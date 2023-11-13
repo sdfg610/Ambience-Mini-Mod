@@ -6,6 +6,7 @@ import net.minecraftforge.fml.config.ModConfig;
 
 public class Config
 {
+    public static ForgeConfigSpec.BooleanValue enabled;
     public static ForgeConfigSpec.BooleanValue lostFocusEnabled;
     public static ForgeConfigSpec.IntValue fadeDuration;
     public static ForgeConfigSpec.IntValue attackedDistance;
@@ -22,6 +23,10 @@ public class Config
 
         clientBuilder.comment("Ambience Mini Mod Configurations")
             .push("AmbienceMini");
+
+        enabled = clientBuilder.comment("Whether the features of this mod should be enabled")
+                .worldRestart()
+                .define("Enabled", true);
 
         lostFocusEnabled = clientBuilder.comment("Fade Out Sound Volume on Game Lost Focus [Default:true]")
                 .worldRestart()
