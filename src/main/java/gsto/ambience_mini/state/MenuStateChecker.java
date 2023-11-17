@@ -1,9 +1,9 @@
-package gsto.ambience_mini.utils;
+package gsto.ambience_mini.state;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.*;
 
-public class GameStateChecker
+public class MenuStateChecker
 {
     public static boolean inMainMenu(Minecraft mc)
     {

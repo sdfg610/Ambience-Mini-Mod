@@ -1,7 +1,7 @@
 package gsto.ambience_mini;
 
 import gsto.ambience_mini.music.MusicLoader;
-import gsto.ambience_mini.music.MusicPlayerThread;
+import gsto.ambience_mini.music.MusicMonitorThread;
 import gsto.ambience_mini.music.NilMusicManager;
 import gsto.ambience_mini.setup.Config;
 import com.mojang.logging.LogUtils;
@@ -25,7 +25,7 @@ public class AmbienceMini
     public static final String MODID = "ambience_mini";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public static MusicPlayerThread musicPlayerThread;
+    public static MusicMonitorThread musicMonitorThread;
 
 
     public AmbienceMini()
@@ -38,7 +38,6 @@ public class AmbienceMini
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
-        //MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
     }
 
 
@@ -50,8 +49,8 @@ public class AmbienceMini
 
     public void tryReload()
     {
-        if (musicPlayerThread != null)
-            musicPlayerThread.kill();
+        if (musicMonitorThread != null)
+            musicMonitorThread.kill();
 
         if (!Config.enabled.get())
             LOGGER.info("Not enabled in config. Ambience Mini is disabled.");
@@ -61,7 +60,7 @@ public class AmbienceMini
             MusicManager nilMusicManager = new NilMusicManager(mc);
             ObfuscationReflectionHelper.setPrivateValue(Minecraft.class, mc, nilMusicManager, OBF_MC_MUSIC_MANAGER);
 
-            musicPlayerThread = new MusicPlayerThread();
+            musicMonitorThread = new MusicMonitorThread();
 
             LOGGER.info("Successfully loaded Ambience Mini");
         }

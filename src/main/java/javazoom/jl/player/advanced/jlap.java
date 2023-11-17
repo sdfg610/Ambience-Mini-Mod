@@ -19,9 +19,13 @@
 
 package javazoom.jl.player.advanced;
 
-import javazoom.jl.decoder.JavaLayerException;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
-import java.io.*;
+import javazoom.jl.decoder.JavaLayerException;
 
 /**
  * This class implements a sample player using Playback listener.

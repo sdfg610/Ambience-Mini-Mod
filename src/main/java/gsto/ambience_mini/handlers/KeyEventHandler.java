@@ -25,6 +25,8 @@ public class KeyEventHandler
         Minecraft mc = Minecraft.getInstance();
         if (mc.isWindowActive()) {
             if (reloadKey.consumeClick()) {
+                SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("toast.reload_title"), new TranslatableComponent("toast.reload_description"));
+
                 /*
                 Ambience.thread.forceKill();
                 Ambience.thread.run();
@@ -34,8 +36,6 @@ public class KeyEventHandler
                 if (SongLoader.enabled)
                     Ambience.thread = new PlayerThread();
                 */
-
-                SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("toast.reload_title"), new TranslatableComponent("toast.reload_description"));
             }
         }
     }

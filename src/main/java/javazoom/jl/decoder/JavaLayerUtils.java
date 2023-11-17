@@ -20,7 +20,13 @@
 
 package javazoom.jl.decoder;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InvalidClassException;
+import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 
 /**
@@ -66,7 +72,7 @@ public class JavaLayerUtils
 	 *		the underlying stream, or an object could not be deserialized
 	 *		from the stream.
 	 * 
-	 * @see ObjectInputStream
+	 * @see java.io.ObjectInputStream
 	 */
 	static public Object deserialize(InputStream in)
 		throws IOException

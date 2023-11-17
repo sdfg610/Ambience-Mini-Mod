@@ -1,4 +1,4 @@
-package gsto.ambience_mini.utils;
+package gsto.ambience_mini.state;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;

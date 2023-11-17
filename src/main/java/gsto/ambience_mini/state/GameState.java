@@ -1,8 +1,10 @@
-package gsto.ambience_mini.music;
+package gsto.ambience_mini.state;
+
+import net.minecraft.client.gui.screens.Screen;
 
 import javax.annotation.Nullable;
 
-public class MusicState
+public class GameState
 {
     @Nullable public static String currentScreen = null;
     @Nullable public static String currentDimension = null;
@@ -12,4 +14,13 @@ public class MusicState
 
     public static boolean isAttacked = false;
 
+
+
+
+
+
+    public void HandleScreen(Screen screen)
+    {
+
+    }
 }

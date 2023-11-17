@@ -19,11 +19,17 @@
 
 package javazoom.jl.player.advanced;
 
-import javazoom.jl.decoder.*;
+import java.io.InputStream;
+
+import javazoom.jl.decoder.Bitstream;
+import javazoom.jl.decoder.BitstreamException;
+import javazoom.jl.decoder.Decoder;
+import javazoom.jl.decoder.Header;
+import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.decoder.SampleBuffer;
 import javazoom.jl.player.AudioDevice;
 import javazoom.jl.player.FactoryRegistry;
-
-import java.io.InputStream;
+import javazoom.jl.player.JavaSoundAudioDevice;
 
 /**
  * a hybrid of javazoom.jl.player.Player tweeked to include <code>play(startFrame, endFrame)</code>
@@ -109,7 +115,7 @@ public class AdvancedPlayer
 	}
 
 	/**
-	 * Cloases this player. Any audio currently playing is stopped
+	 * Closes this player. Any audio currently playing is stopped
 	 * immediately.
 	 */
 	public synchronized void close()
@@ -146,8 +152,7 @@ public class AdvancedPlayer
 
 			Header h = bitstream.readFrame();
 			if (h == null) return false;
-			frames++; // XXX ~Vazkii
-			
+
 			// sample buffer set when decoder constructed
 			SampleBuffer output = (SampleBuffer) decoder.decodeFrame(h, bitstream);
 
@@ -191,7 +196,6 @@ public class AdvancedPlayer
 	{
 		boolean ret = true;
 		int offset = start;
-		frames = start; // XXX ~Vazkii
 		while (offset-- > 0 && ret) ret = skipFrame();
 		return play(end - start);
 	}
@@ -227,7 +231,7 @@ public class AdvancedPlayer
 	{
 		return listener;
 	}
-	
+
 	/**
 	 * closes the player and notifies <code>PlaybackListener</code>
 	 */
@@ -236,25 +240,34 @@ public class AdvancedPlayer
 		listener.playbackFinished(createEvent(PlaybackEvent.STOPPED));
 		close();
 	}
-	
+
+
 	/* ====================================================================================
 	 * XXX
 	 * Functions added by necessity, not present in the original code.
 	 * ~Vazkii
 	 * ====================================================================================
 	 */
-	
-	public AudioDevice getAudioDevice() 
+
+	public AudioDevice getAudioDevice()
 	{
 		return audio;
 	}
-	
-	int frames = 0;
-	public int getFrames() {
-		return frames;
-	}
-	
-	public Decoder getDecoder() {
-		return decoder;
+
+
+	/* ====================================================================================
+	 * XXX
+	 * Functions added by necessity, not present in the original code.
+	 * ~GSTO
+	 * ====================================================================================
+	 */
+
+	public void setGain(float gain) {
+		if(audio instanceof JavaSoundAudioDevice) {
+			try {
+				((JavaSoundAudioDevice) audio).setGain(gain);
+			} catch (IllegalArgumentException ignored)
+			{ } // If you can't fix the bug just put a catch around it
+		}
 	}
 }

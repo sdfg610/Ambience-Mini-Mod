@@ -5,10 +5,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -19,7 +21,7 @@ public class ForgeEventHandlers
     @OnlyIn(value = Dist.CLIENT)
     public static void onTick(final TickEvent.ClientTickEvent event)
     {
-        if(AmbienceMini.musicPlayerThread == null)
+        if(AmbienceMini.musicMonitorThread == null)
             return;
 
         if (event.phase == TickEvent.Phase.END)
@@ -66,5 +68,22 @@ public class ForgeEventHandlers
         else if (event.getEntity() == Minecraft.getInstance().player) {
             //Ambience.attacked = false;
         }
+    }
+
+    @SubscribeEvent
+    @OnlyIn(value = Dist.CLIENT)
+    public static void onSleepEvent(final PlayerSleepInBedEvent event) {
+        AmbienceMini.LOGGER.info("Sleep");
+    }
+
+    @SubscribeEvent
+    @OnlyIn(value = Dist.CLIENT)
+    public static void onScreenChanged(final ScreenOpenEvent event) {
+        var s = event.getScreen();
+
+        if (s != null)
+            AmbienceMini.LOGGER.info(s.getClass().getName());
+        else
+            AmbienceMini.LOGGER.info("Screen: null");
     }
 }
