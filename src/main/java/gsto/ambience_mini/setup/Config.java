@@ -32,10 +32,6 @@ public class Config
                 .worldRestart()
                 .define("Lost_Focus_FadeOut", true);
 
-        fadeDuration = clientBuilder.comment("Defines the sound volume fade in/out duration [Default:25,Range:1~500]")
-                .worldRestart()
-                .defineInRange("Fade_Duration",25,1,500);
-
         attackedDistance = clientBuilder.comment("Defines the distance in blocks between the player and hostile mobs to determine if still in combat or not [Default:16,Range:10 ~ 128]")
                 .worldRestart()
                 .defineInRange("In_Battle_Distance",16,10,128);

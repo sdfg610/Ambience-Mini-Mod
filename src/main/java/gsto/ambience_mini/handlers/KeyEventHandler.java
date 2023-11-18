@@ -26,16 +26,7 @@ public class KeyEventHandler
         if (mc.isWindowActive()) {
             if (reloadKey.consumeClick()) {
                 SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("toast.reload_title"), new TranslatableComponent("toast.reload_description"));
-
-                /*
-                Ambience.thread.forceKill();
-                Ambience.thread.run();
-
-                SongPicker.reset();
-                SongLoader.loadFrom(Ambience.ambienceDir);
-                if (SongLoader.enabled)
-                    Ambience.thread = new PlayerThread();
-                */
+                AmbienceMini.tryReload();
             }
         }
     }

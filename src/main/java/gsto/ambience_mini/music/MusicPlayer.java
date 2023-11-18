@@ -7,11 +7,13 @@ import javazoom.jl.player.advanced.AdvancedPlayer;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.Callable;
-import java.util.function.Predicate;
 
 public class MusicPlayer
 {
+    public static final float MIN_GAIN = -50F;
+    public static final float MAX_GAIN = 0F;
+
+
     private boolean _isPlaying = false;
     private final InputStream _musicStream;
     private final AdvancedPlayer _player;
@@ -20,14 +22,14 @@ public class MusicPlayer
     public final Music currentMusic;
 
 
-    public MusicPlayer(Music music) throws JavaLayerException {
-        this(music, null);
+    public MusicPlayer(Music music, float gain) throws JavaLayerException {
+        this(music, gain, null);
     }
 
-    public MusicPlayer(Music music, @Nullable Runnable onDonePlaying) throws JavaLayerException {
+    public MusicPlayer(Music music, float gain, @Nullable Runnable onDonePlaying) throws JavaLayerException {
         currentMusic = music;
         _musicStream = currentMusic.getMusicStream();
-        _player = new AdvancedPlayer(_musicStream);
+        _player = new AdvancedPlayer(_musicStream, gain);
 
         _playerThread = new Thread(() -> {
             try {

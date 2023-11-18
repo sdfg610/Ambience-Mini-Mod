@@ -1,6 +1,7 @@
 package gsto.ambience_mini.handlers;
 
 import gsto.ambience_mini.AmbienceMini;
+import gsto.ambience_mini.music.GameStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraftforge.api.distmarker.Dist;
@@ -10,7 +11,6 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -21,7 +21,7 @@ public class ForgeEventHandlers
     @OnlyIn(value = Dist.CLIENT)
     public static void onTick(final TickEvent.ClientTickEvent event)
     {
-        if(AmbienceMini.musicMonitorThread == null)
+        if(AmbienceMini.musicManagerThread == null)
             return;
 
         if (event.phase == TickEvent.Phase.END)
@@ -72,18 +72,7 @@ public class ForgeEventHandlers
 
     @SubscribeEvent
     @OnlyIn(value = Dist.CLIENT)
-    public static void onSleepEvent(final PlayerSleepInBedEvent event) {
-        AmbienceMini.LOGGER.info("Sleep");
-    }
-
-    @SubscribeEvent
-    @OnlyIn(value = Dist.CLIENT)
     public static void onScreenChanged(final ScreenOpenEvent event) {
-        var s = event.getScreen();
-
-        if (s != null)
-            AmbienceMini.LOGGER.info(s.getClass().getName());
-        else
-            AmbienceMini.LOGGER.info("Screen: null");
+        GameStateManager.handleScreen(event.getScreen());
     }
 }

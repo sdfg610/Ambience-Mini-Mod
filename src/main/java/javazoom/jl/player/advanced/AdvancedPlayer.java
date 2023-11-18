@@ -51,21 +51,31 @@ public class AdvancedPlayer
 	/** Listener for the playback process */
 	private PlaybackListener listener;
 
+
 	/**
 	 * Creates a new <code>Player</code> instance.
 	 */
 	public AdvancedPlayer(InputStream stream) throws JavaLayerException
 	{
-		this(stream, null);
+		this(stream, null, 0f);
 	}
 
-	public AdvancedPlayer(InputStream stream, AudioDevice device) throws JavaLayerException
+	/**
+	 * Creates a new <code>Player</code> instance.
+	 */
+	public AdvancedPlayer(InputStream stream, float gain) throws JavaLayerException
+	{
+		this(stream, null, gain);
+	}
+
+	public AdvancedPlayer(InputStream stream, AudioDevice device, float gain) throws JavaLayerException
 	{
 		bitstream = new Bitstream(stream);
 
 		if (device!=null) audio = device;
 		else audio = FactoryRegistry.systemRegistry().createAudioDevice();
 		audio.open(decoder = new Decoder());
+		((JavaSoundAudioDevice) audio).setDefaultGain(gain);
 	}
 
 	public void play() throws JavaLayerException
@@ -263,11 +273,9 @@ public class AdvancedPlayer
 	 */
 
 	public void setGain(float gain) {
-		if(audio instanceof JavaSoundAudioDevice) {
-			try {
-				((JavaSoundAudioDevice) audio).setGain(gain);
-			} catch (IllegalArgumentException ignored)
-			{ } // If you can't fix the bug just put a catch around it
-		}
+		try {
+			((JavaSoundAudioDevice) audio).setGain(gain);
+		} catch (Exception ignored)
+		{ } // If you can't fix the bug just put a catch around it
 	}
 }

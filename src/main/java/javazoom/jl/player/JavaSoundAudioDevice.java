@@ -26,7 +26,6 @@ package javazoom.jl.player;
 
 import javax.sound.sampled.*;
 
-import gsto.ambience_mini.AmbienceMini;
 import javazoom.jl.decoder.Decoder;
 import javazoom.jl.decoder.JavaLayerException;
 
@@ -39,11 +38,14 @@ import javazoom.jl.decoder.JavaLayerException;
  */
 public class JavaSoundAudioDevice extends AudioDeviceBase
 {
-	private SourceDataLine	source = null;
+	private volatile SourceDataLine	source = null;
 
 	private AudioFormat		fmt = null;
 
 	private byte[]			byteBuf = new byte[4096];
+
+	private float _defaultGain = 0f;
+
 
 	protected void setAudioFormat(AudioFormat fmt0)
 	{
@@ -106,8 +108,8 @@ public class JavaSoundAudioDevice extends AudioDeviceBase
 					FloatControl c = (FloatControl)source.getControl(FloatControl.Type.MASTER_GAIN);
                     c.setValue(c.getMaximum());
                 }*/
+				((FloatControl) source.getControl(FloatControl.Type.MASTER_GAIN)).setValue(_defaultGain);
                 source.start();
-				setGain(AmbienceMini.musicMonitorThread.getRealGain());
             }
         } catch (RuntimeException ex)
           {
@@ -217,13 +219,16 @@ public class JavaSoundAudioDevice extends AudioDeviceBase
 	 */
 
 	// From http://stackoverflow.com/a/2324408
-	public void setGain(float gain)
+	public void setGain(float gain) {
+        while (source == null)
+            Thread.onSpinWait();
+		FloatControl volControl = (FloatControl) source.getControl(FloatControl.Type.MASTER_GAIN);
+		volControl.setValue(gain);
+	}
+
+	public void setDefaultGain(float defaultGain)
 	{
-		if (source != null)
-		{
-			FloatControl volControl = (FloatControl) source.getControl(FloatControl.Type.MASTER_GAIN);
-            volControl.setValue(gain);
-		}
+		_defaultGain = defaultGain;
 	}
 
 	public float getGain()
@@ -233,6 +238,6 @@ public class JavaSoundAudioDevice extends AudioDeviceBase
 			FloatControl volControl = (FloatControl) source.getControl(FloatControl.Type.MASTER_GAIN);
 			return volControl.getValue();
 		}
-		return 0F;
+		return 0f;
 	}
 }
