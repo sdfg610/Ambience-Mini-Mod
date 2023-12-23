@@ -1,5 +1,6 @@
 package gsto.ambience_mini;
 
+import gsto.ambience_mini.music.GameStateManager;
 import gsto.ambience_mini.music.MusicLoader;
 import gsto.ambience_mini.music.MusicManagerThread;
 import gsto.ambience_mini.music.NilMusicManager;
@@ -52,10 +53,14 @@ public class AmbienceMini
         if (musicManagerThread != null)
             musicManagerThread.kill();
 
+
+
         if (!Config.enabled.get())
             LOGGER.info("Not enabled in config. Ambience Mini is disabled.");
         else if (MusicLoader.loadConfig())
         {
+            GameStateManager.init();
+
             Minecraft mc = Minecraft.getInstance();
             MusicManager nilMusicManager = new NilMusicManager(mc);
             ObfuscationReflectionHelper.setPrivateValue(Minecraft.class, mc, nilMusicManager, OBF_MC_MUSIC_MANAGER);

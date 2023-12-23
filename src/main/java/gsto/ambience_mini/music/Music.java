@@ -27,4 +27,10 @@ public class Music
         }
         return null;
     }
+
+    @Override
+    public String toString()
+    {
+        return musicName + " (" + _filePath + ")";
+    }
 }

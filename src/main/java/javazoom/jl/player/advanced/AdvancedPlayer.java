@@ -20,6 +20,7 @@
 package javazoom.jl.player.advanced;
 
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.BitstreamException;
@@ -78,9 +79,9 @@ public class AdvancedPlayer
 		((JavaSoundAudioDevice) audio).setDefaultGain(gain);
 	}
 
-	public void play() throws JavaLayerException
+	public void play(AtomicBoolean isPlaying) throws JavaLayerException
 	{
-		play(Integer.MAX_VALUE);
+		play(Integer.MAX_VALUE, isPlaying);
 	}
 
 	/**
@@ -90,7 +91,7 @@ public class AdvancedPlayer
 	 * @return	true if the last frame was played, or false if there are
 	 *			more frames.
 	 */
-	public boolean play(int frames) throws JavaLayerException
+	public boolean play(int frames, AtomicBoolean isPlaying) throws JavaLayerException
 	{
 		boolean ret = true;
 
@@ -99,6 +100,8 @@ public class AdvancedPlayer
 
 		while (frames-- > 0 && ret)
 		{
+			while (!isPlaying.get())
+				Thread.onSpinWait();
 			ret = decodeFrame();
 		}
 
@@ -108,9 +111,7 @@ public class AdvancedPlayer
 			AudioDevice out = audio;
 			if (out != null)
 			{
-//				System.out.println(audio.getPosition());
 				out.flush();
-//				System.out.println(audio.getPosition());
 				synchronized (this)
 				{
 					complete = (!closed);
@@ -207,7 +208,7 @@ public class AdvancedPlayer
 		boolean ret = true;
 		int offset = start;
 		while (offset-- > 0 && ret) ret = skipFrame();
-		return play(end - start);
+		return play(end - start, new AtomicBoolean());
 	}
 
 	/**

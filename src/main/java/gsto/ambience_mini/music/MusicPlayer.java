@@ -7,17 +7,25 @@ import javazoom.jl.player.advanced.AdvancedPlayer;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MusicPlayer
 {
     public static final float MIN_GAIN = -50F;
     public static final float MAX_GAIN = 0F;
 
+    private static final long FADE_STEP_MILLISECONDS = 75;
+    private static final int FADE_STEP_COUNT = 10;
 
-    private boolean _isPlaying = false;
+
+    private float _currentGain;
+    private boolean _suppressOnDonePlaying;
+
+    private final AtomicBoolean _isPlaying = new AtomicBoolean(false);
     private final InputStream _musicStream;
     private final AdvancedPlayer _player;
-    private final Thread _playerThread;
+
 
     public final Music currentMusic;
 
@@ -28,14 +36,15 @@ public class MusicPlayer
 
     public MusicPlayer(Music music, float gain, @Nullable Runnable onDonePlaying) throws JavaLayerException {
         currentMusic = music;
+        _currentGain = gain;
         _musicStream = currentMusic.getMusicStream();
-        _player = new AdvancedPlayer(_musicStream, gain);
+        _player = new AdvancedPlayer(_musicStream, _currentGain);
 
-        _playerThread = new Thread(() -> {
+        Thread _playerThread = new Thread(() -> {
             try {
-                _player.play();
-                _isPlaying = false;
-                if (onDonePlaying != null)
+                _player.play(_isPlaying);
+                _isPlaying.set(false);
+                if (!_suppressOnDonePlaying && onDonePlaying != null)
                     onDonePlaying.run();
             } catch (Exception ex) {
                 AmbienceMini.LOGGER.error("Error in MusicPlayer's internal thread", ex);
@@ -43,19 +52,34 @@ public class MusicPlayer
         });
         _playerThread.setDaemon(true);
         _playerThread.setName("Ambience Mini - Music Player Thread");
+        _playerThread.start();
     }
 
 
     // Controls
-
-    public void startMusicThread()
-    {
-        _isPlaying = true;
-        _playerThread.start();
+    public void playOrResume(boolean fadeIn) throws InterruptedException {
+        if (fadeIn) {
+            _player.setGain(MIN_GAIN);
+            _isPlaying.set(true);
+            fadeIn();
+        } else {
+            _player.setGain(_currentGain);
+            _isPlaying.set(true);
+        }
     }
 
-    public void stopMusicThreadAndCloseStreams()
-    {
+    public void pause(boolean fadeOut) throws InterruptedException {
+        if (fadeOut)
+            fadeOut();
+
+        _isPlaying.set(false);
+    }
+
+    public void stop(boolean fadeOut, boolean suppressOnDonePlaying) throws InterruptedException {
+        _suppressOnDonePlaying = suppressOnDonePlaying;
+        if (fadeOut)
+            fadeOut();
+
         _player.close();
         try {
             _musicStream.close();
@@ -64,7 +88,7 @@ public class MusicPlayer
 
     public boolean isPlaying()
     {
-        return _isPlaying;
+        return _isPlaying.get();
     }
 
 
@@ -72,6 +96,28 @@ public class MusicPlayer
 
     public void setGain(float gain)
     {
+        _currentGain = gain;
         _player.setGain(gain);
+    }
+
+    private void fadeIn() throws InterruptedException
+    {
+        float diff = Math.abs(_currentGain - MusicPlayer.MIN_GAIN) / FADE_STEP_COUNT;
+        for (int i = FADE_STEP_COUNT - 1; i >= 0; i--) {
+            _player.setGain(_currentGain - diff*i);
+            TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
+        }
+        _player.setGain(_currentGain);
+    }
+
+
+    private void fadeOut() throws InterruptedException
+    {
+        float diff = Math.abs(_currentGain - MusicPlayer.MIN_GAIN) / FADE_STEP_COUNT;
+        for (int i = 0; i < FADE_STEP_COUNT; i++) {
+            _player.setGain(_currentGain - diff*i);
+            TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
+        }
+        _player.setGain(MusicPlayer.MIN_GAIN);
     }
 }

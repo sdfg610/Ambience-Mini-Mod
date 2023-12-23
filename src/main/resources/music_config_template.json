@@ -1,0 +1,28 @@
+{
+  "event.main_menu": [],
+  "event.connecting": [],
+  "event.disconnected": [],
+  "event.credits": [],
+
+  "dimension.minecraft:overworld": {
+    "biome.minecraft:forest": {
+
+    },
+
+    "structure.minecraft:stronghold": {
+
+    }
+  },
+
+  "biome.minecraft:forest": {
+
+  },
+
+  "structure.minecraft:stronghold": {
+
+  },
+
+  "trigger.downfall": {
+    "event.default": []
+  }
+}

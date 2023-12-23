@@ -2,26 +2,29 @@ package gsto.ambience_mini.music;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.*;
-import net.minecraft.client.player.LocalPlayer;
-
-import javax.annotation.Nullable;
 
 public class GameStateManager
 {
+    private static Minecraft mc = null;
     private static boolean isJoiningWorld = false;
     private static boolean isPaused = false;
+
+
+    public static void init()
+    {
+        mc = Minecraft.getInstance();
+    }
 
 
     //
     // Menu states
     //
-
-    public static boolean inMainMenu(Minecraft mc)
+    public static boolean inMainMenu()
     {
         return mc.player == null || mc.level == null;
     }
 
-    public static boolean inGame(Minecraft mc)
+    public static boolean inGame()
     {
         return mc.player != null && mc.level != null;
     }
@@ -31,9 +34,9 @@ public class GameStateManager
         return isPaused;
     }
 
-    public static boolean possiblyInSoundOptions(Minecraft mc)
+    public static boolean possiblyInSoundOptions()
     {
-        return isPaused || inMainMenu(mc);
+        return isPaused || inMainMenu();
     }
 
 
@@ -42,17 +45,12 @@ public class GameStateManager
         return isJoiningWorld;
     }
 
-    public static boolean onDisconnectedScreen(Minecraft mc)
+    public static boolean onDisconnectedScreen()
     {
         return mc.screen instanceof DisconnectedScreen;
     }
 
-    public static boolean onDeathScreen(Minecraft mc)
-    {
-        return mc.screen instanceof DeathScreen;
-    }
-
-    public static boolean onCreditsScreen(Minecraft mc)
+    public static boolean onCreditsScreen()
     {
         return mc.screen instanceof WinScreen;
     }
@@ -61,29 +59,43 @@ public class GameStateManager
     //
     // Environmental states
     //
-
-    public static boolean inBossFight(Minecraft mc)
+    public static boolean isNight()
     {
-        // TODO: DO BETTER
-        return mc.gui.getBossOverlay().shouldPlayMusic();
+        assert mc.level != null;
+        assert mc.player != null;
+
+        long time = mc.level.getDayTime() % 24000;
+        return time > 13200 && time < 23200;
+    }
+
+    public static boolean isDownfall()
+    {
+        assert mc.level != null;
+        assert mc.player != null;
+        return mc.level.isRaining();
     }
 
 
     //
     // Player states
     //
-
-    public static boolean isSleeping(LocalPlayer player)
+    public static boolean isSleeping()
     {
-        return player.isSleeping();
+        assert mc.player != null;
+        return mc.player.isSleeping();
     }
 
-    public static boolean isDead(LocalPlayer player)
+    public static boolean isDead()
     {
-        return player.isDeadOrDying();
+        assert mc.player != null;
+        return mc.player.isDeadOrDying();
     }
 
-
+    public static boolean inBossFight()
+    {
+        // TODO: DO BETTER
+        return mc.gui.getBossOverlay().shouldPlayMusic();
+    }
 
 
     //
@@ -92,7 +104,7 @@ public class GameStateManager
 
     public static void handleScreen(Screen screen)
     {
-        if (screen == null)
+        if (screen == null || screen instanceof TitleScreen)
         {
             isJoiningWorld = false;
             isPaused = false;

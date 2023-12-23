@@ -45,6 +45,7 @@ public class JavaSoundAudioDevice extends AudioDeviceBase
 	private byte[]			byteBuf = new byte[4096];
 
 	private float _defaultGain = 0f;
+	private float _delayedGain = 0f;
 
 
 	protected void setAudioFormat(AudioFormat fmt0)
@@ -219,11 +220,14 @@ public class JavaSoundAudioDevice extends AudioDeviceBase
 	 */
 
 	// From http://stackoverflow.com/a/2324408
-	public void setGain(float gain) {
-        while (source == null)
-            Thread.onSpinWait();
-		FloatControl volControl = (FloatControl) source.getControl(FloatControl.Type.MASTER_GAIN);
-		volControl.setValue(gain);
+	public void setGain(float gain) throws JavaLayerException {
+        if (source == null)
+            setDefaultGain(gain);
+		else
+		{
+			FloatControl volControl = (FloatControl) source.getControl(FloatControl.Type.MASTER_GAIN);
+			volControl.setValue(gain);
+		}
 	}
 
 	public void setDefaultGain(float defaultGain)

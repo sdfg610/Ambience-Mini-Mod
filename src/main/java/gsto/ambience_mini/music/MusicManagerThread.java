@@ -4,20 +4,26 @@ import gsto.ambience_mini.AmbienceMini;
 import javazoom.jl.decoder.JavaLayerException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.sounds.SoundSource;
 
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class MusicManagerThread extends Thread
 {
     private static final long UPDATE_INTERVAL_MILLISECONDS = 100;
-    private static final long FADE_STEP_MILLISECONDS = 75;
-    private static final int FADE_STEP_COUNT = 10;
+    private static final long NEXT_MUSIC_DELAY_MILLISECONDS = 2000;
 
 
-    private MusicPlayer _player = null;
+    private MusicPlayer _musicPlayer = null;
     private boolean _kill = false;
+
+    private final Random _rand = new Random(System.currentTimeMillis());
+    private String _currentEvent = null;
+    private List<Music> _currentMusicChoices = List.of();
+
+    private long _chooseNextMusicTime = Long.MAX_VALUE;
 
 
     public MusicManagerThread() {
@@ -38,28 +44,29 @@ public class MusicManagerThread extends Thread
             long nextUpdate = System.currentTimeMillis();
             while (!_kill)
             {
+                // Update at most every "UPDATE_INTERVAL_MILLISECONDS".
                 TimeUnit.MILLISECONDS.sleep(nextUpdate - System.currentTimeMillis());
                 nextUpdate = System.currentTimeMillis() + UPDATE_INTERVAL_MILLISECONDS;
 
-                Minecraft mc = Minecraft.getInstance();
-                LocalPlayer mcPlayer = mc.player;
+                // Don't waste resources setting gain if in a state where you cannot possibly be in the sound menu.
+                if (_musicPlayer != null && GameStateManager.possiblyInSoundOptions())
+                    _musicPlayer.setGain(getRealGain());
 
-                if (_player != null && GameStateManager.possiblyInSoundOptions(mc))
-                    _player.setGain(getRealGain());
-
-                if (GameStateManager.inMainMenu(mc)) {
-                    if (GameStateManager.isJoiningWorld())
-                        playMusic(MusicLoader.MUSIC_JOINING, true, true);
-                    else
-                        playMusic(MusicLoader.MUSIC_MAIN_MENU, true, true);
+                if (GameStateManager.inMainMenu()) {
+                    boolean fireAndForget =
+                            (GameStateManager.isJoiningWorld() && setCurrentEvent(MusicEvents.CONNECTING))
+                            || (GameStateManager.onDisconnectedScreen() && setCurrentEvent(MusicEvents.DISCONNECTED))
+                            || setCurrentEvent(MusicEvents.MAIN_MENU);
                 }
-                else if (mcPlayer != null && GameStateManager.inGame(mc))
+                else if (GameStateManager.inGame())
                 {
-                    if (GameStateManager.isDead(mcPlayer))
-                        playMusic(MusicLoader.MUSIC_DEAD, false, false);
-                    else
-                        playMusic(MusicLoader.MUSIC_CHILL_DAY1, true, true);
+                    boolean fireAndForget =
+                            (GameStateManager.isDead() && setCurrentEvent(MusicEvents.DEAD))
+                            || (GameStateManager.onCreditsScreen() && setCurrentEvent(MusicEvents.CREDITS))
+                            || setCurrentEvent(MusicEvents.DEFAULT);
                 }
+
+                handleMusicCycle();
             }
         }
         catch (Exception ex)
@@ -84,58 +91,78 @@ public class MusicManagerThread extends Thread
     // Music and volume
     //
 
-    public void playMusic(Music nextMusic, boolean fadeInNext, boolean fadeOutCurrent) throws JavaLayerException, InterruptedException
+    private boolean setCurrentEvent(String event)
     {
-        if (_player == null || _player.currentMusic != nextMusic)
+        var newMusic = MusicRegistry.getMusic(event);
+        if (newMusic != _currentMusicChoices) {
+            _currentEvent = event;
+            _currentMusicChoices = newMusic;
+            return true;
+        }
+
+        return _currentEvent.equals(event);
+    }
+
+    private void handleMusicCycle() throws JavaLayerException, InterruptedException
+    {
+        boolean fade = !_currentEvent.equals(MusicEvents.DEAD) || _musicPlayer == null;
+
+        Music currentMusic = null;
+        if (_musicPlayer != null)
+            currentMusic = _musicPlayer.currentMusic;
+
+        if (!_currentMusicChoices.isEmpty())
         {
-            if (_player != null)
+            int currentMusicIndex = _currentMusicChoices.indexOf(currentMusic);
+            if (currentMusicIndex == -1)
+                playMusic(_currentMusicChoices.get(_rand.nextInt(_currentMusicChoices.size())), fade, fade);
+            else if (System.currentTimeMillis() > _chooseNextMusicTime) {
+                int nextMusicIndex = _rand.nextInt(_currentMusicChoices.size());
+                while (nextMusicIndex == currentMusicIndex)
+                    nextMusicIndex = _rand.nextInt(_currentMusicChoices.size());
+
+                playMusic(_currentMusicChoices.get(nextMusicIndex), fade, fade);
+            }
+            _chooseNextMusicTime = Long.MAX_VALUE;
+        }
+        else if (_musicPlayer != null && _musicPlayer.isPlaying())
+            _musicPlayer.stop(true, true);
+    }
+
+    private void playMusic(Music nextMusic, boolean fadeInNext, boolean fadeOutCurrent) throws JavaLayerException, InterruptedException
+    {
+        if (nextMusic != null && (_musicPlayer == null || _musicPlayer.currentMusic != nextMusic))
+        {
+            if (_musicPlayer != null)
                 stopMusic(fadeOutCurrent);
-            _player = new MusicPlayer(nextMusic, fadeInNext ? MusicPlayer.MIN_GAIN : getRealGain());
-            _player.startMusicThread();
-
-            if (fadeInNext)
-                fadeIn();
+            _musicPlayer = new MusicPlayer(
+                    nextMusic,
+                    getRealGain(),
+                    () -> _chooseNextMusicTime = System.currentTimeMillis() + NEXT_MUSIC_DELAY_MILLISECONDS
+            );
+            _musicPlayer.playOrResume(fadeInNext);
         }
     }
 
-    public void stopMusic(boolean fadeOut) throws InterruptedException
+    private void pauseMusic(boolean fadeOut) throws InterruptedException
     {
-        if(_player != null)
+        if(_musicPlayer != null)
+            _musicPlayer.pause(fadeOut);
+    }
+
+    private void stopMusic(boolean fadeOut) throws InterruptedException
+    {
+        if(_musicPlayer != null)
         {
-            if (fadeOut)
-                fadeOut();
-            _player.stopMusicThreadAndCloseStreams();
-            _player = null;
+            _musicPlayer.stop(fadeOut, true);
+            _musicPlayer = null;
         }
     }
 
-    public float getRealGain()
+    private float getRealGain()
     {
         Options settings = Minecraft.getInstance().options;
         float musicGain = settings.getSoundSourceVolume(SoundSource.MUSIC) * settings.getSoundSourceVolume(SoundSource.MASTER);
         return (MusicPlayer.MIN_GAIN + (MusicPlayer.MAX_GAIN - MusicPlayer.MIN_GAIN) * musicGain);
-    }
-
-    private void fadeIn() throws InterruptedException
-    {
-        float real = getRealGain();
-        float diff = Math.abs(real - MusicPlayer.MIN_GAIN) / FADE_STEP_COUNT;
-        for (int i = FADE_STEP_COUNT - 1; i >= 0; i--) {
-            _player.setGain(real - diff*i);
-            TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
-        }
-        _player.setGain(real);
-    }
-
-
-    private void fadeOut() throws InterruptedException
-    {
-        float real = getRealGain();
-        float diff = Math.abs(real - MusicPlayer.MIN_GAIN) / FADE_STEP_COUNT;
-        for (int i = 0; i < FADE_STEP_COUNT; i++) {
-            _player.setGain(real - diff*i);
-            TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
-        }
-        _player.setGain(MusicPlayer.MIN_GAIN);
     }
 }
