@@ -68,6 +68,12 @@ public class GameStateManager
     }
 
 
+    public static boolean isGameFocused()
+    {
+        return mc.isWindowActive();
+    }
+
+
     //
     // Environmental states
     //

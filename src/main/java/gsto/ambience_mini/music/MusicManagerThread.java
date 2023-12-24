@@ -1,6 +1,7 @@
 package gsto.ambience_mini.music;
 
 import gsto.ambience_mini.AmbienceMini;
+import gsto.ambience_mini.setup.Config;
 import javazoom.jl.decoder.JavaLayerException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -43,12 +44,25 @@ public class MusicManagerThread extends Thread
     public void run()
     {
         try {
+            boolean isPaused = false;
             long nextUpdate = System.currentTimeMillis();
             while (!_kill)
             {
                 // Update at most every "UPDATE_INTERVAL_MILLISECONDS".
                 TimeUnit.MILLISECONDS.sleep(nextUpdate - System.currentTimeMillis());
                 nextUpdate = System.currentTimeMillis() + UPDATE_INTERVAL_MILLISECONDS;
+
+                if (Config.lostFocusEnabled.get()) {
+                    if (!GameStateManager.isGameFocused()) {
+                        pauseMusic(true);
+                        isPaused = true;
+                        continue;
+                    }
+                    else if (isPaused) {
+                        _musicPlayer.playOrResume(true);
+                        isPaused = false;
+                    }
+                }
 
                 // Don't waste resources setting gain if in a state where you cannot possibly be in the sound menu.
                 if (_musicPlayer != null && GameStateManager.possiblyInSoundOptions())

@@ -58,6 +58,9 @@ public class MusicPlayer
 
     // Controls
     public void playOrResume(boolean fadeIn) throws InterruptedException {
+        if (_isPlaying.get())
+            return;
+
         if (fadeIn) {
             _player.setGain(MIN_GAIN);
             _isPlaying.set(true);
@@ -69,6 +72,9 @@ public class MusicPlayer
     }
 
     public void pause(boolean fadeOut) throws InterruptedException {
+        if (!_isPlaying.get())
+            return;
+
         if (fadeOut)
             fadeOut();
 
