@@ -7,6 +7,7 @@ public class MusicEvents
     public static final String CATEGORY_TRIGGER = "trigger";
     public static final String CATEGORY_DIMENSION = "dimension";
     public static final String CATEGORY_BIOME = "biome";
+    public static final String CATEGORY_BIOME_TAG = "biometag";
     public static final String CATEGORY_STRUCTURE = "structure";
     public static final String CATEGORY_BOSS = "boss";
 
@@ -37,10 +38,10 @@ public class MusicEvents
     // Player events
     public static final String DYING = "dying";
     public static final String DEAD = "dead";
+
     public static final String SLEEPING = "sleeping";
     public static final String FISHING = "fishing";
 
-    public static final String DEEP_UNDERGROUND = "deep_underground";
     public static final String UNDER_DEEPSLATE = "under_deepslate";
     public static final String UNDERGROUND = "underground";
     public static final String UNDERWATER = "under_water";

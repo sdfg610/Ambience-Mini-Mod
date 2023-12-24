@@ -21,7 +21,8 @@ import org.slf4j.Logger;
 @Mod(AmbienceMini.MODID)
 public class AmbienceMini
 {
-    private static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
+    public static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
+    public static final String OBF_MAP_BOSS_INFO = "f_93699_";
 
     public static final String MODID = "ambience_mini";
     public static final Logger LOGGER = LogUtils.getLogger();
@@ -52,8 +53,6 @@ public class AmbienceMini
     {
         if (musicManagerThread != null)
             musicManagerThread.kill();
-
-
 
         if (!Config.enabled.get())
             LOGGER.info("Not enabled in config. Ambience Mini is disabled.");

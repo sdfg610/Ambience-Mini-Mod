@@ -10,29 +10,44 @@ import java.util.Map;
 public class MusicRegistry
 {
     private static final Map<String, ArrayList<MusicRule>> events = new HashMap<>();
+    private static final Map<String, List<Music>> bosses = new HashMap<>();
 
     public static void clear()
     {
         events.clear();
+        bosses.clear();
     }
 
 
-    public static void addRule(String event, MusicRule rule) {
+    public static void addEventRule(String event, MusicRule rule) {
         events.computeIfAbsent(event, ignore -> new ArrayList<>()).add(rule);
     }
 
-    public static List<Music> getMusic(String event) {
+    public static void addBossMusic(String bossName, List<Music> music) {
+        bosses.put(bossName, music);
+    }
+
+    public static List<Music> getEventMusic(String event) {
         var rules = events.getOrDefault(event, null);
         if (rules == null)
             return null;
 
         for (var rule : rules)
         {
-            boolean isValid = triggersFulfilled(rule.triggers);
+            boolean isValid =
+                    (rule.dimension() == null || rule.dimension().equals(GameStateManager.getDimensionId()))
+                    && triggersFulfilled(rule.triggers());
             if (isValid)
-                return rule.music;
+                return rule.music();
         }
 
+        return null;
+    }
+
+    public static List<Music> getBossMusic(String bossName) {
+        for (var boss : bosses.entrySet())
+            if (boss.getKey().equals("*") || bossName.contains(boss.getKey())) // Uses contains here since boss-id/keys are like "entity.minecraft.ender_dragon".
+                return boss.getValue();
         return null;
     }
 

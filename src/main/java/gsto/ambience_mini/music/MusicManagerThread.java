@@ -15,6 +15,8 @@ public class MusicManagerThread extends Thread
     private static final long UPDATE_INTERVAL_MILLISECONDS = 100;
     private static final long NEXT_MUSIC_DELAY_MILLISECONDS = 2000;
 
+    private static final long HIGH_UP_THRESHOLD = 150;
+
 
     private MusicPlayer _musicPlayer = null;
     private boolean _kill = false;
@@ -63,7 +65,11 @@ public class MusicManagerThread extends Thread
                     boolean fireAndForget =
                             (GameStateManager.isDead() && setCurrentEvent(MusicEvents.DEAD))
                             || (GameStateManager.onCreditsScreen() && setCurrentEvent(MusicEvents.CREDITS))
-                            || setCurrentEvent(MusicEvents.DEFAULT);
+                            || setBossBasedMusicEvent(GameStateManager.getBossId())
+                            || (GameStateManager.isSleeping() && setCurrentEvent(MusicEvents.SLEEPING))
+                            || (GameStateManager.isFishing() && setCurrentEvent(MusicEvents.FISHING))
+                            || setAreaBasedMusicEvent()
+                            || setElevationBasedMusicEvent();
                 }
 
                 handleMusicCycle();
@@ -72,6 +78,9 @@ public class MusicManagerThread extends Thread
         catch (Exception ex)
         {
             AmbienceMini.LOGGER.error("Error in MusicPlayerThread.run()", ex);
+            try {
+                stopMusic(false);
+            } catch (InterruptedException ignored) { }
         }
     }
 
@@ -88,13 +97,45 @@ public class MusicManagerThread extends Thread
 
 
     //
-    // Music and volume
+    // Event control
     //
+
+    private boolean setAreaBasedMusicEvent()
+    {
+        return (GameStateManager.isInVillage() && setCurrentEvent(MusicEvents.VILLAGE));
+    }
+
+    private boolean setElevationBasedMusicEvent()
+    {
+        int playerElevation = GameStateManager.getPlayerElevation(); // The 'Y' coordinate.
+        return
+                (GameStateManager.isUnderWater() && setCurrentEvent(MusicEvents.UNDERWATER))
+                || (playerElevation > HIGH_UP_THRESHOLD && setCurrentEvent(MusicEvents.HIGH_UP))
+                || (playerElevation < 0 && setCurrentEvent(MusicEvents.UNDER_DEEPSLATE))
+                || (GameStateManager.isUnderground() && setCurrentEvent(MusicEvents.UNDERGROUND))
+                || setCurrentEvent(MusicEvents.DEFAULT);
+    }
+
+    private boolean setBossBasedMusicEvent(String bossName)
+    {
+        if (bossName == null)
+            return false;
+
+        var bossEvent = "boss:" + bossName;
+        var newMusic = MusicRegistry.getBossMusic(bossName);
+        if (newMusic != _currentMusicChoices && newMusic != null) {
+            _currentEvent = bossEvent;
+            _currentMusicChoices = newMusic;
+            return true;
+        }
+
+        return _currentEvent.equals(bossEvent);
+    }
 
     private boolean setCurrentEvent(String event)
     {
-        var newMusic = MusicRegistry.getMusic(event);
-        if (newMusic != _currentMusicChoices) {
+        var newMusic = MusicRegistry.getEventMusic(event);
+        if (newMusic != _currentMusicChoices && newMusic != null) {
             _currentEvent = event;
             _currentMusicChoices = newMusic;
             return true;
@@ -102,6 +143,11 @@ public class MusicManagerThread extends Thread
 
         return _currentEvent.equals(event);
     }
+
+
+    //
+    // Music and volume
+    //
 
     private void handleMusicCycle() throws JavaLayerException, InterruptedException
     {
@@ -123,7 +169,6 @@ public class MusicManagerThread extends Thread
 
                 playMusic(_currentMusicChoices.get(nextMusicIndex), fade, fade);
             }
-            _chooseNextMusicTime = Long.MAX_VALUE;
         }
         else if (_musicPlayer != null && _musicPlayer.isPlaying())
             _musicPlayer.stop(true, true);
@@ -142,6 +187,7 @@ public class MusicManagerThread extends Thread
             );
             _musicPlayer.playOrResume(fadeInNext);
         }
+        _chooseNextMusicTime = Long.MAX_VALUE;
     }
 
     private void pauseMusic(boolean fadeOut) throws InterruptedException

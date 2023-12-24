@@ -24,5 +24,7 @@
 
   "trigger.downfall": {
     "event.default": []
-  }
+  },
+
+  "boss.*": ["Default boss music"]
 }
