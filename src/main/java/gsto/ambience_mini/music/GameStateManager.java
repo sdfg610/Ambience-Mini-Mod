@@ -41,14 +41,9 @@ public class GameStateManager
         return mc.player != null && mc.level != null;
     }
 
-    public static boolean inPauseMenu()
-    {
-        return isPaused;
-    }
-
     public static boolean possiblyInSoundOptions()
     {
-        return isPaused || inMainMenu();
+        return mc.isPaused() || inMainMenu();
     }
 
 
@@ -183,11 +178,8 @@ public class GameStateManager
         if (screen == null || screen instanceof TitleScreen)
         {
             isJoiningWorld = false;
-            isPaused = false;
         }
         else if (screen instanceof LevelLoadingScreen || screen instanceof ConnectScreen || screen instanceof ReceivingLevelScreen || screen instanceof GenericDirtMessageScreen)
             isJoiningWorld = true;
-        else if (screen instanceof PauseScreen)
-            isPaused = true;
     }
 }

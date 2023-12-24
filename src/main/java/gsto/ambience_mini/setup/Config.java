@@ -8,8 +8,8 @@ public class Config
 {
     public static ForgeConfigSpec.BooleanValue enabled;
     public static ForgeConfigSpec.BooleanValue lostFocusEnabled;
-    public static ForgeConfigSpec.IntValue fadeDuration;
     public static ForgeConfigSpec.IntValue attackedDistance;
+    public static ForgeConfigSpec.BooleanValue ignoreMasterVolume;
 
 
     public static void register()
@@ -35,6 +35,10 @@ public class Config
         attackedDistance = clientBuilder.comment("Defines the distance in blocks between the player and hostile mobs to determine if still in combat or not [Default:16,Range:10 ~ 128]")
                 .worldRestart()
                 .defineInRange("In_Battle_Distance",16,10,128);
+
+        ignoreMasterVolume = clientBuilder.comment("If 'true', music volume is not affected by 'Master Volume' to make it easier to balance music volume with everything else [Default:true]")
+                .worldRestart()
+                .define("Ignore_Master_Volume",true);
 
 
         clientBuilder.pop();

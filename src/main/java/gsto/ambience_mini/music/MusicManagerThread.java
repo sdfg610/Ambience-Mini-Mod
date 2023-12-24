@@ -222,7 +222,14 @@ public class MusicManagerThread extends Thread
     private float getRealGain()
     {
         Options settings = Minecraft.getInstance().options;
-        float musicGain = settings.getSoundSourceVolume(SoundSource.MUSIC) * settings.getSoundSourceVolume(SoundSource.MASTER);
+        float musicGain = settings.getSoundSourceVolume(SoundSource.MUSIC) * getMasterVolume(settings);
         return (MusicPlayer.MIN_GAIN + (MusicPlayer.MAX_GAIN - MusicPlayer.MIN_GAIN) * musicGain);
+    }
+
+    private float getMasterVolume(Options settings)
+    {
+        if (Config.ignoreMasterVolume.get())
+            return 1f;
+        return settings.getSoundSourceVolume(SoundSource.MASTER);
     }
 }
