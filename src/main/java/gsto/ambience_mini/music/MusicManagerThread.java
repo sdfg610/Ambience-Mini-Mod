@@ -52,9 +52,9 @@ public class MusicManagerThread extends Thread
                 TimeUnit.MILLISECONDS.sleep(nextUpdate - System.currentTimeMillis());
                 nextUpdate = System.currentTimeMillis() + UPDATE_INTERVAL_MILLISECONDS;
 
-                if (Config.lostFocusEnabled.get()) {
+                if (Config.lostFocusEnabled.get() && _musicPlayer != null) {
                     if (!GameStateManager.isGameFocused()) {
-                        pauseMusic(true);
+                        pauseMusic();
                         isPaused = true;
                         continue;
                     }
@@ -204,10 +204,10 @@ public class MusicManagerThread extends Thread
         _chooseNextMusicTime = Long.MAX_VALUE;
     }
 
-    private void pauseMusic(boolean fadeOut) throws InterruptedException
+    private void pauseMusic() throws InterruptedException
     {
         if(_musicPlayer != null)
-            _musicPlayer.pause(fadeOut);
+            _musicPlayer.pause(true);
     }
 
     private void stopMusic(boolean fadeOut) throws InterruptedException
