@@ -5,7 +5,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.LerpingBossEvent;
 import net.minecraft.client.gui.screens.*;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.AABB;
@@ -165,7 +167,7 @@ public class GameStateManager
             return null;
 
         var bossEvent = bossMap.values().stream().findFirst().get();
-        return ((TranslatableComponent)bossEvent.getName()).getKey();
+        return ((TranslatableContents)bossEvent.getName().getContents()).getKey();
     }
 
 

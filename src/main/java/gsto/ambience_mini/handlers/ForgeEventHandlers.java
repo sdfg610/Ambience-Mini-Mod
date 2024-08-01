@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.ScreenOpenEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -72,7 +72,7 @@ public class ForgeEventHandlers
 
     @SubscribeEvent
     @OnlyIn(value = Dist.CLIENT)
-    public static void onScreenChanged(final ScreenOpenEvent event) {
+    public static void onScreenChanged(final ScreenEvent.Opening event) {
         GameStateManager.handleScreen(event.getScreen());
     }
 }
