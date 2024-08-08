@@ -1,8 +1,8 @@
 package gsto.ambience_mini.music;
 
 import gsto.ambience_mini.AmbienceMini;
-import javazoom.jl.decoder.JavaLayerException;
-import javazoom.jl.player.advanced.AdvancedPlayer;
+import javazoom.jlayer.decoder.JavaLayerException;
+import javazoom.jlayer.player.advanced.AdvancedPlayer;
 
 import javax.annotation.Nullable;
 import java.io.IOException;

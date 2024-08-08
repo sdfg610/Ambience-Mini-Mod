@@ -2,7 +2,7 @@ package gsto.ambience_mini.music;
 
 import gsto.ambience_mini.AmbienceMini;
 import gsto.ambience_mini.setup.Config;
-import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jlayer.decoder.JavaLayerException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.sounds.SoundSource;
