@@ -1,16 +1,19 @@
-package gsto.ambience_mini.music;
+package gsto.ambience_mini.music.loader;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import gsto.ambience_mini.AmbienceMini;
+import gsto.ambience_mini.music.player.Music;
+import gsto.ambience_mini.music.state.MusicEvents;
+import gsto.ambience_mini.music.player.MusicRegistry;
 
 import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 
-public class MusicLoader
+public class MusicLoaderOld
 {
     // Files and directories
     public static final String AMBIENCE_DIRECTORY_NAME = "ambience_music";
@@ -25,7 +28,7 @@ public class MusicLoader
         Path configFilePath = Path.of(".", AMBIENCE_DIRECTORY_NAME, MUSIC_CONFIG_FILE_NAME);
         File configFile = configFilePath.toFile();
         if (!configFile.exists()) {
-            AmbienceMini.LOGGER.warn("Could not find config file: '" + configFilePath + "'. Ambience Mini is disabled.");
+            AmbienceMini.LOGGER.warn("Could not find config file: '{}'. Ambience Mini is disabled.", configFilePath);
             return false;
         }
 
@@ -114,7 +117,7 @@ public class MusicLoader
             return null;
 
         return musicNames.stream().map(
-                name -> musicCache.computeIfAbsent(name, key -> new Music(getMusicPath(key)))
+            name -> musicCache.computeIfAbsent(name, key -> new Music(getMusicPath(key)))
         ).toList();
     }
 

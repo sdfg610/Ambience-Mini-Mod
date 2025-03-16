@@ -1,13 +1,17 @@
 package gsto.ambience_mini;
 
-import gsto.ambience_mini.music.GameStateManager;
-import gsto.ambience_mini.music.MusicLoader;
-import gsto.ambience_mini.music.MusicManagerThread;
-import gsto.ambience_mini.music.NilMusicManager;
+import gsto.ambience_mini.music.loader.pretty_printer.PrettyPrinter;
+import gsto.ambience_mini.music.loader.syntactic_analysis.Parser;
+import gsto.ambience_mini.music.loader.syntactic_analysis.Scanner;
+import gsto.ambience_mini.music.state.GameMonitor;
+import gsto.ambience_mini.music.player.VolumeMonitor;
+import gsto.ambience_mini.music.state.GameStateManager;
+import gsto.ambience_mini.music.loader.MusicLoaderOld;
+import gsto.ambience_mini.music.MusicMonitor;
+import gsto.ambience_mini.music.assorted.NilMusicManager;
 import gsto.ambience_mini.setup.Config;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.sounds.MusicManager;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,17 +20,22 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
 
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(AmbienceMini.MODID)
 public class AmbienceMini
 {
-    public static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
-    public static final String OBF_MAP_BOSS_INFO = "f_93699_";
-
     public static final String MODID = "ambience_mini";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public static MusicManagerThread musicManagerThread;
+    public static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
+    public static final String OBF_MAP_BOSS_INFO = "f_93699_";
+
+    public static MusicMonitor musicMonitor;
 
 
     public AmbienceMini()
@@ -35,37 +44,60 @@ public class AmbienceMini
 
         // Register the setup method for mod-loading
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-        modBus.addListener(this::clientSetup);
+        modBus.addListener(AmbienceMini::clientSetup);
 
         // Register ourselves for server and other game events we are interested in
         //MinecraftForge.EVENT_BUS.register(this);
+
+        try {
+            Path configFilePath = Path.of("ambience_music2/music_config.txt");
+
+            System.out.println(Files.readString(configFilePath));
+
+            Scanner scanner = new Scanner(new FileInputStream(configFilePath.toFile()));
+            Parser parser = new Parser(scanner);
+            parser.Parse();
+
+            if (!parser.hasErrors())
+                System.out.println(PrettyPrinter.printConf(parser.mainNode));
+            System.out.println("");
+        }
+        catch (Exception ignored)
+        {
+            System.out.println("");
+        }
     }
 
-
     @SubscribeEvent
-    public void clientSetup(final FMLClientSetupEvent event)
-    {
+    public static void clientSetup(final FMLClientSetupEvent event) {
         tryReload();
     }
 
-    public static void tryReload()
-    {
-        if (musicManagerThread != null)
-            musicManagerThread.kill();
+    public static void tryReload() {
+        if (musicMonitor != null)
+            musicMonitor.kill();
 
         if (!Config.enabled.get())
             LOGGER.info("Not enabled in config. Ambience Mini is disabled.");
-        else if (MusicLoader.loadConfig())
+        else if (MusicLoaderOld.loadConfig())
         {
             GameStateManager.init();
 
-            Minecraft mc = Minecraft.getInstance();
-            MusicManager nilMusicManager = new NilMusicManager(mc);
-            ObfuscationReflectionHelper.setPrivateValue(Minecraft.class, mc, nilMusicManager, OBF_MC_MUSIC_MANAGER);
+            disableNativeMusicManager();
+            GameMonitor.init();
+            VolumeMonitor.init();
 
-            musicManagerThread = new MusicManagerThread();
+            musicMonitor = new MusicMonitor();
 
             LOGGER.info("Successfully loaded Ambience Mini");
         }
+    }
+
+    public static void disableNativeMusicManager()
+    {
+        Minecraft mc = Minecraft.getInstance();
+        ObfuscationReflectionHelper.setPrivateValue(
+            Minecraft.class, mc, new NilMusicManager(mc), OBF_MC_MUSIC_MANAGER
+        );
     }
 }

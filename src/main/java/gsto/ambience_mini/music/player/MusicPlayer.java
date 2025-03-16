@@ -1,4 +1,4 @@
-package gsto.ambience_mini.music;
+package gsto.ambience_mini.music.player;
 
 import gsto.ambience_mini.AmbienceMini;
 import javazoom.jlayer.decoder.JavaLayerException;
@@ -30,15 +30,11 @@ public class MusicPlayer
     public final Music currentMusic;
 
 
-    public MusicPlayer(Music music, float gain) throws JavaLayerException {
-        this(music, gain, null);
-    }
-
-    public MusicPlayer(Music music, float gain, @Nullable Runnable onDonePlaying) throws JavaLayerException {
+    public MusicPlayer(Music music, float volume, @Nullable Runnable onDonePlaying) throws JavaLayerException {
         currentMusic = music;
-        _currentGain = gain;
         _musicStream = currentMusic.getMusicStream();
         _player = new AdvancedPlayer(_musicStream, _currentGain);
+        setVolume(volume);
 
         Thread _playerThread = new Thread(() -> {
             try {
@@ -99,11 +95,10 @@ public class MusicPlayer
 
 
     // Volume
-
-    public void setGain(float gain)
+    public void setVolume(float volume)
     {
-        _currentGain = gain;
-        _player.setGain(gain);
+        _currentGain = MIN_GAIN + ((MAX_GAIN + currentMusic.gain) - MIN_GAIN) * volume;
+        _player.setGain(_currentGain);
     }
 
     private void fadeIn() throws InterruptedException

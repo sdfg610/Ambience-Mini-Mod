@@ -1,4 +1,4 @@
-package gsto.ambience_mini.music;
+package gsto.ambience_mini.music.state;
 
 public class MusicEvents
 {

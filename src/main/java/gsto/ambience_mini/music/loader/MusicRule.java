@@ -1,4 +1,6 @@
-package gsto.ambience_mini.music;
+package gsto.ambience_mini.music.loader;
+
+import gsto.ambience_mini.music.player.Music;
 
 import javax.annotation.Nullable;
 import java.util.List;

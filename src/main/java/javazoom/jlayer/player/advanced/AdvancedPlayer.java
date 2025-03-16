@@ -40,15 +40,19 @@ public class AdvancedPlayer
 {
 	/** The MPEG audio bitstream.*/
 	private Bitstream bitstream;
+
 	/** The MPEG audio decoder. */
 	private Decoder decoder;
+
 	/** The AudioDevice the audio samples are written to. */
 	private AudioDevice audio;
+
 	/** Has the player been closed? */
 	private boolean closed = false;
+
 	/** Has the player played back all frames from the stream? */
-	private boolean complete = false;
 	private int lastPosition = 0;
+
 	/** Listener for the playback process */
 	private PlaybackListener listener;
 
@@ -73,8 +77,10 @@ public class AdvancedPlayer
 	{
 		bitstream = new Bitstream(stream);
 
-		if (device!=null) audio = device;
-		else audio = FactoryRegistry.systemRegistry().createAudioDevice();
+		if (device != null)
+			audio = device;
+		else
+			audio = FactoryRegistry.systemRegistry().createAudioDevice();
 		audio.open(decoder = new Decoder());
 		((JavaSoundAudioDevice) audio).setDefaultGain(gain);
 	}
@@ -114,20 +120,19 @@ public class AdvancedPlayer
 				out.flush();
 				synchronized (this)
 				{
-					complete = (!closed);
 					close();
 				}
 
 				// report to listener
-				if(listener != null) listener.playbackFinished(createEvent(out, PlaybackEvent.STOPPED));
+				if(listener != null)
+					listener.playbackFinished(createEvent(out, PlaybackEvent.STOPPED));
 			}
 		}
 		return ret;
 	}
 
 	/**
-	 * Closes this player. Any audio currently playing is stopped
-	 * immediately.
+	 * Closes this player. Any audio currently playing is stopped immediately.
 	 */
 	public synchronized void close()
 	{
@@ -144,8 +149,8 @@ public class AdvancedPlayer
 			{
 				bitstream.close();
 			}
-			catch (BitstreamException ex)
-			{}
+			catch (BitstreamException ignored)
+			{ }
 		}
 	}
 

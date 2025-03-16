@@ -1,6 +1,9 @@
-package gsto.ambience_mini.music;
+package gsto.ambience_mini.music.player;
 
 import gsto.ambience_mini.AmbienceMini;
+import gsto.ambience_mini.music.state.GameStateManager;
+import gsto.ambience_mini.music.state.MusicEvents;
+import gsto.ambience_mini.music.loader.MusicRule;
 
 import java.util.ArrayList;
 import java.util.HashMap;

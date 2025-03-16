@@ -1,12 +1,10 @@
-package gsto.ambience_mini.music;
+package gsto.ambience_mini.music.state;
 
 import gsto.ambience_mini.AmbienceMini;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.LerpingBossEvent;
 import net.minecraft.client.gui.screens.*;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.level.LightLayer;
@@ -21,7 +19,6 @@ public class GameStateManager
 {
     private static Minecraft mc = null;
     private static boolean isJoiningWorld = false;
-    private static boolean isPaused = false;
 
 
     public static void init()
@@ -45,7 +42,7 @@ public class GameStateManager
 
     public static boolean possiblyInSoundOptions()
     {
-        return mc.isPaused() || inMainMenu();
+        return (mc.screen != null && mc.screen.isPauseScreen()) || inMainMenu();
     }
 
 

@@ -1,17 +1,21 @@
 package gsto.ambience_mini.music;
 
 import gsto.ambience_mini.AmbienceMini;
+import gsto.ambience_mini.music.state.GameStateManager;
+import gsto.ambience_mini.music.state.MusicEvents;
+import gsto.ambience_mini.music.player.Music;
+import gsto.ambience_mini.music.player.MusicPlayer;
+import gsto.ambience_mini.music.player.MusicRegistry;
+import gsto.ambience_mini.music.player.VolumeMonitor;
 import gsto.ambience_mini.setup.Config;
 import javazoom.jlayer.decoder.JavaLayerException;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
-import net.minecraft.sounds.SoundSource;
 
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
-public class MusicManagerThread extends Thread
+public class MusicMonitor extends Thread
 {
     private static final long UPDATE_INTERVAL_MILLISECONDS = 100;
     private static final long NEXT_MUSIC_DELAY_MILLISECONDS = 2000;
@@ -29,12 +33,16 @@ public class MusicManagerThread extends Thread
     private long _chooseNextMusicTime = Long.MAX_VALUE;
 
 
-    public MusicManagerThread() {
+    public MusicMonitor() {
         setDaemon(true);
         setName("Ambience Mini - Music Monitor Thread");
         start();
     }
 
+    private final Consumer<Float> volumeChangedHandler = volume -> {
+        if (_musicPlayer != null)
+            _musicPlayer.setVolume(volume);
+    };
 
     //
     // Thread control
@@ -44,6 +52,8 @@ public class MusicManagerThread extends Thread
     public void run()
     {
         try {
+            VolumeMonitor.registerVolumeHandler(volumeChangedHandler);
+
             boolean isPaused = false;
             long nextUpdate = System.currentTimeMillis();
             while (!_kill)
@@ -63,10 +73,6 @@ public class MusicManagerThread extends Thread
                         isPaused = false;
                     }
                 }
-
-                // Don't waste resources setting gain if in a state where you cannot possibly be in the sound menu.
-                if (_musicPlayer != null && GameStateManager.possiblyInSoundOptions())
-                    _musicPlayer.setGain(getRealGain());
 
                 if (GameStateManager.inMainMenu()) {
                     boolean fireAndForget =
@@ -95,6 +101,9 @@ public class MusicManagerThread extends Thread
             try {
                 stopMusic(false);
             } catch (InterruptedException ignored) { }
+        }
+        finally {
+            VolumeMonitor.unregisterVolumeHandler(volumeChangedHandler);
         }
     }
 
@@ -196,7 +205,7 @@ public class MusicManagerThread extends Thread
                 stopMusic(fadeOutCurrent);
             _musicPlayer = new MusicPlayer(
                     nextMusic,
-                    getRealGain(),
+                    VolumeMonitor.getVolume(),
                     () -> _chooseNextMusicTime = System.currentTimeMillis() + NEXT_MUSIC_DELAY_MILLISECONDS
             );
             _musicPlayer.playOrResume(fadeInNext);
@@ -217,19 +226,5 @@ public class MusicManagerThread extends Thread
             _musicPlayer.stop(fadeOut, true);
             _musicPlayer = null;
         }
-    }
-
-    private float getRealGain()
-    {
-        Options settings = Minecraft.getInstance().options;
-        float musicGain = settings.getSoundSourceVolume(SoundSource.MUSIC) * getMasterVolume(settings);
-        return (MusicPlayer.MIN_GAIN + (MusicPlayer.MAX_GAIN - MusicPlayer.MIN_GAIN) * musicGain);
-    }
-
-    private float getMasterVolume(Options settings)
-    {
-        if (Config.ignoreMasterVolume.get())
-            return 1f;
-        return settings.getSoundSourceVolume(SoundSource.MASTER);
     }
 }
