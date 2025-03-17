@@ -1,13 +1,15 @@
 package gsto.ambience_mini;
 
 import gsto.ambience_mini.music.loader.pretty_printer.PrettyPrinter;
+import gsto.ambience_mini.music.loader.semantic_analysis.Env;
+import gsto.ambience_mini.music.loader.semantic_analysis.SemanticAnalysis;
 import gsto.ambience_mini.music.loader.syntactic_analysis.Parser;
 import gsto.ambience_mini.music.loader.syntactic_analysis.Scanner;
-import gsto.ambience_mini.music.state.GameMonitor;
+import gsto.ambience_mini.music.state.GameStateMonitor;
 import gsto.ambience_mini.music.player.VolumeMonitor;
 import gsto.ambience_mini.music.state.GameStateManager;
 import gsto.ambience_mini.music.loader.MusicLoaderOld;
-import gsto.ambience_mini.music.MusicMonitor;
+import gsto.ambience_mini.music.AmbienceWorkerThread;
 import gsto.ambience_mini.music.assorted.NilMusicManager;
 import gsto.ambience_mini.setup.Config;
 import com.mojang.logging.LogUtils;
@@ -23,6 +25,7 @@ import org.slf4j.Logger;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -35,7 +38,7 @@ public class AmbienceMini
     public static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
     public static final String OBF_MAP_BOSS_INFO = "f_93699_";
 
-    public static MusicMonitor musicMonitor;
+    public static AmbienceWorkerThread ambienceWorkerThread;
 
 
     public AmbienceMini()
@@ -58,8 +61,14 @@ public class AmbienceMini
             Parser parser = new Parser(scanner);
             parser.Parse();
 
-            if (!parser.hasErrors())
+            if (!parser.hasErrors()) {
                 System.out.println(PrettyPrinter.printConf(parser.mainNode));
+
+                List<String> semErr = SemanticAnalysis.Conf(parser.mainNode, new Env()).toList();
+
+                System.out.println("");
+            }
+
             System.out.println("");
         }
         catch (Exception ignored)
@@ -74,8 +83,8 @@ public class AmbienceMini
     }
 
     public static void tryReload() {
-        if (musicMonitor != null)
-            musicMonitor.kill();
+        if (ambienceWorkerThread != null)
+            ambienceWorkerThread.kill();
 
         if (!Config.enabled.get())
             LOGGER.info("Not enabled in config. Ambience Mini is disabled.");
@@ -84,10 +93,10 @@ public class AmbienceMini
             GameStateManager.init();
 
             disableNativeMusicManager();
-            GameMonitor.init();
+            GameStateMonitor.init();
             VolumeMonitor.init();
 
-            musicMonitor = new MusicMonitor();
+            ambienceWorkerThread = new AmbienceWorkerThread();
 
             LOGGER.info("Successfully loaded Ambience Mini");
         }

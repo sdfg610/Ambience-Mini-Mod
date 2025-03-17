@@ -15,7 +15,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class MusicMonitor extends Thread
+public class AmbienceWorkerThread extends Thread
 {
     private static final long UPDATE_INTERVAL_MILLISECONDS = 100;
     private static final long NEXT_MUSIC_DELAY_MILLISECONDS = 2000;
@@ -33,7 +33,7 @@ public class MusicMonitor extends Thread
     private long _chooseNextMusicTime = Long.MAX_VALUE;
 
 
-    public MusicMonitor() {
+    public AmbienceWorkerThread() {
         setDaemon(true);
         setName("Ambience Mini - Music Monitor Thread");
         start();

@@ -40,11 +40,6 @@ public class GameStateManager
         return mc.player != null && mc.level != null;
     }
 
-    public static boolean possiblyInSoundOptions()
-    {
-        return (mc.screen != null && mc.screen.isPauseScreen()) || inMainMenu();
-    }
-
 
     public static boolean isJoiningWorld()
     {

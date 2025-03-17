@@ -3,7 +3,7 @@ package gsto.ambience_mini.music.player;
 import gsto.ambience_mini.AmbienceMini;
 import gsto.ambience_mini.music.state.GameStateManager;
 import gsto.ambience_mini.music.state.MusicEvents;
-import gsto.ambience_mini.music.loader.MusicRule;
+import gsto.ambience_mini.music.loader.MusicRuleOld;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class MusicRegistry
 {
-    private static final Map<String, ArrayList<MusicRule>> events = new HashMap<>();
+    private static final Map<String, ArrayList<MusicRuleOld>> events = new HashMap<>();
     private static final Map<String, List<Music>> bosses = new HashMap<>();
 
     public static void clear()
@@ -22,7 +22,7 @@ public class MusicRegistry
     }
 
 
-    public static void addEventRule(String event, MusicRule rule) {
+    public static void addEventRule(String event, MusicRuleOld rule) {
         events.computeIfAbsent(event, ignore -> new ArrayList<>()).add(rule);
     }
 

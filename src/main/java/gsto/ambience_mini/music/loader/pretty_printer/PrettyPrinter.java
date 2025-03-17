@@ -4,6 +4,7 @@ import gsto.ambience_mini.music.loader.abstract_syntax.conf.*;
 import gsto.ambience_mini.music.loader.abstract_syntax.expr.*;
 import gsto.ambience_mini.music.loader.abstract_syntax.play.*;
 import gsto.ambience_mini.music.loader.abstract_syntax.shed.*;
+import gsto.ambience_mini.music.loader.abstract_syntax.type.*;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -102,10 +103,10 @@ public class PrettyPrinter {
             return Float.toString(floatV.value());
         else if (expr instanceof StringV stringV)
             return '"' + stringV.value() + '"';
-        else if (expr instanceof Event ev)
+        else if (expr instanceof Ev ev)
             return '@' + ev.eventName().value();
         else if (expr instanceof Get get)
-            return ':' + get.propertyName().value();
+            return '$' + get.propertyName().value();
         else if (expr instanceof BinaryOp binOp)
             return surround(binOp.left()) + binaryOpString(binOp.op()) + surround(binOp.right());
 
@@ -124,6 +125,24 @@ public class PrettyPrinter {
         return switch (op) {
             case EQ -> " == ";
             case APP_EQ -> " ~~ ";
+            case AND -> " && ";
+            case OR -> " || ";
         };
+    }
+
+
+    public static String printType(Type type) {
+        if (type instanceof BoolT)
+            return "bool";
+        else if (type instanceof IntT)
+            return "int";
+        else if (type instanceof FloatT)
+            return "float";
+        else if (type instanceof StringT)
+            return "string";
+        else if (type == null)
+            return "null";
+
+        throw new RuntimeException("Unhandled Type-type: " + type.getClass().getCanonicalName());
     }
 }

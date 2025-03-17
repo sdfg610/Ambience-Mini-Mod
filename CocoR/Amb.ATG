@@ -31,15 +31,6 @@ COMPILER File
         return str.substring(1, str.length() - 1);
     }
 
-    private Expr makeEqOp(String op, Expr left, Expr right)
-    {
-        return switch (op) {
-            case "==" ->  new BinaryOp(BinaryOperators.EQ, left, right);
-            case "~~" -> new BinaryOp(BinaryOperators.APP_EQ, left, right);
-            default -> throw new RuntimeException("Unknown equality operator: " + op);
-        };
-    }
-
 /*------------------------------------------------------------------------*/
 /* The following section contains the token specification of Dims.*/
 CHARACTERS
@@ -109,11 +100,19 @@ Shed<out Shed shed>                    (. shed = null; .)
 .
 
 /*------------------------------------------------------------------------*/
-Expr<out Expr expr>              (. String op = null; .)
+Expr<out Expr expr>              (. BinaryOperators op = BinaryOperators.AND; .)
+    = ExprEq<out expr>
+    { ( "&&"                     (. op = BinaryOperators.AND; .)
+      | "||"                     (. op = BinaryOperators.OR; .)
+      ) ExprEq<out Expr expr2>   (. expr = new BinaryOp(op, expr, expr2); .)
+    }
+.
+
+ExprEq<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; .)
     = ExprTerm<out expr>
-    { ( "=="                     (. op = "=="; .)
-      | "~~"                     (. op = "~~"; .)
-      ) ExprTerm<out Expr expr2> (. expr = makeEqOp(op, expr, expr2); .)
+    { ( "=="                     (. op = BinaryOperators.EQ; .)
+      | "~~"                     (. op = BinaryOperators.APP_EQ; .)
+      ) ExprTerm<out Expr expr2> (. expr = new BinaryOp(op, expr, expr2); .)
     }
 .
 
@@ -124,8 +123,9 @@ ExprTerm<out Expr expr> (. expr = null;                                   .)
     | STRING            (. expr = new StringV(removeFirstAndLast(t.val)); .)
     | "true"            (. expr = new BoolV(true);                        .)
     | "false"           (. expr = new BoolV(false);                       .)
-    | '@' IDENT         (. expr = new Event(new IdentE(t.val));           .)
-    | ':' IDENT         (. expr = new Get(new IdentE(t.val));             .)
+    | '@' IDENT         (. expr = new Ev(new IdentE(t.val));              .)
+    | '$' IDENT         (. expr = new Get(new IdentE(t.val));             .)
+    | '(' Expr<out expr> ')'
 .
 
 END File. // Must refer to the same non-terminal as "COMPILER" at the top.

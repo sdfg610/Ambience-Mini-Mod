@@ -10,5 +10,9 @@ import net.minecraftforge.fml.event.config.ModConfigEvent;
 @Mod.EventBusSubscriber(modid = AmbienceMini.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value={Dist.CLIENT})
 public class ModEventHandlers
 {
+    @SubscribeEvent
+    public static void onConfigReload(final ModConfigEvent.Reloading event)
+    {
 
+    }
 }

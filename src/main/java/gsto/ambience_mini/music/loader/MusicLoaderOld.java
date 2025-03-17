@@ -77,7 +77,7 @@ public class MusicLoaderOld
                 case MusicEvents.CATEGORY_EVENT ->
                     MusicRegistry.addEventRule(
                             value,
-                            new MusicRule(dimension, null, null, new ArrayList<>(triggers), getMusicFromNames(getMusicNames(child.getValue())))
+                            new MusicRuleOld(dimension, null, null, new ArrayList<>(triggers), getMusicFromNames(getMusicNames(child.getValue())))
                     );
 
                 case MusicEvents.CATEGORY_BOSS -> {

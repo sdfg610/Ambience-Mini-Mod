@@ -17,7 +17,7 @@ public class Parser {
 	public static final int _INT = 2;
 	public static final int _FLOAT = 3;
 	public static final int _STRING = 4;
-	public static final int maxT = 29;
+	public static final int maxT = 31;
 
 	static final boolean _T = true;
 	static final boolean _x = false;
@@ -38,15 +38,6 @@ public class Parser {
 
     private static String removeFirstAndLast(String str) {
         return str.substring(1, str.length() - 1);
-    }
-
-    private Expr makeEqOp(String op, Expr left, Expr right)
-    {
-        return switch (op) {
-            case "==" ->  new BinaryOp(BinaryOperators.EQ, left, right);
-            case "~~" -> new BinaryOp(BinaryOperators.APP_EQ, left, right);
-            default -> throw new RuntimeException("Unknown equality operator: " + op);
-        };
     }
 
 /*------------------------------------------------------------------------*/
@@ -130,7 +121,7 @@ public class Parser {
 		} else if (StartOf(1)) {
 			Shed shed = Shed();
 			conf = new Schedule(shed); 
-		} else SynErr(30);
+		} else SynErr(32);
 		return conf;
 	}
 
@@ -177,7 +168,7 @@ public class Parser {
 			Get();
 			Shed shed2 = Shed();
 			shed = new Interrupt(shed2); 
-		} else SynErr(31);
+		} else SynErr(33);
 		return shed;
 	}
 
@@ -210,29 +201,47 @@ public class Parser {
 					Get();
 				} else if (la.kind == 2) {
 					Get();
-				} else SynErr(32);
+				} else SynErr(34);
 				gain = new FloatV(Float.parseFloat(t.val));            
 				Expect(14);
 			}
 			play = new Load(file, gain);                           
-		} else SynErr(33);
+		} else SynErr(35);
 		return play;
 	}
 
 	Expr  Expr() {
 		Expr  expr;
-		String op = null; 
-		expr = ExprTerm();
+		BinaryOperators op = BinaryOperators.EQ; 
+		expr = ExprEq();
 		while (la.kind == 23 || la.kind == 24) {
 			if (la.kind == 23) {
 				Get();
-				op = "=="; 
+				op = BinaryOperators.AND; 
 			} else {
 				Get();
-				op = "~~"; 
+				op = BinaryOperators.OR; 
+			}
+			Expr expr2 = ExprEq();
+			expr = new BinaryOp(op, expr, expr2); 
+		}
+		return expr;
+	}
+
+	Expr  ExprEq() {
+		Expr  expr;
+		BinaryOperators op = BinaryOperators.EQ; 
+		expr = ExprTerm();
+		while (la.kind == 25 || la.kind == 26) {
+			if (la.kind == 25) {
+				Get();
+				op = BinaryOperators.EQ; 
+			} else {
+				Get();
+				op = BinaryOperators.APP_EQ; 
 			}
 			Expr expr2 = ExprTerm();
-			expr = makeEqOp(op, expr, expr2); 
+			expr = new BinaryOp(op, expr, expr2); 
 		}
 		return expr;
 	}
@@ -261,29 +270,35 @@ public class Parser {
 			expr = new StringV(removeFirstAndLast(t.val)); 
 			break;
 		}
-		case 25: {
+		case 27: {
 			Get();
 			expr = new BoolV(true);                        
 			break;
 		}
-		case 26: {
+		case 28: {
 			Get();
 			expr = new BoolV(false);                       
 			break;
 		}
-		case 27: {
+		case 29: {
 			Get();
 			Expect(1);
-			expr = new Event(new IdentE(t.val));           
+			expr = new Ev(new IdentE(t.val));              
 			break;
 		}
-		case 28: {
+		case 30: {
 			Get();
 			Expect(1);
 			expr = new Get(new IdentE(t.val));             
 			break;
 		}
-		default: SynErr(34); break;
+		case 19: {
+			Get();
+			expr = Expr();
+			Expect(20);
+			break;
+		}
+		default: SynErr(36); break;
 		}
 		return expr;
 	}
@@ -301,9 +316,9 @@ public class Parser {
 	}
 
 	private static final boolean[][] set = {
-		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_T,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x},
-		{_x,_T,_x,_x, _T,_x,_x,_x, _x,_T,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x}
+		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_T,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_T,_x,_x, _T,_x,_x,_x, _x,_T,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x}
 
 	};
 } // end Parser
@@ -350,18 +365,20 @@ class Errors {
 			case 20: s = "\")\" expected"; break;
 			case 21: s = "\"default\" expected"; break;
 			case 22: s = "\"interrupt\" expected"; break;
-			case 23: s = "\"==\" expected"; break;
-			case 24: s = "\"~~\" expected"; break;
-			case 25: s = "\"true\" expected"; break;
-			case 26: s = "\"false\" expected"; break;
-			case 27: s = "\"@\" expected"; break;
-			case 28: s = "\":\" expected"; break;
-			case 29: s = "??? expected"; break;
-			case 30: s = "invalid Conf"; break;
-			case 31: s = "invalid Shed"; break;
-			case 32: s = "invalid PlayTerm"; break;
-			case 33: s = "invalid PlayTerm"; break;
-			case 34: s = "invalid ExprTerm"; break;
+			case 23: s = "\"&&\" expected"; break;
+			case 24: s = "\"||\" expected"; break;
+			case 25: s = "\"==\" expected"; break;
+			case 26: s = "\"~~\" expected"; break;
+			case 27: s = "\"true\" expected"; break;
+			case 28: s = "\"false\" expected"; break;
+			case 29: s = "\"@\" expected"; break;
+			case 30: s = "\"$\" expected"; break;
+			case 31: s = "??? expected"; break;
+			case 32: s = "invalid Conf"; break;
+			case 33: s = "invalid Shed"; break;
+			case 34: s = "invalid PlayTerm"; break;
+			case 35: s = "invalid PlayTerm"; break;
+			case 36: s = "invalid ExprTerm"; break;
 			default: s = "error " + n; break;
 		}
 		printMsg(line, col, s);
