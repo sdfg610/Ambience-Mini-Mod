@@ -9,13 +9,15 @@ import gsto.ambience_mini.music.loader.pretty_printer.PrettyPrinter;
 import gsto.ambience_mini.music.state.Event;
 import gsto.ambience_mini.music.state.Property;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class SemanticAnalysis {
-    public static Stream<String> Conf(Conf conf, Env env) {
+public record SemanticAnalysis(String musicDirectory) {
+    public Stream<String> Conf(Conf conf, Env env) {
         ArrayList<String> errors = new ArrayList<>();
 
         if (conf instanceof Playlist playlist) {
@@ -37,7 +39,7 @@ public class SemanticAnalysis {
         throw new RuntimeException("Unhandled Conf-type: " + conf.getClass().getCanonicalName());
     }
 
-    private static Stream<String> PL(PL play, Env env) {
+    private Stream<String> PL(PL play, Env env) {
         if (play instanceof IdentP ident) {
             String name = ident.value();
             return env.hasPlaylist(name)
@@ -49,13 +51,18 @@ public class SemanticAnalysis {
                     PL(concat.left(), env),
                     PL(concat.right(), env)
             );
-        else if (play instanceof Load || play instanceof Nil)
+        else if (play instanceof Load load)
+            return Files.exists(getMusicPath(load.file().value()))
+                    ? Stream.empty()
+                    : Stream.of("Cannot find music-file with name: " + load.file().value());
+
+        else if (play instanceof Nil)
             return Stream.empty();
 
         throw new RuntimeException("Unhandled PL-type: " + play.getClass().getCanonicalName());
     }
 
-    private static Stream<String> Shed(Shed shed, Env env) {
+    private Stream<String> Shed(Shed shed, Env env) {
         if (shed instanceof Play play) {
             if (play.playlist() instanceof IdentP indent)
                 return env.hasPlaylist(indent.value())
@@ -72,7 +79,10 @@ public class SemanticAnalysis {
 
             Type type = Expr(when.condition(), env, errors);
             if (!(type instanceof BoolT))
-                errors.add("The condition inside a 'when' must result in a boolean value");
+                errors.add("The condition inside a 'when' must result in a boolean value.");
+
+            if (when.body() instanceof Interrupt)
+                errors.add("An interrupt can only be a child of a block (begin/end). Not a 'when'.");
 
             return Stream.concat(errors.stream(), Shed(when.body(), env));
         }
@@ -92,7 +102,7 @@ public class SemanticAnalysis {
         throw new RuntimeException("Unhandled Shed-type: " + shed.getClass().getCanonicalName());
     }
 
-    public static Type Expr(Expr expr, Env env, ArrayList<String> errors) {
+    public Type Expr(Expr expr, Env env, ArrayList<String> errors) {
         if (expr instanceof IdentE ident) {
             errors.add("Lone identifiers currently do not have a use in expressions. Unknown identifier: " + ident.value());
             return null;
@@ -111,7 +121,7 @@ public class SemanticAnalysis {
             return new BoolT();
         }
         else if (expr instanceof Get property) {
-            Optional<Property> prop = Property.get(property.propertyName().value());
+            Optional<Property> prop = Property.tryGet(property.propertyName().value());
             if (prop.isEmpty()) {
                 errors.add("Unknown property: $" + property.propertyName().value());
                 return null;
@@ -145,5 +155,11 @@ public class SemanticAnalysis {
         }
 
         throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
+    }
+
+    private Path getMusicPath(String musicName) {
+        if (!musicName.endsWith(".mp3"))
+            return Path.of(musicDirectory, musicName + ".mp3");
+        return Path.of(musicDirectory, musicName);
     }
 }

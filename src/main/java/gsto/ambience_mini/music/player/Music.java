@@ -27,10 +27,6 @@ public class Music
     }
 
 
-    public boolean checkFileExists() {
-        return Files.exists(_filePath);
-    }
-
     public InputStream getMusicStream() {
         try {
             return new FileInputStream(_filePath.toFile());

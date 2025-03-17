@@ -1,6 +1,7 @@
 package gsto.ambience_mini.music;
 
 import gsto.ambience_mini.AmbienceMini;
+import gsto.ambience_mini.music.player.rule.Rule;
 import gsto.ambience_mini.music.state.GameStateManager;
 import gsto.ambience_mini.music.state.MusicEvents;
 import gsto.ambience_mini.music.player.Music;
@@ -33,7 +34,7 @@ public class AmbienceWorkerThread extends Thread
     private long _chooseNextMusicTime = Long.MAX_VALUE;
 
 
-    public AmbienceWorkerThread() {
+    public AmbienceWorkerThread(Rule rule) {
         setDaemon(true);
         setName("Ambience Mini - Music Monitor Thread");
         start();

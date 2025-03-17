@@ -21,8 +21,11 @@ public class Event {
     }
 
 
-    public static Optional<Event> get(String name) {
-        return EVENTS.stream().filter(event -> event.name.equals(name)).findFirst();
+    public static Event get(String name) {
+        return EVENTS.stream()
+                .filter(event -> event.name.equals(name))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Could not get event: " + name));
     }
 
     public static boolean exists(String name) {

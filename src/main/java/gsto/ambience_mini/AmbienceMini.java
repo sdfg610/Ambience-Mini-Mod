@@ -1,10 +1,13 @@
 package gsto.ambience_mini;
 
+import gsto.ambience_mini.music.loader.MusicLoader;
+import gsto.ambience_mini.music.loader.compiler.Compiler;
 import gsto.ambience_mini.music.loader.pretty_printer.PrettyPrinter;
 import gsto.ambience_mini.music.loader.semantic_analysis.Env;
 import gsto.ambience_mini.music.loader.semantic_analysis.SemanticAnalysis;
 import gsto.ambience_mini.music.loader.syntactic_analysis.Parser;
 import gsto.ambience_mini.music.loader.syntactic_analysis.Scanner;
+import gsto.ambience_mini.music.player.rule.Rule;
 import gsto.ambience_mini.music.state.GameStateMonitor;
 import gsto.ambience_mini.music.player.VolumeMonitor;
 import gsto.ambience_mini.music.state.GameStateManager;
@@ -32,6 +35,8 @@ import java.util.List;
 @Mod(AmbienceMini.MODID)
 public class AmbienceMini
 {
+    public static final String AMBIENCE_DIRECTORY = "ambience_music";
+
     public static final String MODID = "ambience_mini";
     public static final Logger LOGGER = LogUtils.getLogger();
 
@@ -51,30 +56,6 @@ public class AmbienceMini
 
         // Register ourselves for server and other game events we are interested in
         //MinecraftForge.EVENT_BUS.register(this);
-
-        try {
-            Path configFilePath = Path.of("ambience_music2/music_config.txt");
-
-            System.out.println(Files.readString(configFilePath));
-
-            Scanner scanner = new Scanner(new FileInputStream(configFilePath.toFile()));
-            Parser parser = new Parser(scanner);
-            parser.Parse();
-
-            if (!parser.hasErrors()) {
-                System.out.println(PrettyPrinter.printConf(parser.mainNode));
-
-                List<String> semErr = SemanticAnalysis.Conf(parser.mainNode, new Env()).toList();
-
-                System.out.println("");
-            }
-
-            System.out.println("");
-        }
-        catch (Exception ignored)
-        {
-            System.out.println("");
-        }
     }
 
     @SubscribeEvent
@@ -86,20 +67,21 @@ public class AmbienceMini
         if (ambienceWorkerThread != null)
             ambienceWorkerThread.kill();
 
-        if (!Config.enabled.get())
-            LOGGER.info("Not enabled in config. Ambience Mini is disabled.");
-        else if (MusicLoaderOld.loadConfig())
-        {
-            GameStateManager.init();
+        if (Config.enabled.get()) {
+            MusicLoader.loadFrom(AMBIENCE_DIRECTORY).ifPresent(rule -> {
+                GameStateManager.init(); // TODO: Remove !!!!!!!!!!
 
-            disableNativeMusicManager();
-            GameStateMonitor.init();
-            VolumeMonitor.init();
+                disableNativeMusicManager();
+                GameStateMonitor.init();
+                VolumeMonitor.init();
 
-            ambienceWorkerThread = new AmbienceWorkerThread();
+                ambienceWorkerThread = new AmbienceWorkerThread(rule);
 
-            LOGGER.info("Successfully loaded Ambience Mini");
+                LOGGER.info("Successfully loaded Ambience Mini");
+            });
         }
+        else
+            LOGGER.info("Not enabled in config. Ambience Mini is disabled.");
     }
 
     public static void disableNativeMusicManager()
