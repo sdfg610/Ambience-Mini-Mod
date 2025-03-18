@@ -4,16 +4,13 @@ import gsto.ambience_mini.AmbienceMini;
 import gsto.ambience_mini.music.player.rule.PlaylistChoice;
 import gsto.ambience_mini.music.player.rule.Rule;
 import gsto.ambience_mini.music.state.Event;
-import gsto.ambience_mini.music.state.GameStateManager;
 import gsto.ambience_mini.music.player.Music;
 import gsto.ambience_mini.music.player.MusicPlayer;
 import gsto.ambience_mini.music.player.VolumeMonitor;
 import gsto.ambience_mini.music.state.GameStateMonitor;
-import gsto.ambience_mini.music.state.Property;
 import gsto.ambience_mini.setup.Config;
 import javazoom.jlayer.decoder.JavaLayerException;
 
-import java.lang.ref.Reference;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -135,6 +132,7 @@ public class AmbienceThread extends Thread
 
         List<Music> nextPlaylist = nextChoice.playlist();
         boolean nextIsInterrupt = nextChoice.isInterrupt();
+        boolean doFade = !nextChoice.isInstant();
 
         MusicPlayer activePlayer = nextIsInterrupt ? _interruptPlayer : _mainPlayer;
         Music currentMusic = activePlayer == null ? null : activePlayer.currentMusic;
@@ -155,10 +153,8 @@ public class AmbienceThread extends Thread
             }
         }
 
-        boolean fade = !Event.DEAD.isActive(); // TODO: Make fine-control through config
-
         if (nextIsInterrupt && _mainPlayer != null && _mainPlayer.isPlaying()) // Check for playing since just pause
-            _mainPlayer.pause(fade);
+            _mainPlayer.pause(doFade);
         else if (!nextIsInterrupt && _interruptPlayer != null) {
             stopInterruptMusic(true);
             if (!musicStillValid)
@@ -172,16 +168,16 @@ public class AmbienceThread extends Thread
         else if (!musicStillValid || activePlayer == null || System.currentTimeMillis() > _chooseNextMusicTime) {
             Music nextMusic = selectMusic(nextPlaylist, currentMusic);
             if (nextIsInterrupt) {
-                stopInterruptMusic(fade);
-                _interruptPlayer = playMusic(nextMusic, fade);
+                stopInterruptMusic(doFade);
+                _interruptPlayer = playMusic(nextMusic, doFade);
             } else {
-                stopMainMusic(fade);
-                _mainPlayer = playMusic(nextMusic, fade);
+                stopMainMusic(doFade);
+                _mainPlayer = playMusic(nextMusic, doFade);
             }
         }
 
         else if (!activePlayer.isPlaying())
-            activePlayer.playOrResume(fade);
+            activePlayer.playOrResume(doFade);
     }
 
 

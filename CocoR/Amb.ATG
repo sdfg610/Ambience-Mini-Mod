@@ -87,16 +87,17 @@ PlayTerm<out PL play>               (. play = new Nil(); FloatV gain = null; .)
 .
 
 /*------------------------------------------------------------------------*/
-Shed<out Shed shed>                    (. shed = null; .)
-    = "play" Play<out PL pl> ';'       (. shed = new Play(pl); .)
-    | "begin"                          (. ArrayList<Shed> items = new ArrayList<>();  .)
-      { Shed<out Shed shed2>           (. items.add(shed2); .)
+Shed<out Shed shed>                          (. shed = null; boolean instant = false; .)
+    = "play" ["instant"                      (. instant = true; .)
+      ] Play<out PL pl> ';'                  (. shed = new Play(pl, instant); .)
+    | "begin"                                (. ArrayList<Shed> items = new ArrayList<>();  .)
+      { Shed<out Shed shed2>                 (. items.add(shed2); .)
       }
-      "end"                            (. shed = new Block(items); .)
+      "end"                                  (. shed = new Block(items); .)
     | "when" '(' Expr<out Expr expr>
-      ')' Shed<out Shed shed2>         (. shed = new When(expr, shed2); .)
-    | "default" Shed<out Shed shed2>   (. shed = new When(new BoolV(true), shed2); .)
-    | "interrupt" Shed<out Shed shed2> (. shed = new Interrupt(shed2); .)
+      ')' Shed<out Shed shed2>               (. shed = new When(expr, shed2); .)
+    | "default" Shed<out Shed shed2>         (. shed = new When(new BoolV(true), shed2); .)
+    | "interrupt" Shed<out Shed shed2>       (. shed = new Interrupt(shed2); .)
 .
 
 /*------------------------------------------------------------------------*/

@@ -3,7 +3,6 @@ package gsto.ambience_mini;
 import gsto.ambience_mini.music.loader.MusicLoader;
 import gsto.ambience_mini.music.state.GameStateMonitor;
 import gsto.ambience_mini.music.player.VolumeMonitor;
-import gsto.ambience_mini.music.state.GameStateManager;
 import gsto.ambience_mini.music.AmbienceThread;
 import gsto.ambience_mini.music.assorted.NilMusicManager;
 import gsto.ambience_mini.setup.Config;
