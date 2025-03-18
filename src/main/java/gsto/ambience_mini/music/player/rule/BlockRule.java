@@ -5,11 +5,11 @@ import java.util.Objects;
 
 public record BlockRule(List<Rule> subRules, List<Rule> interrupts) implements Rule {
     @Override
-    public NextMusic getNext() {
+    public PlaylistChoice getNext() {
         return interrupts.stream()
                 .map(Rule::getNext)
                 .filter(Objects::nonNull)
-                .map(NextMusic::asInterrupt)
+                .map(PlaylistChoice::asInterrupt)
                 .findFirst().orElseGet(() ->
                         subRules.stream()
                                 .map(Rule::getNext)

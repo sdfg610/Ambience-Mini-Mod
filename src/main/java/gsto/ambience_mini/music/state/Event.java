@@ -1,7 +1,6 @@
 package gsto.ambience_mini.music.state;
 
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 public class Event {
@@ -45,34 +44,46 @@ public class Event {
     public static final Event MAIN_MENU = register("main_menu", GameStateMonitor::inMainMenu);
     public static final Event JOINING = register("joining", GameStateMonitor::isJoiningWorld);
     public static final Event IN_GAME = register("in_game", GameStateMonitor::inGame);
-    public static final Event CREDITS = register("credits", () -> false);
+    public static final Event CREDITS = register("credits", GameStateMonitor::onCreditsScreen);
 
-    // Time
-    public static final Event DAY = register("day", () -> false);
-    public static final Event DAWN = register("dawn", () -> false);
-    public static final Event DUSK = register("dusk", () -> false);
-    public static final Event NIGHT = register("night", () -> false);
+    // Time events
+    public static final Event DAY = register("day",  () -> {
+        int time = GameStateMonitor.getTime();   // "12542" is the time when beds can be used.
+        return time > 23500 || time <= 12500;    // "23460" is the time from when beds cannot be used.
+    });
+    public static final Event DAWN = register("dawn",  () -> {
+        int time = GameStateMonitor.getTime();
+        return time > 23500 || time <= 2000;
+    });
+    public static final Event DUSK = register("dusk",  () -> {
+        int time = GameStateMonitor.getTime();
+        return time > 10300 && time <= 12500;
+    });
+    public static final Event NIGHT = register("night", () -> {
+        int time = GameStateMonitor.getTime();
+        return time > 12500 && time <= 23500;
+    });
 
     // Weather
-    public static final Event DOWNFALL = register("downfall", () -> false);
+    public static final Event DOWNFALL = register("downfall", () -> GameStateMonitor.getRainLevel() > .2f);
+    public static final Event THUNDER = register("thunder", GameStateMonitor::isThundering);
     public static final Event RAIN = register("rain", () -> false);
     public static final Event SNOW = register("snow", () -> false);
 
     // Special locations
-    public static final Event VILLAGE = register("village", () -> false);
+    public static final Event VILLAGE = register("village", GameStateMonitor::inVillage);
     public static final Event RANCH = register("ranch", () -> false);
 
     // Height-based
-    public static final Event UNDER_DEEPSLATE = register("under_deepslate", () -> false);
-    public static final Event UNDERGROUND = register("underground", () -> false);
-    public static final Event UNDERWATER = register("under_water", () -> false);
-    public static final Event HIGH_UP = register("high_up", () -> false);
+    public static final Event UNDER_DEEPSLATE = register("under_deepslate", () -> GameStateMonitor.getPlayerElevation() < 0);
+    public static final Event UNDERGROUND = register("underground", GameStateMonitor::isUnderground);
+    public static final Event UNDERWATER = register("under_water", GameStateMonitor::isUnderWater);
+    public static final Event HIGH_UP = register("high_up", () -> GameStateMonitor.getPlayerElevation() > GameStateMonitor.HIGH_UP_THRESHOLD);
 
     // Player state
-    public static final Event DYING = register("dying", () -> false);
-    public static final Event DEAD = register("dead", () -> false);
-    public static final Event SLEEPING = register("sleeping", () -> false);
-    public static final Event FISHING = register("fishing", () -> false);
+    public static final Event DEAD = register("dead", GameStateMonitor::isDead);
+    public static final Event SLEEPING = register("sleeping", GameStateMonitor::isSleeping);
+    public static final Event FISHING = register("fishing", GameStateMonitor::isFishing);
 
     // Mounts
     public static final Event MINECART = register("minecart", () -> false);
@@ -84,6 +95,6 @@ public class Event {
 
     // Combat
     public static final Event IN_COMBAT = register("in_combat", () -> false);
-    public static final Event BOSS_FIGHT = register("boss_fight", () -> false);
+    public static final Event BOSS_FIGHT = register("boss_fight", () -> !GameStateMonitor.getBossId().isEmpty());
     public static final Event RAID = register("raid", () -> false);
 }

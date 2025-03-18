@@ -42,7 +42,11 @@ public class Property {
         return ev;
     }
 
-    public static final Property DIMENSION = register("dimension", new StringT(), () -> null);
-    public static final Property ELEVATION = register("elevation", new FloatT(), () -> null);
-    public static final Property BOSS = register("boss", new StringT(), () -> null);
+    public static final Property DIMENSION = register("dimension", new StringT(), GameStateMonitor::getDimensionId);
+    public static final Property BIOME = register("biome", new StringT(), GameStateMonitor::getBiomeId);
+    public static final Property ELEVATION = register("elevation", new FloatT(), GameStateMonitor::getPlayerElevation);
+    public static final Property TIME = register("time", new IntT(), GameStateMonitor::getTime);
+    public static final Property BOSS = register("boss", new StringT(), GameStateMonitor::getBossId);
+
+    //TODO: biometag, structure ?
 }

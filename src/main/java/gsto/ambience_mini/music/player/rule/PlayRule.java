@@ -6,7 +6,7 @@ import java.util.List;
 
 public record PlayRule(List<Music> playlist) implements Rule {
     @Override
-    public NextMusic getNext() {
-        return new NextMusic(playlist, false);
+    public PlaylistChoice getNext() {
+        return new PlaylistChoice(playlist, false);
     }
 }

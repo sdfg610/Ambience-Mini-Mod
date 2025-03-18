@@ -45,7 +45,7 @@ public class AdvancedPlayer
 	private Decoder decoder;
 
 	/** The AudioDevice the audio samples are written to. */
-	private AudioDevice audio;
+	private AudioDevice audioDevice;
 
 	/** Has the player been closed? */
 	private boolean closed = false;
@@ -78,11 +78,11 @@ public class AdvancedPlayer
 		bitstream = new Bitstream(stream);
 
 		if (device != null)
-			audio = device;
+			audioDevice = device;
 		else
-			audio = FactoryRegistry.systemRegistry().createAudioDevice();
-		audio.open(decoder = new Decoder());
-		((JavaSoundAudioDevice) audio).setDefaultGain(gain);
+			audioDevice = FactoryRegistry.systemRegistry().createAudioDevice();
+		audioDevice.open(decoder = new Decoder());
+		((JavaSoundAudioDevice) audioDevice).setDefaultGain(gain);
 	}
 
 	public void play(AtomicBoolean isPlaying) throws JavaLayerException
@@ -101,33 +101,27 @@ public class AdvancedPlayer
 	{
 		boolean ret = true;
 
-		// report to listener
-		if(listener != null) listener.playbackStarted(createEvent(PlaybackEvent.STARTED));
+		if(listener != null)
+			listener.playbackStarted(createEvent(PlaybackEvent.STARTED));
 
-		while (frames-- > 0 && ret)
-		{
-			while (!isPlaying.get())
+		while (frames-- > 0 && ret) {
+			while (!isPlaying.get() && !closed)
 				Thread.onSpinWait();
 			ret = decodeFrame();
 		}
 
-//		if (!ret)
-		{
-			// last frame, ensure all data flushed to the audio device.
-			AudioDevice out = audio;
-			if (out != null)
-			{
-				out.flush();
-				synchronized (this)
-				{
-					close();
-				}
-
-				// report to listener
-				if(listener != null)
-					listener.playbackFinished(createEvent(out, PlaybackEvent.STOPPED));
+		// last frame, ensure all data flushed to the audio device.
+		AudioDevice out = audioDevice;
+		if (out != null) {
+			out.flush();
+			synchronized (this) {
+				close(); // Nulls audioDevice. Thus, we have "out".
 			}
+
+			if(listener != null)
+				listener.playbackFinished(createEvent(out, PlaybackEvent.STOPPED));
 		}
+
 		return ret;
 	}
 
@@ -136,21 +130,17 @@ public class AdvancedPlayer
 	 */
 	public synchronized void close()
 	{
-		AudioDevice out = audio;
-		if (out != null)
-		{
-			closed = true;
-			audio = null;
-			// this may fail, so ensure object state is set up before
-			// calling this method.
+		AudioDevice out = audioDevice;
+		closed = true;
+		audioDevice = null;
+
+		if (out != null) {
+			// this may fail, so ensure object state is set up before calling this method.
 			out.close();
 			lastPosition = out.getPosition();
-			try
-			{
-				bitstream.close();
-			}
-			catch (BitstreamException ignored)
-			{ }
+
+			try { bitstream.close(); }
+			catch (BitstreamException ignored) { }
 		}
 	}
 
@@ -161,9 +151,8 @@ public class AdvancedPlayer
 	 */
 	protected boolean decodeFrame() throws JavaLayerException
 	{
-		try
-		{
-			AudioDevice out = audio;
+		try {
+			AudioDevice out = audioDevice;
 			if (out == null) return false;
 
 			Header h = bitstream.readFrame();
@@ -172,19 +161,13 @@ public class AdvancedPlayer
 			// sample buffer set when decoder constructed
 			SampleBuffer output = (SampleBuffer) decoder.decodeFrame(h, bitstream);
 
-			synchronized (this)
-			{
-				out = audio;
-				if(out != null)
-				{
-					out.write(output.getBuffer(), 0, output.getBufferLength());
-				}
+			synchronized (this) {
+				out.write(output.getBuffer(), 0, output.getBufferLength());
 			}
 
 			bitstream.closeFrame();
 		}
-		catch (RuntimeException ex)
-		{
+		catch (RuntimeException ex) {
 			throw new JavaLayerException("Exception decoding audio frame", ex);
 		}
 		return true;
@@ -194,8 +177,7 @@ public class AdvancedPlayer
 	 * skips over a single frame
 	 * @return false	if there are no more frames to decode, true otherwise.
 	 */
-	protected boolean skipFrame() throws JavaLayerException
-	{
+	protected boolean skipFrame() throws JavaLayerException {
 		Header h = bitstream.readFrame();
 		if (h == null) return false;
 		bitstream.closeFrame();
@@ -221,7 +203,7 @@ public class AdvancedPlayer
 	 */
 	private PlaybackEvent createEvent(int id)
 	{
-		return createEvent(audio, id);
+		return createEvent(audioDevice, id);
 	}
 
 	/**
@@ -261,27 +243,14 @@ public class AdvancedPlayer
 	/* ====================================================================================
 	 * XXX
 	 * Functions added by necessity, not present in the original code.
-	 * ~Vazkii
-	 * ====================================================================================
-	 */
-
-	public AudioDevice getAudioDevice()
-	{
-		return audio;
-	}
-
-
-	/* ====================================================================================
-	 * XXX
-	 * Functions added by necessity, not present in the original code.
 	 * ~GSTO
 	 * ====================================================================================
 	 */
 
 	public void setGain(float gain) {
 		try {
-			((JavaSoundAudioDevice) audio).setGain(gain);
-		} catch (Exception ignored)
+			((JavaSoundAudioDevice) audioDevice).setGain(gain);
+		} catch (Throwable ignored)
 		{ } // If you can't fix the bug just put a catch around it
 	}
 }

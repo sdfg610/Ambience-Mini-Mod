@@ -2,13 +2,13 @@ package gsto.ambience_mini.music.loader;
 
 import gsto.ambience_mini.AmbienceMini;
 import gsto.ambience_mini.music.loader.compiler.Compiler;
-import gsto.ambience_mini.music.loader.pretty_printer.PrettyPrinter;
 import gsto.ambience_mini.music.loader.semantic_analysis.Env;
 import gsto.ambience_mini.music.loader.semantic_analysis.SemanticAnalysis;
 import gsto.ambience_mini.music.loader.syntactic_analysis.Parser;
 import gsto.ambience_mini.music.loader.syntactic_analysis.Scanner;
 import gsto.ambience_mini.music.player.rule.Rule;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.util.List;
@@ -20,10 +20,13 @@ public class MusicLoader {
 
     public static Optional<Rule> loadFrom(String ambienceDirectory) {
         try {
-            Path configFilePath = Path.of(ambienceDirectory, MUSIC_CONFIG_FILE);
+            File configFile = Path.of(ambienceDirectory, MUSIC_CONFIG_FILE).toFile();
             String musicPath = Path.of(ambienceDirectory, MUSIC_DIRECTORY).toString();
 
-            Parser parser = new Parser(new Scanner(new FileInputStream(configFilePath.toFile())));
+            if (!configFile.exists())
+                return Optional.empty();
+
+            Parser parser = new Parser(new Scanner(new FileInputStream(configFile)));
             parser.Parse();
 
             if (!parser.hasErrors()) {

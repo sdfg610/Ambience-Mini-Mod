@@ -54,7 +54,7 @@ public record SemanticAnalysis(String musicDirectory) {
         else if (play instanceof Load load)
             return Files.exists(getMusicPath(load.file().value()))
                     ? Stream.empty()
-                    : Stream.of("Cannot find music-file with name: " + load.file().value());
+                    : Stream.of("Cannot find music-file with name: '" + load.file().value() + "'");
 
         else if (play instanceof Nil)
             return Stream.empty();
