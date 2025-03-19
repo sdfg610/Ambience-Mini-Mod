@@ -165,7 +165,7 @@ public class AmbienceThread extends Thread
             if (nextIsInterrupt) stopInterruptMusic(true);
             else stopMainMusic(true);
 
-        else if (!musicStillValid || activePlayer == null || System.currentTimeMillis() > _chooseNextMusicTime) {
+        else if (!musicStillValid || System.currentTimeMillis() > _chooseNextMusicTime) {
             Music nextMusic = selectMusic(nextPlaylist, currentMusic);
             if (nextIsInterrupt) {
                 stopInterruptMusic(doFade);
@@ -187,11 +187,11 @@ public class AmbienceThread extends Thread
         if (playlist.size() == 1)
             return playlist.get(0);
 
-        Music nextMusic = playlist.get(_rand.nextInt(playlist.size()));
+        Music nextMusic = playlist.get(getRandom(playlist.size()));
         while (nextMusic == currentMusic)
-            nextMusic = playlist.get(_rand.nextInt(playlist.size()));
+            nextMusic = playlist.get(getRandom(playlist.size()));
 
-        return playlist.get(_rand.nextInt(playlist.size()));
+        return playlist.get(getRandom(playlist.size()));
     }
 
 
@@ -242,5 +242,16 @@ public class AmbienceThread extends Thread
             catch (Exception ignored) { }
             _interruptPlayer = null;
         }
+    }
+
+
+    private int getRandom(int max) {
+        int iterations = _rand.nextInt(10,50);
+        int acc = 0;
+        while (iterations > 0) {
+            acc += _rand.nextInt(0, 10000);
+            iterations--;
+        }
+        return acc % max;
     }
 }
