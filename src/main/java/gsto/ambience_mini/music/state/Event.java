@@ -67,9 +67,9 @@ public class Event {
     });
 
     // Weather
-    public static final Event DOWNFALL = register("downfall", () -> GameStateMonitor.getRainLevel() > GameStateMonitor.RAIN_THRESHOLD);
-    public static final Event RAIN = register("rain", () -> GameStateMonitor.getRainLevel() > GameStateMonitor.RAIN_THRESHOLD && !GameStateMonitor.isColdEnoughToSnow());
-    public static final Event SNOW = register("snow", () -> GameStateMonitor.getRainLevel() > GameStateMonitor.RAIN_THRESHOLD && GameStateMonitor.isColdEnoughToSnow());
+    public static final Event DOWNFALL = register("downfall", GameStateMonitor::isRaining);
+    public static final Event RAIN = register("rain", () -> GameStateMonitor.isRaining() && !GameStateMonitor.isColdEnoughToSnow());
+    public static final Event SNOW = register("snow", () -> GameStateMonitor.isRaining() && GameStateMonitor.isColdEnoughToSnow());
     public static final Event THUNDER = register("thunder", GameStateMonitor::isThundering);
 
     // Special locations

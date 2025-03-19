@@ -18,8 +18,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public record Compiler(String musicDirectory) {
-    private static final List<Music> EMPTY_PLAYLIST = new ArrayList<>();
-
     public Rule Conf(Conf conf) {
         return Conf(conf, new HashMap<>());
     }
@@ -56,14 +54,8 @@ public record Compiler(String musicDirectory) {
     }
 
     private Rule Shed(Shed shed, HashMap<String, List<Music>> playlists) {
-        if (shed instanceof Play play) {
-            if (play.playlist() instanceof IdentP indent)
-                return new PlayRule(playlists.get(indent.value()), play.isInstant());
-            else if (play.playlist() instanceof Nil)
-                return new PlayRule(EMPTY_PLAYLIST, play.isInstant());
-
-            throw new RuntimeException("Cannot compile play.play.playlist(): " + play.playlist().getClass().getCanonicalName());
-        }
+        if (shed instanceof Play play)
+            return new PlayRule(PL(play.playlist(), playlists).toList(), play.isInstant());
         else if (shed instanceof Block block) {
             ArrayList<Rule> interrupts = new ArrayList<>();
             ArrayList<Rule> subRules = new ArrayList<>();

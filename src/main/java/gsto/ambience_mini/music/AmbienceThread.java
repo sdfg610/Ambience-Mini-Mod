@@ -137,7 +137,7 @@ public class AmbienceThread extends Thread
         MusicPlayer activePlayer = nextIsInterrupt ? _interruptPlayer : _mainPlayer;
         Music currentMusic = activePlayer == null ? null : activePlayer.currentMusic;
 
-        boolean musicStillValid = nextPlaylist.contains(currentMusic);
+        boolean musicStillValid = nextPlaylist.stream().anyMatch(music -> music.equals(currentMusic));
 
         if (_isHalted) {
             _isHalted = false;

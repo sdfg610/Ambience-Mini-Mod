@@ -63,15 +63,8 @@ public record SemanticAnalysis(String musicDirectory) {
     }
 
     private Stream<String> Shed(Shed shed, Env env) {
-        if (shed instanceof Play play) {
-            if (play.playlist() instanceof IdentP indent)
-                return env.hasPlaylist(indent.value())
-                        ? Stream.empty()
-                        : Stream.of("Use of undefined playlist after 'play' keyword: " + indent.value());
-            else if (play.playlist() instanceof Nil)
-                return Stream.empty();
-            return Stream.of("The 'play' keyword may only be followed by a single playlist-name or NIL.");
-        }
+        if (shed instanceof Play play)
+            return PL(play.playlist(), env);
         else if (shed instanceof Block block)
             return block.body().stream().map(sh -> Shed(sh, env)).reduce(Stream.empty(), Stream::concat);
         else if (shed instanceof When when) {
@@ -87,14 +80,14 @@ public record SemanticAnalysis(String musicDirectory) {
             return Stream.concat(errors.stream(), Shed(when.body(), env));
         }
         else if (shed instanceof Interrupt interrupt) {
-            if (env.inInterrupt)
+            if (env.inInterrupt > 0)
                 return Stream.of("An 'interrupt' may not occur inside the body of another 'interrupt'.");
 
-            env.inInterrupt = true;
+            env.inInterrupt++; // Track multiple nested interrupts to allow finding other errors within.
             Stream<String> res = interrupt.shed() instanceof When
                     ? Shed(interrupt.shed(), env)
                     : Stream.of("The 'interrupt' keyword may only be followed by a 'when' clause.");
-            env.inInterrupt = false;
+            env.inInterrupt--;
 
             return res;
         }

@@ -24,7 +24,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,7 +31,6 @@ public class GameStateMonitor
 {
     public static final long FISHING_TIMEOUT_MILLIS = 4000;
 
-    public static final float RAIN_THRESHOLD = .2f;
     public static final long HIGH_UP_THRESHOLD = 150;
     public static final long IN_VILLAGE_THRESHOLD = 3;
     public static final long IN_RANCH_THRESHOLD = 15;
@@ -223,8 +221,8 @@ public class GameStateMonitor
         return (int) (mc.level != null ? mc.level.getDayTime() : 0) % 24000;
     }
 
-    public static float getRainLevel() {
-        return mc.level != null ? mc.level.getRainLevel(1f) : 0f;
+    public static boolean isRaining() {
+        return mc.level != null && mc.level.isRaining();
     }
 
     public static boolean isThundering() {

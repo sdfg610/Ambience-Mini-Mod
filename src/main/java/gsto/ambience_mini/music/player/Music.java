@@ -5,8 +5,8 @@ import gsto.ambience_mini.AmbienceMini;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class Music
 {
@@ -14,10 +14,6 @@ public class Music
     public final String musicName;
     public final float gain;
 
-
-    public Music(Path filePath) {
-        this(filePath, 0f);
-    }
 
     public Music(Path filePath, float gain)
     {
@@ -40,5 +36,19 @@ public class Music
     public String toString()
     {
         return musicName + " (" + _filePath + ")";
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Music music = (Music) o;
+        return Float.compare(gain, music.gain) == 0 && Objects.equals(_filePath, music._filePath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(_filePath, gain);
     }
 }
