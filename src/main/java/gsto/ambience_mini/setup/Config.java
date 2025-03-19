@@ -12,9 +12,6 @@ public class Config
     public static ForgeConfigSpec.BooleanValue ignoreMasterVolume;
 
 
-    // TODO: music delay-interval config ?
-
-
     public static void register()
     {
         registerClientConfigs();

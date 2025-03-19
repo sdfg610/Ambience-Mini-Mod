@@ -43,6 +43,8 @@ public class Event {
     // Global events
     public static final Event MAIN_MENU = register("main_menu", GameStateMonitor::inMainMenu);
     public static final Event JOINING = register("joining", GameStateMonitor::isJoiningWorld);
+    public static final Event DISCONNECTED = register("disconnected", GameStateMonitor::isDisconnected);
+    //public static final Event PAUSED = register("paused", GameStateMonitor::isPaused); // TODO: Paused should only work in single player
     public static final Event IN_GAME = register("in_game", GameStateMonitor::inGame);
     public static final Event CREDITS = register("credits", GameStateMonitor::onCreditsScreen);
 
@@ -65,14 +67,14 @@ public class Event {
     });
 
     // Weather
-    public static final Event DOWNFALL = register("downfall", () -> GameStateMonitor.getRainLevel() > .2f);
+    public static final Event DOWNFALL = register("downfall", () -> GameStateMonitor.getRainLevel() > GameStateMonitor.RAIN_THRESHOLD);
+    public static final Event RAIN = register("rain", () -> GameStateMonitor.getRainLevel() > GameStateMonitor.RAIN_THRESHOLD && !GameStateMonitor.isColdEnoughToSnow());
+    public static final Event SNOW = register("snow", () -> GameStateMonitor.getRainLevel() > GameStateMonitor.RAIN_THRESHOLD && GameStateMonitor.isColdEnoughToSnow());
     public static final Event THUNDER = register("thunder", GameStateMonitor::isThundering);
-    public static final Event RAIN = register("rain", () -> false);
-    public static final Event SNOW = register("snow", () -> false);
 
     // Special locations
     public static final Event VILLAGE = register("village", GameStateMonitor::inVillage);
-    public static final Event RANCH = register("ranch", () -> false);
+    public static final Event RANCH = register("ranch", GameStateMonitor::inRanch);
 
     // Height-based
     public static final Event UNDER_DEEPSLATE = register("under_deepslate", () -> GameStateMonitor.getPlayerElevation() < 0);
@@ -86,15 +88,15 @@ public class Event {
     public static final Event FISHING = register("fishing", GameStateMonitor::isFishing);
 
     // Mounts
-    public static final Event MINECART = register("minecart", () -> false);
-    public static final Event BOAT = register("boat", () -> false);
-    public static final Event HORSE = register("horse", () -> false);
-    public static final Event DONKEY = register("donkey", () -> false);
-    public static final Event PIG = register("pig", () -> false);
-    public static final Event FLYING_ELYTRA = register("flying_elytra", () -> false);
+    public static final Event MINECART = register("minecart", GameStateMonitor::inMinecart);
+    public static final Event BOAT = register("boat", GameStateMonitor::inBoat);
+    public static final Event HORSE = register("horse", GameStateMonitor::onHorse);
+    public static final Event DONKEY = register("donkey", GameStateMonitor::onDonkey);
+    public static final Event PIG = register("pig", GameStateMonitor::onPig);
+    //public static final Event FLYING_ELYTRA = register("flying_elytra", () -> false); // TODO: Find out how to do this in 1.20.1
 
     // Combat
     public static final Event IN_COMBAT = register("in_combat", () -> false);
     public static final Event BOSS_FIGHT = register("boss_fight", () -> !GameStateMonitor.getBossId().isEmpty());
-    public static final Event RAID = register("raid", () -> false);
+    //public static final Event RAID = register("raid", () -> false); // TODO: Can be done using "getBossId".
 }

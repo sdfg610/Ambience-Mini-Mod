@@ -44,8 +44,12 @@ public class Property {
 
     public static final Property DIMENSION = register("dimension", new StringT(), GameStateMonitor::getDimensionId);
     public static final Property BIOME = register("biome", new StringT(), GameStateMonitor::getBiomeId);
-    public static final Property ELEVATION = register("elevation", new FloatT(), GameStateMonitor::getPlayerElevation);
     public static final Property TIME = register("time", new IntT(), GameStateMonitor::getTime);
+
+    public static final Property VEHICLE = register("vehicle", new StringT(), GameStateMonitor::getVehicle);
+
+    public static final Property ELEVATION = register("elevation", new FloatT(), GameStateMonitor::getPlayerElevation);
+
     public static final Property BOSS = register("boss", new StringT(), GameStateMonitor::getBossId);
 
     //TODO: biometag, structure ?
