@@ -169,7 +169,7 @@ public class GameStateMonitor
             return false;
 
         var playerPos = mc.player.blockPosition();
-        var area = new AABB(playerPos.getX() - 16, playerPos.getY() - 8, playerPos.getZ() - 16, playerPos.getX() + 16, playerPos.getY() + 8, playerPos.getZ() + 16);
+        var area = new AABB(playerPos.getX() - 30, playerPos.getY() - 8, playerPos.getZ() - 30, playerPos.getX() + 30, playerPos.getY() + 8, playerPos.getZ() + 30);
 
         var nearbyAnimalsCount = mc.level.getEntitiesOfClass(Animal.class, area, ignore -> true).size();
         return nearbyAnimalsCount >= IN_RANCH_THRESHOLD;
