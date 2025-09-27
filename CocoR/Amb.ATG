@@ -11,10 +11,10 @@ which will be explained when met first in context.  */
 /* () is a grouping used alongside |. The parenthesis contains a series of strings separated by |. This means that exactly one of the strings is chosen. */
 
 /* Imports here are inserted at the top of the generated lexer and parser. */
-import gsto.ambience_mini.music.loader.abstract_syntax.expr.*;
-import gsto.ambience_mini.music.loader.abstract_syntax.conf.*;
-import gsto.ambience_mini.music.loader.abstract_syntax.shed.*;
-import gsto.ambience_mini.music.loader.abstract_syntax.play.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expr.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.conf.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.shed.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.play.*;
 import java.util.ArrayList;
 
 /* The required start of a Coco/R grammar file. "Program" specifies the starting symbol of the grammar. */

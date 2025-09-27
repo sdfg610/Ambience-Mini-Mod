@@ -27,7 +27,7 @@ Coco/R itself) does not fall under the GNU General Public License.
 ------------------------------------------------------------------------*/
 -->begin
 
-import gsto.ambience_mini.AmbienceMini;
+import org.slf4j.Logger;
 
 public class Parser {
 -->constants
@@ -40,13 +40,15 @@ public class Parser {
 	int errDist = minErrDist;
 	
 	public Scanner scanner;
+	public Logger logger;
 	public Errors errors;
 
 	-->declarations
 
-	public Parser(Scanner scanner) {
+	public Parser(Scanner scanner, Logger logger) {
 		this.scanner = scanner;
-		errors = new Errors();
+		this.logger = logger;
+		errors = new Errors(logger);
 	}
 
 	void SynErr (int n) {
@@ -119,8 +121,14 @@ public class Parser {
 
 
 class Errors {
+	public Logger logger;
+
 	public int count = 0;                                     // number of errors detected
 	public String errMsgFormat = "-- line {0} col {1}: {2}"; // 0=line, 1=column, 2=text
+
+    public Errors(Logger logger) {
+        this.logger = logger;
+    }
 	
 	protected void printMsg(int line, int column, String msg) {
 		StringBuffer b = new StringBuffer(errMsgFormat);
@@ -130,7 +138,7 @@ class Errors {
 		if (pos >= 0) { b.delete(pos, pos+3); b.insert(pos, column); }
 		pos = b.indexOf("{2}");
 		if (pos >= 0) b.replace(pos, pos+3, msg);
-		AmbienceMini.LOGGER.error(b.toString());
+		logger.error(b.toString());
 	}
 	
 	public void SynErr (int line, int col, int n) {
@@ -148,7 +156,7 @@ class Errors {
 	}
 	
 	public void SemErr (String s) {
-		AmbienceMini.LOGGER.error(s);
+		logger.error(s);
 		count++;
 	}
 	
@@ -157,7 +165,7 @@ class Errors {
 	}
 	
 	public void Warning (String s) {
-		AmbienceMini.LOGGER.error(s);
+		logger.error(s);
 	}
 } // Errors
 

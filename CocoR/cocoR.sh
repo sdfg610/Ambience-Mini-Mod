@@ -1,7 +1,7 @@
 #!/bin/bash
 
-java -jar Coco.jar Dims.ATG -package "gsto.ambience_mini.music.loader.syntactic_analysis" -o "../src/main/java/gsto/ambience_mini/music/loader/syntactic_analysis"
+java -jar Coco.jar Dims.ATG -package "me.molybdenum.ambience_mini.engine.loader.syntactic_analysis" -o "../engine/src/main/java/me/molybdenum/ambience_mini/engine/loader/syntactic_analysis"
 
-[ -e "../src/main/java/gsto/ambience_mini/music/loader/syntactic_analysis/Parser.java.old" ] && rm "../src/main/java/gsto/ambience_mini/music/loader/syntactic_analysis/Parser.java.old"
+[ -e "../engine/src/main/java/me/molybdenum/ambience_mini/engine/loader/syntactic_analysis/Parser.java.old" ] && rm "../engine/src/main/java/me/molybdenum/ambience_mini/engine/loader/syntactic_analysis/Parser.java.old"
 
-[ -e "../src/main/java/gsto/ambience_mini/music/loader/syntactic_analysis/Scanner.java.old" ] && rm "../src/main/java/gsto/ambience_mini/music/loader/syntactic_analysis/Scanner.java.old"
+[ -e "../engine/src/main/java/me/molybdenum/ambience_mini/engine/loader/syntactic_analysis/Scanner.java.old" ] && rm "../engine/src/main/java/me/molybdenum/ambience_mini/engine/loader/syntactic_analysis/Scanner.java.old"
