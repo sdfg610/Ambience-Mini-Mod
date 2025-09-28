@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.handlers;
 
+import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.state.Screens;
 import net.minecraft.client.gui.screens.*;
@@ -10,6 +11,7 @@ import net.minecraft.realms.DisconnectedRealmsScreen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
@@ -28,7 +30,7 @@ public class ForgeEventHandlers
     //
     @SubscribeEvent
     @OnlyIn(value = Dist.CLIENT)
-    public static void onScreenChanged(final ScreenEvent.Opening event) {
+    public static void onScreenChanged(final ScreenOpenEvent event) {
         Screen screen = event.getScreen();
 
         if (screen instanceof ProgressScreen || screen instanceof ConnectScreen || screen instanceof LevelLoadingScreen || screen instanceof ReceivingLevelScreen)

@@ -12,11 +12,11 @@ public abstract class BaseVolumeMonitor {
     protected BaseVolumeMonitor(Supplier<Boolean> ignoreMasterVolume) {
         _ignoreMasterVolume = ignoreMasterVolume;
 
-        injectVolumeListeners();
+        initialize();
     }
 
 
-    protected abstract void injectVolumeListeners();
+    protected abstract void initialize();
 
     protected abstract float getMusicVolume();
 

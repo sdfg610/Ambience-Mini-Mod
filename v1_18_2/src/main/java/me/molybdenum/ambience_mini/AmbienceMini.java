@@ -5,10 +5,12 @@ import me.molybdenum.ambience_mini.engine.AmbienceThread;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
 import me.molybdenum.ambience_mini.setup.Config;
+import me.molybdenum.ambience_mini.setup.KeyBindings;
 import me.molybdenum.ambience_mini.setup.NilMusicManager;
 import me.molybdenum.ambience_mini.state.GameStateProvider;
 import me.molybdenum.ambience_mini.state.VolumeMonitor;
 import net.minecraft.client.Minecraft;
+import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,6 +18,9 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
+import oshi.util.tuples.Pair;
+
+import java.util.function.Consumer;
 
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -27,13 +32,14 @@ public class AmbienceMini
 
     public static final Logger LOGGER = LogUtils.getLogger();
 
-
     public static AmbienceThread ambienceThread;
+    public static Consumer<Pair<SoundSource, Float>> onVolumeChanged = null;
 
 
     public AmbienceMini()
     {
         Config.register();
+        KeyBindings.register();
 
         // Register the setup method for mod-loading
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -58,11 +64,11 @@ public class AmbienceMini
                 disableNativeMusicManager();
 
                 ambienceThread = new AmbienceThread(
-                    rule,
-                    LOGGER,
-                    Config.lostFocusEnabled,
-                    Minecraft.getInstance()::isWindowActive,
-                    new VolumeMonitor(Config.ignoreMasterVolume)
+                        rule,
+                        LOGGER,
+                        Config.lostFocusEnabled,
+                        Minecraft.getInstance()::isWindowActive,
+                        new VolumeMonitor(Config.ignoreMasterVolume)
                 );
 
                 LOGGER.info("Successfully loaded Ambience Mini");
@@ -76,7 +82,7 @@ public class AmbienceMini
     {
         Minecraft mc = Minecraft.getInstance();
         ObfuscationReflectionHelper.setPrivateValue(
-            Minecraft.class, mc, new NilMusicManager(mc), OBF_MC_MUSIC_MANAGER
+                Minecraft.class, mc, new NilMusicManager(mc), OBF_MC_MUSIC_MANAGER
         );
     }
 }

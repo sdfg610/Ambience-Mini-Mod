@@ -23,7 +23,7 @@ public class VolumeMonitor extends BaseVolumeMonitor {
 
 
     @Override
-    protected void injectVolumeListeners()
+    protected void initialize()
     {
         _masterVolumeInstance = Minecraft.getInstance().options.getSoundSourceOptionInstance(SoundSource.MASTER);
         _musicVolumeInstance = Minecraft.getInstance().options.getSoundSourceOptionInstance(SoundSource.MUSIC);

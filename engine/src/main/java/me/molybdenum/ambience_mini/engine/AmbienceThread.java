@@ -39,7 +39,7 @@ public class AmbienceThread extends Thread
 
 
     private boolean _volumeZero = false;
-    private final Consumer<Float> volumeChangedHandler = volume -> {
+    private final Consumer<Float> _volumeChangedHandler = volume -> {
         handleVolumeZero(volume);
 
         if (_mainPlayer != null)
@@ -74,7 +74,7 @@ public class AmbienceThread extends Thread
     public void run()
     {
         try {
-            _volumeMonitor.registerVolumeHandler(volumeChangedHandler);
+            _volumeMonitor.registerVolumeHandler(_volumeChangedHandler);
             handleVolumeZero(_volumeMonitor.getVolume());
 
             long nextUpdate = System.currentTimeMillis();
@@ -96,7 +96,7 @@ public class AmbienceThread extends Thread
             stopInterruptMusic(false);
         }
         finally {
-            _volumeMonitor.unregisterVolumeHandler(volumeChangedHandler);
+            _volumeMonitor.unregisterVolumeHandler(_volumeChangedHandler);
         }
     }
 
@@ -106,7 +106,7 @@ public class AmbienceThread extends Thread
             _kill = true;
             stopMainMusic(false);
             stopInterruptMusic(false);
-            _volumeMonitor.unregisterVolumeHandler(volumeChangedHandler);
+            _volumeMonitor.unregisterVolumeHandler(_volumeChangedHandler);
 
             try {
                 interrupt();
