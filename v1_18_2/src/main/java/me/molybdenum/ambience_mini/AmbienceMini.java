@@ -11,6 +11,8 @@ import me.molybdenum.ambience_mini.state.GameStateProvider;
 import me.molybdenum.ambience_mini.state.VolumeMonitor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundSource;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -39,7 +41,6 @@ public class AmbienceMini
     public AmbienceMini()
     {
         Config.register();
-        KeyBindings.register();
 
         // Register the setup method for mod-loading
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -51,6 +52,7 @@ public class AmbienceMini
 
     @SubscribeEvent
     public static void clientSetup(final FMLClientSetupEvent event) {
+        KeyBindings.register();
         tryReload();
     }
 

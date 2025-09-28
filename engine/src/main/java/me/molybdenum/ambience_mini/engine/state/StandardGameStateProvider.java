@@ -21,7 +21,7 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
         registerEvent("main_menu", this::inMainMenu);
         registerEvent("joining", this::isJoiningWorld);
         registerEvent("disconnected", this::isDisconnected);
-        //registerEvent("paused", this::isPaused); // TODO: Paused should only work in single player
+        registerEvent("paused", this::isPaused);
         registerEvent("in_game", this::inGame);
         registerEvent("credits", this::onCreditsScreen);
 
@@ -44,8 +44,9 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
         // Height-based
         registerEvent("under_deepslate", this::isUnderDeepslate);
         registerEvent("underground", this::isUnderground);
-        registerEvent("under_water", this::isUnderWater);
         registerEvent("high_up", this::isHighUp);
+        registerEvent("under_water", this::isUnderWater);
+        registerEvent("in_lava", this::inLava);
 
         // Player state
         registerEvent("dead", this::isDead);
@@ -58,12 +59,11 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
         registerEvent("horse", this::onHorse);
         registerEvent("donkey", this::onDonkey);
         registerEvent("pig", this::onPig);
-        //register("flying_elytra", () -> false); // TODO: Find out how to do this in 1.20.1
+        registerEvent("elytra", this::flyingElytra);
 
         // Combat
-        registerEvent("in_combat", this::inCombat);
+        //registerEvent("in_combat", this::inCombat);  // Will give away if creeper targets player... Perhaps activate only after taking or dealing damage?
         registerEvent("boss_fight", this::inBossFight);
-        registerEvent("in_raid", this::inRaid);
 
 
         ////
@@ -73,11 +73,12 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
         registerProperty("biome", new StringT(), this::getBiomeId);
         registerProperty("time", new IntT(), this::getTime);
 
+        registerProperty("boss", new StringT(), this::getBossId);
+
+        registerProperty("health", new FloatT(), this::getPlayerHealth);
+        registerProperty("elevation", new FloatT(), this::getPlayerElevation);
         registerProperty("vehicle", new StringT(), this::getVehicleId);
 
-        registerProperty("elevation", new FloatT(), this::getPlayerElevation);
-
-        registerProperty("boss", new StringT(), this::getBossId);
 
         //TODO: biometag, structure ?
     }
@@ -88,6 +89,7 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
     public abstract boolean inMainMenu();
     public abstract boolean isJoiningWorld();
     public abstract boolean isDisconnected();
+    public abstract boolean isPaused();
     public abstract boolean inGame();
     public abstract boolean onCreditsScreen();
 
@@ -106,8 +108,9 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
 
     public abstract boolean isUnderDeepslate();
     public abstract boolean isUnderground();
-    public abstract boolean isUnderWater();
     public abstract boolean isHighUp();
+    public abstract boolean isUnderWater();
+    public abstract boolean inLava();
 
     public abstract boolean isDead();
     public abstract boolean isSleeping();
@@ -118,10 +121,10 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
     public abstract boolean onHorse();
     public abstract boolean onDonkey();
     public abstract boolean onPig();
+    public abstract boolean flyingElytra();
 
     public abstract boolean inCombat();
     public abstract boolean inBossFight();
-    public abstract boolean inRaid();
 
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -133,5 +136,6 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
 
     public abstract int getTime();
 
+    public abstract float getPlayerHealth();
     public abstract float getPlayerElevation();
 }

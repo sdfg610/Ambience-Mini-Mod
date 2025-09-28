@@ -12,6 +12,7 @@ public record BinOpCondition(BinaryOperators op, Condition left, Condition right
             case APP_EQ -> ((String)left.evaluate()).contains(((String)right.evaluate()));
             case AND -> ((Boolean)left.evaluate()) && ((Boolean)right.evaluate());
             case OR -> ((Boolean)left.evaluate()) || ((Boolean)right.evaluate());
+            case LT -> ((Number)left.evaluate()).doubleValue() < ((Number)right.evaluate()).doubleValue();
         };
     }
 }

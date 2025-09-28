@@ -27,7 +27,6 @@ public class AmbienceMini
 
     public static final Logger LOGGER = LogUtils.getLogger();
 
-
     public static AmbienceThread ambienceThread;
 
 

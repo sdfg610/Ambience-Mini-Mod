@@ -110,9 +110,16 @@ Expr<out Expr expr>              (. BinaryOperators op = BinaryOperators.AND; .)
 .
 
 ExprEq<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; .)
-    = ExprTerm<out expr>
+    = ExprRel<out expr>
     { ( "=="                     (. op = BinaryOperators.EQ; .)
       | "~~"                     (. op = BinaryOperators.APP_EQ; .)
+      ) ExprRel<out Expr expr2> (. expr = new BinaryOp(op, expr, expr2); .)
+    }
+.
+
+ExprRel<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; .)
+    = ExprTerm<out expr>
+    { ( "<"                     (. op = BinaryOperators.LT; .)
       ) ExprTerm<out Expr expr2> (. expr = new BinaryOp(op, expr, expr2); .)
     }
 .

@@ -7,8 +7,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public abstract class BaseGameStateProvider {
-    private static final ArrayList<Event> EVENTS = new ArrayList<>();
-    private static final ArrayList<Property> PROPERTIES = new ArrayList<>();
+    private final ArrayList<Event> EVENTS = new ArrayList<>();
+    private final ArrayList<Property> PROPERTIES = new ArrayList<>();
 
 
     public void registerEvent(String name, Supplier<Boolean> isActive) {

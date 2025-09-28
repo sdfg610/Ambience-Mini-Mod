@@ -3,10 +3,12 @@ package me.molybdenum.ambience_mini.handlers;
 import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.state.Screens;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.*;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.realms.DisconnectedRealmsScreen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -37,8 +39,11 @@ public class ForgeEventHandlers
             currentScreen = Screens.JOINING;
         else if (screen instanceof DisconnectedScreen || screen instanceof DisconnectedRealmsScreen)
             currentScreen = Screens.DISCONNECTED;
-        else if (screen instanceof PauseScreen)
-            currentScreen = Screens.PAUSE;
+        else if (screen instanceof PauseScreen) {
+            IntegratedServer srv = Minecraft.getInstance().getSingleplayerServer();
+            if (srv != null && !srv.isPublished())
+                currentScreen = Screens.PAUSE;
+        }
         else if (screen instanceof WinScreen)
             currentScreen = Screens.CREDITS;
         else if (screen instanceof TitleScreen || screen instanceof JoinMultiplayerScreen || screen instanceof DirectJoinServerScreen || screen instanceof SelectWorldScreen || screen instanceof CreateWorldScreen) {

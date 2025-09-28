@@ -142,6 +142,10 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
                     if (!(typeLeft instanceof BoolT) || !(typeRight instanceof BoolT))
                         errors.add("Arguments of '||' must both be of type bool. Got '" + PrettyPrinter.printType(typeLeft) + "' and '" + PrettyPrinter.printType(typeRight) + "'");
                 }
+                case LT -> {
+                    if (!isNumber(typeLeft) || !isNumber(typeRight))
+                        errors.add("Arguments of '<' must both be numbers. Got '" + PrettyPrinter.printType(typeLeft) + "' and '" + PrettyPrinter.printType(typeRight) + "'");
+                }
             }
 
             return new BoolT();
@@ -150,9 +154,14 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
         throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
     }
 
+
     private Path getMusicPath(String musicName) {
         if (!musicName.endsWith(".mp3"))
             return Path.of(musicDirectory, musicName + ".mp3");
         return Path.of(musicDirectory, musicName);
+    }
+
+    private boolean isNumber(Type type) {
+        return type instanceof IntT || type instanceof FloatT;
     }
 }

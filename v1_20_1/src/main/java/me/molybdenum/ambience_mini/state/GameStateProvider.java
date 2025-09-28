@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.state;
 
+import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.state.Screens;
 import me.molybdenum.ambience_mini.engine.state.StandardGameStateProvider;
 import me.molybdenum.ambience_mini.handlers.ForgeEventHandlers;
@@ -31,18 +32,15 @@ public class GameStateProvider extends StandardGameStateProvider
 {
     public static final String OBF_MAP_BOSS_INFO = "f_93699_";
 
-
-    public static final long FISHING_TIMEOUT_MILLIS = 4000;
-
-    public static final long HIGH_UP_THRESHOLD = 150;
-    public static final long IN_VILLAGE_THRESHOLD = 3;
-    public static final long IN_RANCH_THRESHOLD = 15;
-
-
     private final Minecraft mc = Minecraft.getInstance();
 
     private Vec3 _latestFishingPos = null;
     private long _latestFishingTime = 0L;
+
+
+    public GameStateProvider() {
+        super();
+    }
 
 
     // ------------------------------------------------------------------------------------------------
@@ -66,6 +64,13 @@ public class GameStateProvider extends StandardGameStateProvider
         if (mc.screen == null)
             ForgeEventHandlers.currentScreen = Screens.NONE;
         return ForgeEventHandlers.currentScreen == Screens.DISCONNECTED;
+    }
+
+    @Override
+    public boolean isPaused() {
+        if (mc.screen == null)
+            ForgeEventHandlers.currentScreen = Screens.NONE;
+        return ForgeEventHandlers.currentScreen == Screens.PAUSE;
     }
 
     @Override
@@ -142,7 +147,7 @@ public class GameStateProvider extends StandardGameStateProvider
         var area = new AABB(playerPos.getX() - 30, playerPos.getY() - 15, playerPos.getZ() - 30, playerPos.getX() + 30, playerPos.getY() + 15, playerPos.getZ() + 30);
 
         var nearbyVillagerCount = mc.level.getEntitiesOfClass(Villager.class, area, ignore -> true).size();
-        return nearbyVillagerCount >= IN_VILLAGE_THRESHOLD;
+        return nearbyVillagerCount >= Common.IN_VILLAGE_THRESHOLD;
     }
 
     @Override
@@ -154,7 +159,7 @@ public class GameStateProvider extends StandardGameStateProvider
         var area = new AABB(playerPos.getX() - 30, playerPos.getY() - 8, playerPos.getZ() - 30, playerPos.getX() + 30, playerPos.getY() + 8, playerPos.getZ() + 30);
 
         var nearbyAnimalsCount = mc.level.getEntitiesOfClass(Animal.class, area, ignore -> true).size();
-        return nearbyAnimalsCount >= IN_RANCH_THRESHOLD;
+        return nearbyAnimalsCount >= Common.IN_RANCH_THRESHOLD;
     }
 
     @Override
@@ -179,13 +184,18 @@ public class GameStateProvider extends StandardGameStateProvider
     }
 
     @Override
+    public boolean isHighUp() {
+        return getPlayerElevation() > Common.HIGH_UP_THRESHOLD;
+    }
+
+    @Override
     public boolean isUnderWater() {
         return mc.player != null && mc.player.isUnderWater();
     }
 
     @Override
-    public boolean isHighUp() {
-        return getPlayerElevation() > HIGH_UP_THRESHOLD;
+    public boolean inLava() {
+        return mc.player != null && mc.player.isInLava();
     }
 
 
@@ -211,7 +221,7 @@ public class GameStateProvider extends StandardGameStateProvider
             _latestFishingTime = System.currentTimeMillis();
         }
         else if (_latestFishingPos != null) { // Grace period where "isFishing" will not turn off to prevent "shuffling" music back and forth.
-            if (_latestFishingPos.subtract(mc.player.position()).length() > 1f || System.currentTimeMillis() - _latestFishingTime > FISHING_TIMEOUT_MILLIS)
+            if (_latestFishingPos.subtract(mc.player.position()).length() > 1f || System.currentTimeMillis() - _latestFishingTime > Common.FISHING_TIMEOUT_MILLIS)
                 _latestFishingPos = null;
         }
 
@@ -256,6 +266,13 @@ public class GameStateProvider extends StandardGameStateProvider
         return mc.player.getVehicle() instanceof Pig;
     }
 
+    @Override
+    public boolean flyingElytra() {
+        if (mc.player == null)
+            return false;
+        return mc.player.isFallFlying();
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // Combat events
@@ -267,11 +284,6 @@ public class GameStateProvider extends StandardGameStateProvider
     @Override
     public boolean inBossFight() {
         return !getBossId().isEmpty();
-    }
-
-    @Override
-    public boolean inRaid() {
-        return getBossId().equals("minecraft:raid");  // TODO: Test this
     }
 
 
@@ -319,6 +331,10 @@ public class GameStateProvider extends StandardGameStateProvider
     @Override
     public float getPlayerElevation() {
         return (float)(mc.player != null ? mc.player.position().y : 0f);
+    }
+
+    public float getPlayerHealth() {
+        return (mc.player != null ? mc.player.getHealth() : 0f);
     }
 
 

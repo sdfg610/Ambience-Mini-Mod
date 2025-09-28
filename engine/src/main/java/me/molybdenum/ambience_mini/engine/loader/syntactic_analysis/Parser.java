@@ -237,7 +237,7 @@ public class Parser {
 	Expr  ExprEq() {
 		Expr  expr;
 		BinaryOperators op = BinaryOperators.EQ; 
-		expr = ExprTerm();
+		expr = ExprRel();
 		while (la.kind == 26 || la.kind == 27) {
 			if (la.kind == 26) {
 				Get();
@@ -246,6 +246,19 @@ public class Parser {
 				Get();
 				op = BinaryOperators.APP_EQ; 
 			}
+			Expr expr2 = ExprRel();
+			expr = new BinaryOp(op, expr, expr2); 
+		}
+		return expr;
+	}
+
+	Expr  ExprRel() {
+		Expr  expr;
+		BinaryOperators op = BinaryOperators.EQ; 
+		expr = ExprTerm();
+		while (la.kind == 13) {
+			Get();
+			op = BinaryOperators.LT; 
 			Expr expr2 = ExprTerm();
 			expr = new BinaryOp(op, expr, expr2); 
 		}

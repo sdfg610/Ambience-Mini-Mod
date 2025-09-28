@@ -127,6 +127,7 @@ public class PrettyPrinter {
             case APP_EQ -> " ~~ ";
             case AND -> " && ";
             case OR -> " || ";
+            case LT -> " < ";
         };
     }
 
