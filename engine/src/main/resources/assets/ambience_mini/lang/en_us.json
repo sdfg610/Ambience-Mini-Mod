@@ -1,7 +1,9 @@
 {
-	"key.categories.ambience_mini": "Ambience Mini",
-	"key.reload": "Reload",
+	"mod_name": "Ambience Mini",
 
-	"toast.reload_title": "Ambience Mini",
-	"toast.reload_description": "Trying to reload music player..."
+	"key.reload": "Reload",
+	"key.nextMusic": "Next music",
+
+	"toast.reload_description": "Trying to reload music player...",
+	"toast.next_music_description": "Selecting new music..."
 }

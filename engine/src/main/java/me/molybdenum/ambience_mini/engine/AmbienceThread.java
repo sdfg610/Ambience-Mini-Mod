@@ -276,4 +276,9 @@ public class AmbienceThread extends Thread
         }
         return acc % max;
     }
+
+    // Allowing for other parts of the program to force a new soundtrack to be selected
+    public void selectNewMusic() {
+        _chooseNextMusicTime = 0L;
+    }
 }

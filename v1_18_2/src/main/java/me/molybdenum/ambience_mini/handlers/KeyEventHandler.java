@@ -23,8 +23,13 @@ public class KeyEventHandler
             return;
 
         if (KeyBindings.reloadKey.consumeClick()) {
-            SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("toast.reload_title"), new TranslatableComponent("toast.reload_description"));
+            SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("mod_name"), new TranslatableComponent("toast.reload_description"));
             AmbienceMini.tryReload();
+        }
+
+        if (KeyBindings.nextMusicKey.consumeClick()) {
+            SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("mod_name"), new TranslatableComponent("toast.next_music_description"));
+            AmbienceMini.ambienceThread.selectNewMusic();
         }
     }
 }

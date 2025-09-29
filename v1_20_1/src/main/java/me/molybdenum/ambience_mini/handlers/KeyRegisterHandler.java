@@ -11,10 +11,12 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = Common.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value={Dist.CLIENT})
 public class KeyRegisterHandler
 {
-    public static final KeyMapping reloadKey = new KeyMapping("key.reload", InputConstants.KEY_P, "key.categories.ambience_mini");
+    public static final KeyMapping reloadKey = new KeyMapping("key.reload", InputConstants.KEY_P, "mod_name");
+    public static final KeyMapping nextMusicKey = new KeyMapping("key.nextMusic", InputConstants.KEY_PAGEUP, "mod_name");
 
     @SubscribeEvent
     public static void registerKeybindings(final RegisterKeyMappingsEvent event) {
         event.register(reloadKey);
+        event.register(nextMusicKey);
     }
 }

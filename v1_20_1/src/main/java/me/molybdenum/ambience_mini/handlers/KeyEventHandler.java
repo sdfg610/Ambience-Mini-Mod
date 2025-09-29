@@ -21,8 +21,13 @@ public class KeyEventHandler
             return;
 
         if (KeyRegisterHandler.reloadKey.consumeClick()) {
-            SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, Component.translatable("toast.reload_title"), Component.translatable("toast.reload_description"));
+            SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, Component.translatable("mod_name"), Component.translatable("toast.reload_description"));
             AmbienceMini.tryReload();
+        }
+
+        if (KeyRegisterHandler.nextMusicKey.consumeClick()) {
+            SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, Component.translatable("mod_name"), Component.translatable("toast.next_music_description"));
+            AmbienceMini.ambienceThread.selectNewMusic();
         }
     }
 }
