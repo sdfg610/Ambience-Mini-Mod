@@ -30,12 +30,12 @@ public class AmbienceMini
     public static AmbienceThread ambienceThread;
 
 
-    public AmbienceMini()
+    public AmbienceMini(FMLJavaModLoadingContext context)
     {
-        Config.register();
+        Config.register(context);
 
         // Register the setup method for mod-loading
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        IEventBus modBus = context.getModEventBus();
         modBus.addListener(AmbienceMini::clientSetup);
 
         // Register ourselves for server and other game events we are interested in

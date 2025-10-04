@@ -8,4 +8,6 @@ public class Common {
     public static final long HIGH_UP_THRESHOLD = 150;
     public static final long IN_VILLAGE_THRESHOLD = 3;
     public static final long IN_RANCH_THRESHOLD = 15;
+
+    public static final int CAVE_SCORE_RADIUS = 1;
 }

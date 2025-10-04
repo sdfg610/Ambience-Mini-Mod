@@ -3,6 +3,7 @@ package me.molybdenum.ambience_mini.setup;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class Config
 {
@@ -12,12 +13,12 @@ public class Config
     public static ForgeConfigSpec.BooleanValue ignoreMasterVolume;
 
 
-    public static void register()
+    public static void register(FMLJavaModLoadingContext context)
     {
-        registerClientConfigs();
+        registerClientConfigs(context);
     }
 
-    public static void registerClientConfigs()
+    public static void registerClientConfigs(FMLJavaModLoadingContext context)
     {
         ForgeConfigSpec.Builder clientBuilder = new ForgeConfigSpec.Builder();
 
@@ -43,6 +44,6 @@ public class Config
 
         clientBuilder.pop();
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, clientBuilder.build());
+        context.registerConfig(ModConfig.Type.CLIENT, clientBuilder.build());
     }
 }

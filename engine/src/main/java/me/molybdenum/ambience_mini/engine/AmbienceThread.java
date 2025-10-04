@@ -21,8 +21,8 @@ public class AmbienceThread extends Thread
     private final Supplier<Boolean> _isFocused;
     private final BaseVolumeMonitor _volumeMonitor;
 
-    private static final long UPDATE_INTERVAL_MILLISECONDS = 100;
-    private static final long NEXT_MUSIC_DELAY_MILLISECONDS = 4000;
+    private static final long UPDATE_INTERVAL_MILLISECONDS = 150;   // TODO: Mod config?
+    private static final long NEXT_MUSIC_DELAY_MILLISECONDS = 4000; // TODO: Mod config?
 
 
     private boolean _kill = false;

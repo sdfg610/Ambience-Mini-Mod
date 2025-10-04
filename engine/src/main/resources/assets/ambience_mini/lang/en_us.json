@@ -2,7 +2,8 @@
 	"mod_name": "Ambience Mini",
 
 	"key.reload": "Reload",
-	"key.nextMusic": "Next music",
+	"key.nextMusic": "Change music",
+	"key.showCaveScore": "Show cave score",
 
 	"toast.reload_description": "Trying to reload music player...",
 	"toast.next_music_description": "Selecting new music..."

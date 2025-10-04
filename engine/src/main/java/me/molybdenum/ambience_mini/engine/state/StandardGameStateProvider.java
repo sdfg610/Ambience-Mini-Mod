@@ -79,6 +79,8 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
         registerProperty("elevation", new FloatT(), this::getPlayerElevation);
         registerProperty("vehicle", new StringT(), this::getVehicleId);
 
+        registerProperty("caveScore", new FloatT(), this::getCaveScore);
+
 
         //TODO: biometag, structure ?
     }
@@ -138,4 +140,6 @@ public abstract class StandardGameStateProvider extends BaseGameStateProvider
 
     public abstract float getPlayerHealth();
     public abstract float getPlayerElevation();
+
+    public abstract float getCaveScore();
 }

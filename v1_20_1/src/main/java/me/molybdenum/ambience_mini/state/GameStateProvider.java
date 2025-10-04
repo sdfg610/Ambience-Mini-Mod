@@ -337,6 +337,13 @@ public class GameStateProvider extends StandardGameStateProvider
         return (mc.player != null ? mc.player.getHealth() : 0f);
     }
 
+    @Override
+    public float getCaveScore() {
+        if (mc.player == null || mc.player.getVehicle() == null)
+            return 0;
+        return (float)CaveDetector.getAveragedCaveScore(mc.level, mc.player, Common.CAVE_SCORE_RADIUS);
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // Utilities
