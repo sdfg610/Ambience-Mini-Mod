@@ -10,7 +10,7 @@ import me.molybdenum.ambience_mini.engine.player.rule.PlayRule;
 import me.molybdenum.ambience_mini.engine.player.rule.Rule;
 import me.molybdenum.ambience_mini.engine.player.rule.WhenRule;
 import me.molybdenum.ambience_mini.engine.player.rule.condition.*;
-import me.molybdenum.ambience_mini.engine.state.BaseGameStateProvider;
+import me.molybdenum.ambience_mini.engine.state.providers.BaseGameStateProvider;
 
 import java.nio.file.Path;
 import java.util.*;

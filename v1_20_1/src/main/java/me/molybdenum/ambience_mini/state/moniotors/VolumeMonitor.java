@@ -1,6 +1,6 @@
-package me.molybdenum.ambience_mini.state;
+package me.molybdenum.ambience_mini.state.moniotors;
 
-import me.molybdenum.ambience_mini.engine.state.BaseVolumeMonitor;
+import me.molybdenum.ambience_mini.engine.state.monitors.BaseVolumeMonitor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.sounds.SoundSource;

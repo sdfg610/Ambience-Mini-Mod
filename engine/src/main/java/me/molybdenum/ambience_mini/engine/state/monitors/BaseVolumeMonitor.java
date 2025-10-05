@@ -1,4 +1,4 @@
-package me.molybdenum.ambience_mini.engine.state;
+package me.molybdenum.ambience_mini.engine.state.monitors;
 
 import java.util.HashSet;
 import java.util.function.Consumer;

@@ -6,8 +6,8 @@ import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.play.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.shed.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.loader.pretty_printer.PrettyPrinter;
-import me.molybdenum.ambience_mini.engine.state.BaseGameStateProvider;
-import me.molybdenum.ambience_mini.engine.state.Property;
+import me.molybdenum.ambience_mini.engine.state.providers.BaseGameStateProvider;
+import me.molybdenum.ambience_mini.engine.state.providers.Property;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

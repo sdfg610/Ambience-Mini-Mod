@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.engine.player.rule.condition;
 
-import me.molybdenum.ambience_mini.engine.state.Event;
+import me.molybdenum.ambience_mini.engine.state.providers.Event;
 
 import java.util.function.Supplier;
 

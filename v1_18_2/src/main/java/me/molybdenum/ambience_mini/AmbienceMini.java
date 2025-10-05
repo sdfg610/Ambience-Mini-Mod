@@ -4,15 +4,18 @@ import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.engine.AmbienceThread;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
+import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
+import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
 import me.molybdenum.ambience_mini.setup.Config;
 import me.molybdenum.ambience_mini.setup.KeyBindings;
 import me.molybdenum.ambience_mini.setup.NilMusicManager;
-import me.molybdenum.ambience_mini.state.GameStateProvider;
-import me.molybdenum.ambience_mini.state.VolumeMonitor;
+import me.molybdenum.ambience_mini.state.detectors.CaveDetector;
+import me.molybdenum.ambience_mini.state.monitors.ScreenMonitor;
+import me.molybdenum.ambience_mini.state.monitors.VolumeMonitor;
+import me.molybdenum.ambience_mini.state.readers.LevelReader_1_18;
+import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_18;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundSource;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -34,13 +37,24 @@ public class AmbienceMini
 
     public static final Logger LOGGER = LogUtils.getLogger();
 
+    public static Consumer<Pair<SoundSource, Float>> onVolumeChanged;
+    public static Consumer<Screens> onScreenOpened;
+
+    public static final Config config = new Config();
+    public static final ScreenMonitor screen = new ScreenMonitor();
+    public static final PlayerReader_1_18 player = new PlayerReader_1_18();
+    public static final LevelReader_1_18 level = new LevelReader_1_18();
+    public static CaveDetector caveDetector;
+
     public static AmbienceThread ambienceThread;
-    public static Consumer<Pair<SoundSource, Float>> onVolumeChanged = null;
+
 
 
     public AmbienceMini()
     {
-        Config.register();
+        config.register();
+        caveDetector = new CaveDetector(config);
+        onScreenOpened = scr -> screen.memorizedScreen = scr;
 
         // Register the setup method for mod-loading
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -61,16 +75,20 @@ public class AmbienceMini
         if (ambienceThread != null)
             ambienceThread.kill();
 
-        if (Config.enabled.get()) {
-            MusicLoader.loadFrom(AMBIENCE_DIRECTORY, LOGGER, new GameStateProvider()).ifPresent(rule -> {
+        if (config.enabled.get()) {
+            var gameStateProvider = new GameStateProviderV1<>(
+                    config, screen, player, level, caveDetector
+            );
+
+            MusicLoader.loadFrom(AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(rule -> {
                 disableNativeMusicManager();
 
                 ambienceThread = new AmbienceThread(
                         rule,
                         LOGGER,
-                        Config.lostFocusEnabled,
                         Minecraft.getInstance()::isWindowActive,
-                        new VolumeMonitor(Config.ignoreMasterVolume)
+                        new VolumeMonitor(config.ignoreMasterVolume),
+                        config
                 );
 
                 LOGGER.info("Successfully loaded Ambience Mini");

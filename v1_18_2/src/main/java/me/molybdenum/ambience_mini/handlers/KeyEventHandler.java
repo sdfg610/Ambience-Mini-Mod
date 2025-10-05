@@ -3,16 +3,10 @@ package me.molybdenum.ambience_mini.handlers;
 import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.setup.KeyBindings;
-import me.molybdenum.ambience_mini.state.CaveDetector;
-import me.molybdenum.ambience_mini.state.GameStateProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -44,10 +38,8 @@ public class KeyEventHandler
         }
 
         if (KeyBindings.showCaveScore.consumeClick()) {
-            ClientLevel l = Minecraft.getInstance().level;
-            Player p = Minecraft.getInstance().player;
-            if (l != null && p != null) {
-                String valueStr = formatter.format(CaveDetector.getAveragedCaveScore(l, p, Common.CAVE_SCORE_RADIUS));
+            if (AmbienceMini.level.notNull() && AmbienceMini.player.notNull()) {
+                String valueStr = formatter.format(AmbienceMini.caveDetector.getAveragedCaveScore(AmbienceMini.level, AmbienceMini.player).orElse(0.0));
                 SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("mod_name"), new TextComponent("Cave score = " + valueStr));
             }
         }

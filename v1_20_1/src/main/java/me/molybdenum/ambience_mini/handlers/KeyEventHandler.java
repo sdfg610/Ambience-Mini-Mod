@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.handlers;
 
 import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.Common;
+import me.molybdenum.ambience_mini.setup.KeyBindings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -27,21 +28,19 @@ public class KeyEventHandler
         if (!mc.isWindowActive())
             return;
 
-        if (KeyRegisterHandler.reloadKey.consumeClick()) {
+        if (KeyBindings.reloadKey.consumeClick()) {
             SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, Component.translatable("mod_name"), Component.translatable("toast.reload_description"));
             AmbienceMini.tryReload();
         }
 
-        if (KeyRegisterHandler.nextMusicKey.consumeClick()) {
+        if (KeyBindings.nextMusicKey.consumeClick()) {
             SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, Component.translatable("mod_name"), Component.translatable("toast.next_music_description"));
             AmbienceMini.ambienceThread.selectNewMusic();
         }
 
-        if (KeyRegisterHandler.showCaveScore.consumeClick()) {
-            ClientLevel l = Minecraft.getInstance().level;
-            Player p = Minecraft.getInstance().player;
-            if (l != null && p != null) {
-                String valueStr = formatter.format(CaveDetector.getAveragedCaveScore(l, p, Common.CAVE_SCORE_RADIUS));
+        if (KeyBindings.showCaveScore.consumeClick()) {
+            if (AmbienceMini.level.notNull() && AmbienceMini.player.notNull()) {
+                String valueStr = formatter.format(AmbienceMini.caveDetector.getAveragedCaveScore(AmbienceMini.level, AmbienceMini.player).orElse(0.0));
                 SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, Component.translatable("mod_name"), Component.literal("Cave score = " + valueStr));
             }
         }

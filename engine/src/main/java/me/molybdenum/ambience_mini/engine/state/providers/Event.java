@@ -1,4 +1,4 @@
-package me.molybdenum.ambience_mini.engine.state;
+package me.molybdenum.ambience_mini.engine.state.providers;
 
 import java.util.function.Supplier;
 

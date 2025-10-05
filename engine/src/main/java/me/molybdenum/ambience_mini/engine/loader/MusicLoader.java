@@ -6,7 +6,7 @@ import me.molybdenum.ambience_mini.engine.loader.semantic_analysis.SemanticAnaly
 import me.molybdenum.ambience_mini.engine.loader.syntactic_analysis.Parser;
 import me.molybdenum.ambience_mini.engine.loader.syntactic_analysis.Scanner;
 import me.molybdenum.ambience_mini.engine.player.rule.Rule;
-import me.molybdenum.ambience_mini.engine.state.BaseGameStateProvider;
+import me.molybdenum.ambience_mini.engine.state.providers.BaseGameStateProvider;
 import org.slf4j.Logger;
 
 import java.io.File;

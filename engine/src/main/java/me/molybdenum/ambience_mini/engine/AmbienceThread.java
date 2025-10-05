@@ -5,7 +5,7 @@ import me.molybdenum.ambience_mini.engine.player.rule.Rule;
 import me.molybdenum.ambience_mini.engine.player.Music;
 import me.molybdenum.ambience_mini.engine.player.MusicPlayer;
 import javazoom.jlayer.decoder.JavaLayerException;
-import me.molybdenum.ambience_mini.engine.state.BaseVolumeMonitor;
+import me.molybdenum.ambience_mini.engine.state.monitors.BaseVolumeMonitor;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -17,9 +17,9 @@ import java.util.function.Supplier;
 public class AmbienceThread extends Thread
 {
     private final Logger _logger;
-    private final Supplier<Boolean> _lostFocusEnabled;
     private final Supplier<Boolean> _isFocused;
     private final BaseVolumeMonitor _volumeMonitor;
+    private final BaseConfig _config;
 
     private static final long UPDATE_INTERVAL_MILLISECONDS = 150;   // TODO: Mod config?
     private static final long NEXT_MUSIC_DELAY_MILLISECONDS = 4000; // TODO: Mod config?
@@ -28,7 +28,7 @@ public class AmbienceThread extends Thread
     private boolean _kill = false;
 
 
-    private final Random _rand = new Random(System.currentTimeMillis());
+    private final Random _rand = new Random(System.nanoTime());
     private final Rule _rule; // An object representation of the config file which decides the music.
 
     private MusicPlayer _mainPlayer = null;
@@ -53,15 +53,15 @@ public class AmbienceThread extends Thread
     public AmbienceThread(
         Rule rule,
         Logger logger,
-        Supplier<Boolean> lostFocusEnabled,
         Supplier<Boolean> isFocused,
-        BaseVolumeMonitor volumeMonitor
+        BaseVolumeMonitor volumeMonitor,
+        BaseConfig config
     ) {
         _rule = rule;
         _logger = logger;
-        _lostFocusEnabled = lostFocusEnabled;
         _isFocused = isFocused;
         _volumeMonitor = volumeMonitor;
+        _config = config;
 
         setDaemon(true);
         setName("Ambience Mini - Music Monitor Thread");
@@ -128,7 +128,7 @@ public class AmbienceThread extends Thread
     }
 
     private boolean handleUnfocused() {
-        if (_lostFocusEnabled.get()) {
+        if (_config.lostFocusEnabled.get()) {
             boolean isUnfocused = !_isFocused.get();
             if (isUnfocused && !_isHalted)
                 haltMusic();
