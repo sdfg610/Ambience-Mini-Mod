@@ -2,7 +2,8 @@ package me.molybdenum.ambience_mini.state.detectors;
 
 import me.molybdenum.ambience_mini.engine.BaseConfig;
 import me.molybdenum.ambience_mini.engine.state.detectors.BaseCaveDetector;
-import me.molybdenum.ambience_mini.engine.state.readers.LevelReader;
+import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
+import me.molybdenum.ambience_mini.engine.state.readers.BlockReading;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
@@ -14,7 +15,9 @@ import net.minecraftforge.common.Tags;
 
 import java.util.*;
 
-public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState, Score>
+import static me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader.MAX_LIGHT_LEVEL;
+
+public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
 {
     protected static final double Y_ROT_SKYWARD_THRESHOLD = 30.0;
     protected static final double SCORE_WEIGHT = 1.0 / 3.0;
@@ -81,10 +84,14 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState, S
         super(config);
     }
 
-
     @Override
-    protected double computeFinalScore(List<Score> scores, LevelReader<BlockPos, Vec3, BlockState> level, Vec3 vOrigin, BlockPos bOrigin)
-    {
+    protected double computeScore(
+            BaseLevelReader<BlockPos, Vec3, BlockState> level,
+            List<BlockReading<BlockPos, BlockState>> readings,
+            BlockPos origin
+    ) {
+        List<Score> scores = readings.stream().map(r -> getScore(level, r)).toList();
+
         var finalScore = scores.stream().map(Score::sum).reduce(0.0, Double::sum) / scores.size();
 
         double caveBlockCount = scores.stream().filter(s -> s.materialScore() > 0.05 || s.tagScore() > 0.05).count();
@@ -93,7 +100,7 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState, S
         double nonCaveBlockCount = scores.stream().filter(s -> s.materialScore() < -0.05 || s.tagScore() < -0.05).count();
         finalScore -= 0.2 * (nonCaveBlockCount / scores.size());
 
-        finalScore -= (0.2/MAX_LIGHT_LEVEL) * level.getMaxSkyLight(bOrigin);
+        finalScore -= (0.2/MAX_LIGHT_LEVEL) * level.getMaxSkyLightAt(origin);
 
         // TODO: Use skyward property to determine sky-view?
         // TODO: Measure of enclosed-ness?
@@ -103,74 +110,38 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState, S
         return finalScore;
     }
 
-    @Override
-    protected Score testDirection(LevelReader<BlockPos, Vec3, BlockState> level, Vec3 origin, double xRot, double yRot)
-    {
-        boolean isSkyward = yRot >= Y_ROT_SKYWARD_THRESHOLD;
 
-        BlockPos bPos = getNearestBlockOrAirAtBoundary(level, origin, xRot, yRot);
-        BlockState blockState = level.getBlockState(bPos);
-        if (isAir(blockState)) {
-            double lightingScore = 1.0 - (2.0/MAX_LIGHT_LEVEL) * level.getMaxSkyLight(bPos);
+    protected Score getScore(
+            BaseLevelReader<BlockPos, Vec3, BlockState> level,
+            BlockReading<BlockPos, BlockState> reading
+    ) {
+        boolean isSkyward = reading.yRot() >= Y_ROT_SKYWARD_THRESHOLD;
+
+        BlockPos bPos = reading.blockPos();
+        BlockState blockState = reading.blockState();
+        if (level.isAir(blockState)) {
+            double lightingScore = 1.0 - (2.0/MAX_LIGHT_LEVEL) * level.getMaxSkyLightAt(bPos);
             return new Score(0, 0, lightingScore, isSkyward, bPos, blockState);
         }
 
         // Generate cave score based on tags [-0.33 ; +0.33]
-        int caveTags = countCaveTags(blockState);
-        int noneCaveTags = countNonCaveTags(blockState);
+        int caveTags = (int)blockState.getTags().filter(CAVE_TAGS::contains).count();
+        int noneCaveTags = (int)blockState.getTags().filter(NON_CAVE_TAGS::contains).count();
         double tagScore = 0;
         if (noneCaveTags < caveTags) tagScore = SCORE_WEIGHT - (SCORE_WEIGHT*2 * ((double) noneCaveTags / caveTags));
         else if (caveTags < noneCaveTags) tagScore = -SCORE_WEIGHT + (SCORE_WEIGHT*2 * ((double) caveTags / noneCaveTags));
 
         // Generate cave score based on material [-0.33 ; +0.33]
         double materialScore = 0;
-        if (isCaveMaterial(blockState)) materialScore = SCORE_WEIGHT;
-        if (isNonCaveMaterial(blockState)) materialScore = -SCORE_WEIGHT;
+        if (CAVE_MATERIALS.contains(blockState.getMaterial())) materialScore = SCORE_WEIGHT;
+        if (NON_CAVE_MATERIALS.contains(blockState.getMaterial())) materialScore = -SCORE_WEIGHT;
 
         // Generate cave score based on maximal sky-lighting [-0.33 ; +0.33]
-        double lightingScore = SCORE_WEIGHT - (SCORE_WEIGHT*2 / MAX_LIGHT_LEVEL) * averageLightingOfAirAroundBlock(level, bPos);
+        double lightingScore = SCORE_WEIGHT - (SCORE_WEIGHT*2 / MAX_LIGHT_LEVEL) * level.getAverageLightingAround(bPos);
         //double lightingScore = 0.33 * (1.5 - (log2(30 - averageLight*2 + 2) / 2)); // Quick dropoff such that only sharp light counts as non-cave
 
         // TODO: Use identifiers???? state.getBlock().getRegistryName().getPath()
 
         return new Score(tagScore, materialScore, lightingScore, isSkyward, bPos, blockState);
-    }
-
-
-    protected int countCaveTags(BlockState blockState) {
-        return (int)blockState.getTags().filter(CAVE_TAGS::contains).count();
-    }
-
-    protected int countNonCaveTags(BlockState blockState) {
-        return (int)blockState.getTags().filter(NON_CAVE_TAGS::contains).count();
-    }
-
-    protected boolean isCaveMaterial(BlockState blockState) {
-        return CAVE_MATERIALS.contains(blockState.getMaterial());
-    }
-
-    protected boolean isNonCaveMaterial(BlockState blockState) {
-        return NON_CAVE_MATERIALS.contains(blockState.getMaterial());
-    }
-
-
-    @Override
-    protected BlockPos offsetB(BlockPos blockPos, int x, int y, int z) {
-        return blockPos.offset(x, y, z);
-    }
-
-    @Override
-    protected Vec3 offsetV(Vec3 position, double x, double y, double z) {
-        return position.add(x, y, z);
-    }
-
-    @Override
-    protected BlockPos vectorToBlockPos(Vec3 position) {
-        return new BlockPos(position);
-    }
-
-    @Override
-    protected boolean isAir(BlockState blockState) {
-        return blockState.isAir();
     }
 }

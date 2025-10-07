@@ -5,7 +5,7 @@ import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.IntT;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.StringT;
 import me.molybdenum.ambience_mini.engine.BaseConfig;
 import me.molybdenum.ambience_mini.engine.state.detectors.BaseCaveDetector;
-import me.molybdenum.ambience_mini.engine.state.readers.LevelReader;
+import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
 import me.molybdenum.ambience_mini.engine.state.readers.PlayerReader;
 import me.molybdenum.ambience_mini.engine.state.monitors.BaseScreenMonitor;
 import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
@@ -15,7 +15,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState> extends BaseGame
 {
     private final BaseScreenMonitor _screen;
     private final PlayerReader<TBlockPos, TVec3> _player;
-    private final LevelReader<TBlockPos, TVec3, TBlockState> _level;
+    private final BaseLevelReader<TBlockPos, TVec3, TBlockState> _level;
     private final BaseCaveDetector<TBlockPos, TVec3, TBlockState> _caveDetector;
 
     private final int _villageScanHorizontalRadius;
@@ -39,7 +39,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState> extends BaseGame
         BaseConfig config,
         BaseScreenMonitor screen,
         PlayerReader<TBlockPos, TVec3> player,
-        LevelReader<TBlockPos, TVec3, TBlockState> level,
+        BaseLevelReader<TBlockPos, TVec3, TBlockState> level,
         BaseCaveDetector<TBlockPos, TVec3, TBlockState> caveDetector
     ) {
         super();

@@ -21,8 +21,8 @@ public class AmbienceThread extends Thread
     private final BaseVolumeMonitor _volumeMonitor;
     private final BaseConfig _config;
 
-    private static final long UPDATE_INTERVAL_MILLISECONDS = 150;   // TODO: Mod config?
-    private static final long NEXT_MUSIC_DELAY_MILLISECONDS = 4000; // TODO: Mod config?
+    private final long _updateIntervalMilliseconds;
+    private final long _nextMusicDelayMilliseconds;
 
 
     private boolean _kill = false;
@@ -63,6 +63,9 @@ public class AmbienceThread extends Thread
         _volumeMonitor = volumeMonitor;
         _config = config;
 
+        _updateIntervalMilliseconds = config.updateInterval.get();
+        _nextMusicDelayMilliseconds = config.nextMusicDelay.get();
+
         setDaemon(true);
         setName("Ambience Mini - Music Monitor Thread");
         start();
@@ -82,7 +85,7 @@ public class AmbienceThread extends Thread
             {
                 // Update at most every "UPDATE_INTERVAL_MILLISECONDS".
                 TimeUnit.MILLISECONDS.sleep(nextUpdate - System.currentTimeMillis());
-                nextUpdate = System.currentTimeMillis() + UPDATE_INTERVAL_MILLISECONDS;
+                nextUpdate = System.currentTimeMillis() + _updateIntervalMilliseconds;
 
                 if (_volumeZero || handleUnfocused())
                     continue;
@@ -215,7 +218,7 @@ public class AmbienceThread extends Thread
         MusicPlayer musicPlayer = new MusicPlayer(
             nextMusic,
             _volumeMonitor.getVolume(),
-            () -> _chooseNextMusicTime = System.currentTimeMillis() + NEXT_MUSIC_DELAY_MILLISECONDS,
+            () -> _chooseNextMusicTime = System.currentTimeMillis() + _nextMusicDelayMilliseconds,
             _logger
         );
         musicPlayer.playOrResume(fade);

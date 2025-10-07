@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.state.readers;
 
-import me.molybdenum.ambience_mini.engine.state.readers.LevelReader;
+import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -13,10 +13,9 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import javax.annotation.Nullable;
+import java.util.List;
 
-public class LevelReader_1_18 implements LevelReader<BlockPos, Vec3, BlockState>
-{
+public class LevelReader_1_18 extends BaseLevelReader<BlockPos, Vec3, BlockState> {
     private final Minecraft mc = Minecraft.getInstance();
 
 
@@ -62,7 +61,8 @@ public class LevelReader_1_18 implements LevelReader<BlockPos, Vec3, BlockState>
 
     @Override
     public boolean isThundering() {
-        return false;
+        assert mc.level != null;
+        return mc.level.isThundering();
     }
 
     @Override
@@ -74,30 +74,30 @@ public class LevelReader_1_18 implements LevelReader<BlockPos, Vec3, BlockState>
 
     @Override
     public int countNearbyVillagers(BlockPos center, int horizontalRadius, int verticalRadius) {
-        return countEntities(Villager.class, center, horizontalRadius, verticalRadius);
+        return getNearbyEntities(Villager.class, center, horizontalRadius, verticalRadius).size();
     }
 
     @Override
     public int countNearbyAnimals(BlockPos center, int horizontalRadius, int verticalRadius) {
-        return countEntities(Animal.class, center, horizontalRadius, verticalRadius);
+        return getNearbyEntities(Animal.class, center, horizontalRadius, verticalRadius).size();
     }
 
 
     @Override
-    public boolean canSeeSky(BlockPos blockPos) {
-        assert mc.level != null;
-        return mc.level.canSeeSky(blockPos);
-    }
-
-    @Override
-    public int getMaxSkyLight(BlockPos blockPos) {
+    public int getMaxSkyLightAt(BlockPos blockPos) {
         assert mc.level != null;
         return mc.level.getBrightness(LightLayer.SKY, blockPos);
     }
 
 
     @Override
-    public @Nullable BlockPos tryGetNearestBlockInDirection(Vec3 from, Vec3 to) {
+    public BlockState getBlockState(BlockPos blockPos) {
+        assert mc.level != null;
+        return mc.level.getBlockState(blockPos);
+    }
+
+    @Override
+    public BlockPos getNearestBlockOrFurthestAir(Vec3 from, Vec3 to) {
         assert mc.level != null;
         var hit = mc.level.clip(new ClipContext(
                 from, to,
@@ -106,25 +106,40 @@ public class LevelReader_1_18 implements LevelReader<BlockPos, Vec3, BlockState>
                 null
         ));
 
-        return hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos() : null;
+        return hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos() : vectorToBlockPos(to);
     }
 
     @Override
-    public BlockState getBlockState(BlockPos blockPos) {
-        assert mc.level != null;
-        return mc.level.getBlockState(blockPos);
+    public boolean isAir(BlockState blockState) {
+        return blockState.isAir();
+    }
+
+
+    @Override
+    public BlockPos vectorToBlockPos(Vec3 position) {
+        return new BlockPos(position);
+    }
+
+    @Override
+    public BlockPos offsetBlockPos(BlockPos blockPos, int x, int y, int z) {
+        return blockPos.offset(x, y, z);
+    }
+
+    @Override
+    public Vec3 offsetVector(Vec3 position, double x, double y, double z) {
+        return position.add(x, y, z);
     }
 
 
     // ------------------------------------------------------------------------------------------------
     // Utilities
-    private <T extends Entity> int countEntities(Class<T> clazz, BlockPos center, int horizontalRadius, int verticalRadius)
+    private <T extends Entity> List<T> getNearbyEntities(Class<T> clazz, BlockPos center, int horizontalRadius, int verticalRadius)
     {
         assert mc.level != null;
         var area = new AABB(
                 center.getX() - horizontalRadius, center.getY() - verticalRadius, center.getZ() - horizontalRadius,
                 center.getX() + horizontalRadius, center.getY() + verticalRadius, center.getZ() + horizontalRadius
         );
-        return mc.level.getEntitiesOfClass(clazz, area, ignore -> true).size();
+        return mc.level.getEntitiesOfClass(clazz, area, ignore -> true);
     }
 }
