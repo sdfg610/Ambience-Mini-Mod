@@ -89,6 +89,12 @@ public class LevelReader_1_18 extends BaseLevelReader<BlockPos, Vec3, BlockState
         return mc.level.getBrightness(LightLayer.SKY, blockPos);
     }
 
+    @Override
+    public int getBlockLightAt(BlockPos blockPos) {
+        assert mc.level != null;
+        return mc.level.getBrightness(LightLayer.BLOCK, blockPos);
+    }
+
 
     @Override
     public BlockState getBlockState(BlockPos blockPos) {

@@ -36,7 +36,6 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
         add(BlockTags.CROPS);
         add(BlockTags.SNOW);
         add(BlockTags.ICE);
-        add(BlockTags.MINEABLE_WITH_SHOVEL);
         add(Tags.Blocks.SAND);
         add(Tags.Blocks.SANDSTONE);
     }};
@@ -53,7 +52,6 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
         add(BlockTags.DEEPSLATE_ORE_REPLACEABLES);
         add(BlockTags.CRYSTAL_SOUND_BLOCKS);
         add(BlockTags.CAVE_VINES);
-        add(BlockTags.MINEABLE_WITH_PICKAXE);
         add(Tags.Blocks.COBBLESTONE);
         add(Tags.Blocks.GRAVEL);
         add(Tags.Blocks.OBSIDIAN);
@@ -88,7 +86,8 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
     protected double computeScore(
             BaseLevelReader<BlockPos, Vec3, BlockState> level,
             List<BlockReading<BlockPos, BlockState>> readings,
-            BlockPos origin
+            Vec3 vOrigin,
+            BlockPos bOrigin
     ) {
         List<Score> scores = readings.stream().map(r -> getScore(level, r)).toList();
 
@@ -100,12 +99,7 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
         double nonCaveBlockCount = scores.stream().filter(s -> s.materialScore() < -0.05 || s.tagScore() < -0.05).count();
         finalScore -= 0.2 * (nonCaveBlockCount / scores.size());
 
-        finalScore -= (0.2/MAX_LIGHT_LEVEL) * level.getMaxSkyLightAt(origin);
-
-        // TODO: Use skyward property to determine sky-view?
-        // TODO: Measure of enclosed-ness?
-        // TODO: Less dependency on material and tags?
-        // TODO: Use world-gen rates to determine whether something could be underground?
+        finalScore -= (0.1/MAX_LIGHT_LEVEL) * level.getMaxSkyLightAt(bOrigin);
 
         return finalScore;
     }
@@ -121,7 +115,7 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
         BlockState blockState = reading.blockState();
         if (level.isAir(blockState)) {
             double lightingScore = 1.0 - (2.0/MAX_LIGHT_LEVEL) * level.getMaxSkyLightAt(bPos);
-            return new Score(0, 0, lightingScore, isSkyward, bPos, blockState);
+            return new Score(0, 0, lightingScore, isSkyward);
         }
 
         // Generate cave score based on tags [-0.33 ; +0.33]
@@ -140,8 +134,6 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
         double lightingScore = SCORE_WEIGHT - (SCORE_WEIGHT*2 / MAX_LIGHT_LEVEL) * level.getAverageLightingAround(bPos);
         //double lightingScore = 0.33 * (1.5 - (log2(30 - averageLight*2 + 2) / 2)); // Quick dropoff such that only sharp light counts as non-cave
 
-        // TODO: Use identifiers???? state.getBlock().getRegistryName().getPath()
-
-        return new Score(tagScore, materialScore, lightingScore, isSkyward, bPos, blockState);
+        return new Score(tagScore, materialScore, lightingScore, isSkyward);
     }
 }

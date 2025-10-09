@@ -8,7 +8,6 @@ import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
 import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
 import me.molybdenum.ambience_mini.setup.Config;
 import me.molybdenum.ambience_mini.setup.NilMusicManager;
-import me.molybdenum.ambience_mini.state.GameStateProvider;
 import me.molybdenum.ambience_mini.state.moniotors.ScreenMonitor;
 import me.molybdenum.ambience_mini.state.moniotors.VolumeMonitor;
 import me.molybdenum.ambience_mini.state.detectors.CaveDetector;

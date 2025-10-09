@@ -46,7 +46,7 @@ public abstract class BaseConfig {
         nextMusicDelay = makeIntOption(
                 "The delay in milliseconds from when some music reaches the end until the next music begins [Default: 4000]",
                 "Next_Music_Delay",
-                4000, 50, 60000
+                4000, 1000, 60000
         );
 
         // Volume control

@@ -38,6 +38,7 @@ public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState>
     public abstract boolean isAir(TBlockState blockState);
 
     public abstract int getMaxSkyLightAt(TBlockPos blockPos);
+    public abstract int getBlockLightAt(TBlockPos blockPos);
 
     public abstract TBlockPos vectorToBlockPos(TVec3 position);
     public abstract TBlockPos offsetBlockPos(TBlockPos blockPos, int x, int y, int z);

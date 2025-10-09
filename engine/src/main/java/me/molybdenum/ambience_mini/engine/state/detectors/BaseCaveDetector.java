@@ -38,7 +38,7 @@ public abstract class BaseCaveDetector<TBlockPos, TVec3, TBlockState>
                         TVec3 vOrigin = level.offsetVector(player.eyePosition(), xOff, yOff, zOff);
                         List<BlockReading<TBlockPos, TBlockState>> readings
                                 = level.readSurroundings(vOrigin, _xGranularity, _yGranularity, _measureDistance);
-                        scores.add(computeScore(level, readings, bOrigin));
+                        scores.add(computeScore(level, readings, vOrigin, bOrigin));
                     }
                 }
 
@@ -51,6 +51,7 @@ public abstract class BaseCaveDetector<TBlockPos, TVec3, TBlockState>
     protected abstract double computeScore(
             BaseLevelReader<TBlockPos, TVec3, TBlockState> level,
             List<BlockReading<TBlockPos, TBlockState>> readings,
+            TVec3 vOrigin,
             TBlockPos bOrigin
     );
 }
