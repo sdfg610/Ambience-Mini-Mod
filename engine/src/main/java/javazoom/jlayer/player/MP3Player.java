@@ -27,11 +27,8 @@ import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-/**
- * a hybrid of javazoom.jl.player.Player tweeked to include <code>play(startFrame, endFrame)</code>
- * hopefully this will be included in the api
- */
-public class NewMP3Player
+
+public class MP3Player
 {
 	private final Decoder decoder = new Decoder();
 	private final JavaSoundAudioDevice audioDevice = new JavaSoundAudioDevice();
@@ -40,20 +37,17 @@ public class NewMP3Player
 	private final AtomicBoolean doPlay = new AtomicBoolean(false);
 
 	private final Bitstream bitstream;
-	private final float initialGain;
 
 	private final Consumer<Exception> onException;
 	private final Consumer<Boolean> onFinishedPlaying; // Boolean indicating whether the music was stopped (true) or ran to end (false)
 
 
-	public NewMP3Player(
+	public MP3Player(
 			InputStream stream,
-			float initialGain,
 			Consumer<Exception> onException,
 			Consumer<Boolean> onFinishedPlaying
 	) {
 		this.bitstream = new Bitstream(stream);
-		this.initialGain = initialGain;
 		this.onException = onException;
 		this.onFinishedPlaying = onFinishedPlaying;
 
@@ -67,7 +61,7 @@ public class NewMP3Player
 		return doPlay.get();
 	}
 
-	public void resume() {
+	public void play() {
 		doPlay.set(true);
 	}
 
@@ -94,7 +88,6 @@ public class NewMP3Player
 		Thread _playerThread = new Thread(() -> {
 			try {
 				audioDevice.open(decoder);
-				audioDevice.setGain(initialGain);
 
 				boolean keepGoing = true;
 				while (keepGoing && !doStop.get()) {

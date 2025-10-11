@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.state.detectors;
 
-import me.molybdenum.ambience_mini.engine.BaseConfig;
+import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
 import me.molybdenum.ambience_mini.engine.state.detectors.BaseCaveDetector;
 import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
 import net.minecraft.core.BlockPos;

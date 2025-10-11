@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.engine.player.music_picker.rules.Rule;
 import me.molybdenum.ambience_mini.engine.player.Music;
 import me.molybdenum.ambience_mini.engine.player.MusicPlayer;
 import javazoom.jlayer.decoder.JavaLayerException;
+import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
 import me.molybdenum.ambience_mini.engine.state.monitors.BaseVolumeMonitor;
 import org.slf4j.Logger;
 
@@ -72,6 +73,7 @@ public class AmbienceThread extends Thread
         start();
     }
 
+
     // ----------------------------------------------------------------------------------------------------------------
     // Thread control
     @Override
@@ -95,7 +97,7 @@ public class AmbienceThread extends Thread
             }
         }
         catch (Exception ex) {
-            _logger.error("Error in MusicPlayerThread.run()", ex);
+            _logger.error("Error in AmbienceThread.run()", ex);
             stopMainMusic(false);
             stopInterruptMusic(false);
         }
@@ -270,7 +272,7 @@ public class AmbienceThread extends Thread
     // Utilities
 
     // The most random number generator I could think of.
-    // "_rand.nextInt" alone just didn't... feel random...
+    // "_rand.nextInt" alone just didn't... feel random...;
     private int getRandom(int max) {
         int iterations = _rand.nextInt(10,50);
         int acc = 0;
@@ -278,7 +280,7 @@ public class AmbienceThread extends Thread
             acc += _rand.nextInt(0, 10000);
             iterations--;
         }
-        return acc % max;
+        return (int)((acc + System.nanoTime()) % max);
     }
 
     // Allowing for other parts of the program to force a new soundtrack to be selected

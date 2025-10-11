@@ -3,7 +3,7 @@ package me.molybdenum.ambience_mini.engine.state.providers;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.FloatT;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.IntT;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.StringT;
-import me.molybdenum.ambience_mini.engine.BaseConfig;
+import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
 import me.molybdenum.ambience_mini.engine.state.detectors.BaseCaveDetector;
 import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
 import me.molybdenum.ambience_mini.engine.state.readers.PlayerReader;

@@ -1,8 +1,6 @@
 package me.molybdenum.ambience_mini.engine.player;
 
-import javazoom.jlayer.decoder.JavaLayerException;
-import javazoom.jlayer.player.controller.MP3Player;
-import org.jetbrains.annotations.NotNull;
+import javazoom.jlayer.player.MP3Player;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -10,7 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MusicPlayer
 {
@@ -22,86 +19,67 @@ public class MusicPlayer
 
     private boolean _suppressOnPlayedToEnd;
 
-    private final AtomicBoolean _isPlaying = new AtomicBoolean(false);
-    private InputStream _musicStream = null;
-    private MP3Player _player = null;
-
-
     public final Music currentMusic;
+    private MP3Player _player = null;
     private float _currentGain;
 
 
-    public MusicPlayer(Music music, float volume, @Nullable Runnable onPlayedToEnd, Logger logger) throws JavaLayerException {
+    public MusicPlayer(Music music, float volume, @Nullable Runnable onPlayedToEnd, Logger logger) {
         currentMusic = music;
         try {
-            _musicStream = currentMusic.getMusicStream();
-            _player = new MP3Player(_musicStream, _currentGain);
-            setVolume(volume);
+            InputStream stream = currentMusic.getMusicStream();
+            _player = new MP3Player(
+                    stream,
+                    ex -> logger.error("Error in MP3 player thread", ex),
+                    ignored -> {
+                        try { stream.close(); }
+                        catch (IOException ignore) { }
 
-            getThread(onPlayedToEnd, logger).start();
+                        if (!_suppressOnPlayedToEnd && onPlayedToEnd != null)
+                            onPlayedToEnd.run();
+                    }
+            );
+            setVolume(volume);
+            _player.play();
         } catch (FileNotFoundException ex) {
             logger.error("File '{}' not found. Fix your Ambience config!", currentMusic.musicName, ex);
         }
     }
 
-    private @NotNull Thread getThread(@Nullable Runnable onPlayedToEnd, Logger logger) {
-        Thread _playerThread = new Thread(() -> {
-            try {
-                _player.play(_isPlaying);
-                _isPlaying.set(false);
 
-                try { _musicStream.close(); }
-                catch (IOException ignore) { }
-
-                if (!_suppressOnPlayedToEnd && onPlayedToEnd != null)
-                    onPlayedToEnd.run();
-            } catch (Throwable ex) {
-                logger.error("Error in MusicPlayer's internal thread", ex);
-            }
-        });
-        _playerThread.setDaemon(true);
-        _playerThread.setName("Ambience Mini - Music Player Thread");
-        return _playerThread;
-    }
-
-
+    // ------------------------------------------------------------------------------------------
     // Controls
     public void playOrResume(boolean fadeIn) {
-        if (_isPlaying.get())
-            return;
-
-        if (fadeIn) {
-            _player.setGain(MIN_GAIN);
-            _isPlaying.set(true);
-            fadeIn();
-        } else {
-            _player.setGain(_currentGain);
-            _isPlaying.set(true);
+        if (!_player.isPlaying()) {
+            if (fadeIn) {
+                _player.setGain(MIN_GAIN);
+                _player.play();
+                fadeIn();
+            } else {
+                _player.setGain(_currentGain);
+                _player.play();
+            }
         }
     }
 
     public void pause(boolean fadeOut) {
-        if (!_isPlaying.get())
-            return;
-
-        if (fadeOut)
-            fadeOut();
-
-        _isPlaying.set(false);
+        if (_player.isPlaying()) {
+            if (fadeOut)
+                fadeOut();
+            _player.pause();
+        }
     }
 
     public void stop(boolean fadeOut) {
         _suppressOnPlayedToEnd = true;
-
         if (fadeOut)
             fadeOut();
 
-        _isPlaying.set(false);
-        _player.close();
+        _player.stop();
     }
 
     public boolean isPlaying() {
-        return _isPlaying.get();
+        return _player.isPlaying();
     }
 
 

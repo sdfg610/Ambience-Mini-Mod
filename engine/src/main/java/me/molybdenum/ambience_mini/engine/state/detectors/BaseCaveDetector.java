@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.engine.state.detectors;
 
-import me.molybdenum.ambience_mini.engine.BaseConfig;
+import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
 import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
 import me.molybdenum.ambience_mini.engine.state.readers.BlockReading;
 import me.molybdenum.ambience_mini.engine.state.readers.PlayerReader;
