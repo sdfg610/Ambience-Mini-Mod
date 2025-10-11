@@ -126,7 +126,7 @@ public class Decoder implements DecoderErrors
 	 * Decodes one frame from an MPEG audio bitstream.
 	 * 
 	 * @param header		The header describing the frame to decode.
-	 * @param bitstream		The bistream that provides the bits for te body of the frame. 
+	 * @param stream		The bistream that provides the bits for te body of the frame.
 	 * 
 	 * @return A SampleBuffer containing the decoded samples.
 	 */

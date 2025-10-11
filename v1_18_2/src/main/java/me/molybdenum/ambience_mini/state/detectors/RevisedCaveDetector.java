@@ -8,11 +8,12 @@ import me.molybdenum.ambience_mini.setup.AmTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+
 import java.util.List;
 
 public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
 {
-    protected static final double Y_ROT_SKYWARD_THRESHOLD = 30.0;
+    protected static final double Y_ROT_SKYWARD_THRESHOLD = 45.0;
 
 
     public RevisedCaveDetector(BaseConfig config) {
@@ -26,7 +27,73 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
             Vec3 vOrigin,
             BlockPos bOrigin
     ) {
-        List<Measurement> scores = readings.stream().map(r -> measure(level, r, vOrigin)).toList();
+        List<Measurement> measurements = readings
+                .stream()
+                .map(r -> measure(level, r, vOrigin))
+                .toList();
+
+        long measureCount = measurements.size();
+        long skywardCount = 0, skyAccessCount = 0;
+
+        double minDist = Double.MAX_VALUE, maxDist = Double.MIN_VALUE;
+        // TODO: Pure min-dist/max-dist is dangerous if one direction is unobstructed. Perhaps base on some percentile?
+
+        for (var m : measurements) {
+            minDist = Double.min(minDist, m.distance());
+            maxDist = Double.max(maxDist, m.distance());
+
+            if (m.isSkyward()) skywardCount++;
+            if (m.type() == MaterialType.AIR) {
+                if (m.isSkyward() && m.maxSkyLightLevel() >= 14)
+                    skyAccessCount++;
+            }
+        }
+
+        double caveScore = 0;
+        for (var m : measurements) {
+            switch (m.type()) {
+                case AIR -> { }
+                case CAVE -> { }
+                case AMBIGUOUS -> { }
+                case WEAK_NON_CAVE -> { }
+                case NON_CAVE -> { }
+            }
+        }
+
+
+
+
+
+
+/*
+
+
+        for (var m : measurements) {
+            switch (m.type()) {
+                case AIR -> airCount++;
+                case CAVE -> caveCount++;
+                case AMBIGUOUS -> ambiguousCount++;
+                case WEAK_NON_CAVE -> weakCount++;
+                case NON_CAVE -> nonCaveCount++;
+            }
+        }
+
+        // Only pulls towards "not in cave"
+        double accessToSkyRatio = (double)skyAccessCount / skywardCount;
+        double nonCaveRatio = (double)nonCaveCount / measureCount;
+        double weakNonCaveRatio = (double)weakCount / measureCount;
+
+        // Only pulls towards "in cave"
+        double caveRatio = (double)caveCount / measureCount;
+
+        // Ambiguous measurements
+        double ambiguousRatio = (double)ambiguousCount / measureCount;
+
+*/
+
+
+
+        //double baseMaterialRatioScore = 1 - (2*Math.max())
 
         /*
         var finalScore = scores.stream().map(Score::sum).reduce(0.0, Double::sum) / scores.size();
@@ -39,23 +106,14 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
 
         //finalScore -= (0.2/MAX_LIGHT_LEVEL) * level.getMaxSkyLightAt(origin);
 
-        // TODO: Use skyward property to determine sky-view?
-        // TODO: Measure of enclosed-ness?
-        // TODO: Less dependency on material and tags?
-        // TODO: Use world-gen rates to determine whether something could be underground?
-
-
-        //
-
-
-
-        return finalScore;*/
+        return finalScore;
+        */
 
         return 0;
     }
 
 
-    protected Measurement measure(
+    private Measurement measure(
             BaseLevelReader<BlockPos, Vec3, BlockState> level,
             BlockReading<BlockPos, BlockState> reading,
             Vec3 origin
@@ -64,7 +122,7 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
         BlockState blockState = reading.blockState();
 
         boolean isSkyward = reading.yRot() >= Y_ROT_SKYWARD_THRESHOLD;
-        int skyLight = level.getMaxSkyLightAt(bPos);
+        int maxSkyLight = level.getMaxSkyLightAt(bPos);
         int blockLight = level.getBlockLightAt(bPos);
         double distance = origin.distanceTo(origin);
 
@@ -78,19 +136,19 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
         else if (blockState.is(AmTags.NON_CAVE_MATERIAL))
             type = MaterialType.NON_CAVE;
 
-        return new Measurement(type, isSkyward, skyLight, blockLight, distance);
+        return new Measurement(type, isSkyward, maxSkyLight, blockLight, distance);
     }
 
 
-    protected record Measurement(
+    private record Measurement(
             MaterialType type,
             boolean isSkyward,
-            int skyLightLevel,
+            int maxSkyLightLevel,
             int blockLightLevel,
             double distance
     ) { }
 
-    protected enum MaterialType {
+    private enum MaterialType {
         AIR, CAVE, AMBIGUOUS, WEAK_NON_CAVE, NON_CAVE
     }
 }

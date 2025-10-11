@@ -34,7 +34,7 @@ public class KeyEventHandler
 
         if (KeyBindings.nextMusicKey.consumeClick()) {
             SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("mod_name"), new TranslatableComponent("toast.next_music_description"));
-            AmbienceMini.ambienceThread.selectNewMusic();
+            AmbienceMini.ambienceThread.forceSelectNewMusic();
         }
 
         if (KeyBindings.showCaveScore.consumeClick()) {

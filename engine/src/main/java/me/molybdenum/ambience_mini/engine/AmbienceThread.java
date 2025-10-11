@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine;
 
-import me.molybdenum.ambience_mini.engine.player.rule.PlaylistChoice;
-import me.molybdenum.ambience_mini.engine.player.rule.Rule;
+import me.molybdenum.ambience_mini.engine.player.music_picker.PlaylistChoice;
+import me.molybdenum.ambience_mini.engine.player.music_picker.rules.Rule;
 import me.molybdenum.ambience_mini.engine.player.Music;
 import me.molybdenum.ambience_mini.engine.player.MusicPlayer;
 import javazoom.jlayer.decoder.JavaLayerException;
@@ -19,8 +19,9 @@ public class AmbienceThread extends Thread
     private final Logger _logger;
     private final Supplier<Boolean> _isFocused;
     private final BaseVolumeMonitor _volumeMonitor;
-    private final BaseConfig _config;
 
+
+    private final boolean _lostFocusEnabled;
     private final long _updateIntervalMilliseconds;
     private final long _nextMusicDelayMilliseconds;
 
@@ -61,8 +62,8 @@ public class AmbienceThread extends Thread
         _logger = logger;
         _isFocused = isFocused;
         _volumeMonitor = volumeMonitor;
-        _config = config;
 
+        _lostFocusEnabled = config.lostFocusEnabled.get();
         _updateIntervalMilliseconds = config.updateInterval.get();
         _nextMusicDelayMilliseconds = config.nextMusicDelay.get();
 
@@ -131,7 +132,7 @@ public class AmbienceThread extends Thread
     }
 
     private boolean handleUnfocused() {
-        if (_config.lostFocusEnabled.get()) {
+        if (_lostFocusEnabled) {
             boolean isUnfocused = !_isFocused.get();
             if (isUnfocused && !_isHalted)
                 haltMusic();
@@ -164,7 +165,7 @@ public class AmbienceThread extends Thread
             if (!nextIsInterrupt)
                 stopInterruptMusic(false);
 
-            if (musicStillValid && unHaltMusic())
+            if (musicStillValid && resumeMusic())
                 return;
             else {
                 stopInterruptMusic(false);
@@ -236,7 +237,7 @@ public class AmbienceThread extends Thread
             _mainPlayer.pause(true);
     }
 
-    private boolean unHaltMusic()
+    private boolean resumeMusic()
     {
         if (_interruptPlayer != null)
             _interruptPlayer.playOrResume(true);
@@ -281,7 +282,7 @@ public class AmbienceThread extends Thread
     }
 
     // Allowing for other parts of the program to force a new soundtrack to be selected
-    public void selectNewMusic() {
+    public void forceSelectNewMusic() {
         _chooseNextMusicTime = 0L;
     }
 }

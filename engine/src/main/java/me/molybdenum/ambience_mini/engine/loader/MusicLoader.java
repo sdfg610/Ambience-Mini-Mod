@@ -5,7 +5,7 @@ import me.molybdenum.ambience_mini.engine.loader.semantic_analysis.Env;
 import me.molybdenum.ambience_mini.engine.loader.semantic_analysis.SemanticAnalysis;
 import me.molybdenum.ambience_mini.engine.loader.syntactic_analysis.Parser;
 import me.molybdenum.ambience_mini.engine.loader.syntactic_analysis.Scanner;
-import me.molybdenum.ambience_mini.engine.player.rule.Rule;
+import me.molybdenum.ambience_mini.engine.player.music_picker.rules.Rule;
 import me.molybdenum.ambience_mini.engine.state.providers.BaseGameStateProvider;
 import org.slf4j.Logger;
 

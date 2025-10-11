@@ -268,7 +268,7 @@ public final class Bitstream implements BitstreamErrors
 		{
 			result = readNextFrame();
 			// E.B, Parse VBR (if any) first frame.
-			if (firstframe == true)
+			if (firstframe)
 			{
 				result.parseVBR(frame_bytes);
 				firstframe = false;

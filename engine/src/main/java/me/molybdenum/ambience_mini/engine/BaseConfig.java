@@ -119,14 +119,14 @@ public abstract class BaseConfig {
                 123, 16, 500
         );
         yAxisGranularity = makeIntOption(
-                "The number of vertical directions (in addition to straight up and down) to probe when determining whether the player is in a cave. Total directions: X_Axis_Granularity * Y_Axis_Granularity + 2 [Default: 4]",
+                "The number of vertical directions (in addition to straight up and down) to probe when determining whether the player is in a cave. Total directions: X_Axis_Granularity * Y_Axis_Granularity + 2 [Default: 5]",
                 "Y_Axis_Granularity",
-                4, 1, 90
+                5, 1, 90
         );
         xAxisGranularity = makeIntOption(
-                "The number of horizontal directions to probe when determining whether the player is in a cave. Total directions X_Axis_Granularity * Y_Axis_Granularity + 2 [Default: 8]",
+                "The number of horizontal directions to probe when determining whether the player is in a cave. Total directions X_Axis_Granularity * Y_Axis_Granularity + 2 [Default: 12]",
                 "X_Axis_Granularity",
-                8, 4, 180
+                12, 4, 180
         );
 
         postSetup();

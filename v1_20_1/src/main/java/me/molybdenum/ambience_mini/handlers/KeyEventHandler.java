@@ -5,9 +5,7 @@ import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.setup.KeyBindings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -35,7 +33,7 @@ public class KeyEventHandler
 
         if (KeyBindings.nextMusicKey.consumeClick()) {
             SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, Component.translatable("mod_name"), Component.translatable("toast.next_music_description"));
-            AmbienceMini.ambienceThread.selectNewMusic();
+            AmbienceMini.ambienceThread.forceSelectNewMusic();
         }
 
         if (KeyBindings.showCaveScore.consumeClick()) {

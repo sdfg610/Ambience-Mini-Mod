@@ -5,11 +5,11 @@ import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expr.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.play.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.shed.*;
 import me.molybdenum.ambience_mini.engine.player.Music;
-import me.molybdenum.ambience_mini.engine.player.rule.BlockRule;
-import me.molybdenum.ambience_mini.engine.player.rule.PlayRule;
-import me.molybdenum.ambience_mini.engine.player.rule.Rule;
-import me.molybdenum.ambience_mini.engine.player.rule.WhenRule;
-import me.molybdenum.ambience_mini.engine.player.rule.condition.*;
+import me.molybdenum.ambience_mini.engine.player.music_picker.rules.BlockRule;
+import me.molybdenum.ambience_mini.engine.player.music_picker.rules.PlayRule;
+import me.molybdenum.ambience_mini.engine.player.music_picker.rules.Rule;
+import me.molybdenum.ambience_mini.engine.player.music_picker.rules.WhenRule;
+import me.molybdenum.ambience_mini.engine.player.music_picker.condition.*;
 import me.molybdenum.ambience_mini.engine.state.providers.BaseGameStateProvider;
 
 import java.nio.file.Path;

@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MusicPlayer
+public class NewMusicPlayer
 {
     public static final float MIN_GAIN = -50F;
     public static final float DEFAULT_MAX_GAIN = 0F;
@@ -31,7 +31,7 @@ public class MusicPlayer
     private float _currentGain;
 
 
-    public MusicPlayer(Music music, float volume, @Nullable Runnable onPlayedToEnd, Logger logger) throws JavaLayerException {
+    public NewMusicPlayer(Music music, float volume, @Nullable Runnable onPlayedToEnd, Logger logger) throws JavaLayerException {
         currentMusic = music;
         try {
             _musicStream = currentMusic.getMusicStream();
@@ -112,7 +112,7 @@ public class MusicPlayer
     }
 
     private void fadeIn() {
-        float diff = Math.abs(_currentGain - MusicPlayer.MIN_GAIN) / FADE_STEP_COUNT;
+        float diff = Math.abs(_currentGain - NewMusicPlayer.MIN_GAIN) / FADE_STEP_COUNT;
         try {
             for (int i = FADE_STEP_COUNT - 1; i >= 0; i--) {
                 _player.setGain(_currentGain - diff*i);
@@ -124,7 +124,7 @@ public class MusicPlayer
     }
 
     private void fadeOut() {
-        float diff = Math.abs(_currentGain - MusicPlayer.MIN_GAIN) / FADE_STEP_COUNT;
+        float diff = Math.abs(_currentGain - NewMusicPlayer.MIN_GAIN) / FADE_STEP_COUNT;
         try {
             for (int i = 0; i < FADE_STEP_COUNT; i++) {
                 _player.setGain(_currentGain - diff*i);
@@ -132,6 +132,6 @@ public class MusicPlayer
             }
         } catch (Throwable ignored) { }
 
-        _player.setGain(MusicPlayer.MIN_GAIN);
+        _player.setGain(NewMusicPlayer.MIN_GAIN);
     }
 }

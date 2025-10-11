@@ -90,7 +90,7 @@ public class SampleBuffer extends Obuffer
 	    {
 		  	fs = f[i++];
 			fs = (fs>32767.0f ? 32767.0f 
-						   : (fs < -32767.0f ? -32767.0f : fs));
+						   : (Math.max(fs, -32767.0f)));
 			
 			s = (short)fs;
 			buffer[pos] = s;
