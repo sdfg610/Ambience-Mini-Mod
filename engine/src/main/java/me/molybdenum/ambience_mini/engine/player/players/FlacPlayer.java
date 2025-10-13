@@ -105,7 +105,10 @@ public class FlacPlayer implements Player {
             try {
                 FLACDecoder decoder = new FLACDecoder(stream);
 
-                Metadata md = Arrays.stream(decoder.readMetadata()).findFirst().orElse(null);
+                Metadata md = Arrays.stream(decoder.readMetadata())
+                        .filter(m -> m instanceof StreamInfo)
+                        .findFirst()
+                        .orElse(null);
                 if (md instanceof StreamInfo streamInfo)
                     initializeSoundSource(streamInfo);
                 else
