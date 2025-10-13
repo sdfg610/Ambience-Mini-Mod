@@ -17,10 +17,10 @@
  *----------------------------------------------------------------------
  */
 
-package javazoom.jlayer.player;
+package me.molybdenum.ambience_mini.engine.player.players;
 
 import javazoom.jlayer.decoder.*;
-import javazoom.jlayer.player.audio.JavaSoundAudioDevice;
+import javazoom.jlayer.audio.JavaSoundAudioDevice;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 
-public class MP3Player
+public class MP3Player implements Player
 {
 	private final Decoder decoder = new Decoder();
 	private final JavaSoundAudioDevice audioDevice = new JavaSoundAudioDevice();
@@ -96,8 +96,6 @@ public class MP3Player
 					keepGoing = decodeFrame();
 				}
 				audioDevice.flush();
-
-				onFinishedPlaying.accept(doStop.get());
 			}
 			catch (Exception ex) {
 				onException.accept(ex);
@@ -108,6 +106,8 @@ public class MP3Player
 				catch (BitstreamException ignored) { }
 
 				doPlay.set(false);
+
+				onFinishedPlaying.accept(doStop.get());
 			}
 		});
 		_playerThread.setDaemon(true);

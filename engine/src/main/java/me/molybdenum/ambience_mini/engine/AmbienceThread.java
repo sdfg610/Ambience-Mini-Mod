@@ -217,7 +217,7 @@ public class AmbienceThread extends Thread
     }
 
 
-    private MusicPlayer playMusic(Music nextMusic, boolean fade) throws JavaLayerException {
+    private MusicPlayer playMusic(Music nextMusic, boolean fade) {
         MusicPlayer musicPlayer = new MusicPlayer(
             nextMusic,
             _volumeMonitor.getVolume(),

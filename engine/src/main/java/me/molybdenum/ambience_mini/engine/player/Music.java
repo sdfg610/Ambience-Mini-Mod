@@ -44,4 +44,13 @@ public class Music
     public int hashCode() {
         return Objects.hash(_filePath, gain);
     }
+
+
+    public boolean isMP3() {
+        return musicName.endsWith(".mp3");
+    }
+
+    public boolean isFLAC() {
+        return musicName.endsWith(".flac");
+    }
 }

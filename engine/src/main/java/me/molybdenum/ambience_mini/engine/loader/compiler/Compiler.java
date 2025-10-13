@@ -45,7 +45,7 @@ public record Compiler(String musicDirectory, BaseGameStateProvider gameStatePro
                     PL(concat.right(), playlists)
             );
         else if (play instanceof Load load)
-            return Stream.of(new Music(getMusicPath(load.file().value()), load.gain() != null ? load.gain().value() : 0f));
+            return Stream.of(new Music(Path.of(musicDirectory, load.file().value()), load.gain() != null ? load.gain().value() : 0f));
         else if (play instanceof Nil)
             return Stream.empty();
 
@@ -93,12 +93,5 @@ public record Compiler(String musicDirectory, BaseGameStateProvider gameStatePro
             return new BinOpCondition(binOp.op(), Expr(binOp.left()), Expr(binOp.right()));
 
         throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
-    }
-
-
-    private Path getMusicPath(String musicName) {
-        if (!musicName.endsWith(".mp3"))
-            return Path.of(musicDirectory, musicName + ".mp3");
-        return Path.of(musicDirectory, musicName);
     }
 }

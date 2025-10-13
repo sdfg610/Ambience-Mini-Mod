@@ -18,7 +18,7 @@
  *----------------------------------------------------------------------
  */
 
-package javazoom.jlayer.player.audio;
+package javazoom.jlayer.audio;
 
 import java.util.Enumeration;
 import java.util.Hashtable;

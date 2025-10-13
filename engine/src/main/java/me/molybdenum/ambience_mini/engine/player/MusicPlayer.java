@@ -1,6 +1,8 @@
 package me.molybdenum.ambience_mini.engine.player;
 
-import javazoom.jlayer.player.MP3Player;
+import me.molybdenum.ambience_mini.engine.player.players.FlacPlayer;
+import me.molybdenum.ambience_mini.engine.player.players.MP3Player;
+import me.molybdenum.ambience_mini.engine.player.players.Player;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -8,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class MusicPlayer
 {
@@ -17,33 +20,49 @@ public class MusicPlayer
     private static final long FADE_STEP_MILLISECONDS = 75;
     private static final int FADE_STEP_COUNT = 10;
 
-    private boolean _suppressOnPlayedToEnd;
-
     public final Music currentMusic;
-    private MP3Player _player = null;
+    private Player _player = null;
     private float _currentGain;
 
 
     public MusicPlayer(Music music, float volume, @Nullable Runnable onPlayedToEnd, Logger logger) {
         currentMusic = music;
         try {
-            InputStream stream = currentMusic.getMusicStream();
-            _player = new MP3Player(
-                    stream,
-                    ex -> logger.error("Error in MP3 player thread", ex),
-                    ignored -> {
-                        try { stream.close(); }
-                        catch (IOException ignore) { }
-
-                        if (!_suppressOnPlayedToEnd && onPlayedToEnd != null)
-                            onPlayedToEnd.run();
-                    }
-            );
+            _player = createPlayer(music, onPlayedToEnd, logger);
             setVolume(volume);
             _player.play();
         } catch (FileNotFoundException ex) {
             logger.error("File '{}' not found. Fix your Ambience config!", currentMusic.musicName, ex);
+        } catch (RuntimeException ex) {
+            logger.error("A problem happened while trying to play '{}'!", currentMusic.musicName, ex);
         }
+    }
+
+    private Player createPlayer(Music music, @Nullable Runnable onPlayedToEnd, Logger logger) throws FileNotFoundException {
+        InputStream stream = currentMusic.getMusicStream();
+
+        Consumer<Boolean> onFinished = wasStopped -> {
+            try { stream.close(); }
+            catch (IOException ignore) { }
+            if (!wasStopped && onPlayedToEnd != null)
+                onPlayedToEnd.run();
+        };
+
+        if (music.isMP3())
+            return new MP3Player(
+                    stream,
+                    ex -> logger.error("Error in MP3 player thread", ex),
+                    onFinished
+            );
+        else if (music.isFLAC())
+            return new FlacPlayer(
+                    stream,
+                    music.musicName,
+                    ex -> logger.error("Error in FLAC player thread", ex),
+                    onFinished
+            );
+
+        throw new RuntimeException("Unsupported file format! How did this get through the semantic analysis? Or is there another bug?");
     }
 
 
@@ -71,7 +90,6 @@ public class MusicPlayer
     }
 
     public void stop(boolean fadeOut) {
-        _suppressOnPlayedToEnd = true;
         if (fadeOut)
             fadeOut();
 

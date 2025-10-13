@@ -18,7 +18,7 @@
  *----------------------------------------------------------------------
  */
 
-package javazoom.jlayer.player.audio;
+package javazoom.jlayer.audio;
 
 import javazoom.jlayer.decoder.JavaLayerException;
 

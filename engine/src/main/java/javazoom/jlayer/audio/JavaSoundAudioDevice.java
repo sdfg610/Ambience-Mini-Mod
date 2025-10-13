@@ -22,7 +22,7 @@
  *----------------------------------------------------------------------
  */
 
-package javazoom.jlayer.player.audio;
+package javazoom.jlayer.audio;
 
 import javax.sound.sampled.*;
 

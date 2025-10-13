@@ -1,5 +1,7 @@
 package me.molybdenum.ambience_mini.engine.loader.semantic_analysis;
 
+import me.molybdenum.ambience_mini.engine.Utils;
+import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.conf.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expr.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.play.*;
@@ -51,10 +53,16 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
                     PL(concat.left(), env),
                     PL(concat.right(), env)
             );
-        else if (play instanceof Load load)
-            return Files.exists(getMusicPath(load.file().value()))
-                    ? Stream.empty()
-                    : Stream.of("Cannot find music-file with name: '" + load.file().value() + "'");
+        else if (play instanceof Load load) {
+            Path musicPath = Path.of(musicDirectory, load.file().value());
+            String ext = Utils.getFileExtension(musicPath.getFileName().toString());
+
+            if (!Files.exists(musicPath))
+                return Stream.of("Cannot find music-file with name: '" + musicPath + "'");
+            else if (!MusicLoader.SUPPORTED_FILE_TYPES.contains(ext))
+                return Stream.of("Ambience mini only supports file types '" + String.join(", ", MusicLoader.SUPPORTED_FILE_TYPES) + "' but got '" + ext + "'");
+            return Stream.empty();
+        }
 
         else if (play instanceof Nil)
             return Stream.empty();
@@ -152,13 +160,6 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
         }
 
         throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
-    }
-
-
-    private Path getMusicPath(String musicName) {
-        if (!musicName.endsWith(".mp3"))
-            return Path.of(musicDirectory, musicName + ".mp3");
-        return Path.of(musicDirectory, musicName);
     }
 
     private boolean isNumber(Type type) {

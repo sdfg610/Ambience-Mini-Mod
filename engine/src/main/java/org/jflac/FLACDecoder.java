@@ -73,21 +73,9 @@ public class FLACDecoder {
     private int badFrames;
     private boolean eof = false;
     
-    private FrameListeners frameListeners = new FrameListeners();
-    private PCMProcessors pcmProcessors = new PCMProcessors();
-    
-    // Decoder states
-    //private static final int DECODER_SEARCH_FOR_METADATA = 0;
-    //private static final int DECODER_READ_METADATA = 1;
-    //private static final int DECODER_SEARCH_FOR_FRAME_SYNC = 2;
-    //private static final int DECODER_READ_FRAME = 3;
-    //private static final int DECODER_END_OF_STREAM = 4;
-    //private static final int DECODER_ABORTED = 5;
-    //private static final int DECODER_UNPARSEABLE_STREAM = 6;
-    //private static final int STREAM_DECODER_MEMORY_ALLOCATION_ERROR = 7;
-    //private static final int STREAM_DECODER_ALREADY_INITIALIZED = 8;
-    //private static final int STREAM_DECODER_INVALID_CALLBACK = 9;
-    //private static final int STREAM_DECODER_UNINITIALIZED = 10;
+    private final FrameListeners frameListeners = new FrameListeners();
+    private final PCMProcessors pcmProcessors = new PCMProcessors();
+
     
     /**
      * The constructor.
@@ -223,13 +211,13 @@ public class FLACDecoder {
      */
     public Metadata[] readMetadata() throws IOException {
         readStreamSync();
-        Vector metadataList = new Vector();
+        Vector<Metadata> metadataList = new Vector<>();
         Metadata metadata;
         do {
             metadata = readNextMetadata();
             metadataList.add(metadata);
         } while (!metadata.isLast());
-        return (Metadata[])metadataList.toArray(new Metadata[0]);
+        return metadataList.toArray(new Metadata[0]);
     }
     
     /**
@@ -248,66 +236,7 @@ public class FLACDecoder {
         } while (!metadata.isLast());
         return (Metadata[])metadataList.toArray(new Metadata[0]);
     }
-    
-    /**
-     * process a single metadata/frame.
-     * @return True of one processed
-     * @throws IOException  on read error
-     */
-    /*
-     public boolean processSingle() throws IOException {
-     
-     while (true) {
-     switch (state) {
-     case DECODER_SEARCH_FOR_METADATA :
-     readStreamSync();
-     break;
-     case DECODER_READ_METADATA :
-     readNextMetadata(); // above function sets the status for us
-     return true;
-     case DECODER_SEARCH_FOR_FRAME_SYNC :
-     frameSync(); // above function sets the status for us
-     break;
-     case DECODER_READ_FRAME :
-     readFrame();
-     return true; // above function sets the status for us
-     //break;
-      case DECODER_END_OF_STREAM :
-      case DECODER_ABORTED :
-      return true;
-      default :
-      return false;
-      }
-      }
-      }
-      */
-    
-    /**
-     * Process all the metadata records.
-     * @throws IOException On read error
-     */
-    /*
-     public void processMetadata() throws IOException {
-     
-     while (true) {
-     switch (state) {
-     case DECODER_SEARCH_FOR_METADATA :
-     readStreamSync();
-     break;
-     case DECODER_READ_METADATA :
-     readNextMetadata(); // above function sets the status for us
-     break;
-     case DECODER_SEARCH_FOR_FRAME_SYNC :
-     case DECODER_READ_FRAME :
-     case DECODER_END_OF_STREAM :
-     case DECODER_ABORTED :
-     default :
-     return;
-     }
-     }
-     }
-     */
-    
+
     /**
      * Decode the FLAC file.
      * @throws IOException  On read error
@@ -316,18 +245,7 @@ public class FLACDecoder {
         readMetadata();
         try {
             while (true) {
-                //switch (state) {
-                //case DECODER_SEARCH_FOR_METADATA :
-                //    readStreamSync();
-                //    break;
-                //case DECODER_READ_METADATA :
-                //    Metadata metadata = readNextMetadata();
-                //    if (metadata == null) break;
-                //    break;
-                //case DECODER_SEARCH_FOR_FRAME_SYNC :
                 findFrameSync();
-                //    break;
-                //case DECODER_READ_FRAME :
                 try {
                     readFrame();
                     frameListeners.processFrame(frame);
@@ -335,13 +253,6 @@ public class FLACDecoder {
                 } catch (FrameDecodeException e) {
                     badFrames++;
                 }
-                //    break;
-                //case DECODER_END_OF_STREAM :
-                //case DECODER_ABORTED :
-                //    return;
-                //default :
-                //    throw new IOException("Unknown state: " + state);
-                //}
             }
         } catch (EOFException e) {
             eof = true;
@@ -353,21 +264,9 @@ public class FLACDecoder {
      * @throws IOException  On read error
      */
     public void decodeFrames() throws IOException {
-        //state = DECODER_SEARCH_FOR_FRAME_SYNC;
         try {
             while (true) {
-                //switch (state) {
-                //case DECODER_SEARCH_FOR_METADATA :
-                //    readStreamSync();
-                //    break;
-                //case DECODER_READ_METADATA :
-                //    Metadata metadata = readNextMetadata();
-                //    if (metadata == null) break;
-                //    break;
-                //case DECODER_SEARCH_FOR_FRAME_SYNC :
                 findFrameSync();
-                //    break;
-                //case DECODER_READ_FRAME :
                 try {
                     readFrame();
                     frameListeners.processFrame(frame);
@@ -375,13 +274,6 @@ public class FLACDecoder {
                 } catch (FrameDecodeException e) {
                     badFrames++;
                 }
-                //    break;
-                //case DECODER_END_OF_STREAM :
-                //case DECODER_ABORTED :
-                //    return;
-                //default :
-                //    throw new IOException("Unknown state: " + state);
-                //}
             }
         } catch (EOFException e) {
             eof = true;
@@ -728,35 +620,15 @@ public class FLACDecoder {
      * @throws IOException  on read error
      */
     public Frame readNextFrame() throws IOException {
-        //boolean got_a_frame;
-        
         try {
             while (true) {
-                //switch (state) {
-                //case STREAM_DECODER_SEARCH_FOR_METADATA :
-                //    findMetadata();
-                //    break;
-                //case STREAM_DECODER_READ_METADATA :
-                //    readMetadata(); /* above function sets the status for us */
-                //    break;
-                //case DECODER_SEARCH_FOR_FRAME_SYNC :
-                findFrameSync(); /* above function sets the status for us */
-                //System.exit(0);
-                //break;
-                //case DECODER_READ_FRAME :
+                findFrameSync();
                 try {
                     readFrame();
                     return frame;
                 } catch (FrameDecodeException e) {
                     badFrames++;
                 }
-                //break;
-                //case DECODER_END_OF_STREAM :
-                //case DECODER_ABORTED :
-                //    return null;
-                //default :
-                //    return null;
-                //}
             }
         } catch (EOFException e) {
             eof = true;
@@ -832,7 +704,7 @@ public class FLACDecoder {
      * @return  The next metadata record
      * @throws IOException  on read error
      */
-    public Metadata readNextMetadata() throws IOException {
+    private Metadata readNextMetadata() throws IOException {
         Metadata metadata = null;
         
         boolean isLast = (bitStream.readRawUInt(Metadata.STREAM_METADATA_IS_LAST_LEN) != 0);
@@ -884,7 +756,7 @@ public class FLACDecoder {
         bitStream.readByteBlockAlignedNoCRC(null, skip);
     }
     
-    private void findFrameSync() throws IOException {
+    public void findFrameSync() throws IOException {
         boolean first = true;
         //int cnt=0;
         
