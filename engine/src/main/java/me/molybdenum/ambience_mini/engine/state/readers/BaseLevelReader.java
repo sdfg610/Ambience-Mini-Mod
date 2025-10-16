@@ -100,7 +100,7 @@ public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState>
 
     // ------------------------------------------------------------------------------------------------
     // Lighting-helpers
-    public double getAverageLightingAround(TBlockPos bPos) {
+    public double getAverageSkyLightingAround(TBlockPos bPos) {
         List<TBlockPos> airPositions = getSurroundingNonCornerPositions(bPos)
                 .filter(this::isAirAt)
                 .toList();
@@ -109,6 +109,18 @@ public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState>
 
         int sum = airPositions.stream()
                 .map(this::getMaxSkyLightAt)
+                .reduce(0, Integer::sum);
+        return (double) sum / airPositions.size();
+    }
+    public double getAverageBlockLightingAround(TBlockPos bPos) {
+        List<TBlockPos> airPositions = getSurroundingNonCornerPositions(bPos)
+                .filter(this::isAirAt)
+                .toList();
+        if (airPositions.isEmpty())
+            return 0;
+
+        int sum = airPositions.stream()
+                .map(this::getBlockLightAt)
                 .reduce(0, Integer::sum);
         return (double) sum / airPositions.size();
     }

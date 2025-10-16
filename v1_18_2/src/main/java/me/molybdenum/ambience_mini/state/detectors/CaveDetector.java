@@ -131,7 +131,7 @@ public class CaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
         if (NON_CAVE_MATERIALS.contains(blockState.getMaterial())) materialScore = -SCORE_WEIGHT;
 
         // Generate cave score based on maximal sky-lighting [-0.33 ; +0.33]
-        double lightingScore = SCORE_WEIGHT - (SCORE_WEIGHT*2 / MAX_LIGHT_LEVEL) * level.getAverageLightingAround(bPos);
+        double lightingScore = SCORE_WEIGHT - (SCORE_WEIGHT*2 / MAX_LIGHT_LEVEL) * level.getAverageSkyLightingAround(bPos);
         //double lightingScore = 0.33 * (1.5 - (log2(30 - averageLight*2 + 2) / 2)); // Quick dropoff such that only sharp light counts as non-cave
 
         return new Score(tagScore, materialScore, lightingScore, isSkyward);
