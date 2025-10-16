@@ -15,6 +15,11 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
 {
     protected static final double Y_ROT_SKYWARD_THRESHOLD = 45.0;
 
+    double SKY_ACCESS_BASE_WEIGHT = .75;
+    double SKY_LIGHT_BASE_WEIGHT = .75;
+    double MIN_LIGHT_BASE_WEIGHT = 1;
+    double CAVE_BASE_WEIGHT = 2;
+
 
     public RevisedCaveDetector(BaseConfig config) {
         super(config);
@@ -27,96 +32,99 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
             Vec3 vOrigin,
             BlockPos bOrigin
     ) {
-        List<Measurement> measurements = readings
-                .stream()
+        List<Measurement> measurements = readings.stream()
                 .map(r -> measure(level, r, vOrigin))
                 .toList();
 
         long measureCount = measurements.size();
-        long skywardCount = 0, skyAccessCount = 0;
+        long caveCount = 0, ambCount = 0, weakCount = 0, nonCount = 0;
 
-        double minDist = Double.MAX_VALUE, maxDist = Double.MIN_VALUE;
-        // TODO: Pure min-dist/max-dist is dangerous if one direction is unobstructed. Perhaps base on some percentile?
+        int skyAccessMaxLevel = 0; double skyAccessLevel = 0;
+        int skyLightMaxLevel = 0; double skyLightLevel = 0;
+        int minimumLightMaxLevel = 0; double minimumLightLevel = 0; // Minimum at daytime, that is.
+        int caveMaxLevel = 0; double caveLevel = 0;
 
         for (var m : measurements) {
-            minDist = Double.min(minDist, m.distance());
-            maxDist = Double.max(maxDist, m.distance());
+            double maxSkyLightRatio = (double)m.maxSkyLightLevel() / BaseLevelReader.MAX_LIGHT_LEVEL;
+            double minimumLightRatio = Math.max(maxSkyLightRatio, (double)m.blockLightLevel() / BaseLevelReader.MAX_LIGHT_LEVEL);
 
-            if (m.isSkyward()) skywardCount++;
-            if (m.type() == MaterialType.AIR) {
-                if (m.isSkyward() && m.maxSkyLightLevel() >= 14)
-                    skyAccessCount++;
+            if (m.isSkyward()) {
+                skyAccessMaxLevel += 1;
+                switch (m.type()) {
+                    case CAVE -> skyAccessLevel += .5 * maxSkyLightRatio;
+                    case AMBIGUOUS  -> skyAccessLevel += .7 * maxSkyLightRatio;
+                    case WEAK_NON_CAVE -> skyAccessLevel += .9 * maxSkyLightRatio;
+                    case NON_CAVE, AIR -> skyAccessLevel += maxSkyLightRatio;
+                }
             }
-        }
 
-        double caveScore = 0;
-        for (var m : measurements) {
+            skyLightMaxLevel += 1;
             switch (m.type()) {
-                case AIR -> { }
-                case CAVE -> { }
-                case AMBIGUOUS -> { }
-                case WEAK_NON_CAVE -> { }
-                case NON_CAVE -> { }
+                case CAVE -> {
+                    caveCount++;
+                    skyLightLevel += .5 * maxSkyLightRatio;
+                    caveMaxLevel += 1; caveLevel += 1;
+                }
+                case AMBIGUOUS -> {
+                    ambCount++;
+                    skyLightLevel += .75 * maxSkyLightRatio;
+                    minimumLightMaxLevel += 1; minimumLightLevel += .75 * minimumLightRatio;
+                }
+                case WEAK_NON_CAVE -> {
+                    weakCount++;
+                    skyLightLevel += .85 * maxSkyLightRatio;
+                    caveMaxLevel += 1; caveLevel += .5;
+                    minimumLightMaxLevel += 1; minimumLightLevel += .85 * minimumLightRatio;
+                }
+                case NON_CAVE -> {
+                    nonCount++;
+                    skyLightLevel += maxSkyLightRatio;
+                    caveMaxLevel += 1;
+                    minimumLightMaxLevel += 1; minimumLightLevel += minimumLightRatio;
+                }
+                case AIR -> skyLightLevel += maxSkyLightRatio;
             }
         }
 
+        double inverseCaveRatio = 1.0 - ((double)caveCount / measureCount);
 
+        // Negated since "more light" gives lower cave score.
+        double skyAccessWeight = SKY_ACCESS_BASE_WEIGHT + .5*inverseCaveRatio;
+        double skyAccessScore = -computeScore(skyAccessWeight, skyAccessLevel / skyAccessMaxLevel);
 
+        // Negated since "more light" gives lower cave score.
+        double skyLightWeight = SKY_LIGHT_BASE_WEIGHT + .5*inverseCaveRatio;
+        double skyLightScore = -computeScore(skyLightWeight, skyLightLevel / skyLightMaxLevel);
 
+        double totalScore = skyAccessScore + skyLightScore;
+        double totalWeight = skyAccessWeight + skyLightWeight;
 
+        if (minimumLightMaxLevel != 0) {
+            double minimumLightScoreWeight = MIN_LIGHT_BASE_WEIGHT * (double)(ambCount + weakCount + nonCount) / measureCount;
 
-/*
-
-
-        for (var m : measurements) {
-            switch (m.type()) {
-                case AIR -> airCount++;
-                case CAVE -> caveCount++;
-                case AMBIGUOUS -> ambiguousCount++;
-                case WEAK_NON_CAVE -> weakCount++;
-                case NON_CAVE -> nonCaveCount++;
-            }
+            totalScore -= computeScore(minimumLightScoreWeight, minimumLightLevel / minimumLightMaxLevel);
+            totalWeight += minimumLightScoreWeight;
         }
 
-        // Only pulls towards "not in cave"
-        double accessToSkyRatio = (double)skyAccessCount / skywardCount;
-        double nonCaveRatio = (double)nonCaveCount / measureCount;
-        double weakNonCaveRatio = (double)weakCount / measureCount;
+        if (caveMaxLevel != 0) {
+            double caveScoreWeight = CAVE_BASE_WEIGHT * (double)(caveCount + nonCount + weakCount) / measureCount;
 
-        // Only pulls towards "in cave"
-        double caveRatio = (double)caveCount / measureCount;
+            totalScore += computeScore(caveScoreWeight, caveLevel / caveMaxLevel);
+            totalWeight += caveScoreWeight;
+        }
 
-        // Ambiguous measurements
-        double ambiguousRatio = (double)ambiguousCount / measureCount;
+        return totalScore / totalWeight; // Average, weighted score
+    }
 
-*/
-
-
-
-        //double baseMaterialRatioScore = 1 - (2*Math.max())
-
-        /*
-        var finalScore = scores.stream().map(Score::sum).reduce(0.0, Double::sum) / scores.size();
-
-        double caveBlockCount = scores.stream().filter(s -> s.materialScore() > 0.05 || s.tagScore() > 0.05).count();
-        finalScore += 0.2 * (caveBlockCount / scores.size());
-
-        double nonCaveBlockCount = scores.stream().filter(s -> s.materialScore() < -0.05 || s.tagScore() < -0.05).count();
-        finalScore -= 0.2 * (nonCaveBlockCount / scores.size());
-
-        //finalScore -= (0.2/MAX_LIGHT_LEVEL) * level.getMaxSkyLightAt(origin);
-
-        return finalScore;
-        */
-
-        return 0;
+    private double computeScore(double weight, double ratio) {
+        return weight*(-1 + 2*ratio);
     }
 
 
     private Measurement measure(
             BaseLevelReader<BlockPos, Vec3, BlockState> level,
             BlockReading<BlockPos, BlockState> reading,
-            Vec3 origin
+            Vec3 ignored
     ) {
         BlockPos bPos = reading.blockPos();
         BlockState blockState = reading.blockState();
@@ -124,7 +132,6 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
         boolean isSkyward = reading.yRot() >= Y_ROT_SKYWARD_THRESHOLD;
         int maxSkyLight = level.getMaxSkyLightAt(bPos);
         int blockLight = level.getBlockLightAt(bPos);
-        double distance = origin.distanceTo(origin);
 
         MaterialType type = MaterialType.AMBIGUOUS;
         if (level.isAir(blockState))
@@ -136,7 +143,7 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
         else if (blockState.is(AmTags.NON_CAVE_MATERIAL))
             type = MaterialType.NON_CAVE;
 
-        return new Measurement(type, isSkyward, maxSkyLight, blockLight, distance);
+        return new Measurement(type, isSkyward, maxSkyLight, blockLight);
     }
 
 
@@ -144,8 +151,7 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
             MaterialType type,
             boolean isSkyward,
             int maxSkyLightLevel,
-            int blockLightLevel,
-            double distance
+            int blockLightLevel
     ) { }
 
     private enum MaterialType {

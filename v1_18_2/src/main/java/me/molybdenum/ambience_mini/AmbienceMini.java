@@ -10,6 +10,7 @@ import me.molybdenum.ambience_mini.setup.Config;
 import me.molybdenum.ambience_mini.setup.KeyBindings;
 import me.molybdenum.ambience_mini.setup.NilMusicManager;
 import me.molybdenum.ambience_mini.state.detectors.CaveDetector;
+import me.molybdenum.ambience_mini.state.detectors.RevisedCaveDetector;
 import me.molybdenum.ambience_mini.state.monitors.ScreenMonitor;
 import me.molybdenum.ambience_mini.state.monitors.VolumeMonitor;
 import me.molybdenum.ambience_mini.state.readers.LevelReader_1_18;
@@ -44,7 +45,7 @@ public class AmbienceMini
     public static final ScreenMonitor screen = new ScreenMonitor();
     public static final PlayerReader_1_18 player = new PlayerReader_1_18();
     public static final LevelReader_1_18 level = new LevelReader_1_18();
-    public static CaveDetector caveDetector;
+    public static RevisedCaveDetector caveDetector;
 
     public static AmbienceThread ambienceThread;
 
@@ -53,7 +54,7 @@ public class AmbienceMini
     public AmbienceMini()
     {
         config.register();
-        caveDetector = new CaveDetector(config);
+        caveDetector = new RevisedCaveDetector(config);
         onScreenOpened = scr -> screen.memorizedScreen = scr;
 
         // Register the setup method for mod-loading
