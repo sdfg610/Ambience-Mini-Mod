@@ -4,16 +4,19 @@ import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.engine.AmbienceThread;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
+import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
 import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
 import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
 import me.molybdenum.ambience_mini.setup.Config;
 import me.molybdenum.ambience_mini.setup.NilMusicManager;
 import me.molybdenum.ambience_mini.state.moniotors.ScreenMonitor;
 import me.molybdenum.ambience_mini.state.moniotors.VolumeMonitor;
-import me.molybdenum.ambience_mini.state.detectors.CaveDetector;
 import me.molybdenum.ambience_mini.state.readers.LevelReader_1_20;
 import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_20;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -40,7 +43,7 @@ public class AmbienceMini
     public static final ScreenMonitor screen = new ScreenMonitor();
     public static final PlayerReader_1_20 player = new PlayerReader_1_20();
     public static final LevelReader_1_20 level = new LevelReader_1_20();
-    public static CaveDetector caveDetector;
+    public static CaveDetector<BlockPos, Vec3, BlockState> caveDetector;
 
     public static AmbienceThread ambienceThread;
 
@@ -48,7 +51,7 @@ public class AmbienceMini
     public AmbienceMini(FMLJavaModLoadingContext context)
     {
         config.register(context);
-        caveDetector = new CaveDetector(config);
+        caveDetector = new CaveDetector<>(config);
         onScreenOpened = scr -> screen.memorizedScreen = scr;
 
         // Register the setup method for mod-loading

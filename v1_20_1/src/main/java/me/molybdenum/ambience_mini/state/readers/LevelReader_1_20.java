@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.state.readers;
 
 import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
+import me.molybdenum.ambience_mini.setup.AmTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -89,6 +90,12 @@ public class LevelReader_1_20 extends BaseLevelReader<BlockPos, Vec3, BlockState
         return mc.level.getBrightness(LightLayer.SKY, blockPos);
     }
 
+    @Override
+    public int getBlockLightAt(BlockPos blockPos) {
+        assert mc.level != null;
+        return mc.level.getBrightness(LightLayer.BLOCK, blockPos);
+    }
+
 
     @Override
     public BlockState getBlockState(BlockPos blockPos) {
@@ -112,6 +119,21 @@ public class LevelReader_1_20 extends BaseLevelReader<BlockPos, Vec3, BlockState
     @Override
     public boolean isAir(BlockState blockState) {
         return blockState.isAir();
+    }
+
+    @Override
+    public boolean isCaveMaterial(BlockState blockState) {
+        return blockState.is(AmTags.CAVE_MATERIAL);
+    }
+
+    @Override
+    public boolean isWeakNonCaveMaterial(BlockState blockState) {
+        return blockState.is(AmTags.WEAK_NON_CAVE_MATERIAL);
+    }
+
+    @Override
+    public boolean isNonCaveMaterial(BlockState blockState) {
+        return blockState.is(AmTags.NON_CAVE_MATERIAL);
     }
 
 

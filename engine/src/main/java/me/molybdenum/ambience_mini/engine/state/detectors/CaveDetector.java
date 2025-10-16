@@ -1,39 +1,64 @@
-package me.molybdenum.ambience_mini.state.detectors;
+package me.molybdenum.ambience_mini.engine.state.detectors;
 
 import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
-import me.molybdenum.ambience_mini.engine.state.detectors.BaseCaveDetector;
 import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
 import me.molybdenum.ambience_mini.engine.state.readers.BlockReading;
-import me.molybdenum.ambience_mini.setup.AmTags;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
+import me.molybdenum.ambience_mini.engine.state.readers.PlayerReader;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockState>
+public class CaveDetector<TBlockPos, TVec3, TBlockState>
 {
     protected static final double Y_ROT_SKYWARD_THRESHOLD = 45.0;
 
     double SKY_ACCESS_BASE_WEIGHT = 1;
     double SKY_LIGHT_BASE_WEIGHT = .5;
-    double ARTIFICIAL_LIGHT_BASE_WEIGHT = .5;
     double CAVE_BASE_WEIGHT = 1;
 
+    private final int _caveScoreRadius;
+    private final int _measureDistance;
+    private final int _xGranularity;
+    private final int _yGranularity;
 
-    public RevisedCaveDetector(BaseConfig config) {
-        super(config);
+
+    public CaveDetector(BaseConfig config) {
+        _caveScoreRadius = config.caveScoreRadius.get();
+        _measureDistance = config.caveMeasureDistance.get();
+        _xGranularity = config.xAxisGranularity.get();
+        _yGranularity = config.yAxisGranularity.get();
     }
 
-    @Override
-    protected double computeScore(
-            BaseLevelReader<BlockPos, Vec3, BlockState> level,
-            List<BlockReading<BlockPos, BlockState>> readings,
-            Vec3 vOrigin,
-            BlockPos bOrigin
+
+    public Optional<Double> getAveragedCaveScore(
+            BaseLevelReader<TBlockPos, TVec3, TBlockState> level, PlayerReader<TBlockPos, TVec3> player
     ) {
+        List<Double> scores = new ArrayList<>();
+        for (int xOff = -_caveScoreRadius; xOff <= _caveScoreRadius; xOff++)
+            for (int yOff = -_caveScoreRadius; yOff <= _caveScoreRadius; yOff++)
+                for (int zOff = -_caveScoreRadius; zOff <= _caveScoreRadius; zOff++) {
+                    TBlockPos bOrigin = level.offsetBlockPos(player.eyeBlockPos(), xOff, yOff, zOff);
+                    if (level.isAirAt(bOrigin)) {
+                        TVec3 vOrigin = level.offsetVector(player.eyePosition(), xOff, yOff, zOff);
+                        List<BlockReading<TBlockPos, TBlockState>> readings
+                                = level.readSurroundings(vOrigin, _xGranularity, _yGranularity, _measureDistance);
+                        scores.add(computeScore(level, readings));
+                    }
+                }
+
+        if (scores.isEmpty())
+            return Optional.empty();
+
+        return Optional.of(scores.stream().reduce(0.0, Double::sum) / scores.size());
+    }
+
+    protected double computeScore(
+            BaseLevelReader<TBlockPos, TVec3, TBlockState> level,
+            List<BlockReading<TBlockPos, TBlockState>> readings
+    ){
         List<Measurement> measurements = readings.stream()
-                .map(r -> measure(level, r, vOrigin))
+                .map(r -> measure(level, r))
                 .toList();
 
         //
@@ -172,18 +197,17 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
     // Produces a score between [-1.0 ; +1.0]
     private double computeAntiProScore(double anti, double pro) {
         return anti <= pro
-            ? 1 - anti / pro
-            : -1 + pro / anti;
+                ? 1 - anti / pro
+                : -1 + pro / anti;
     }
 
 
     private Measurement measure(
-            BaseLevelReader<BlockPos, Vec3, BlockState> level,
-            BlockReading<BlockPos, BlockState> reading,
-            Vec3 ignored
+            BaseLevelReader<TBlockPos, TVec3, TBlockState> level,
+            BlockReading<TBlockPos, TBlockState> reading
     ) {
-        BlockPos bPos = reading.blockPos();
-        BlockState blockState = reading.blockState();
+        TBlockPos bPos = reading.blockPos();
+        TBlockState blockState = reading.blockState();
 
         boolean isSkyward = reading.yRot() >= Y_ROT_SKYWARD_THRESHOLD;
         double maxSkyLight = level.getAverageSkyLightingAround(bPos);
@@ -192,11 +216,11 @@ public class RevisedCaveDetector extends BaseCaveDetector<BlockPos, Vec3, BlockS
         MaterialType type = MaterialType.AMBIGUOUS;
         if (level.isAir(blockState))
             type = MaterialType.AIR;
-        else if (blockState.is(AmTags.CAVE_MATERIAL))
+        else if (level.isCaveMaterial(blockState))
             type = MaterialType.CAVE;
-        else if (blockState.is(AmTags.WEAK_NON_CAVE_MATERIAL))
+        else if (level.isWeakNonCaveMaterial(blockState))
             type = MaterialType.WEAK_NON_CAVE;
-        else if (blockState.is(AmTags.NON_CAVE_MATERIAL))
+        else if (level.isNonCaveMaterial(blockState))
             type = MaterialType.NON_CAVE;
 
         return new Measurement(type, isSkyward, maxSkyLight, blockLight);

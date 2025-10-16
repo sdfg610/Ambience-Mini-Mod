@@ -35,7 +35,11 @@ public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState>
 
     public abstract TBlockState getBlockState(TBlockPos blockPos);
     public abstract TBlockPos getNearestBlockOrFurthestAir(TVec3 from, TVec3 to);
+
     public abstract boolean isAir(TBlockState blockState);
+    public abstract boolean isCaveMaterial(TBlockState blockState);
+    public abstract boolean isWeakNonCaveMaterial(TBlockState blockState);
+    public abstract boolean isNonCaveMaterial(TBlockState blockState);
 
     public abstract int getMaxSkyLightAt(TBlockPos blockPos);
     public abstract int getBlockLightAt(TBlockPos blockPos);
