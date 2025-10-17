@@ -213,7 +213,7 @@ public class AmbienceThread extends Thread
         while (nextMusic == currentMusic)
             nextMusic = playlist.get(getRandom(playlist.size()));
 
-        return playlist.get(getRandom(playlist.size()));
+        return nextMusic;
     }
 
 

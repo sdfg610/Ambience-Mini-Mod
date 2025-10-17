@@ -86,6 +86,10 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
         double caveRatio = (caveCount + .25*ambCount + (airCount - airCount*averageAirLightRatio)) / measureCount;
         double nonCaveRatio = (nonCount + .25*ambCount + .5*weakCount + airCount*averageAirLightRatio) / measureCount;
 
+        // TODO: Use cave/noncave ratio to correct weak weights?
+
+        // TODO: Add "Weak cave material". Terracotta is also found in some buildings!
+
         //
         // Weighted judgments
         //
@@ -185,7 +189,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
         double totalWeight = skyAccessWeight + skyLightWeight + caveWeight;
 
         if (maxArtificialLight != 0) {
-            double artificialLightScore = (artificialLight / maxArtificialLight) * (1+.5*nonCaveRatio);
+            double artificialLightScore = (artificialLight / maxArtificialLight) * (1+.5*nonCaveRatio-.5*caveRatio);
 
             totalScore -= artificialLightScore;
             totalWeight += artificialLightScore;

@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 public class Config extends BaseConfig
 {
-    private ForgeConfigSpec.Builder clientBuilder = new ForgeConfigSpec.Builder();
+    private ForgeConfigSpec.Builder clientBuilder;
 
 
     public void register(FMLJavaModLoadingContext context) {

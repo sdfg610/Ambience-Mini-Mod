@@ -43,19 +43,19 @@ public class AmBlockTagsProvider extends TagsProvider<Block>
 
         tag(AmTags.WEAK_NON_CAVE_MATERIAL)
                 .addTag(BlockTags.PRESSURE_PLATES)
-                .addTag(BlockTags.DOORS)
+                .addTag(BlockTags.WOODEN_DOORS)
+                .addTag(BlockTags.WOODEN_TRAPDOORS)
                 .addTag(BlockTags.TRAPDOORS)
                 .addTag(BlockTags.FENCES)
                 .addTag(BlockTags.FENCE_GATES)
                 .addTag(BlockTags.SHULKER_BOXES)
+                .addTag(Tags.Blocks.CHESTS)
+                .add(Blocks.COMPOSTER)
                 .add(Blocks.CRAFTING_TABLE)
                 .add(Blocks.FURNACE)
                 .add(Blocks.BLAST_FURNACE)
                 .add(Blocks.ENCHANTING_TABLE)
                 .add(Blocks.BREWING_STAND)
-                .add(Blocks.CHEST)
-                .add(Blocks.ENDER_CHEST)
-                .add(Blocks.TRAPPED_CHEST)
                 .add(Blocks.ANVIL)
                 .add(Blocks.CHIPPED_ANVIL)
                 .add(Blocks.DAMAGED_ANVIL)
@@ -116,6 +116,8 @@ public class AmBlockTagsProvider extends TagsProvider<Block>
                 .add(Blocks.KELP)
                 .add(Blocks.KELP_PLANT)
                 .add(Blocks.TURTLE_EGG)
+                .add(Blocks.FERN)
+                .add(Blocks.LIGHTNING_ROD)
         ;
     }
 

@@ -1,5 +1,4 @@
 {
-  "replace": false,
   "values": [
     "minecraft:white_concrete",
     "minecraft:orange_concrete",
@@ -43,7 +42,7 @@
     "#minecraft:beehives",
     "#minecraft:crops",
     "#minecraft:saplings",
-    "#minecraft:carpets",
+    "#minecraft:wool_carpets",
     "#minecraft:flowers",
     "#minecraft:sand",
     "#minecraft:impermeable",
@@ -56,6 +55,7 @@
     "minecraft:grass_block",
     "minecraft:grass",
     "minecraft:coarse_dirt",
+    "minecraft:mud",
     "minecraft:tall_grass",
     "minecraft:oak_sapling",
     "minecraft:spruce_sapling",

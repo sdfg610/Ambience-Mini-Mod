@@ -51,7 +51,6 @@ public class AmbienceMini
     public AmbienceMini(FMLJavaModLoadingContext context)
     {
         config.register(context);
-        caveDetector = new CaveDetector<>(config);
         onScreenOpened = scr -> screen.memorizedScreen = scr;
 
         // Register the setup method for mod-loading
@@ -64,6 +63,7 @@ public class AmbienceMini
 
     @SubscribeEvent
     public static void clientSetup(final FMLClientSetupEvent event) {
+        caveDetector = new CaveDetector<>(config);
         tryReload();
     }
 
