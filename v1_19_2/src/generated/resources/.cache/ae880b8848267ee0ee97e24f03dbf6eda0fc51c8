@@ -1,0 +1,4 @@
+// 1.19.2	2025-10-19T12:03:35.889810991	Ambience Mini Block-Tags Provider
+93f1b21e12dd7cccb5524f1fc271e1b1e2fbee1c data/ambience_mini/tags/blocks/cave_material.json
+7de8fbaed4356813d88eb41f8e05200eb0e56670 data/ambience_mini/tags/blocks/non_cave_material.json
+272f0954b06fffcd26ecc7c4d905d422f49a5727 data/ambience_mini/tags/blocks/weak_non_cave_material.json

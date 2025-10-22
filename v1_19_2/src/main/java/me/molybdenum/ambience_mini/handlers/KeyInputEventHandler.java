@@ -15,7 +15,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 @Mod.EventBusSubscriber(modid = Common.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value={Dist.CLIENT})
-public class KeyEventHandler
+public class KeyInputEventHandler
 {
     private static final NumberFormat formatter = new DecimalFormat("#0.00000");
 
