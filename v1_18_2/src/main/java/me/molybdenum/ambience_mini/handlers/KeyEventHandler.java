@@ -2,7 +2,6 @@ package me.molybdenum.ambience_mini.handlers;
 
 import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.setup.KeyBindings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.network.chat.TextComponent;
@@ -27,17 +26,17 @@ public class KeyEventHandler
         if (!mc.isWindowActive())
             return;
 
-        if (KeyBindings.reloadKey.consumeClick()) {
+        if (AmbienceMini.keyBindings.reloadKey.consumeClick()) {
             SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("mod_name"), new TranslatableComponent("toast.reload_description"));
             AmbienceMini.tryReload();
         }
 
-        if (KeyBindings.nextMusicKey.consumeClick()) {
+        if (AmbienceMini.keyBindings.nextMusicKey.consumeClick()) {
             SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("mod_name"), new TranslatableComponent("toast.next_music_description"));
             AmbienceMini.ambienceThread.forceSelectNewMusic();
         }
 
-        if (KeyBindings.showCaveScore.consumeClick()) {
+        if (AmbienceMini.keyBindings.showCaveScore.consumeClick()) {
             if (AmbienceMini.level.notNull() && AmbienceMini.player.notNull()) {
                 String valueStr = formatter.format(AmbienceMini.caveDetector.getAveragedCaveScore(AmbienceMini.level, AmbienceMini.player).orElse(0.0));
                 SystemToast.addOrUpdate(mc.getToasts(), SystemToast.SystemToastIds.TUTORIAL_HINT, new TranslatableComponent("mod_name"), new TextComponent("Cave score = " + valueStr));

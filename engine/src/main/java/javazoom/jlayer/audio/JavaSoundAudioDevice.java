@@ -102,7 +102,7 @@ public class JavaSoundAudioDevice extends AudioDeviceBase
 		  t = ex;
 		}
         if (source==null)
-			throw new JavaLayerException("cannot obtain source audio line", t);
+			throw new JavaLayerException("Cannot obtain source audio line", t);
     }
 
 	public int millisecondsToBytes(AudioFormat fmt, int time)

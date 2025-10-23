@@ -1,19 +1,31 @@
 package me.molybdenum.ambience_mini.setup;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import me.molybdenum.ambience_mini.engine.setup.BaseKeyBindings;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.client.ClientRegistry;
 
-public class KeyBindings
+public class KeyBindings extends BaseKeyBindings<KeyMapping>
 {
-    public static final KeyMapping reloadKey = new KeyMapping("key.reload", InputConstants.KEY_P, "mod_name");
-    public static final KeyMapping nextMusicKey = new KeyMapping("key.nextMusic", InputConstants.KEY_PAGEUP, "mod_name");
-    public static final KeyMapping showCaveScore = new KeyMapping("key.showCaveScore", InputConstants.KEY_PAGEDOWN, "mod_name");
+    @Override
+    protected int keyP() {
+        return InputConstants.KEY_P;
+    }
 
-    public static void register()
-    {
-        ClientRegistry.registerKeyBinding(reloadKey);
-        ClientRegistry.registerKeyBinding(nextMusicKey);
-        ClientRegistry.registerKeyBinding(showCaveScore);
+    @Override
+    protected int keyPageUp() {
+        return InputConstants.KEY_PAGEUP;
+    }
+
+    @Override
+    protected int keyPageDown() {
+        return InputConstants.KEY_PAGEDOWN;
+    }
+
+    @Override
+    protected KeyMapping makeAndRegister(String description, int defaultKey) {
+        KeyMapping key = new KeyMapping(description, defaultKey, "mod_name");
+        ClientRegistry.registerKeyBinding(key);
+        return key;
     }
 }

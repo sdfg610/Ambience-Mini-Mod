@@ -4,19 +4,23 @@ import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.engine.AmbienceThread;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
+import me.molybdenum.ambience_mini.engine.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
 import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
 import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
 import me.molybdenum.ambience_mini.setup.Config;
+import me.molybdenum.ambience_mini.setup.KeyBindings;
 import me.molybdenum.ambience_mini.setup.NilMusicManager;
 import me.molybdenum.ambience_mini.state.moniotors.ScreenMonitor;
 import me.molybdenum.ambience_mini.state.moniotors.VolumeMonitor;
 import me.molybdenum.ambience_mini.state.readers.LevelReader_1_20;
 import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_20;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -32,14 +36,19 @@ import java.util.function.Consumer;
 @Mod(Common.MODID)
 public class AmbienceMini
 {
+    // Utils
     public static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
     public static final String AMBIENCE_DIRECTORY = "ambience_music";
 
     public static final Logger LOGGER = LogUtils.getLogger();
 
+    // Setup
+    public static final Config config = new Config();
+    public static BaseKeyBindings<KeyMapping> keyBindings;
+
+    // Music
     public static Consumer<Screens> onScreenOpened;
 
-    public static final Config config = new Config();
     public static final ScreenMonitor screen = new ScreenMonitor();
     public static final PlayerReader_1_20 player = new PlayerReader_1_20();
     public static final LevelReader_1_20 level = new LevelReader_1_20();
@@ -56,16 +65,18 @@ public class AmbienceMini
         // Register the setup method for mod-loading
         IEventBus modBus = context.getModEventBus();
         modBus.addListener(AmbienceMini::clientSetup);
-
-        // Register ourselves for server and other game events we are interested in
-        //MinecraftForge.EVENT_BUS.register(this);
+        modBus.addListener(AmbienceMini::registerKeybindings);
     }
 
-    @SubscribeEvent
     public static void clientSetup(final FMLClientSetupEvent event) {
         caveDetector = new CaveDetector<>(config);
         tryReload();
     }
+
+    public static void registerKeybindings(final RegisterKeyMappingsEvent event) {
+        keyBindings = new KeyBindings(event).registerKeys();
+    }
+
 
     public static void tryReload()
     {
