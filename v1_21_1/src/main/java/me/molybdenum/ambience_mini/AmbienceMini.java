@@ -1,77 +1,76 @@
 package me.molybdenum.ambience_mini;
 
-import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.engine.AmbienceThread;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
 import me.molybdenum.ambience_mini.engine.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
-import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
 import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
+import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
 import me.molybdenum.ambience_mini.setup.Config;
 import me.molybdenum.ambience_mini.setup.KeyBindings;
 import me.molybdenum.ambience_mini.setup.NilMusicManager;
-import me.molybdenum.ambience_mini.state.monitors.ScreenMonitor;
-import me.molybdenum.ambience_mini.state.monitors.VolumeMonitor;
-import me.molybdenum.ambience_mini.state.readers.LevelReader_1_18;
-import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_18;
+import me.molybdenum.ambience_mini.state.moniotors.ScreenMonitor;
+import me.molybdenum.ambience_mini.state.moniotors.VolumeMonitor;
+import me.molybdenum.ambience_mini.state.readers.LevelReader_1_21;
+import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_21;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.slf4j.Logger;
-import oshi.util.tuples.Pair;
+
+import com.mojang.logging.LogUtils;
+
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.ModContainer;
 
 import java.util.function.Consumer;
 
-
-// The value here should match an entry in the META-INF/mods.toml file
 @Mod(Common.MODID)
-public class AmbienceMini
-{
+public class AmbienceMini {
     // Utils
-    public static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
+
     public static final Logger LOGGER = LogUtils.getLogger();
 
     // Setup
     public static final Config config = new Config();
-    public static final BaseKeyBindings<KeyMapping> keyBindings = new KeyBindings();
+    public static BaseKeyBindings<KeyMapping> keyBindings;
 
     // Music
-    public static Consumer<Pair<SoundSource, Float>> onVolumeChanged;
     public static Consumer<Screens> onScreenOpened;
 
     public static final ScreenMonitor screen = new ScreenMonitor();
-    public static final PlayerReader_1_18 player = new PlayerReader_1_18();
-    public static final LevelReader_1_18 level = new LevelReader_1_18();
+    public static final PlayerReader_1_21 player = new PlayerReader_1_21();
+    public static final LevelReader_1_21 level = new LevelReader_1_21();
     public static CaveDetector<BlockPos, Vec3, BlockState> caveDetector;
 
     public static AmbienceThread ambienceThread;
 
-
-    public AmbienceMini()
-    {
-        config.register();
-        keyBindings.registerKeys();
-        caveDetector = new CaveDetector<>(config);
+    // The constructor for the mod class is the first code that is run when your mod is loaded.
+    // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
+    public AmbienceMini(IEventBus modEventBus, ModContainer modContainer) {
+        config.register(modContainer);
         onScreenOpened = scr -> screen.memorizedScreen = scr;
 
-        // Register the setup method for mod-loading
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-        modBus.addListener(AmbienceMini::clientSetup);
+        modEventBus.addListener(AmbienceMini::clientSetup);
+        modEventBus.addListener(AmbienceMini::registerKeybindings);
     }
 
     public static void clientSetup(final FMLClientSetupEvent event) {
+        caveDetector = new CaveDetector<>(config);
         tryReload();
     }
+
+    public static void registerKeybindings(final RegisterKeyMappingsEvent event) {
+        keyBindings = new KeyBindings(event).registerKeys();
+    }
+
 
     public static void tryReload()
     {
@@ -105,7 +104,7 @@ public class AmbienceMini
     {
         Minecraft mc = Minecraft.getInstance();
         ObfuscationReflectionHelper.setPrivateValue(
-                Minecraft.class, mc, new NilMusicManager(mc), OBF_MC_MUSIC_MANAGER
+                Minecraft.class, mc, new NilMusicManager(mc), "musicManager"
         );
     }
 }

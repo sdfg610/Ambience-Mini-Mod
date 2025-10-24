@@ -63,13 +63,13 @@ public abstract class AudioDeviceFactory
 	 * @return			A newly-created instance of the audio device class.
 	 */
 	protected AudioDevice instantiate(ClassLoader loader, String name)
-		throws ClassNotFoundException, 
-			   IllegalAccessException, 
+		throws ClassNotFoundException,
+			   IllegalAccessException,
 			   InstantiationException
 	{
 		AudioDevice dev = null;
 		
-		Class cls = null;
+		Class<?> cls = null;
 		if (loader==null)
 		{
 			cls = Class.forName(name);

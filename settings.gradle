@@ -2,6 +2,9 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         maven {
+            url = 'https://maven.neoforged.net/releases'
+        }
+        maven {
             name = 'MinecraftForge'
             url = 'https://maven.minecraftforge.net/'
         }
@@ -9,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
 rootProject.name = 'AmbienceMini'
@@ -17,3 +20,4 @@ include('engine')
 include('v1_18_2')
 include('v1_19_2')
 include('v1_20_1')
+include('v1_21_1')

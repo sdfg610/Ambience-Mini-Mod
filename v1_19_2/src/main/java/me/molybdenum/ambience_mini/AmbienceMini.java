@@ -40,7 +40,6 @@ public class AmbienceMini
 {
     // Utils
     public static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
-    public static final String AMBIENCE_DIRECTORY = "ambience_music";
 
     public static final Logger LOGGER = LogUtils.getLogger();
 
@@ -91,7 +90,7 @@ public class AmbienceMini
                     config, screen, player, level, caveDetector
             );
 
-            MusicLoader.loadFrom(AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(rule -> {
+            MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(rule -> {
                 disableNativeMusicManager();
 
                 ambienceThread = new AmbienceThread(

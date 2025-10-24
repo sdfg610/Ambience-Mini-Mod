@@ -1,10 +1,29 @@
 {
-	"mod_name": "Ambience Mini",
+  "mod_name": "Ambience Mini",
 
-	"key.reload": "Reload",
-	"key.nextMusic": "Change music",
-	"key.showCaveScore": "Show cave score",
+  "key.reload": "Reload",
+  "key.nextMusic": "Change music",
+  "key.showCaveScore": "Show cave score",
 
-	"toast.reload_description": "Trying to reload music player...",
-	"toast.next_music_description": "Selecting new music..."
+  "toast.reload_description": "Trying to reload music player...",
+  "toast.next_music_description": "Selecting new music...",
+
+  "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
+  "ambience_mini.configuration.Enabled": "Enabled",
+  "ambience_mini.configuration.Update_Interval": "Update interval",
+  "ambience_mini.configuration.Next_Music_Delay": "Next music delay",
+  "ambience_mini.configuration.Lost_Focus_FadeOut": "Lost focus fadeout",
+  "ambience_mini.configuration.Ignore_Master_Volume": "Ignore master volume",
+  "ambience_mini.configuration.Village_Scan_Horizontal_Radius": "Village scan: horizontal radius",
+  "ambience_mini.configuration.Village_Scan_Vertical_Radius": "Village scan: vertical radius",
+  "ambience_mini.configuration.Villager_Count_Threshold": "Villager count threshold",
+  "ambience_mini.configuration.Ranch_Scan_Horizontal_Radius": "Ranch scan: horizontal radius",
+  "ambience_mini.configuration.Ranch_Scan_Vertical_Radius": "Ranch scan: vertical radius",
+  "ambience_mini.configuration.Animal_Count_Threshold": "Animal count threshold",
+  "ambience_mini.configuration.Fishing_Timeout": "Fishing timeout",
+  "ambience_mini.configuration.Fishing_Move_Threshold": "Fishing move threshold",
+  "ambience_mini.configuration.Cave_Score_Radius": "Cave score radius",
+  "ambience_mini.configuration.Cave_Measure_Distance": "Cave measure distance",
+  "ambience_mini.configuration.Y_Axis_Granularity": "Y-axis granularity",
+  "ambience_mini.configuration.X_Axis_Granularity": "X-axis granularity"
 }
