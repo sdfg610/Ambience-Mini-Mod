@@ -1,4 +1,4 @@
-package me.molybdenum.ambience_mini.setup;
+package me.molybdenum.ambience_mini;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.MusicManager;

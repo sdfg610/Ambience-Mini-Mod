@@ -23,21 +23,24 @@ public class AmBlockTagsProvider extends BlockTagsProvider
         // Cave material specifically does not include "Tags.Blocks.STONE" since this tag contains too many/diverse blocks
         tag(AmTags.CAVE_MATERIAL)
                 .addTag(BlockTags.BASE_STONE_OVERWORLD) // Stone, Andesite, Granite, Diorite, Deepslate, Tuff
-                .addTag(BlockTags.TERRACOTTA)
                 .addTag(BlockTags.CAVE_VINES)
                 .addTag(BlockTags.CRYSTAL_SOUND_BLOCKS)
                 .addTag(Tags.Blocks.ORES) // All the default ores.
                 .addTag(Tags.Blocks.ORES_IN_GROUND_DEEPSLATE)
                 .addTag(Tags.Blocks.ORES_IN_GROUND_STONE)
-                .addTag(Tags.Blocks.COBBLESTONE) // Different cobblestones and likely more by other mods
-                .addTag(Tags.Blocks.GRAVEL) // Gravel and likely more by other mods
-                .addTag(Tags.Blocks.OBSIDIAN) // Obsidian and likely more by other mods
                 .add(Blocks.BEDROCK)
                 .add(Blocks.COBWEB)
                 .add(Blocks.GLOW_LICHEN)
                 .add(Blocks.CALCITE)
                 .add(Blocks.POINTED_DRIPSTONE)
                 .add(Blocks.DRIPSTONE_BLOCK)
+        ;
+
+        tag(AmTags.WEAK_CAVE_MATERIAL)
+                .addTag(Tags.Blocks.COBBLESTONE) // Different cobblestones and likely more by other mods
+                .addTag(Tags.Blocks.GRAVEL) // Gravel and likely more by other mods
+                .addTag(Tags.Blocks.OBSIDIAN) // Obsidian and likely more by other mods
+                .addTag(BlockTags.TERRACOTTA)
         ;
 
         tag(AmTags.WEAK_NON_CAVE_MATERIAL)
@@ -49,6 +52,8 @@ public class AmBlockTagsProvider extends BlockTagsProvider
                 .addTag(BlockTags.STAIRS)
                 .addTag(BlockTags.FENCE_GATES)
                 .addTag(BlockTags.SHULKER_BOXES)
+                .addTag(BlockTags.CAULDRONS)
+                .addTag(BlockTags.ANVIL)
                 .addTag(Tags.Blocks.CHESTS)
                 .add(Blocks.COMPOSTER)
                 .add(Blocks.CRAFTING_TABLE)
@@ -56,21 +61,12 @@ public class AmBlockTagsProvider extends BlockTagsProvider
                 .add(Blocks.BLAST_FURNACE)
                 .add(Blocks.ENCHANTING_TABLE)
                 .add(Blocks.BREWING_STAND)
-                .add(Blocks.ANVIL)
-                .add(Blocks.CHIPPED_ANVIL)
-                .add(Blocks.DAMAGED_ANVIL)
-                .add(Blocks.CAULDRON)
-                .add(Blocks.LAVA_CAULDRON)
-                .add(Blocks.WATER_CAULDRON)
-                .add(Blocks.POWDER_SNOW_CAULDRON)
                 .add(Blocks.LOOM)
                 .add(Blocks.BARREL)
                 .add(Blocks.SMOKER)
                 .add(Blocks.GRINDSTONE)
                 .add(Blocks.LECTERN)
                 .add(Blocks.SMITHING_TABLE)
-                .add(Blocks.LANTERN)
-                .add(Blocks.LIGHTNING_ROD)
         ;
 
         registerConcrete(tag(AmTags.NON_CAVE_MATERIAL))
@@ -80,6 +76,7 @@ public class AmBlockTagsProvider extends BlockTagsProvider
                 .addTag(BlockTags.CORAL_PLANTS)
                 .addTag(BlockTags.WALL_CORALS)
                 .addTag(BlockTags.LOGS)
+                .addTag(BlockTags.OVERWORLD_NATURAL_LOGS)
                 .addTag(BlockTags.LEAVES)
                 .addTag(BlockTags.BEEHIVES)
                 .addTag(BlockTags.CROPS)
@@ -100,12 +97,6 @@ public class AmBlockTagsProvider extends BlockTagsProvider
                 .add(Blocks.MUD)
                 .add(Blocks.TALL_GRASS)
                 .add(Blocks.OAK_SAPLING)
-                .add(Blocks.SPRUCE_SAPLING)
-                .add(Blocks.ACACIA_SAPLING)
-                .add(Blocks.BAMBOO_SAPLING)
-                .add(Blocks.BIRCH_SAPLING)
-                .add(Blocks.DARK_OAK_SAPLING)
-                .add(Blocks.JUNGLE_SAPLING)
                 .add(Blocks.SEAGRASS)
                 .add(Blocks.TALL_SEAGRASS)
                 .add(Blocks.BOOKSHELF)
@@ -118,7 +109,7 @@ public class AmBlockTagsProvider extends BlockTagsProvider
                 .add(Blocks.KELP_PLANT)
                 .add(Blocks.TURTLE_EGG)
                 .add(Blocks.FERN)
-                .add(Blocks.LIGHTNING_ROD)
+                .add(Blocks.CACTUS)
         ;
     }
 

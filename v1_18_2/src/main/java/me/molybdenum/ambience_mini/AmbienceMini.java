@@ -10,7 +10,6 @@ import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
 import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
 import me.molybdenum.ambience_mini.setup.Config;
 import me.molybdenum.ambience_mini.setup.KeyBindings;
-import me.molybdenum.ambience_mini.setup.NilMusicManager;
 import me.molybdenum.ambience_mini.state.monitors.ScreenMonitor;
 import me.molybdenum.ambience_mini.state.monitors.VolumeMonitor;
 import me.molybdenum.ambience_mini.state.readers.LevelReader_1_18;
@@ -22,11 +21,11 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 import oshi.util.tuples.Pair;
 
@@ -60,7 +59,6 @@ public class AmbienceMini
     public AmbienceMini()
     {
         config.register();
-        keyBindings.registerKeys();
         caveDetector = new CaveDetector<>(config);
         onScreenOpened = scr -> screen.memorizedScreen = scr;
 
@@ -70,6 +68,7 @@ public class AmbienceMini
     }
 
     public static void clientSetup(final FMLClientSetupEvent event) {
+        keyBindings.registerKeys();
         tryReload();
     }
 
