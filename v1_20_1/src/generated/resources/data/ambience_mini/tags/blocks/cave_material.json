@@ -1,15 +1,11 @@
 {
   "values": [
     "#minecraft:base_stone_overworld",
-    "#minecraft:terracotta",
     "#minecraft:cave_vines",
     "#minecraft:crystal_sound_blocks",
     "#forge:ores",
     "#forge:ores_in_ground/deepslate",
     "#forge:ores_in_ground/stone",
-    "#forge:cobblestone",
-    "#forge:gravel",
-    "#forge:obsidian",
     "minecraft:bedrock",
     "minecraft:cobweb",
     "minecraft:glow_lichen",

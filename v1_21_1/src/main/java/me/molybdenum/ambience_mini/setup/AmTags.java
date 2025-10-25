@@ -11,7 +11,7 @@ public class AmTags {
     public static final TagKey<Block> CAVE_MATERIAL = create("cave_material");
 
     // These will count more towards being cave if other cave materials are present
-    public static final TagKey<Block> WEAK_CAVE_MATERIAL = create("weak_non_cave_material");
+    public static final TagKey<Block> WEAK_CAVE_MATERIAL = create("weak_cave_material");
 
     // These will count more towards being non-cave if other non-cave materials are present
     public static final TagKey<Block> WEAK_NON_CAVE_MATERIAL = create("weak_non_cave_material");
