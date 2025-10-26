@@ -2,13 +2,11 @@
   "required": true,
   "minVersion": "0.8",
   "package": "me.molybdenum.ambience_mini.mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_21",
   "client": [
-    "SoundManagerMixin",
     "ClassInstanceMultiMapMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "refmap": "mixins.ambience_mini.refmap.json"
+  }
 }

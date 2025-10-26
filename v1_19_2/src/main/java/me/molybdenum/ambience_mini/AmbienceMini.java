@@ -12,8 +12,8 @@ import me.molybdenum.ambience_mini.setup.Config;
 import me.molybdenum.ambience_mini.setup.KeyBindings;
 import me.molybdenum.ambience_mini.state.monitors.ScreenMonitor;
 import me.molybdenum.ambience_mini.state.monitors.VolumeMonitor;
-import me.molybdenum.ambience_mini.state.readers.LevelReader_1_18;
-import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_18;
+import me.molybdenum.ambience_mini.state.readers.LevelReader_1_19;
+import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_19;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -50,8 +50,8 @@ public class AmbienceMini
     public static Consumer<Screens> onScreenOpened;
 
     public static final ScreenMonitor screen = new ScreenMonitor();
-    public static final PlayerReader_1_18 player = new PlayerReader_1_18();
-    public static final LevelReader_1_18 level = new LevelReader_1_18();
+    public static final PlayerReader_1_19 player = new PlayerReader_1_19();
+    public static final LevelReader_1_19 level = new LevelReader_1_19();
     public static CaveDetector<BlockPos, Vec3, BlockState> caveDetector;
 
     public static AmbienceThread ambienceThread;

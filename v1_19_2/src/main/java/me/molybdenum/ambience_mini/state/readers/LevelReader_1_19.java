@@ -16,7 +16,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
-public class LevelReader_1_18 extends BaseLevelReader<BlockPos, Vec3, BlockState> {
+public class LevelReader_1_19 extends BaseLevelReader<BlockPos, Vec3, BlockState> {
     private final Minecraft mc = Minecraft.getInstance();
 
 
@@ -124,6 +124,11 @@ public class LevelReader_1_18 extends BaseLevelReader<BlockPos, Vec3, BlockState
     @Override
     public boolean isCaveMaterial(BlockState blockState) {
         return blockState.is(AmTags.CAVE_MATERIAL);
+    }
+
+    @Override
+    public boolean isWeakCaveMaterial(BlockState blockState) {
+        return blockState.is(AmTags.WEAK_CAVE_MATERIAL);
     }
 
     @Override

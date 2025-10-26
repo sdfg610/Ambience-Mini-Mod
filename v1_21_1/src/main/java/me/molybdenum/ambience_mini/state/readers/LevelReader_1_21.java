@@ -11,8 +11,10 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 
 import java.util.List;
 
@@ -106,11 +108,11 @@ public class LevelReader_1_21 extends BaseLevelReader<BlockPos, Vec3, BlockState
     @Override
     public BlockPos getNearestBlockOrFurthestAir(Vec3 from, Vec3 to) {
         assert mc.level != null;
-        var hit = mc.level.clip(new ClipContext(
+        BlockHitResult hit = mc.level.clip(new ClipContext(
                 from, to,
                 ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
-                (Entity) null
+                CollisionContext.empty()
         ));
 
         return hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos() : vectorToBlockPos(to);
@@ -124,6 +126,11 @@ public class LevelReader_1_21 extends BaseLevelReader<BlockPos, Vec3, BlockState
     @Override
     public boolean isCaveMaterial(BlockState blockState) {
         return blockState.is(AmTags.CAVE_MATERIAL);
+    }
+
+    @Override
+    public boolean isWeakCaveMaterial(BlockState blockState) {
+        return blockState.is(AmTags.WEAK_CAVE_MATERIAL);
     }
 
     @Override

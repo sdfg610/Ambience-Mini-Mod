@@ -12,7 +12,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
 
-public class PlayerReader_1_18 implements me.molybdenum.ambience_mini.engine.state.readers.PlayerReader<BlockPos, Vec3> {
+public class PlayerReader_1_19 implements me.molybdenum.ambience_mini.engine.state.readers.PlayerReader<BlockPos, Vec3> {
     private final Minecraft mc = Minecraft.getInstance();
 
 

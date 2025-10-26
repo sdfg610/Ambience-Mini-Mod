@@ -38,6 +38,7 @@ public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState>
 
     public abstract boolean isAir(TBlockState blockState);
     public abstract boolean isCaveMaterial(TBlockState blockState);
+    public abstract boolean isWeakCaveMaterial(TBlockState blockState);
     public abstract boolean isWeakNonCaveMaterial(TBlockState blockState);
     public abstract boolean isNonCaveMaterial(TBlockState blockState);
 

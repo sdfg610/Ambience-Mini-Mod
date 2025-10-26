@@ -127,6 +127,11 @@ public class LevelReader_1_18 extends BaseLevelReader<BlockPos, Vec3, BlockState
     }
 
     @Override
+    public boolean isWeakCaveMaterial(BlockState blockState) {
+        return blockState.is(AmTags.WEAK_CAVE_MATERIAL);
+    }
+
+    @Override
     public boolean isWeakNonCaveMaterial(BlockState blockState) {
         return blockState.is(AmTags.WEAK_NON_CAVE_MATERIAL);
     }
