@@ -14,7 +14,11 @@ public class SoundManagerMixin {
     @Inject(at = @At("HEAD"), method = "updateSourceVolume(Lnet/minecraft/sounds/SoundSource;F)V")
     public void onUpdateSourceVolume(SoundSource p_120359_, float p_120360_, CallbackInfo ignored)
     {
-        if (AmbienceMini.onVolumeChanged != null)
-            AmbienceMini.onVolumeChanged.accept(new Pair<>(p_120359_, p_120360_));
+        if (AmbienceMini.volume != null) {
+            switch (p_120359_) {
+                case MASTER -> AmbienceMini.volume.setMasterVolume(p_120360_);
+                case MUSIC -> AmbienceMini.volume.setMusicVolume(p_120360_);
+            }
+        }
     }
 }

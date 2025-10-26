@@ -6,7 +6,7 @@ import me.molybdenum.ambience_mini.engine.player.Music;
 import me.molybdenum.ambience_mini.engine.player.MusicPlayer;
 import javazoom.jlayer.decoder.JavaLayerException;
 import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
-import me.molybdenum.ambience_mini.engine.state.monitors.BaseVolumeMonitor;
+import me.molybdenum.ambience_mini.engine.state.monitors.VolumeMonitor;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class AmbienceThread extends Thread
 {
     private final Logger _logger;
     private final Supplier<Boolean> _isFocused;
-    private final BaseVolumeMonitor _volumeMonitor;
+    private final VolumeMonitor _volumeMonitor;
 
 
     private final boolean _lostFocusEnabled;
@@ -56,7 +56,7 @@ public class AmbienceThread extends Thread
         Rule rule,
         Logger logger,
         Supplier<Boolean> isFocused,
-        BaseVolumeMonitor volumeMonitor,
+        VolumeMonitor volumeMonitor,
         BaseConfig config
     ) {
         _rule = rule;

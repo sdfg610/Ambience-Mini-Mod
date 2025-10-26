@@ -20,13 +20,8 @@ public class ScreenMonitor extends BaseScreenMonitor
 
 
     @Override
-    public boolean isScreenNull() {
+    public boolean isActualScreenNull() {
         return mc.screen == null;
-    }
-
-    @Override
-    public boolean isDeathScreen() {
-        return mc.screen instanceof DeathScreen;
     }
 
     @Override

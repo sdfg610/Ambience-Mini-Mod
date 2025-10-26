@@ -6,9 +6,7 @@ public abstract class BaseScreenMonitor
 {
     public Screens memorizedScreen = Screens.NONE;
 
-    public abstract boolean isScreenNull();
-
-    public abstract boolean isDeathScreen();
+    public abstract boolean isActualScreenNull();
 
     public abstract Optional<String> getBossIdIfInFight();
 }

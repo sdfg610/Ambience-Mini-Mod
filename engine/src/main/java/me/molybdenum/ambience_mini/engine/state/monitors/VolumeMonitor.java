@@ -1,26 +1,45 @@
 package me.molybdenum.ambience_mini.engine.state.monitors;
 
+import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
+
 import java.util.HashSet;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public abstract class BaseVolumeMonitor {
+public class VolumeMonitor {
+    private float _masterVolume;
+    private float _musicVolume;
+
     private final Supplier<Boolean> _ignoreMasterVolume;
     private final HashSet<Consumer<Float>> volumeChangedHandlers = new HashSet<>();
 
 
-    protected BaseVolumeMonitor(Supplier<Boolean> ignoreMasterVolume) {
-        _ignoreMasterVolume = ignoreMasterVolume;
-
-        initialize();
+    public VolumeMonitor(BaseConfig config, float master, float music) {
+        _ignoreMasterVolume = config.ignoreMasterVolume;
+        _masterVolume = master;
+        _musicVolume = music;
     }
 
 
-    protected abstract void initialize();
+    public float getMasterVolume() {
+        return _masterVolume;
+    }
 
-    protected abstract float getMusicVolume();
+    public void setMasterVolume(float volume) {
+        _masterVolume = volume;
+        handleVolumeChanged();
+    }
 
-    protected abstract float getMasterVolume();
+
+    public float getMusicVolume() {
+        return _musicVolume;
+    }
+
+    public void setMusicVolume(float volume) {
+        _musicVolume = volume;
+        handleVolumeChanged();
+    }
+
 
     public float getVolume() {
         return getMusicVolume() *  (_ignoreMasterVolume.get() ? 1f : getMasterVolume());

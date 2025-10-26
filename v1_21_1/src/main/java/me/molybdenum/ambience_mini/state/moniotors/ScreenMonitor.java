@@ -4,7 +4,6 @@ import me.molybdenum.ambience_mini.engine.state.monitors.BaseScreenMonitor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.LerpingBossEvent;
-import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.neoforged.fml.util.ObfuscationReflectionHelper;
 
@@ -18,13 +17,8 @@ public class ScreenMonitor extends BaseScreenMonitor
 
 
     @Override
-    public boolean isScreenNull() {
+    public boolean isActualScreenNull() {
         return mc.screen == null;
-    }
-
-    @Override
-    public boolean isDeathScreen() {
-        return mc.screen instanceof DeathScreen;
     }
 
     @Override

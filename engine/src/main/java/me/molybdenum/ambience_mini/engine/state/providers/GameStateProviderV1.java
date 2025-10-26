@@ -136,31 +136,31 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState> extends BaseGame
     // ------------------------------------------------------------------------------------------------
     // Global events
     public boolean inMainMenu() {
-        if (_screen.isScreenNull())
+        if (_screen.isActualScreenNull())
             _screen.memorizedScreen = Screens.NONE;
         return _screen.memorizedScreen == Screens.MAIN_MENU;
     }
 
     public boolean isJoiningWorld() {
-        if (_screen.isScreenNull())
+        if (_screen.isActualScreenNull())
             _screen.memorizedScreen = Screens.NONE;
         return _screen.memorizedScreen == Screens.JOINING;
     }
 
     public boolean isDisconnected() {
-        if (_screen.isScreenNull())
+        if (_screen.isActualScreenNull())
             _screen.memorizedScreen = Screens.NONE;
         return _screen.memorizedScreen == Screens.DISCONNECTED;
     }
 
     public boolean isPaused() {
-        if (_screen.isScreenNull())
+        if (_screen.isActualScreenNull())
             _screen.memorizedScreen = Screens.NONE;
         return _screen.memorizedScreen == Screens.PAUSE;
     }
 
     public boolean onCreditsScreen() {
-        if (_screen.isScreenNull())
+        if (_screen.isActualScreenNull())
             _screen.memorizedScreen = Screens.NONE;
         return _screen.memorizedScreen == Screens.CREDITS;
     }
@@ -234,7 +234,9 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState> extends BaseGame
     // ------------------------------------------------------------------------------------------------
     // Player-state-based events
     public boolean isDead() {
-        return _screen.isDeathScreen();
+        if (_screen.isActualScreenNull())
+            _screen.memorizedScreen = Screens.NONE;
+        return _screen.memorizedScreen == Screens.DEATH;
     }
 
     public boolean isSleeping() {

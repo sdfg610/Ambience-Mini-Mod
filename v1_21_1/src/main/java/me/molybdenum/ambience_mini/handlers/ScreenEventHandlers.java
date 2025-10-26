@@ -22,23 +22,26 @@ public class ScreenEventHandlers
     // Client events
     @SubscribeEvent
     public static void onScreenChanged(final ScreenEvent.Opening event) {
-        if (AmbienceMini.onScreenOpened == null)
-            return;
-
         Screen screen = event.getScreen();
         if (screen instanceof ProgressScreen || screen instanceof ConnectScreen || screen instanceof LevelLoadingScreen || screen instanceof ReceivingLevelScreen)
-            AmbienceMini.onScreenOpened.accept(Screens.JOINING);
+            AmbienceMini.screen.memorizedScreen = Screens.JOINING;
+
         else if (screen instanceof DisconnectedScreen || screen instanceof DisconnectedRealmsScreen)
-            AmbienceMini.onScreenOpened.accept(Screens.DISCONNECTED);
+            AmbienceMini.screen.memorizedScreen = Screens.DISCONNECTED;
+
         else if (screen instanceof PauseScreen) {
             IntegratedServer srv = Minecraft.getInstance().getSingleplayerServer();
             if (srv != null && !srv.isPublished())
-                AmbienceMini.onScreenOpened.accept(Screens.PAUSE);
+                AmbienceMini.screen.memorizedScreen = Screens.PAUSE;
         }
+
         else if (screen instanceof WinScreen)
-            AmbienceMini.onScreenOpened.accept(Screens.CREDITS);
-        else if (screen instanceof TitleScreen || screen instanceof JoinMultiplayerScreen || screen instanceof DirectJoinServerScreen || screen instanceof SelectWorldScreen || screen instanceof CreateWorldScreen) {
-            AmbienceMini.onScreenOpened.accept(Screens.MAIN_MENU);
-        }
+            AmbienceMini.screen.memorizedScreen = Screens.CREDITS;
+
+        else if (screen instanceof TitleScreen || screen instanceof JoinMultiplayerScreen || screen instanceof DirectJoinServerScreen || screen instanceof SelectWorldScreen || screen instanceof CreateWorldScreen)
+            AmbienceMini.screen.memorizedScreen = Screens.MAIN_MENU;
+
+        else if (screen instanceof DeathScreen)
+            AmbienceMini.screen.memorizedScreen = Screens.DEATH;
     }
 }

@@ -6,28 +6,28 @@ import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
 import me.molybdenum.ambience_mini.engine.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
-import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
+import me.molybdenum.ambience_mini.engine.state.monitors.VolumeMonitor;
 import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
 import me.molybdenum.ambience_mini.setup.Config;
 import me.molybdenum.ambience_mini.setup.KeyBindings;
 import me.molybdenum.ambience_mini.state.moniotors.ScreenMonitor;
-import me.molybdenum.ambience_mini.state.moniotors.VolumeMonitor;
 import me.molybdenum.ambience_mini.state.readers.LevelReader_1_20;
 import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_20;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
 
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -44,9 +44,9 @@ public class AmbienceMini
     public static BaseKeyBindings<KeyMapping> keyBindings;
 
     // Music
-    public static Consumer<Screens> onScreenOpened;
-
     public static final ScreenMonitor screen = new ScreenMonitor();
+    public static VolumeMonitor volume;
+
     public static final PlayerReader_1_20 player = new PlayerReader_1_20();
     public static final LevelReader_1_20 level = new LevelReader_1_20();
     public static CaveDetector<BlockPos, Vec3, BlockState> caveDetector;
@@ -57,21 +57,26 @@ public class AmbienceMini
     public AmbienceMini(FMLJavaModLoadingContext context)
     {
         config.register(context);
-        onScreenOpened = scr -> screen.memorizedScreen = scr;
 
         // Register the setup method for mod-loading
         IEventBus modBus = context.getModEventBus();
-        modBus.addListener(AmbienceMini::clientSetup);
         modBus.addListener(AmbienceMini::registerKeybindings);
-    }
-
-    public static void clientSetup(final FMLClientSetupEvent event) {
-        caveDetector = new CaveDetector<>(config);
-        tryReload();
+        modBus.addListener(AmbienceMini::loadComplete);
     }
 
     public static void registerKeybindings(final RegisterKeyMappingsEvent event) {
         keyBindings = new KeyBindings(event).registerKeys();
+    }
+
+    public static void loadComplete(final FMLLoadCompleteEvent event) {
+        caveDetector = new CaveDetector<>(config);
+        volume = new VolumeMonitor(
+                config,
+                Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
+                Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC)
+        );
+
+        tryReload();
     }
 
 
@@ -88,12 +93,9 @@ public class AmbienceMini
             MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(rule -> {
                 disableNativeMusicManager();
 
+                Supplier<Boolean> isFocused = Minecraft.getInstance()::isWindowActive;
                 ambienceThread = new AmbienceThread(
-                        rule,
-                        LOGGER,
-                        Minecraft.getInstance()::isWindowActive,
-                        new VolumeMonitor(config.ignoreMasterVolume),
-                        config
+                        rule, LOGGER, isFocused, volume, config
                 );
 
                 LOGGER.info("Successfully loaded Ambience Mini");
