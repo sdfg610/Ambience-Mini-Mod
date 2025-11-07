@@ -1,18 +1,18 @@
 package me.molybdenum.ambience_mini.setup;
 
-import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
+import me.molybdenum.ambience_mini.engine.setup.BaseClientConfig;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.function.Supplier;
 
-public class Config extends BaseConfig
+public class ClientConfig extends BaseClientConfig
 {
     private ModConfigSpec.Builder clientBuilder;
 
 
-    public void register(ModContainer modContainer) {
+    public ClientConfig(ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.CLIENT, clientBuilder.build());
     }
 

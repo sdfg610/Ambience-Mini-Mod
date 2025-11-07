@@ -1,18 +1,24 @@
 package me.molybdenum.ambience_mini.state.readers;
 
-import me.molybdenum.ambience_mini.engine.state.readers.VectorCoordinate;
+import me.molybdenum.ambience_mini.engine.state.readers.PlayerReader;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.BossHealthOverlay;
+import net.minecraft.client.gui.components.LerpingBossEvent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.horse.Donkey;
 import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
-public class PlayerReader_1_21 implements me.molybdenum.ambience_mini.engine.state.readers.PlayerReader<BlockPos, Vec3> {
+public class PlayerReader_1_21 implements PlayerReader<BlockPos, Vec3> {
     private final Minecraft mc = Minecraft.getInstance();
 
 
@@ -55,12 +61,6 @@ public class PlayerReader_1_21 implements me.molybdenum.ambience_mini.engine.sta
     public Vec3 eyePosition() {
         assert mc.player != null;
         return mc.player.getEyePosition();
-    }
-
-    @Override
-    public VectorCoordinate vectorCoordinate() {
-        assert mc.player != null;
-        return new VectorCoordinate(mc.player.getX(), mc.player.getY(), mc.player.getZ());
     }
 
 
@@ -176,5 +176,27 @@ public class PlayerReader_1_21 implements me.molybdenum.ambience_mini.engine.sta
     public boolean fishingHookInWater() {
         assert mc.player != null;
         return mc.player.fishing != null && mc.player.fishing.isInWater();
+    }
+
+    @Override
+    public Optional<String> getBossIdIfInFight() {
+        var bossOverlay = mc.gui.getBossOverlay();
+        Map<UUID, LerpingBossEvent> bossMap = ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, bossOverlay, "events");
+        if (bossMap == null || bossMap.isEmpty())
+            return Optional.empty();
+
+        var bossEvent = bossMap.values()
+                .stream()
+                .findFirst()
+                .get();
+        return Optional.of(
+                ((TranslatableContents)bossEvent.getName()).getKey()
+        );
+    }
+
+    @Override
+    public double distanceTo(Vec3 position) {
+        assert mc.player != null;
+        return mc.player.position().distanceTo(position);
     }
 }

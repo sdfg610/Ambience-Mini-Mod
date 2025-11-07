@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState>
+public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState, TEntity>
 {
     // RotX = sideways [-180.0 ; +179.9]
     // RotY = up/down [-90.0 ; +90.0]
@@ -16,10 +16,13 @@ public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState>
 
     public static final int MAX_LIGHT_LEVEL = 15;
 
+
     // ------------------------------------------------------------------------------------------------
     // Abstract API
     public abstract boolean isNull();
     public abstract boolean notNull();
+
+    public abstract boolean isWorldTickingPaused();
 
     public abstract String getDimensionId();
     public abstract String getBiomeID(TBlockPos blockPos);
@@ -29,6 +32,9 @@ public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState>
     public abstract boolean isRaining();
     public abstract boolean isThundering();
     public abstract boolean isColdEnoughToSnow(TBlockPos blockPos);
+
+    public abstract TEntity getEntityById(int id);
+    public abstract TVec3 getEntityPosition(TEntity entity);
 
     public abstract int countNearbyVillagers(TBlockPos center, int horizontalRadius, int verticalRadius);
     public abstract int countNearbyAnimals(TBlockPos center, int horizontalRadius, int verticalRadius);

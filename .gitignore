@@ -27,4 +27,16 @@ forge*changelog.txt
 v*/run-data/
 
 v1_18_2/src/generated/resources/.cache/
+v1_19_2/src/generated/resources/.cache/
 v1_20_1/src/generated/resources/.cache/
+v1_21_1/src/generated/resources/.cache/
+
+v1_21_1/runs/
+
+run-server_1_21/
+
+run-server_1_18/
+
+run-server_1_19/
+
+run-server_1_20/

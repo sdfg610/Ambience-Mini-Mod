@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.engine.state.detectors;
 
-import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
+import me.molybdenum.ambience_mini.engine.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
 import me.molybdenum.ambience_mini.engine.state.readers.BlockReading;
 import me.molybdenum.ambience_mini.engine.state.readers.PlayerReader;
@@ -23,7 +23,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
     private final int _yGranularity;
 
 
-    public CaveDetector(BaseConfig config) {
+    public CaveDetector(BaseClientConfig config) {
         _caveScoreRadius = config.caveScoreRadius.get();
         _measureDistance = config.caveMeasureDistance.get();
         _xGranularity = config.xAxisGranularity.get();
@@ -32,7 +32,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
 
 
     public Optional<Double> getAveragedCaveScore(
-            BaseLevelReader<TBlockPos, TVec3, TBlockState> level, PlayerReader<TBlockPos, TVec3> player
+            BaseLevelReader<TBlockPos, TVec3, TBlockState, ?> level, PlayerReader<TBlockPos, TVec3> player
     ) {
         List<Double> scores = new ArrayList<>();
         for (int xOff = -_caveScoreRadius; xOff <= _caveScoreRadius; xOff++)
@@ -54,7 +54,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
     }
 
     protected double computeScore(
-            BaseLevelReader<TBlockPos, TVec3, TBlockState> level,
+            BaseLevelReader<TBlockPos, TVec3, TBlockState, ?> level,
             List<BlockReading<TBlockPos, TBlockState>> readings
     ){
         List<Measurement> measurements = readings.stream()
@@ -222,7 +222,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
 
 
     private Measurement measure(
-            BaseLevelReader<TBlockPos, TVec3, TBlockState> level,
+            BaseLevelReader<TBlockPos, TVec3, TBlockState, ?> level,
             BlockReading<TBlockPos, TBlockState> reading
     ) {
         TBlockPos bPos = reading.blockPos();

@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 public class MusicPlayer
 {
-    public static final float MIN_GAIN = -50F;
+    public static final float MIN_GAIN = -30F;
     public static final float DEFAULT_MAX_GAIN = 0F;
 
     private static final long FADE_STEP_MILLISECONDS = 75;

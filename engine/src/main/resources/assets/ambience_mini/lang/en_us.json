@@ -2,11 +2,14 @@
   "mod_name": "Ambience Mini",
 
   "key.reload": "Reload",
-  "key.nextMusic": "Change music",
-  "key.showCaveScore": "Show cave score",
+  "key.next_music": "Change music",
+  "key.show_cave_score": "Show cave score",
 
   "toast.reload_description": "Trying to reload music player...",
   "toast.next_music_description": "Selecting new music...",
+
+  "toast.has_server_support": "Detected server support for Ambience Mini! Server-dependent features are enabled.",
+  "toast.no_server_support": "No server support for Ambience Mini! Server-dependent features are disabled.",
 
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
   "ambience_mini.configuration.Enabled": "Enabled",
@@ -25,5 +28,8 @@
   "ambience_mini.configuration.Cave_Score_Radius": "Cave score radius",
   "ambience_mini.configuration.Cave_Measure_Distance": "Cave measure distance",
   "ambience_mini.configuration.Y_Axis_Granularity": "Y-axis granularity",
-  "ambience_mini.configuration.X_Axis_Granularity": "X-axis granularity"
+  "ambience_mini.configuration.X_Axis_Granularity": "X-axis granularity",
+  "ambience_mini.configuration.Combat_Grace_Period": "Combat grace period",
+  "ambience_mini.configuration.Combatant_Timeout": "Combatant timeout",
+  "ambience_mini.configuration.Leaving_Combat_Distance": "Leaving combat distance"
 }

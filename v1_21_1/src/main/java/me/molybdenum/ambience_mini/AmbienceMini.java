@@ -1,26 +1,34 @@
 package me.molybdenum.ambience_mini;
 
-import me.molybdenum.ambience_mini.engine.AmbienceThread;
+import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
-import me.molybdenum.ambience_mini.engine.setup.BaseKeyBindings;
+import me.molybdenum.ambience_mini.engine.player.AmbienceThread;
 import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
 import me.molybdenum.ambience_mini.engine.state.monitors.VolumeMonitor;
 import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
-import me.molybdenum.ambience_mini.setup.Config;
+import me.molybdenum.ambience_mini.network.Networking;
+import me.molybdenum.ambience_mini.setup.ClientConfig;
 import me.molybdenum.ambience_mini.setup.KeyBindings;
+import me.molybdenum.ambience_mini.state.moniotors.CombatMonitor;
 import me.molybdenum.ambience_mini.state.moniotors.ScreenMonitor;
 import me.molybdenum.ambience_mini.state.readers.LevelReader_1_21;
 import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_21;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.util.ObfuscationReflectionHelper;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.network.event.RegisterConfigurationTasksEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -32,42 +40,66 @@ import net.neoforged.fml.ModContainer;
 import java.util.function.Supplier;
 
 @Mod(Common.MODID)
-public class AmbienceMini {
+public class AmbienceMini extends BaseAmbienceMini {
     // Utils
-
     public static final Logger LOGGER = LogUtils.getLogger();
 
     // Setup
-    public static final Config config = new Config();
-    public static BaseKeyBindings<KeyMapping> keyBindings;
+    public static ClientConfig clientConfig;
+    public static KeyBindings keyBindings;
 
     // Music
-    public static final ScreenMonitor screen = new ScreenMonitor();
-    public static VolumeMonitor volume;
+    public static PlayerReader_1_21 playerReader;
+    public static LevelReader_1_21 levelReader;
 
-    public static final PlayerReader_1_21 player = new PlayerReader_1_21();
-    public static final LevelReader_1_21 level = new LevelReader_1_21();
+    public static ScreenMonitor screenMonitor;
+    public static CombatMonitor combatMonitor;
     public static CaveDetector<BlockPos, Vec3, BlockState> caveDetector;
 
     public static AmbienceThread ambienceThread;
 
-    // The constructor for the mod class is the first code that is run when your mod is loaded.
-    // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
-    public AmbienceMini(IEventBus modEventBus, ModContainer modContainer) {
-        config.register(modContainer);
 
-        modEventBus.addListener(AmbienceMini::loadComplete);
-        modEventBus.addListener(AmbienceMini::registerKeybindings);
+    public AmbienceMini(IEventBus modEventBus, ModContainer modContainer)
+    {
+        modEventBus.addListener(AmbienceMini::registerConfigurationTasks);
+        modEventBus.addListener(AmbienceMini::registerPayloads);
+
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            clientConfig = new ClientConfig(modContainer);
+
+            screenMonitor = new ScreenMonitor();
+            playerReader = new PlayerReader_1_21();
+            levelReader = new LevelReader_1_21();
+
+            modEventBus.addListener(AmbienceMini::registerKeybindings);
+            modEventBus.addListener(AmbienceMini::loadComplete);
+
+            modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+        }
     }
 
+
+    /* Common events */
+    private static void registerConfigurationTasks(final RegisterConfigurationTasksEvent event) {
+        Networking.registerTasks(event);
+    }
+
+    private static void registerPayloads(final RegisterPayloadHandlersEvent event) {
+        Networking.registerPayloads(event);
+    }
+
+
+    /* Client events */
     public static void registerKeybindings(final RegisterKeyMappingsEvent event) {
-        keyBindings = new KeyBindings(event).registerKeys();
+        keyBindings = new KeyBindings(event);
     }
 
     public static void loadComplete(final FMLLoadCompleteEvent event) {
-        caveDetector = new CaveDetector<>(config);
-        volume = new VolumeMonitor(
-                config,
+        combatMonitor = new CombatMonitor(clientConfig, playerReader, levelReader);
+        caveDetector = new CaveDetector<>(clientConfig);
+
+        VolumeMonitor.init(
+                clientConfig,
                 Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
                 Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC)
         );
@@ -81,9 +113,11 @@ public class AmbienceMini {
         if (ambienceThread != null)
             ambienceThread.kill();
 
-        if (config.enabled.get()) {
+        if (clientConfig.enabled.get()) {
+            combatMonitor.clearCombatants();
+
             var gameStateProvider = new GameStateProviderV1<>(
-                    config, screen, player, level, caveDetector
+                    clientConfig, playerReader, levelReader, screenMonitor, combatMonitor, caveDetector
             );
 
             MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(rule -> {
@@ -91,7 +125,7 @@ public class AmbienceMini {
 
                 Supplier<Boolean> isFocused = Minecraft.getInstance()::isWindowActive;
                 ambienceThread = new AmbienceThread(
-                        rule, LOGGER, isFocused, volume, config
+                        rule, LOGGER, isFocused, clientConfig
                 );
 
                 LOGGER.info("Successfully loaded Ambience Mini");
@@ -107,5 +141,10 @@ public class AmbienceMini {
         ObfuscationReflectionHelper.setPrivateValue(
                 Minecraft.class, mc, new NilMusicManager(mc), "musicManager"
         );
+    }
+
+
+    public static ResourceLocation rl(String path) {
+        return ResourceLocation.fromNamespaceAndPath(Common.MODID, path);
     }
 }

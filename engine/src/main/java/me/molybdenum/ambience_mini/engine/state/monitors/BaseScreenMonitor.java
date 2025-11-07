@@ -1,12 +1,24 @@
 package me.molybdenum.ambience_mini.engine.state.monitors;
 
-import java.util.Optional;
-
 public abstract class BaseScreenMonitor
 {
-    public Screens memorizedScreen = Screens.NONE;
+    private Screens memorizedScreen = Screens.NONE;
 
-    public abstract boolean isActualScreenNull();
 
-    public abstract Optional<String> getBossIdIfInFight();
+    public Screens getMemorizedScreen() {
+        if (isCurrentScreenNull())
+            return memorizedScreen = Screens.NONE;
+        return memorizedScreen;
+    }
+    
+    public void setMemorizedScreen(Screens screen) {
+        memorizedScreen = screen;
+    }
+
+    public boolean is(Screens screen) {
+        return getMemorizedScreen() == screen;
+    }
+
+
+    protected abstract boolean isCurrentScreenNull();
 }

@@ -11,7 +11,6 @@ public interface PlayerReader<TBlockPos, TVec3> {
     double vectorZ();
     TVec3 position();
     TVec3 eyePosition();
-    VectorCoordinate vectorCoordinate();
 
     int blockX();
     int blockY();
@@ -35,4 +34,8 @@ public interface PlayerReader<TBlockPos, TVec3> {
     boolean elytraFlying();
 
     boolean fishingHookInWater();
+
+    Optional<String> getBossIdIfInFight();
+
+    double distanceTo(TVec3 position);
 }

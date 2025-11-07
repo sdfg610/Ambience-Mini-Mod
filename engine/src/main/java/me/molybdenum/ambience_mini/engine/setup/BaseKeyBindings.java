@@ -1,18 +1,19 @@
 package me.molybdenum.ambience_mini.engine.setup;
 
-public abstract class BaseKeyBindings<KeyBinding> {
-    public KeyBinding reloadKey;
-    public KeyBinding nextMusicKey;
-    public KeyBinding showCaveScore;
+import me.molybdenum.ambience_mini.engine.AmLang;
 
-    public BaseKeyBindings<KeyBinding> registerKeys() {
-        reloadKey = makeAndRegister("key.reload", keyP());
-        nextMusicKey = makeAndRegister("key.nextMusic", keyPageUp());
-        showCaveScore = makeAndRegister("key.showCaveScore", keyPageDown());
-        return this;
+public abstract class BaseKeyBindings<TKeyBinding> {
+    public TKeyBinding reloadKey;
+    public TKeyBinding nextMusicKey;
+    public TKeyBinding showCaveScore;
+
+    public void registerKeys() {
+        reloadKey = createAndRegister(AmLang.KEY_RELOAD, keyP());
+        nextMusicKey = createAndRegister(AmLang.KEY_NEXT_MUSIC, keyPageUp());
+        showCaveScore = createAndRegister(AmLang.KEY_SHOW_CAVE_SCORE, keyPageDown());
     }
 
-    protected abstract KeyBinding makeAndRegister(String description, int defaultKey);
+    protected abstract TKeyBinding createAndRegister(AmLang description, int defaultKey);
 
     protected abstract int keyP();
     protected abstract int keyPageUp();

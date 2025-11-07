@@ -3,6 +3,7 @@ package me.molybdenum.ambience_mini.state.readers;
 import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
 import me.molybdenum.ambience_mini.setup.AmTags;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Animal;
@@ -15,10 +16,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
 
 import java.util.List;
 
-public class LevelReader_1_21 extends BaseLevelReader<BlockPos, Vec3, BlockState> {
+public class LevelReader_1_21 extends BaseLevelReader<BlockPos, Vec3, BlockState, Entity> {
     private final Minecraft mc = Minecraft.getInstance();
 
 
@@ -30,6 +32,12 @@ public class LevelReader_1_21 extends BaseLevelReader<BlockPos, Vec3, BlockState
     @Override
     public boolean notNull() {
         return mc.level != null;
+    }
+
+    @Override
+    public boolean isWorldTickingPaused() {
+        IntegratedServer srv = Minecraft.getInstance().getSingleplayerServer();
+        return srv != null && (Boolean) ObfuscationReflectionHelper.getPrivateValue(IntegratedServer.class, srv, "paused");
     }
 
 
@@ -72,6 +80,18 @@ public class LevelReader_1_21 extends BaseLevelReader<BlockPos, Vec3, BlockState
     public boolean isColdEnoughToSnow(BlockPos blockPos) {
         assert mc.level != null;
         return mc.level.getBiome(blockPos).value().coldEnoughToSnow(blockPos);
+    }
+
+
+    @Override
+    public Entity getEntityById(int id) {
+        assert mc.level != null;
+        return mc.level.getEntity(id);
+    }
+
+    @Override
+    public Vec3 getEntityPosition(Entity entity) {
+        return entity.position();
     }
 
 
@@ -158,7 +178,6 @@ public class LevelReader_1_21 extends BaseLevelReader<BlockPos, Vec3, BlockState
     public Vec3 offsetVector(Vec3 position, double x, double y, double z) {
         return position.add(x, y, z);
     }
-
 
 
     // ------------------------------------------------------------------------------------------------

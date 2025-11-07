@@ -11,7 +11,6 @@ import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.realms.DisconnectedRealmsScreen;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -23,26 +22,28 @@ public class ScreenEventHandlers
     // Client events
     @SubscribeEvent
     public static void onScreenChanged(final ScreenEvent.Opening event) {
-        Screen screen = event.getScreen();
-        if (screen instanceof ProgressScreen || screen instanceof ConnectScreen || screen instanceof LevelLoadingScreen || screen instanceof ReceivingLevelScreen)
-            AmbienceMini.screen.memorizedScreen = Screens.JOINING;
+        Screen screen = event.getNewScreen();
+        if (screen instanceof ProgressScreen
+                || screen instanceof ConnectScreen
+                || screen instanceof LevelLoadingScreen
+                || screen instanceof ReceivingLevelScreen)
+            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.JOINING);
 
-        else if (screen instanceof DisconnectedScreen || screen instanceof DisconnectedRealmsScreen)
-            AmbienceMini.screen.memorizedScreen = Screens.DISCONNECTED;
-
-        else if (screen instanceof PauseScreen) {
-            IntegratedServer srv = Minecraft.getInstance().getSingleplayerServer();
-            if (srv != null && !srv.isPublished())
-                AmbienceMini.screen.memorizedScreen = Screens.PAUSE;
-        }
+        else if (screen instanceof DisconnectedScreen
+                || screen instanceof DisconnectedRealmsScreen)
+            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.DISCONNECTED);
 
         else if (screen instanceof WinScreen)
-            AmbienceMini.screen.memorizedScreen = Screens.CREDITS;
+            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.CREDITS);
 
-        else if (screen instanceof TitleScreen || screen instanceof JoinMultiplayerScreen || screen instanceof DirectJoinServerScreen || screen instanceof SelectWorldScreen || screen instanceof CreateWorldScreen)
-            AmbienceMini.screen.memorizedScreen = Screens.MAIN_MENU;
+        else if (screen instanceof TitleScreen
+                || screen instanceof JoinMultiplayerScreen
+                || screen instanceof DirectJoinServerScreen
+                || screen instanceof SelectWorldScreen
+                || screen instanceof CreateWorldScreen)
+            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.MAIN_MENU);
 
         else if (screen instanceof DeathScreen)
-            AmbienceMini.screen.memorizedScreen = Screens.DEATH;
+            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.DEATH);
     }
 }

@@ -1,11 +1,9 @@
-package me.molybdenum.ambience_mini.engine;
+package me.molybdenum.ambience_mini.engine.player;
 
 import me.molybdenum.ambience_mini.engine.player.music_picker.PlaylistChoice;
 import me.molybdenum.ambience_mini.engine.player.music_picker.rules.Rule;
-import me.molybdenum.ambience_mini.engine.player.Music;
-import me.molybdenum.ambience_mini.engine.player.MusicPlayer;
 import javazoom.jlayer.decoder.JavaLayerException;
-import me.molybdenum.ambience_mini.engine.setup.BaseConfig;
+import me.molybdenum.ambience_mini.engine.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.state.monitors.VolumeMonitor;
 import org.slf4j.Logger;
 
@@ -19,7 +17,6 @@ public class AmbienceThread extends Thread
 {
     private final Logger _logger;
     private final Supplier<Boolean> _isFocused;
-    private final VolumeMonitor _volumeMonitor;
 
 
     private final boolean _lostFocusEnabled;
@@ -56,13 +53,11 @@ public class AmbienceThread extends Thread
         Rule rule,
         Logger logger,
         Supplier<Boolean> isFocused,
-        VolumeMonitor volumeMonitor,
-        BaseConfig config
+        BaseClientConfig config
     ) {
         _rule = rule;
         _logger = logger;
         _isFocused = isFocused;
-        _volumeMonitor = volumeMonitor;
 
         _lostFocusEnabled = config.lostFocusEnabled.get();
         _updateIntervalMilliseconds = config.updateInterval.get();
@@ -80,8 +75,8 @@ public class AmbienceThread extends Thread
     public void run()
     {
         try {
-            _volumeMonitor.registerVolumeHandler(_volumeChangedHandler);
-            handleVolumeZero(_volumeMonitor.getVolume());
+            VolumeMonitor.registerVolumeHandler(_volumeChangedHandler);
+            handleVolumeZero(VolumeMonitor.getVolume());
 
             long nextUpdate = System.currentTimeMillis();
             while (!_kill)
@@ -102,7 +97,7 @@ public class AmbienceThread extends Thread
             stopInterruptMusic(false);
         }
         finally {
-            _volumeMonitor.unregisterVolumeHandler(_volumeChangedHandler);
+            VolumeMonitor.unregisterVolumeHandler(_volumeChangedHandler);
         }
     }
 
@@ -112,7 +107,7 @@ public class AmbienceThread extends Thread
             _kill = true;
             stopMainMusic(false);
             stopInterruptMusic(false);
-            _volumeMonitor.unregisterVolumeHandler(_volumeChangedHandler);
+            VolumeMonitor.unregisterVolumeHandler(_volumeChangedHandler);
 
             try {
                 interrupt();
@@ -220,7 +215,7 @@ public class AmbienceThread extends Thread
     private MusicPlayer playMusic(Music nextMusic, boolean fade) {
         MusicPlayer musicPlayer = new MusicPlayer(
             nextMusic,
-            _volumeMonitor.getVolume(),
+            VolumeMonitor.getVolume(),
             () -> _chooseNextMusicTime = System.currentTimeMillis() + _nextMusicDelayMilliseconds,
             _logger
         );

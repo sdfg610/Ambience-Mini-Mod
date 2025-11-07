@@ -37,8 +37,6 @@ evaluationDependsOn(':engine')
 runs {
     // applies to all the run configs below
     configureEach {
-        workingDirectory project.file('../run')
-
         // Recommended logging data for a userdev environment
         // The markers can be added/remove as needed separated by commas.
         // "SCAN": For mods scan.
@@ -55,11 +53,15 @@ runs {
     }
 
     client {
+        workingDirectory project.file('../run')
+
         // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
     }
 
     server {
+        workingDirectory project.file('../run-server_1_21')
+
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         argument '--nogui'
     }

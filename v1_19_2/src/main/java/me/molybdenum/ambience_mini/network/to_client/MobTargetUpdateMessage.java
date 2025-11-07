@@ -1,0 +1,32 @@
+package me.molybdenum.ambience_mini.network.to_client;
+
+import me.molybdenum.ambience_mini.AmbienceMini;
+import me.molybdenum.ambience_mini.network.Message;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
+
+public record MobTargetUpdateMessage(int entityID, boolean isTargetingPlayer) implements Message
+{
+    @Override
+    public void encode(FriendlyByteBuf buffer) {
+        buffer.capacity(5);
+        buffer.writeInt(entityID);
+        buffer.writeBoolean(isTargetingPlayer);
+
+    }
+
+    public static MobTargetUpdateMessage decode(FriendlyByteBuf buffer) {
+        return new MobTargetUpdateMessage(buffer.readInt(), buffer.readBoolean());
+    }
+
+    @Override
+    public void handle(Supplier<NetworkEvent.Context> context) {
+        if (isTargetingPlayer)
+            AmbienceMini.combatMonitor.tryAddCombatantById(entityID, false);
+        else
+            AmbienceMini.combatMonitor.removeCombatant(entityID);
+        context.get().setPacketHandled(true);
+    }
+}
