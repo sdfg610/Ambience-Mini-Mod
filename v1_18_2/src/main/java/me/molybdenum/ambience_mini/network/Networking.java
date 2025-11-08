@@ -16,8 +16,8 @@ public class Networking {
     private static final String PROTOCOL_VERSION = "1";
     public static final SimpleChannel INSTANCE = NetworkRegistry.ChannelBuilder.
             named(AmbienceMini.rl(Common.MODID))
-            .clientAcceptedVersions(NetworkRegistry.acceptMissingOr(PROTOCOL_VERSION)) // Client does not need the server to have the channel
-            .serverAcceptedVersions(PROTOCOL_VERSION::equals) // Server always requires client to have the channel
+            .clientAcceptedVersions(NetworkRegistry.acceptMissingOr(PROTOCOL_VERSION))
+            .serverAcceptedVersions(NetworkRegistry.acceptMissingOr(PROTOCOL_VERSION))
             .networkProtocolVersion(() -> PROTOCOL_VERSION)
             .simpleChannel();
 

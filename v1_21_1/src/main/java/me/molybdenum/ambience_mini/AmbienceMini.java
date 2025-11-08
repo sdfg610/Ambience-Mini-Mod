@@ -61,7 +61,6 @@ public class AmbienceMini extends BaseAmbienceMini {
 
     public AmbienceMini(IEventBus modEventBus, ModContainer modContainer)
     {
-        modEventBus.addListener(AmbienceMini::registerConfigurationTasks);
         modEventBus.addListener(AmbienceMini::registerPayloads);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
@@ -80,10 +79,6 @@ public class AmbienceMini extends BaseAmbienceMini {
 
 
     /* Common events */
-    private static void registerConfigurationTasks(final RegisterConfigurationTasksEvent event) {
-        Networking.registerTasks(event);
-    }
-
     private static void registerPayloads(final RegisterPayloadHandlersEvent event) {
         Networking.registerPayloads(event);
     }
@@ -113,26 +108,21 @@ public class AmbienceMini extends BaseAmbienceMini {
         if (ambienceThread != null)
             ambienceThread.kill();
 
-        if (clientConfig.enabled.get()) {
-            combatMonitor.clearCombatants();
+        combatMonitor.clearCombatants();
+        var gameStateProvider = new GameStateProviderV1<>(
+                clientConfig, playerReader, levelReader, screenMonitor, combatMonitor, caveDetector
+        );
 
-            var gameStateProvider = new GameStateProviderV1<>(
-                    clientConfig, playerReader, levelReader, screenMonitor, combatMonitor, caveDetector
+        MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(rule -> {
+            disableNativeMusicManager();
+
+            Supplier<Boolean> isFocused = Minecraft.getInstance()::isWindowActive;
+            ambienceThread = new AmbienceThread(
+                    rule, LOGGER, isFocused, clientConfig
             );
 
-            MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(rule -> {
-                disableNativeMusicManager();
-
-                Supplier<Boolean> isFocused = Minecraft.getInstance()::isWindowActive;
-                ambienceThread = new AmbienceThread(
-                        rule, LOGGER, isFocused, clientConfig
-                );
-
-                LOGGER.info("Successfully loaded Ambience Mini");
-            });
-        }
-        else
-            LOGGER.info("Not enabled in config. Ambience Mini is disabled.");
+            LOGGER.info("Successfully loaded Ambience Mini");
+        });
     }
 
     public static void disableNativeMusicManager()

@@ -15,7 +15,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
-@EventBusSubscriber(modid = Common.MODID)
+@EventBusSubscriber(modid = Common.MODID, value = Dist.CLIENT)
 public class ScreenEventHandlers
 {
     // ------------------------------------------------------------------------------------------------

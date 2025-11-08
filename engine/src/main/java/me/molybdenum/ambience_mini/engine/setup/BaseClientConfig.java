@@ -3,7 +3,6 @@ package me.molybdenum.ambience_mini.engine.setup;
 import java.util.function.Supplier;
 
 public abstract class BaseClientConfig {
-    public final Supplier<Boolean> enabled;
     public final Supplier<Boolean> notifyServerSupport;
 
     public final Supplier<Integer> updateInterval;
@@ -35,12 +34,6 @@ public abstract class BaseClientConfig {
 
     protected BaseClientConfig() {
         preSetup();
-
-        enabled = makeBoolOption(
-                "Whether the features of this mod should be enabled. [Default: true]",
-                "Enabled",
-                true
-        );
 
         notifyServerSupport = makeBoolOption(
                 "If enabled, upon joining a multiplayer server the client will notify whether the server has support for Ambience Mini. If no support, server-dependent features will be disabled. [Default: true]",

@@ -4,6 +4,7 @@ import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.ToastUtil;
 import me.molybdenum.ambience_mini.engine.AmLang;
 import me.molybdenum.ambience_mini.engine.Common;
+import me.molybdenum.ambience_mini.network.to_client.MobTargetUpdatePacket;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -20,7 +21,7 @@ public class LoginHandlers
             AmbienceMini.isSurvivalOrAdventureMode = gameMode.getPlayerMode().isSurvival();
         AmbienceMini.isOnLocalServer = Minecraft.getInstance().isLocalServer();
 
-        // In this version, "hasServerSupport" is set when receiving "HasServerSupportPacket".
+        AmbienceMini.hasServerSupport = event.getPlayer().connection.hasChannel(MobTargetUpdatePacket.TYPE.id());
         if (AmbienceMini.clientConfig.notifyServerSupport.get() && !AmbienceMini.isOnLocalServer)
             ToastUtil.translatable(AmbienceMini.hasServerSupport ? AmLang.TOAST_HAS_SERVER_SUPPORT : AmLang.TOAST_NO_SERVER_SUPPORT);
     }

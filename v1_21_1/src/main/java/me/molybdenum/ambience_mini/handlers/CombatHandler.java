@@ -18,10 +18,16 @@ public class CombatHandler
     {
         if (!event.isCanceled()) {
             if (event.getOriginalAboutToBeSetTarget() instanceof ServerPlayer player && event.getNewAboutToBeSetTarget() != player)
-                PacketDistributor.sendToPlayer(player, new MobTargetUpdatePacket(event.getEntity().getId(), false));
+                sendTargetMessage(player, event, false);
 
             else if (event.getNewAboutToBeSetTarget() instanceof ServerPlayer player)
-                PacketDistributor.sendToPlayer(player, new MobTargetUpdatePacket(event.getEntity().getId(), true));
+                sendTargetMessage(player, event, true);
         }
+    }
+
+    private static void sendTargetMessage(ServerPlayer player, LivingChangeTargetEvent event, boolean isTargetingPlayer) {
+        // Only send packet if client has Ambience Mini installed. This lets non-modded clients join a modded server.
+        if (player.connection.hasChannel(MobTargetUpdatePacket.TYPE.id()))
+            PacketDistributor.sendToPlayer(player, new MobTargetUpdatePacket(event.getEntity().getId(), isTargetingPlayer));
     }
 }
