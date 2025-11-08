@@ -193,7 +193,7 @@ public class PlayerReader_1_19 implements PlayerReader<BlockPos, Vec3>
                 .findFirst()
                 .get();
         return Optional.of(
-                ((TranslatableContents)bossEvent.getName()).getKey()
+                ((TranslatableContents)bossEvent.getName().getContents()).getKey()
         );
     }
 
