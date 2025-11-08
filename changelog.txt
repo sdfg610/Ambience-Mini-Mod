@@ -1,0 +1,22 @@
+Version 2.2.0:
+
+- Added combat tracking to the music engine.
+- The mod is now optional on both the client and server and just enables/disables features depending on where the mod is present.
+- Improved the cave scoring algorithm through more fine-grained scoring of the environment.
+- Various backend improvements.
+- Changed the minimum sound volume such that the music is not way too silent even at 50% volume.
+- Fixed a bug where the music player would crash when entering a boss fight (affected 1.19.2, 1.21.1, and 1.21.1).
+
+
+Version 2.1.1:
+
+- Slight improvements to the cave-scoring system.
+- Small backend-improvements and bug-fixes.
+- Added support for Minecraft 1.21.1.
+
+
+Version 2.1.0:
+
+- Added new some new events and properties. Especially the new cave scoring system.
+- Fixed bug where the same music can play twice in a row.
+- Quality-of-life improvements, bug-fixes, and many other behind-the-scenes things.
