@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.state.readers;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PlayerReader<TBlockPos, TVec3> {
@@ -35,7 +36,8 @@ public interface PlayerReader<TBlockPos, TVec3> {
 
     boolean fishingHookInWater();
 
-    Optional<String> getBossIdIfInFight();
+    boolean isInBossFight();
+    List<String> getBosses();
 
     double distanceTo(TVec3 position);
 }

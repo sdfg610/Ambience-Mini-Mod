@@ -17,7 +17,7 @@ public class Parser {
 	public static final int _INT = 2;
 	public static final int _FLOAT = 3;
 	public static final int _STRING = 4;
-	public static final int maxT = 32;
+	public static final int maxT = 36;
 
 	static final boolean _T = true;
 	static final boolean _x = false;
@@ -123,7 +123,7 @@ public class Parser {
 		} else if (StartOf(1)) {
 			Shed shed = Shed();
 			conf = new Schedule(shed); 
-		} else SynErr(33);
+		} else SynErr(37);
 		return conf;
 	}
 
@@ -174,7 +174,7 @@ public class Parser {
 			Get();
 			Shed shed2 = Shed();
 			shed = new Interrupt(shed2); 
-		} else SynErr(34);
+		} else SynErr(38);
 		return shed;
 	}
 
@@ -207,12 +207,12 @@ public class Parser {
 					Get();
 				} else if (la.kind == 2) {
 					Get();
-				} else SynErr(35);
+				} else SynErr(39);
 				gain = new FloatV(Float.parseFloat(t.val));            
 				Expect(14);
 			}
 			play = new Load(file, gain);                           
-		} else SynErr(36);
+		} else SynErr(40);
 		return play;
 	}
 
@@ -267,7 +267,7 @@ public class Parser {
 
 	Expr  ExprTerm() {
 		Expr  expr;
-		expr = null;                                   
+		expr = null; Quantifiers quantifier = Quantifiers.ANY; 
 		switch (la.kind) {
 		case 1: {
 			Get();
@@ -311,13 +311,30 @@ public class Parser {
 			expr = new Get(new IdentE(t.val));             
 			break;
 		}
+		case 32: case 33: {
+			if (la.kind == 32) {
+				Get();
+			} else {
+				Get();
+				quantifier = Quantifiers.ALL; 
+			}
+			Expect(1);
+			String identifier = t.val; 
+			Expect(34);
+			Expr list = Expr();
+			Expect(35);
+			Expr cond = Expr();
+			Expect(18);
+			expr = new QuantifierOp(quantifier, identifier, list, cond); 
+			break;
+		}
 		case 20: {
 			Get();
 			expr = Expr();
 			Expect(21);
 			break;
 		}
-		default: SynErr(37); break;
+		default: SynErr(41); break;
 		}
 		return expr;
 	}
@@ -335,9 +352,9 @@ public class Parser {
 	}
 
 	private static final boolean[][] set = {
-		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_T,_x,_T, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_T,_x,_x, _T,_x,_x,_x, _x,_T,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x}
+		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_T,_x,_T, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
+		{_x,_T,_x,_x, _T,_x,_x,_x, _x,_T,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x}
 
 	};
 } // end Parser
@@ -399,12 +416,16 @@ class Errors {
 			case 29: s = "\"false\" expected"; break;
 			case 30: s = "\"@\" expected"; break;
 			case 31: s = "\"$\" expected"; break;
-			case 32: s = "??? expected"; break;
-			case 33: s = "invalid Conf"; break;
-			case 34: s = "invalid Shed"; break;
-			case 35: s = "invalid PlayTerm"; break;
-			case 36: s = "invalid PlayTerm"; break;
-			case 37: s = "invalid ExprTerm"; break;
+			case 32: s = "\"any\" expected"; break;
+			case 33: s = "\"all\" expected"; break;
+			case 34: s = "\"in\" expected"; break;
+			case 35: s = "\"where\" expected"; break;
+			case 36: s = "??? expected"; break;
+			case 37: s = "invalid Conf"; break;
+			case 38: s = "invalid Shed"; break;
+			case 39: s = "invalid PlayTerm"; break;
+			case 40: s = "invalid PlayTerm"; break;
+			case 41: s = "invalid ExprTerm"; break;
 			default: s = "error " + n; break;
 		}
 		printMsg(line, col, s);

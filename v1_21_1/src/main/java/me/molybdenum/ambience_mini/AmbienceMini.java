@@ -27,7 +27,6 @@ import net.neoforged.fml.util.ObfuscationReflectionHelper;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.neoforged.neoforge.network.event.RegisterConfigurationTasksEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.slf4j.Logger;
 
@@ -39,7 +38,7 @@ import net.neoforged.fml.ModContainer;
 
 import java.util.function.Supplier;
 
-@Mod(Common.MODID)
+@Mod(Common.MOD_ID)
 public class AmbienceMini extends BaseAmbienceMini {
     // Utils
     public static final Logger LOGGER = LogUtils.getLogger();
@@ -135,6 +134,6 @@ public class AmbienceMini extends BaseAmbienceMini {
 
 
     public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(Common.MODID, path);
+        return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
     }
 }

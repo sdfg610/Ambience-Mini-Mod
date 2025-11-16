@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 
 public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState, TEntity>
 {
-    // RotX = sideways [-180.0 ; +179.9]
+    // RotX = sideways [-180.0 ; +179.99999]
     // RotY = up/down [-90.0 ; +90.0]
     // (X:0,Y:0) = (south, horizontal)
     public static final double Y_ROT_MIN = -90.0;
@@ -24,8 +24,9 @@ public abstract class BaseLevelReader<TBlockPos, TVec3, TBlockState, TEntity>
 
     public abstract boolean isWorldTickingPaused();
 
-    public abstract String getDimensionId();
+    public abstract String getDimensionID();
     public abstract String getBiomeID(TBlockPos blockPos);
+    public abstract List<String> getBiomeTagIDs(TBlockPos blockPos);
 
     public abstract int getTime();
 

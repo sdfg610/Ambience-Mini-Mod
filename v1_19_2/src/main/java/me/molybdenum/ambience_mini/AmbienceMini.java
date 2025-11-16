@@ -5,7 +5,6 @@ import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.player.AmbienceThread;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
-import me.molybdenum.ambience_mini.engine.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
 import me.molybdenum.ambience_mini.engine.state.monitors.VolumeMonitor;
 import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
@@ -16,7 +15,6 @@ import me.molybdenum.ambience_mini.state.monitors.CombatMonitor;
 import me.molybdenum.ambience_mini.state.monitors.ScreenMonitor;
 import me.molybdenum.ambience_mini.state.readers.LevelReader_1_19;
 import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_19;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -27,7 +25,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -39,7 +36,7 @@ import java.util.function.Supplier;
 
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(Common.MODID)
+@Mod(Common.MOD_ID)
 public class AmbienceMini extends BaseAmbienceMini
 {
     // Utils
@@ -135,6 +132,6 @@ public class AmbienceMini extends BaseAmbienceMini
 
 
     public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(Common.MODID, path);
+        return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
     }
 }

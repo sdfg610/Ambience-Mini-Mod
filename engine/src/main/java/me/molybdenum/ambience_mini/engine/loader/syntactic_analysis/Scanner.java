@@ -246,8 +246,8 @@ class StartStates {
 public class Scanner {
 	static final char EOL = '\n';
 	static final int  eofSym = 0;
-	static final int maxT = 32;
-	static final int noSym = 32;
+	static final int maxT = 36;
+	static final int noSym = 36;
 
 
 	public Buffer buffer; // scanner buffer
@@ -305,6 +305,10 @@ public class Scanner {
 		literals.put("interrupt", 23);
 		literals.put("true", 28);
 		literals.put("false", 29);
+		literals.put("any", 32);
+		literals.put("all", 33);
+		literals.put("in", 34);
+		literals.put("where", 35);
 
 	}
 	

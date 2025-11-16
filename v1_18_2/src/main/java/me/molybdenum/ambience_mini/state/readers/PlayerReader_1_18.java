@@ -14,6 +14,7 @@ import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -176,24 +177,28 @@ public class PlayerReader_1_18 implements PlayerReader<BlockPos, Vec3> {
     @Override
     public boolean fishingHookInWater() {
         assert mc.player != null;
-        return mc.player.fishing != null && mc.player.fishing.isInWater();
+        return mc.player.fishing != null && (mc.player.fishing.isOpenWaterFishing() || mc.player.fishing.isInWater());
     }
 
 
     @Override
-    public Optional<String> getBossIdIfInFight() {
-        var bossOverlay = mc.gui.getBossOverlay();
-        Map<UUID, LerpingBossEvent> bossMap = ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, bossOverlay, OBF_MAP_BOSS_INFO);
-        if (bossMap == null || bossMap.isEmpty())
-            return Optional.empty();
+    public boolean isInBossFight() {
+        Map<UUID, LerpingBossEvent> bossMap =
+                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), OBF_MAP_BOSS_INFO);
+        return bossMap != null && !bossMap.isEmpty();
+    }
 
-        var bossEvent = bossMap.values()
-                .stream()
-                .findFirst()
-                .get();
-        return Optional.of(
-                ((TranslatableComponent)bossEvent.getName()).getKey()
-        );
+    @Override
+    public List<String> getBosses() {
+        Map<UUID, LerpingBossEvent> bossMap =
+                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), OBF_MAP_BOSS_INFO);
+
+        return bossMap == null
+                ? List.of()
+                : bossMap.values()
+                    .stream()
+                    .map(bossEvent -> ((TranslatableComponent)bossEvent.getName()).getKey())
+                    .toList();
     }
 
 

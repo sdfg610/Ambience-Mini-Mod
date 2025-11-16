@@ -5,12 +5,12 @@ import me.molybdenum.ambience_mini.engine.AmLang;
 public abstract class BaseKeyBindings<TKeyBinding> {
     public TKeyBinding reloadKey;
     public TKeyBinding nextMusicKey;
-    public TKeyBinding showCaveScore;
+    public TKeyBinding printAll;
 
     public void registerKeys() {
         reloadKey = createAndRegister(AmLang.KEY_RELOAD, keyP());
         nextMusicKey = createAndRegister(AmLang.KEY_NEXT_MUSIC, keyPageUp());
-        showCaveScore = createAndRegister(AmLang.KEY_SHOW_CAVE_SCORE, keyPageDown());
+        printAll = createAndRegister(AmLang.KEY_PRINT_ALL, keyPageDown());
     }
 
     protected abstract TKeyBinding createAndRegister(AmLang description, int defaultKey);

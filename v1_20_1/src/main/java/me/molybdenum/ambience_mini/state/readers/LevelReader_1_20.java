@@ -43,7 +43,7 @@ public class LevelReader_1_20 extends BaseLevelReader<BlockPos, Vec3, BlockState
 
 
     @Override
-    public String getDimensionId() {
+    public String getDimensionID() {
         assert mc.level != null;
         return mc.level.dimension().location().toString();
     }

@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-@Mod.EventBusSubscriber(modid = Common.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value={Dist.CLIENT})
+@Mod.EventBusSubscriber(modid = Common.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value={Dist.CLIENT})
 public class KeyInputEventHandler
 {
     private static final NumberFormat formatter = new DecimalFormat("#0.00000");
@@ -35,7 +35,7 @@ public class KeyInputEventHandler
             AmbienceMini.ambienceThread.forceSelectNewMusic();
         }
 
-        if (AmbienceMini.keyBindings.showCaveScore.consumeClick() && AmbienceMini.levelReader.notNull() && AmbienceMini.playerReader.notNull()) {
+        if (AmbienceMini.keyBindings.printAll.consumeClick() && AmbienceMini.levelReader.notNull() && AmbienceMini.playerReader.notNull()) {
             String valueStr = formatter
                     .format(AmbienceMini.caveDetector.getAveragedCaveScore(AmbienceMini.levelReader, AmbienceMini.playerReader)
                             .orElse(0.0));

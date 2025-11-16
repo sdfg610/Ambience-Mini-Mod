@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.setup;
 
+import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.Common;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
@@ -23,6 +24,6 @@ public class AmTags {
 
     private static TagKey<Block> create(String name)
     {
-        return BlockTags.create(new ResourceLocation(Common.MODID, name));
+        return BlockTags.create(AmbienceMini.rl(name));
     }
 }

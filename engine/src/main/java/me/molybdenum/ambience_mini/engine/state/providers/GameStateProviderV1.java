@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.engine.state.providers;
 
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.FloatT;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.IntT;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.ListT;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.StringT;
 import me.molybdenum.ambience_mini.engine.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
@@ -10,6 +11,8 @@ import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
 import me.molybdenum.ambience_mini.engine.state.readers.BaseLevelReader;
 import me.molybdenum.ambience_mini.engine.state.readers.PlayerReader;
 import me.molybdenum.ambience_mini.engine.state.monitors.BaseScreenMonitor;
+
+import java.util.List;
 
 public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends BaseGameStateProvider
 {
@@ -32,6 +35,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
     private final int _fishingMoveThreshold;
     private TVec3 _latestFishingPos = null;
     private long _latestFishingTime = 0L;
+    private long _latestFishingHookInWaterTime = 0L;
 
     private final int _combatGracePeriod;
     private long _latestCombatTime = 0L;
@@ -127,6 +131,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
         // World properties
         registerProperty("dimension", new StringT(), this::getDimensionId);
         registerProperty("biome", new StringT(), this::getBiomeId);
+        registerProperty("biome_tags", new ListT(new StringT()), this::getBiomeTagIDs);
         registerProperty("time", new IntT(), this::getTime);
         registerProperty("cave_score", new FloatT(), this::getCaveScore);
 
@@ -138,11 +143,10 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
         // Combat properties
         registerProperty("combatant_count", new IntT(), this::countCombatants);
-        registerProperty("boss", new StringT(), this::getBossId);
+        registerProperty("bosses", new ListT(new StringT()), this::getBosses);
 
 
-
-        //TODO: biometag, structure (requires server-sided???) ?
+        //TODO: Structure detection maybe?
     }
 
 
@@ -240,7 +244,12 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
         if (_player.isNull() || _level.isNull())
             return false;
 
-        if (_player.fishingHookInWater()) {
+        // The bopping of the fishing hook creates time periods where the hook is not detected as being in water.
+        // To combat this, I make a small grace period of 1000 milliseconds.
+        if (_player.fishingHookInWater())
+            _latestFishingHookInWaterTime = System.currentTimeMillis();
+
+        if (System.currentTimeMillis() - _latestFishingHookInWaterTime < 1000) {
             _latestFishingPos = _player.position();
             _latestFishingTime = System.currentTimeMillis();
         }
@@ -299,7 +308,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
     }
 
     public boolean inBossFight() {
-        return _player.getBossIdIfInFight().isPresent();
+        return _player.isInBossFight();
     }
 
 
@@ -307,13 +316,19 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
     // ------------------------------------------------------------------------------------------------
     // World properties
     public String getDimensionId() {
-        return _level.notNull() ? _level.getDimensionId() : "";
+        return _level.notNull() ? _level.getDimensionID() : "";
     }
 
     public String getBiomeId() {
         if (_player.isNull() || _level.isNull())
             return "";
         return _level.getBiomeID(_player.blockPos());
+    }
+
+    public List<String> getBiomeTagIDs() {
+        if (_player.isNull() || _level.isNull())
+            return List.of();
+        return _level.getBiomeTagIDs(_player.blockPos());
     }
 
     public int getTime() {
@@ -354,7 +369,9 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
         return _combatMonitor.countCombatants();
     }
 
-    public String getBossId() {
-        return _player.getBossIdIfInFight().orElse("");
+    public List<String> getBosses() {
+        if (_player.isNull())
+            return List.of();
+        return _player.getBosses();
     }
 }

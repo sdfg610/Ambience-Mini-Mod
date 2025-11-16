@@ -15,7 +15,7 @@ import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 
 
-@EventBusSubscriber(modid = Common.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Common.MOD_ID, value = Dist.CLIENT)
 public class CombatClientHandler
 {
     @SubscribeEvent

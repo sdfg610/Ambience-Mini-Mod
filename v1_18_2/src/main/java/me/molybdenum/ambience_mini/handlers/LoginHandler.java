@@ -12,7 +12,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 
-@Mod.EventBusSubscriber(modid = Common.MODID, value={Dist.CLIENT})
+@Mod.EventBusSubscriber(modid = Common.MOD_ID, value={Dist.CLIENT})
 public class LoginHandler
 {
     @SubscribeEvent

@@ -9,6 +9,8 @@ import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.*;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expr.Quantifiers.ANY;
+
 public class PrettyPrinter {
     public static String printConf(Conf conf)
     {
@@ -109,6 +111,14 @@ public class PrettyPrinter {
             return '$' + get.propertyName().value();
         else if (expr instanceof BinaryOp binOp)
             return surround(binOp.left()) + binaryOpString(binOp.op()) + surround(binOp.right());
+        else if (expr instanceof QuantifierOp quanOp)
+            return String.format(
+                    "%s %s in %s has %s end",
+                    getQuantifierString(quanOp.quantifier()),
+                    quanOp.identifier(),
+                    printExpr(quanOp.list()),
+                    printExpr(quanOp.condition())
+            );
 
         throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
     }
@@ -120,7 +130,8 @@ public class PrettyPrinter {
         return printExpr(expr);
     }
 
-    private static String binaryOpString(BinaryOperators op)
+
+    public static String binaryOpString(BinaryOperators op)
     {
         return switch (op) {
             case EQ -> " == ";
@@ -131,8 +142,15 @@ public class PrettyPrinter {
         };
     }
 
+    public static String getQuantifierString(Quantifiers op)
+    {
+        return switch (op) {
+            case ANY -> "any";
+            case ALL -> "all";
+        };
+    }
 
-    public static String printType(Type type) {
+    public static String getTypeString(Type type) {
         if (type instanceof BoolT)
             return "bool";
         else if (type instanceof IntT)
@@ -141,6 +159,10 @@ public class PrettyPrinter {
             return "float";
         else if (type instanceof StringT)
             return "string";
+        else if (type instanceof ListT listT)
+            return "list<" + getTypeString(listT.elementType()) + ">";
+        else if (type instanceof PlaylistT)
+            return "playlist";
         else if (type == null)
             return "null";
 

@@ -77,7 +77,9 @@ public record Compiler(String musicDirectory, BaseGameStateProvider gameStatePro
     }
 
     public Condition Expr(Expr expr) {
-        if (expr instanceof BoolV boolV)
+        if (expr instanceof IdentE identE)
+            return new IdentCondition(identE.value());
+        else if (expr instanceof BoolV boolV)
             return new ValueCondition(boolV.value());
         else if (expr instanceof IntV intV)
             return new ValueCondition(intV.value());
@@ -91,6 +93,8 @@ public record Compiler(String musicDirectory, BaseGameStateProvider gameStatePro
             return new PropertyCondition(gameStateProvider.getProperty(property.propertyName().value()));
         else if (expr instanceof BinaryOp binOp)
             return new BinOpCondition(binOp.op(), Expr(binOp.left()), Expr(binOp.right()));
+        else if (expr instanceof QuantifierOp quanOp)
+            return new QuanOpCondition(quanOp.quantifier(), quanOp.identifier(), Expr(quanOp.list()), Expr(quanOp.condition()));
 
         throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
     }

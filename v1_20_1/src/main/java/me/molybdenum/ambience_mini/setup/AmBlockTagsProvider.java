@@ -2,10 +2,7 @@ package me.molybdenum.ambience_mini.setup;
 
 import me.molybdenum.ambience_mini.engine.Common;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.Registry;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
-import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -20,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 public class AmBlockTagsProvider extends BlockTagsProvider
 {
     public AmBlockTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
-        super(output, lookupProvider, Common.MODID, existingFileHelper);
+        super(output, lookupProvider, Common.MOD_ID, existingFileHelper);
     }
 
     @Override

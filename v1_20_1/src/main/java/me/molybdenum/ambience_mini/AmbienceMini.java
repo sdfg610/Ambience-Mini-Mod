@@ -5,7 +5,6 @@ import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.player.AmbienceThread;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
-import me.molybdenum.ambience_mini.engine.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
 import me.molybdenum.ambience_mini.engine.state.monitors.VolumeMonitor;
 import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
@@ -16,7 +15,6 @@ import me.molybdenum.ambience_mini.state.moniotors.CombatMonitor;
 import me.molybdenum.ambience_mini.state.moniotors.ScreenMonitor;
 import me.molybdenum.ambience_mini.state.readers.LevelReader_1_20;
 import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_20;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -38,7 +36,7 @@ import java.util.function.Supplier;
 
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(Common.MODID)
+@Mod(Common.MOD_ID)
 public class AmbienceMini extends BaseAmbienceMini
 {
     // Utils
@@ -134,6 +132,6 @@ public class AmbienceMini extends BaseAmbienceMini
 
 
     public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(Common.MODID, path);
+        return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
     }
 }

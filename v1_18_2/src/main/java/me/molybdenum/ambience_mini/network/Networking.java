@@ -15,7 +15,7 @@ import java.util.function.Function;
 public class Networking {
     private static final String PROTOCOL_VERSION = "1";
     public static final SimpleChannel INSTANCE = NetworkRegistry.ChannelBuilder.
-            named(AmbienceMini.rl(Common.MODID))
+            named(AmbienceMini.rl(Common.MOD_ID))
             .clientAcceptedVersions(NetworkRegistry.acceptMissingOr(PROTOCOL_VERSION))
             .serverAcceptedVersions(NetworkRegistry.acceptMissingOr(PROTOCOL_VERSION))
             .networkProtocolVersion(() -> PROTOCOL_VERSION)

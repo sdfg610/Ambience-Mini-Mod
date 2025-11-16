@@ -15,7 +15,7 @@ public class AmBlockTagsProvider extends TagsProvider<Block>
 {
     @SuppressWarnings("deprecation")
     public AmBlockTagsProvider(DataGenerator p_126546_, ExistingFileHelper existingFileHelper) {
-        super(p_126546_, Registry.BLOCK, Common.MODID, existingFileHelper);
+        super(p_126546_, Registry.BLOCK, Common.MOD_ID, existingFileHelper);
     }
 
     @Override

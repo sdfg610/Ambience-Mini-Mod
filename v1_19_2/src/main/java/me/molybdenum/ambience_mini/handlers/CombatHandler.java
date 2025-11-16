@@ -10,7 +10,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 
-@Mod.EventBusSubscriber(modid = Common.MODID)
+@Mod.EventBusSubscriber(modid = Common.MOD_ID)
 public class CombatHandler
 {
     @SubscribeEvent(priority = EventPriority.LOWEST)

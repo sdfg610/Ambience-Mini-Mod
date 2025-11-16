@@ -19,6 +19,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -35,7 +36,7 @@ import java.util.function.Supplier;
 
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(Common.MODID)
+@Mod(Common.MOD_ID)
 public class AmbienceMini extends BaseAmbienceMini
 {
     // Utils
@@ -47,14 +48,15 @@ public class AmbienceMini extends BaseAmbienceMini
     public static ClientConfig clientConfig;
     public static KeyBindings keyBindings;
 
-    // Music
+    // State
     public static PlayerReader_1_18 playerReader;
     public static LevelReader_1_18 levelReader;
-
     public static ScreenMonitor screenMonitor;
     public static CombatMonitor combatMonitor;
     public static CaveDetector<BlockPos, Vec3, BlockState> caveDetector;
+    public static GameStateProviderV1<BlockPos, Vec3, BlockState, Entity> gameStateProvider;
 
+    // Music
     public static AmbienceThread ambienceThread;
 
 
@@ -87,6 +89,10 @@ public class AmbienceMini extends BaseAmbienceMini
         keyBindings = new KeyBindings();
         caveDetector = new CaveDetector<>(clientConfig);
 
+        gameStateProvider = new GameStateProviderV1<>(
+                clientConfig, playerReader, levelReader, screenMonitor, combatMonitor, caveDetector
+        );
+
         VolumeMonitor.init(
                 clientConfig,
                 Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
@@ -103,9 +109,6 @@ public class AmbienceMini extends BaseAmbienceMini
             ambienceThread.kill();
 
         combatMonitor.clearCombatants();
-        var gameStateProvider = new GameStateProviderV1<>(
-                clientConfig, playerReader, levelReader, screenMonitor, combatMonitor, caveDetector
-        );
 
         MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(rule -> {
             disableNativeMusicManager();
@@ -129,6 +132,6 @@ public class AmbienceMini extends BaseAmbienceMini
 
 
     public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(Common.MODID, path);
+        return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
     }
 }

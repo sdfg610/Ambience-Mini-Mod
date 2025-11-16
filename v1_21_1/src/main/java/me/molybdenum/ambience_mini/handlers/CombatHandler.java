@@ -10,7 +10,7 @@ import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 
-@EventBusSubscriber(modid = Common.MODID)
+@EventBusSubscriber(modid = Common.MOD_ID)
 public class CombatHandler
 {
     @SubscribeEvent(priority = EventPriority.LOWEST)

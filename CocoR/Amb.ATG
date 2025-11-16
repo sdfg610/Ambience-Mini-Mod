@@ -124,7 +124,7 @@ ExprRel<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; .)
     }
 .
 
-ExprTerm<out Expr expr> (. expr = null;                                   .)
+ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY; .)
     = IDENT             (. expr = new IdentE(t.val);                      .)
     | INT               (. expr = new IntV(Integer.parseInt(t.val));      .)
     | FLOAT             (. expr = new FloatV(Float.parseFloat(t.val));    .)
@@ -133,6 +133,10 @@ ExprTerm<out Expr expr> (. expr = null;                                   .)
     | "false"           (. expr = new BoolV(false);                       .)
     | '@' IDENT         (. expr = new Ev(new IdentE(t.val));              .)
     | '$' IDENT         (. expr = new Get(new IdentE(t.val));             .)
+    | ("any" | "all"    (. quantifier = Quantifiers.ALL; .)
+      ) IDENT           (. String identifier = t.val; .)
+      "in" Expr<out Expr list> "where" Expr<out Expr cond> "end"
+                        (. expr = new QuantifierOp(quantifier, identifier, list, cond); .)
     | '(' Expr<out expr> ')'
 .
 

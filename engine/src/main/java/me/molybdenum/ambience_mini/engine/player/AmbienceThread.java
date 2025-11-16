@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.player;
 
 import me.molybdenum.ambience_mini.engine.player.music_picker.PlaylistChoice;
+import me.molybdenum.ambience_mini.engine.player.music_picker.VarEnv;
 import me.molybdenum.ambience_mini.engine.player.music_picker.rules.Rule;
 import javazoom.jlayer.decoder.JavaLayerException;
 import me.molybdenum.ambience_mini.engine.setup.BaseClientConfig;
@@ -141,9 +142,9 @@ public class AmbienceThread extends Thread
 
     // ----------------------------------------------------------------------------------------------------------------
     // Music and volume
-    private void handleMusicCycle() throws JavaLayerException
+    private void handleMusicCycle()
     {
-        PlaylistChoice nextChoice = _rule.getNext();
+        PlaylistChoice nextChoice = _rule.getNext(VarEnv.empty());
         if (nextChoice == null)
             return;
 

@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.setup.AmTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.npc.Villager;
@@ -44,7 +45,7 @@ public class LevelReader_1_18 extends BaseLevelReader<BlockPos, Vec3, BlockState
 
 
     @Override
-    public String getDimensionId() {
+    public String getDimensionID() {
         assert mc.level != null;
         return mc.level.dimension().location().toString();
     }
@@ -56,6 +57,15 @@ public class LevelReader_1_18 extends BaseLevelReader<BlockPos, Vec3, BlockState
                 (resourceKey) -> resourceKey.location().toString(),
                 (biome) -> ""
         );
+    }
+
+    @Override
+    public List<String> getBiomeTagIDs(BlockPos blockPos) {
+        assert mc.level != null;
+        return mc.level.getBiome(blockPos)
+                .tags()
+                .map(tag -> tag.location().toString())
+                .toList();
     }
 
 

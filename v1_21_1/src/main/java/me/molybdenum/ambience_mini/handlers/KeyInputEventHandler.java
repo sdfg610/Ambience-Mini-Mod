@@ -14,7 +14,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 
-@EventBusSubscriber(modid = Common.MODID, value={Dist.CLIENT})
+@EventBusSubscriber(modid = Common.MOD_ID, value={Dist.CLIENT})
 public class KeyInputEventHandler
 {
     private static final NumberFormat formatter = new DecimalFormat("#0.00000");
@@ -36,7 +36,7 @@ public class KeyInputEventHandler
             AmbienceMini.ambienceThread.forceSelectNewMusic();
         }
 
-        if (AmbienceMini.keyBindings.showCaveScore.consumeClick() && AmbienceMini.levelReader.notNull() && AmbienceMini.playerReader.notNull()) {
+        if (AmbienceMini.keyBindings.printAll.consumeClick() && AmbienceMini.levelReader.notNull() && AmbienceMini.playerReader.notNull()) {
             String valueStr = formatter
                     .format(AmbienceMini.caveDetector.getAveragedCaveScore(AmbienceMini.levelReader, AmbienceMini.playerReader)
                     .orElse(0.0));

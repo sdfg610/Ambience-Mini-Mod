@@ -1,7 +1,6 @@
 package me.molybdenum.ambience_mini.engine.loader.semantic_analysis;
 
-import me.molybdenum.ambience_mini.engine.Utils;
-import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
+import me.molybdenum.ambience_mini.engine.utils.Utils;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.conf.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expr.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.play.*;
@@ -19,16 +18,14 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider gameStateProvider) {
-    public Stream<String> Conf(Conf conf, Env env) {
+    public Stream<String> Conf(Conf conf, TypeEnv env) {
         ArrayList<String> errors = new ArrayList<>();
 
         if (conf instanceof Playlist playlist) {
             String name = playlist.ident().value();
 
-            if (env.hasPlaylist(name))
+            if (!env.bind(name, new PlaylistT()))
                 errors.add("Multiple definition of playlist: " + name);
-            else
-                env.addPlaylist(name);
 
             Stream<String> plErr = PL(playlist.playlist(), env);
             Stream<String> confErr = Conf(playlist.conf(), env);
@@ -41,12 +38,17 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
         throw new RuntimeException("Unhandled Conf-type: " + conf.getClass().getCanonicalName());
     }
 
-    private Stream<String> PL(PL play, Env env) {
+    private Stream<String> PL(PL play, TypeEnv env) {
         if (play instanceof IdentP ident) {
             String name = ident.value();
-            return env.hasPlaylist(name)
+            var binding = env.lookup(name);
+            if (binding.isEmpty())
+                return Stream.of("Use of undefined playlist: " + name);
+
+            var type = binding.get();
+            return type instanceof PlaylistT
                     ? Stream.empty()
-                    : Stream.of("Use of undefined playlist: " + name);
+                    : Stream.of("The ident '" + name + "' was expected to be a playlist but has type '" + PrettyPrinter.getTypeString(type) + "'");
         }
         else if (play instanceof Concat concat)
             return Stream.concat(
@@ -59,8 +61,8 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
 
             if (!Files.exists(musicPath))
                 return Stream.of("Cannot find music-file with name: '" + musicPath + "'");
-            else if (!MusicLoader.SUPPORTED_FILE_TYPES.contains(ext))
-                return Stream.of("Ambience mini only supports file types '" + String.join(", ", MusicLoader.SUPPORTED_FILE_TYPES) + "' but got '" + ext + "'");
+            else if (!Utils.SUPPORTED_FILE_TYPES.contains(ext))
+                return Stream.of("Ambience mini only supports file types '" + String.join(", ", Utils.SUPPORTED_FILE_TYPES) + "' but got '" + ext + "'");
             return Stream.empty();
         }
 
@@ -70,32 +72,37 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
         throw new RuntimeException("Unhandled PL-type: " + play.getClass().getCanonicalName());
     }
 
-    private Stream<String> Shed(Shed shed, Env env) {
+    private Stream<String> Shed(Shed shed, TypeEnv env) {
         if (shed instanceof Play play)
             return PL(play.playlist(), env);
         else if (shed instanceof Block block)
-            return block.body().stream().map(sh -> Shed(sh, env)).reduce(Stream.empty(), Stream::concat);
+            return block.body().stream()
+                    .map(sh -> Shed(sh, env))
+                    .reduce(Stream.empty(), Stream::concat);
         else if (shed instanceof When when) {
             ArrayList<String> errors = new ArrayList<>();
 
             Type type = Expr(when.condition(), env, errors);
             if (!(type instanceof BoolT))
-                errors.add("The condition inside a 'when' must result in a boolean value.");
-
+                errors.add("The condition inside a 'when' must result in a boolean value. Got '" + PrettyPrinter.getTypeString(type) + "'");
             if (when.body() instanceof Interrupt)
                 errors.add("An interrupt can only be a child of a block (begin/end). Not a 'when'.");
 
-            return Stream.concat(errors.stream(), Shed(when.body(), env));
+            env.openScope();
+            var errorsFromBody = Shed(when.body(), env);
+            env.closeScope();
+
+            return Stream.concat(errors.stream(), errorsFromBody);
         }
         else if (shed instanceof Interrupt interrupt) {
-            if (env.inInterrupt > 0)
+            if (env.inInterrupt())
                 return Stream.of("An 'interrupt' may not occur inside the body of another 'interrupt'.");
 
-            env.inInterrupt++; // Track multiple nested interrupts to allow finding other errors within.
+            env.enterInterrupt();
             Stream<String> res = interrupt.shed() instanceof When
                     ? Shed(interrupt.shed(), env)
                     : Stream.of("The 'interrupt' keyword may only be followed by a 'when' clause.");
-            env.inInterrupt--;
+            env.exitInterrupt();
 
             return res;
         }
@@ -103,10 +110,14 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
         throw new RuntimeException("Unhandled Shed-type: " + shed.getClass().getCanonicalName());
     }
 
-    public Type Expr(Expr expr, Env env, ArrayList<String> errors) {
+    public Type Expr(Expr expr, TypeEnv env, ArrayList<String> errors) {
         if (expr instanceof IdentE ident) {
-            errors.add("Lone identifiers currently do not have a use in expressions. Unknown identifier: " + ident.value());
-            return null;
+            Optional<Type> type = env.lookup(ident.value());
+            if (type.isEmpty()) {
+                errors.add("Use of unbound ident '" + ident.value() + "'");
+                return null;
+            }
+            return type.get();
         }
         else if (expr instanceof BoolV)
             return new BoolT();
@@ -118,13 +129,13 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
             return new StringT();
         else if (expr instanceof Ev ev) {
             if (gameStateProvider.tryGetEvent(ev.eventName().value()).isEmpty())
-                errors.add("Unknown event: @" + ev.eventName().value());
+                errors.add("Use of unknown event: @" + ev.eventName().value());
             return new BoolT();
         }
         else if (expr instanceof Get property) {
             Optional<Property> prop = gameStateProvider.tryGetProperty(property.propertyName().value());
             if (prop.isEmpty()) {
-                errors.add("Unknown property: $" + property.propertyName().value());
+                errors.add("Use of unknown property: $" + property.propertyName().value());
                 return null;
             }
             return prop.get().type;
@@ -133,36 +144,59 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
             Type typeLeft = Expr(binOp.left(), env, errors);
             Type typeRight = Expr(binOp.right(), env, errors);
 
-            switch (binOp.op()) {
-                case EQ -> {
-                    if (!Objects.equals(typeLeft, typeRight))
-                        errors.add("Arguments of '==' must be of same type. Got '" + PrettyPrinter.printType(typeLeft) + "' and '" + PrettyPrinter.printType(typeRight) + "'");
+            if (typeLeft != null && typeRight != null) // Only check if both types are known, else we get useless errors.
+                switch (binOp.op()) {
+                    case EQ -> {
+                        if (!Objects.equals(typeLeft, typeRight))
+                            errors.add("Arguments of '==' must be of same type. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'");
+                    }
+                    case APP_EQ -> {
+                        if (!(typeLeft instanceof StringT) || !(typeRight instanceof StringT))
+                            errors.add("Arguments of '~~' must both be of type string. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'");
+                    }
+                    case AND -> {
+                        if (!(typeLeft instanceof BoolT) || !(typeRight instanceof BoolT))
+                            errors.add("Arguments of '&&' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'");
+                    }
+                    case OR -> {
+                        if (!(typeLeft instanceof BoolT) || !(typeRight instanceof BoolT))
+                            errors.add("Arguments of '||' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'");
+                    }
+                    case LT -> {
+                        if (isNotNumber(typeLeft) || isNotNumber(typeRight))
+                            errors.add("Arguments of '<' must both be numbers. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'");
+                    }
                 }
-                case APP_EQ -> {
-                    if (!(typeLeft instanceof StringT) || !(typeRight instanceof StringT))
-                        errors.add("Arguments of '~~' must both be of type string. Got '" + PrettyPrinter.printType(typeLeft) + "' and '" + PrettyPrinter.printType(typeRight) + "'");
-                }
-                case AND -> {
-                    if (!(typeLeft instanceof BoolT) || !(typeRight instanceof BoolT))
-                        errors.add("Arguments of '&&' must both be of type bool. Got '" + PrettyPrinter.printType(typeLeft) + "' and '" + PrettyPrinter.printType(typeRight) + "'");
-                }
-                case OR -> {
-                    if (!(typeLeft instanceof BoolT) || !(typeRight instanceof BoolT))
-                        errors.add("Arguments of '||' must both be of type bool. Got '" + PrettyPrinter.printType(typeLeft) + "' and '" + PrettyPrinter.printType(typeRight) + "'");
-                }
-                case LT -> {
-                    if (!isNumber(typeLeft) || !isNumber(typeRight))
-                        errors.add("Arguments of '<' must both be numbers. Got '" + PrettyPrinter.printType(typeLeft) + "' and '" + PrettyPrinter.printType(typeRight) + "'");
-                }
-            }
 
             return new BoolT();
         }
+        else if (expr instanceof QuantifierOp quanOp) {
+            Type typeList = Expr(quanOp.list(), env, errors);
+            if (typeList != null && !(typeList instanceof ListT))
+                errors.add("The expression after 'in' in a list quantifier must be a list, but got '" + PrettyPrinter.getTypeString(typeList) + "'");
 
-        throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
+            env.openScope();
+            if (!env.bind(quanOp.identifier(), tryGetListElementType(typeList)))
+                errors.add("Multiple definitions of the ident '" + quanOp.identifier() + "'");
+
+            Type typeCondition = Expr(quanOp.condition(), env, errors);
+            if (!(typeCondition instanceof BoolT))
+                errors.add("The expression after 'where' in a list quantifier must be a boolean, but got '" + PrettyPrinter.getTypeString(typeCondition) + "'");
+            env.closeScope();
+
+            return new BoolT();
+        }
+        else
+            throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
     }
 
-    private boolean isNumber(Type type) {
-        return type instanceof IntT || type instanceof FloatT;
+    private boolean isNotNumber(Type type) {
+        return !(type instanceof IntT) && !(type instanceof FloatT);
+    }
+
+    private Type tryGetListElementType(Type type) {
+        if (type instanceof ListT list)
+            return list.elementType();
+        return null;
     }
 }
