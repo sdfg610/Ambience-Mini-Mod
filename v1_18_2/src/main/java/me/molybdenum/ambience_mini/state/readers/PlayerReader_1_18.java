@@ -13,11 +13,9 @@ import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class PlayerReader_1_18 implements PlayerReader<BlockPos, Vec3> {
     private static final String OBF_MAP_BOSS_INFO = "f_93699_";
@@ -108,6 +106,16 @@ public class PlayerReader_1_18 implements PlayerReader<BlockPos, Vec3> {
     public float maxHealth() {
         assert mc.player != null;
         return mc.player.getMaxHealth();
+    }
+
+    @Override
+    public List<String> getActiveEffectIds() {
+        assert mc.player != null;
+        return mc.player.getActiveEffectsMap().keySet().stream()
+                .map(ForgeRegistryEntry::getRegistryName)
+                .filter(Objects::nonNull)
+                .map(Object::toString)
+                .toList();
     }
 
 

@@ -140,6 +140,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
         registerProperty("max_health", new FloatT(), this::getPlayerMaxHealth);
         registerProperty("elevation", new FloatT(), this::getPlayerElevation);
         registerProperty("vehicle", new StringT(), this::getVehicleId);
+        registerProperty("effects", new ListT(new StringT()), this::getActiveEffects);
 
         // Combat properties
         registerProperty("combatant_count", new IntT(), this::countCombatants);
@@ -344,22 +345,28 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Player properties
-    public String getVehicleId() {
-        if (_player.isNull())
-            return "";
-        return _player.vehicleId().orElse("");
-    }
-
-    public float getPlayerElevation() {
-        return (_player.notNull() ? (float)_player.vectorY() : 0);
-    }
-
     public float getPlayerHealth() {
         return (_player.notNull() ? _player.health() : 0);
     }
 
     public float getPlayerMaxHealth() {
         return (_player.notNull() ? _player.maxHealth() : 0);
+    }
+
+    public float getPlayerElevation() {
+        return (_player.notNull() ? (float)_player.vectorY() : 0);
+    }
+
+    public String getVehicleId() {
+        if (_player.isNull())
+            return "";
+        return _player.vehicleId().orElse("");
+    }
+
+    public List<String> getActiveEffects() {
+        if (_player.isNull())
+            return List.of();
+        return _player.getActiveEffectIds();
     }
 
 

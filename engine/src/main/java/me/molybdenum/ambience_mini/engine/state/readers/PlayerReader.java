@@ -21,6 +21,7 @@ public interface PlayerReader<TBlockPos, TVec3> {
 
     float health();
     float maxHealth();
+    List<String> getActiveEffectIds();
 
     boolean isSleeping();
     boolean isUnderwater();
