@@ -5,7 +5,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.LerpingBossEvent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.horse.Donkey;
 import net.minecraft.world.entity.animal.horse.Horse;
@@ -13,10 +17,10 @@ import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.neoforge.common.extensions.IHolderExtension;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class PlayerReader_1_21 implements PlayerReader<BlockPos, Vec3> {
     private final Minecraft mc = Minecraft.getInstance();
@@ -108,6 +112,17 @@ public class PlayerReader_1_21 implements PlayerReader<BlockPos, Vec3> {
         return mc.player.getMaxHealth();
     }
 
+    @Override
+    public List<String> getActiveEffectIds() {
+        assert mc.player != null;
+        return mc.player.getActiveEffectsMap().keySet().stream()
+                .map(IHolderExtension::getKey)
+                .filter(Objects::nonNull)
+                .map(ResourceKey::location)
+                .map(ResourceLocation::toString)
+                .toList();
+    }
+
 
     @Override
     public boolean isSleeping() {
@@ -179,19 +194,23 @@ public class PlayerReader_1_21 implements PlayerReader<BlockPos, Vec3> {
     }
 
     @Override
-    public Optional<String> getBossIdIfInFight() {
-        var bossOverlay = mc.gui.getBossOverlay();
-        Map<UUID, LerpingBossEvent> bossMap = ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, bossOverlay, "events");
-        if (bossMap == null || bossMap.isEmpty())
-            return Optional.empty();
+    public boolean isInBossFight() {
+        Map<UUID, LerpingBossEvent> bossMap =
+                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), "events");
+        return bossMap != null && !bossMap.isEmpty();
+    }
 
-        var bossEvent = bossMap.values()
+    @Override
+    public List<String> getBosses() {
+        Map<UUID, LerpingBossEvent> bossMap =
+                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), "events");
+
+        return bossMap == null
+                ? List.of()
+                : bossMap.values()
                 .stream()
-                .findFirst()
-                .get();
-        return Optional.of(
-                ((TranslatableContents)bossEvent.getName().getContents()).getKey()
-        );
+                .map(bossEvent -> ((TranslatableContents)bossEvent.getName().getContents()).getKey())
+                .toList();
     }
 
     @Override

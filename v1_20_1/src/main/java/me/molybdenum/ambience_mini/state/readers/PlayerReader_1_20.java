@@ -13,10 +13,9 @@ import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class PlayerReader_1_20 implements PlayerReader<BlockPos, Vec3>
 {
@@ -111,6 +110,16 @@ public class PlayerReader_1_20 implements PlayerReader<BlockPos, Vec3>
         return mc.player.getMaxHealth();
     }
 
+    @Override
+    public List<String> getActiveEffectIds() {
+        assert mc.player != null;
+        return mc.player.getActiveEffectsMap().keySet().stream()
+                .map(ForgeRegistries.MOB_EFFECTS::getKey)
+                .filter(Objects::nonNull)
+                .map(Object::toString)
+                .toList();
+    }
+
 
     @Override
     public boolean isSleeping() {
@@ -182,19 +191,23 @@ public class PlayerReader_1_20 implements PlayerReader<BlockPos, Vec3>
     }
 
     @Override
-    public Optional<String> getBossIdIfInFight() {
-        var bossOverlay = mc.gui.getBossOverlay();
-        Map<UUID, LerpingBossEvent> bossMap = ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, bossOverlay, OBF_MAP_BOSS_INFO);
-        if (bossMap == null || bossMap.isEmpty())
-            return Optional.empty();
+    public boolean isInBossFight() {
+        Map<UUID, LerpingBossEvent> bossMap =
+                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), OBF_MAP_BOSS_INFO);
+        return bossMap != null && !bossMap.isEmpty();
+    }
 
-        var bossEvent = bossMap.values()
-                .stream()
-                .findFirst()
-                .get();
-        return Optional.of(
-                ((TranslatableContents)bossEvent.getName().getContents()).getKey()
-        );
+    @Override
+    public List<String> getBosses() {
+        Map<UUID, LerpingBossEvent> bossMap =
+                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), OBF_MAP_BOSS_INFO);
+
+        return bossMap == null
+                ? List.of()
+                : bossMap.values()
+                    .stream()
+                    .map(bossEvent -> ((TranslatableContents)bossEvent.getName().getContents()).getKey())
+                    .toList();
     }
 
     @Override

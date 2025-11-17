@@ -10,14 +10,10 @@ import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 
 @Mod.EventBusSubscriber(modid = Common.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value={Dist.CLIENT})
 public class KeyInputEventHandler
 {
-    private static final NumberFormat formatter = new DecimalFormat("#0.00000");
-
     @SubscribeEvent
     public static void keyEvent(final InputEvent.Key event)
     {
@@ -36,10 +32,8 @@ public class KeyInputEventHandler
         }
 
         if (AmbienceMini.keyBindings.printAll.consumeClick() && AmbienceMini.levelReader.notNull() && AmbienceMini.playerReader.notNull()) {
-            String valueStr = formatter
-                    .format(AmbienceMini.caveDetector.getAveragedCaveScore(AmbienceMini.levelReader, AmbienceMini.playerReader)
-                            .orElse(0.0));
-            ToastUtil.literal("Cave score = " + valueStr);
+            ToastUtil.translatable(AmLang.TOAST_PRINTING_ALL);
+            AmbienceMini.LOGGER.info("All current Ambience Mini state:\n{}", AmbienceMini.gameStateProvider.readAll());
         }
     }
 }

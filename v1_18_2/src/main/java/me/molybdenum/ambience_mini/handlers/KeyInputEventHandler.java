@@ -10,14 +10,10 @@ import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 
 @Mod.EventBusSubscriber(modid = Common.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value={Dist.CLIENT})
 public class KeyInputEventHandler
 {
-    private static final NumberFormat formatter = new DecimalFormat("#0.00000");
-
     @SubscribeEvent
     public static void keyEvent(final InputEvent.KeyInputEvent event)
     {

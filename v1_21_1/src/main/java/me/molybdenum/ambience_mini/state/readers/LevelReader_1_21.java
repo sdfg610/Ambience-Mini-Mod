@@ -56,6 +56,15 @@ public class LevelReader_1_21 extends BaseLevelReader<BlockPos, Vec3, BlockState
         );
     }
 
+    @Override
+    public List<String> getBiomeTagIDs(BlockPos blockPos) {
+        assert mc.level != null;
+        return mc.level.getBiome(blockPos)
+                .tags()
+                .map(tag -> tag.location().toString())
+                .toList();
+    }
+
 
     @Override
     public int getTime() {
