@@ -2,9 +2,10 @@
 Version 2.3.0:
 
 - Added lists data types (separate from playlists) and list quantifiers (i.e., "all" and "any") to the configuration language.
-- Added a "$biome_tags" property that lists all the tag names of the players current biome.
-- Added an "$effects" property that lists all active effects/(de-)buffs on the player.
-- Since multiple bosses can be active at once, the "$boss" string property has been replaced with the "$bosses" string list property.
+- Added a "$biome_tags" (string list) property that lists all the tag names of the players current biome.
+- Added an "$effects" (string list) property that lists all active effects/(de-)buffs on the player.
+- Added a "$bosses" (string list) property listing all active bosses (since multiple bosses can be active at once).
+    * The old "$boss" property still works and simply gets the first boss in the list (same always, actually).
 - Replaced the "print cave score" keybinding with a "print all readings" keybinding that prints all game state to the Minecraft log.
 - Fixed bug that caused fishing music to constantly reset when moving around too much while fishing or having a very short fishing timeout.
 

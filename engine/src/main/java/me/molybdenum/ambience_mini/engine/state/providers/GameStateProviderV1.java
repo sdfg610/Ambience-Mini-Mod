@@ -144,6 +144,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
         // Combat properties
         registerProperty("combatant_count", new IntT(), this::countCombatants);
+        registerProperty("boss", new StringT(), () -> getBosses().stream().findFirst().orElse(""));
         registerProperty("bosses", new ListT(new StringT()), this::getBosses);
 
 
