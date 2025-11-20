@@ -1,29 +1,27 @@
 package me.molybdenum.ambience_mini.engine.loader.pretty_printer;
 
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.conf.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expr.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.play.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.shed.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expression.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.playlist.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.*;
 
 import java.util.List;
 import java.util.stream.Stream;
 
-import static me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expr.Quantifiers.ANY;
-
 public class PrettyPrinter {
-    public static String printConf(Conf conf)
+    public static String printConf(Config config)
     {
-        if (conf instanceof Playlist playlist)
-            return "playlist " + playlist.ident().value() + " = " + printPL(playlist.playlist()) + ";\n\n" + printConf(playlist.conf());
-        else if (conf instanceof Schedule schedule)
-            return printShed(schedule.schedule());
+        if (config instanceof PlaylistDecl playlistDecl)
+            return "playlist " + playlistDecl.ident().value() + " = " + printPL(playlistDecl.playlist()) + ";\n\n" + printConf(playlistDecl.config());
+        else if (config instanceof ScheduleDecl scheduleDecl)
+            return printShed(scheduleDecl.schedule());
 
-        throw new RuntimeException("Unhandled Conf-type: " + conf.getClass().getCanonicalName());
+        throw new RuntimeException("Unhandled Conf-type: " + config.getClass().getCanonicalName());
     }
 
 
-    public static String printPL(PL play) {
+    public static String printPL(Playlist play) {
         if (play instanceof Nil)
             return "NIL";
 
@@ -61,32 +59,32 @@ public class PrettyPrinter {
             return loadString;
     }
 
-    private static Stream<PL> flatten (PL play) {
+    private static Stream<Playlist> flatten (Playlist play) {
         return play instanceof Concat concat
                 ? Stream.concat(flatten(concat.left()), flatten(concat.right()))
                 : Stream.of(play);
     }
 
 
-    public static String printShed(Shed shed) {
-        return printShed(shed, 0);
+    public static String printShed(Schedule schedule) {
+        return printShed(schedule, 0);
     }
 
-    private static String printShed(Shed shed, int depth) {
-        if (shed instanceof Play play)
+    private static String printShed(Schedule schedule, int depth) {
+        if (schedule instanceof Play play)
             return indent(depth) + "play " + printPL(play.playlist()) + ";\n";
-        else if (shed instanceof Block block)
+        else if (schedule instanceof Block block)
             return "\n" + indent(depth) + "begin\n" +
                     String.join("", block.body().stream().map(sh -> printShed(sh, depth+1)).toList()) +
                     indent(depth) + "end\n";
-        else if (shed instanceof When when)
+        else if (schedule instanceof When when)
             return indent(depth) + "when (" + printExpr(when.condition()) + ") " +
                     printShed(when.body(), when.body() instanceof Block ? depth : 0);
-        else if (shed instanceof Interrupt interrupt)
+        else if (schedule instanceof Interrupt interrupt)
             return indent(depth) + "interrupt " +
-                    printShed(interrupt.shed(), interrupt.shed() instanceof Block ? depth : 0);
+                    printShed(interrupt.body(), interrupt.body() instanceof Block ? depth : 0);
 
-        throw new RuntimeException("Unhandled Shed-type: " + shed.getClass().getCanonicalName());
+        throw new RuntimeException("Unhandled Shed-type: " + schedule.getClass().getCanonicalName());
     }
 
     private static String indent(int depth) {
@@ -97,18 +95,18 @@ public class PrettyPrinter {
     public static String printExpr(Expr expr) {
         if (expr instanceof IdentE ident)
             return ident.value();
-        else if (expr instanceof BoolV boolV)
-            return Boolean.toString(boolV.value());
-        else if (expr instanceof IntV intV)
-            return Integer.toString(intV.value());
-        else if (expr instanceof FloatV floatV)
-            return Float.toString(floatV.value());
-        else if (expr instanceof StringV stringV)
-            return '"' + stringV.value() + '"';
-        else if (expr instanceof Ev ev)
-            return '@' + ev.eventName().value();
-        else if (expr instanceof Get get)
-            return '$' + get.propertyName().value();
+        else if (expr instanceof BoolLit boolLit)
+            return Boolean.toString(boolLit.value());
+        else if (expr instanceof IntLit intLit)
+            return Integer.toString(intLit.value());
+        else if (expr instanceof FloatLit floatLit)
+            return Float.toString(floatLit.value());
+        else if (expr instanceof StringLit stringLit)
+            return '"' + stringLit.value() + '"';
+        else if (expr instanceof GetEvent getEvent)
+            return '@' + getEvent.eventName().value();
+        else if (expr instanceof GetProperty getProperty)
+            return '$' + getProperty.propertyName().value();
         else if (expr instanceof BinaryOp binOp)
             return surround(binOp.left()) + binaryOpString(binOp.op()) + surround(binOp.right());
         else if (expr instanceof QuantifierOp quanOp)

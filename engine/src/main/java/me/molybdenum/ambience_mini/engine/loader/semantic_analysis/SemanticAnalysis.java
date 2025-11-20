@@ -2,9 +2,9 @@ package me.molybdenum.ambience_mini.engine.loader.semantic_analysis;
 
 import me.molybdenum.ambience_mini.engine.utils.Utils;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.conf.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expr.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.play.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.shed.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expression.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.playlist.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.loader.pretty_printer.PrettyPrinter;
 import me.molybdenum.ambience_mini.engine.state.providers.BaseGameStateProvider;
@@ -18,27 +18,27 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider gameStateProvider) {
-    public Stream<String> Conf(Conf conf, TypeEnv env) {
+    public Stream<String> Conf(Config config, TypeEnv env) {
         ArrayList<String> errors = new ArrayList<>();
 
-        if (conf instanceof Playlist playlist) {
-            String name = playlist.ident().value();
+        if (config instanceof PlaylistDecl playlistDecl) {
+            String name = playlistDecl.ident().value();
 
             if (!env.bind(name, new PlaylistT()))
                 errors.add("Multiple definition of playlist: " + name);
 
-            Stream<String> plErr = PL(playlist.playlist(), env);
-            Stream<String> confErr = Conf(playlist.conf(), env);
+            Stream<String> plErr = PL(playlistDecl.playlist(), env);
+            Stream<String> confErr = Conf(playlistDecl.config(), env);
 
             return Stream.concat(errors.stream(), Stream.concat(plErr, confErr));
         }
-        else if (conf instanceof Schedule schedule)
-            return Shed(schedule.schedule(), env);
+        else if (config instanceof ScheduleDecl scheduleDecl)
+            return Shed(scheduleDecl.schedule(), env);
 
-        throw new RuntimeException("Unhandled Conf-type: " + conf.getClass().getCanonicalName());
+        throw new RuntimeException("Unhandled Conf-type: " + config.getClass().getCanonicalName());
     }
 
-    private Stream<String> PL(PL play, TypeEnv env) {
+    private Stream<String> PL(Playlist play, TypeEnv env) {
         if (play instanceof IdentP ident) {
             String name = ident.value();
             var binding = env.lookup(name);
@@ -72,14 +72,14 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
         throw new RuntimeException("Unhandled PL-type: " + play.getClass().getCanonicalName());
     }
 
-    private Stream<String> Shed(Shed shed, TypeEnv env) {
-        if (shed instanceof Play play)
+    private Stream<String> Shed(Schedule schedule, TypeEnv env) {
+        if (schedule instanceof Play play)
             return PL(play.playlist(), env);
-        else if (shed instanceof Block block)
+        else if (schedule instanceof Block block)
             return block.body().stream()
                     .map(sh -> Shed(sh, env))
                     .reduce(Stream.empty(), Stream::concat);
-        else if (shed instanceof When when) {
+        else if (schedule instanceof When when) {
             ArrayList<String> errors = new ArrayList<>();
 
             Type type = Expr(when.condition(), env, errors);
@@ -94,20 +94,20 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
 
             return Stream.concat(errors.stream(), errorsFromBody);
         }
-        else if (shed instanceof Interrupt interrupt) {
+        else if (schedule instanceof Interrupt interrupt) {
             if (env.inInterrupt())
                 return Stream.of("An 'interrupt' may not occur inside the body of another 'interrupt'.");
 
             env.enterInterrupt();
-            Stream<String> res = interrupt.shed() instanceof When
-                    ? Shed(interrupt.shed(), env)
+            Stream<String> res = interrupt.body() instanceof When
+                    ? Shed(interrupt.body(), env)
                     : Stream.of("The 'interrupt' keyword may only be followed by a 'when' clause.");
             env.exitInterrupt();
 
             return res;
         }
 
-        throw new RuntimeException("Unhandled Shed-type: " + shed.getClass().getCanonicalName());
+        throw new RuntimeException("Unhandled Shed-type: " + schedule.getClass().getCanonicalName());
     }
 
     public Type Expr(Expr expr, TypeEnv env, ArrayList<String> errors) {
@@ -119,20 +119,20 @@ public record SemanticAnalysis(String musicDirectory, BaseGameStateProvider game
             }
             return type.get();
         }
-        else if (expr instanceof BoolV)
+        else if (expr instanceof BoolLit)
             return new BoolT();
-        else if (expr instanceof IntV)
+        else if (expr instanceof IntLit)
             return new IntT();
-        else if (expr instanceof FloatV)
+        else if (expr instanceof FloatLit)
             return new FloatT();
-        else if (expr instanceof StringV)
+        else if (expr instanceof StringLit)
             return new StringT();
-        else if (expr instanceof Ev ev) {
-            if (gameStateProvider.tryGetEvent(ev.eventName().value()).isEmpty())
-                errors.add("Use of unknown event: @" + ev.eventName().value());
+        else if (expr instanceof GetEvent getEvent) {
+            if (gameStateProvider.tryGetEvent(getEvent.eventName().value()).isEmpty())
+                errors.add("Use of unknown event: @" + getEvent.eventName().value());
             return new BoolT();
         }
-        else if (expr instanceof Get property) {
+        else if (expr instanceof GetProperty property) {
             Optional<Property> prop = gameStateProvider.tryGetProperty(property.propertyName().value());
             if (prop.isEmpty()) {
                 errors.add("Use of unknown property: $" + property.propertyName().value());

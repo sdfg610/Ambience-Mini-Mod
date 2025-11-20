@@ -1,11 +1,10 @@
 package me.molybdenum.ambience_mini.engine.loader;
 
-import me.molybdenum.ambience_mini.engine.loader.compiler.Compiler;
+import me.molybdenum.ambience_mini.engine.loader.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.loader.semantic_analysis.TypeEnv;
 import me.molybdenum.ambience_mini.engine.loader.semantic_analysis.SemanticAnalysis;
 import me.molybdenum.ambience_mini.engine.loader.syntactic_analysis.Parser;
 import me.molybdenum.ambience_mini.engine.loader.syntactic_analysis.Scanner;
-import me.molybdenum.ambience_mini.engine.player.music_picker.rules.Rule;
 import me.molybdenum.ambience_mini.engine.state.providers.BaseGameStateProvider;
 import org.slf4j.Logger;
 
@@ -19,7 +18,7 @@ public class MusicLoader {
     public static final String MUSIC_DIRECTORY = "music";
     public static final String MUSIC_CONFIG_FILE = "music_config.txt";
 
-    public static Optional<Rule> loadFrom(String ambienceDirectory, Logger logger, BaseGameStateProvider gameStateProvider) {
+    public static Optional<Interpreter> loadFrom(String ambienceDirectory, Logger logger, BaseGameStateProvider gameStateProvider) {
         try {
             File configFile = Path.of(ambienceDirectory, MUSIC_CONFIG_FILE).toFile();
             String musicPath = Path.of(ambienceDirectory, MUSIC_DIRECTORY).toString();
@@ -36,7 +35,7 @@ public class MusicLoader {
                         .toList();
 
                 if (semErr.isEmpty())
-                    return Optional.ofNullable(new Compiler(musicPath, gameStateProvider).Conf(parser.mainNode));
+                    return Optional.of(new Interpreter(parser.mainNode, musicPath, gameStateProvider));
                 else
                     for (String error : semErr)
                         logger.error("Semantic error: {}", error);

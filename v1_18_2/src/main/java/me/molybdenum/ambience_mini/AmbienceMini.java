@@ -110,12 +110,12 @@ public class AmbienceMini extends BaseAmbienceMini
 
         combatMonitor.clearCombatants();
 
-        MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(rule -> {
+        MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(interpreter -> {
             disableNativeMusicManager();
 
             Supplier<Boolean> isFocused = Minecraft.getInstance()::isWindowActive;
             ambienceThread = new AmbienceThread(
-                    rule, LOGGER, isFocused, clientConfig
+                    interpreter, LOGGER, isFocused, clientConfig
             );
 
             LOGGER.info("Successfully loaded Ambience Mini");

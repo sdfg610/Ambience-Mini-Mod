@@ -1,4 +1,11 @@
 
+Version 2.3.1:
+
+- Added a "verbose mode" forge-config option. When enabled, the values (of the events and properties) used to pick a playlist will be printed whenever the current playlist changes.
+    * This information can be used when debugging music packs to see where odd behavior stems from.
+- Fixed bug where the config option for "notify server support" has wrong name (be careful with that copy-pasta coding).
+
+
 Version 2.3.0:
 
 - Added lists data types (separate from playlists) and list quantifiers (i.e., "all" and "any") to the configuration language.

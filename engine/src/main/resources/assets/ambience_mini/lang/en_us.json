@@ -13,7 +13,8 @@
   "toast.no_server_support": "No server support for Ambience Mini! Server-dependent features are disabled.",
 
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
-  "ambience_mini.configuration.Enabled": "Enabled",
+  "ambience_mini.configuration.Notify_Server_Support": "Notify server support",
+  "ambience_mini.configuration.Verbose_Mode": "Verbose mode",
   "ambience_mini.configuration.Update_Interval": "Update interval",
   "ambience_mini.configuration.Next_Music_Delay": "Next music delay",
   "ambience_mini.configuration.Lost_Focus_FadeOut": "Lost focus fadeout",

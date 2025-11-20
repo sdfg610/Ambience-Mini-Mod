@@ -4,6 +4,7 @@ import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.FloatT;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.IntT;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.ListT;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.type.StringT;
+import me.molybdenum.ambience_mini.engine.loader.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
 import me.molybdenum.ambience_mini.engine.state.monitors.BaseCombatMonitor;
@@ -41,6 +42,8 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
     private long _latestCombatTime = 0L;
 
     private double _cashedCaveScore = 0;
+
+    private Property timeProp;
 
 
     public GameStateProviderV1(
@@ -132,7 +135,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
         registerProperty("dimension", new StringT(), this::getDimensionId);
         registerProperty("biome", new StringT(), this::getBiomeId);
         registerProperty("biome_tags", new ListT(new StringT()), this::getBiomeTagIDs);
-        registerProperty("time", new IntT(), this::getTime);
+        timeProp = registerProperty("time", new IntT(), this::getTime);
         registerProperty("cave_score", new FloatT(), this::getCaveScore);
 
         // Player properties
@@ -144,7 +147,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
         // Combat properties
         registerProperty("combatant_count", new IntT(), this::countCombatants);
-        registerProperty("boss", new StringT(), () -> getBosses().stream().findFirst().orElse(""));
+        registerProperty("boss", new StringT(), this::getBoss);
         registerProperty("bosses", new ListT(new StringT()), this::getBosses);
 
 
@@ -154,97 +157,97 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Global events
-    public boolean inMainMenu() {
-        return _screenMonitor.is(Screens.MAIN_MENU);
+    public BoolVal inMainMenu() {
+        return new BoolVal(_screenMonitor.is(Screens.MAIN_MENU));
     }
 
-    public boolean isJoiningWorld() {
-        return _screenMonitor.is(Screens.JOINING);
+    public BoolVal isJoiningWorld() {
+        return new BoolVal(_screenMonitor.is(Screens.JOINING));
     }
 
-    public boolean isDisconnected() {
-        return _screenMonitor.is(Screens.DISCONNECTED);
+    public BoolVal isDisconnected() {
+        return new BoolVal(_screenMonitor.is(Screens.DISCONNECTED));
     }
 
-    public boolean onCreditsScreen() {
-        return _screenMonitor.is(Screens.CREDITS);
+    public BoolVal onCreditsScreen() {
+        return new BoolVal(_screenMonitor.is(Screens.CREDITS));
     }
 
-    public boolean isPaused() {
-        return _level.isWorldTickingPaused();
+    public BoolVal isPaused() {
+        return new BoolVal(_level.isWorldTickingPaused());
     }
 
-    public boolean inGame() {
-        return _level.notNull();
+    public BoolVal inGame() {
+        return new BoolVal(_level.notNull());
     }
 
 
     // ------------------------------------------------------------------------------------------------
     // Time events
-    public boolean isDay() {
-        int time = this.getTime();            // "12542" is the time when beds can be used.
-        return time > 23500 || time <= 12500; // "23460" is the time from when beds cannot be used.
+    public BoolVal isDay() {
+        int time = timeProp.getValue().asInt();                  // "12542" is the time when beds can be used.
+        return new BoolVal(time > 23500 || time <= 12500); // "23460" is the time from when beds cannot be used.
     }
 
-    public boolean isDawn() {
-        int time = this.getTime();
-        return time > 23500 || time <= 2000;
+    public BoolVal isDawn() {
+        int time = timeProp.getValue().asInt();
+        return new BoolVal(time > 23500 || time <= 2000);
     }
 
-    public boolean isDusk() {
-        int time = this.getTime();
-        return time > 10300 && time <= 12500;
+    public BoolVal isDusk() {
+        int time = timeProp.getValue().asInt();
+        return new BoolVal(time > 10300 && time <= 12500);
     }
 
-    public boolean isNight() {
-        int time = this.getTime();
-        return time > 12500 && time <= 23500;
+    public BoolVal isNight() {
+        int time = timeProp.getValue().asInt();
+        return new BoolVal(time > 12500 && time <= 23500);
     }
 
 
     // ------------------------------------------------------------------------------------------------
     // Weather events
-    public boolean isDownfall() {
-        return _level.notNull() && _level.isRaining();
+    public BoolVal isDownfall() {
+        return new BoolVal(_level.notNull() && _level.isRaining());
     }
 
-    public boolean isRaining() {
-        return _player.notNull() && _level.notNull() && _level.isRaining() && !_level.isColdEnoughToSnow(_player.blockPos());
+    public BoolVal isRaining() {
+        return new BoolVal(_player.notNull() && _level.notNull() && _level.isRaining() && !_level.isColdEnoughToSnow(_player.blockPos()));
     }
 
-    public boolean isSnowing() {
-        return _player.notNull() && _level.notNull() && _level.isRaining() && _level.isColdEnoughToSnow(_player.blockPos());
+    public BoolVal isSnowing() {
+        return new BoolVal(_player.notNull() && _level.notNull() && _level.isRaining() && _level.isColdEnoughToSnow(_player.blockPos()));
     }
 
-    public boolean isThundering() {
-        return _level.notNull() && _level.isThundering();
+    public BoolVal isThundering() {
+        return new BoolVal(_level.notNull() && _level.isThundering());
     }
 
 
     // ------------------------------------------------------------------------------------------------
     // Location events
-    public boolean inVillage() {
-        return _player.notNull() && _level.notNull() && _level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold;
+    public BoolVal inVillage() {
+        return new BoolVal(_player.notNull() && _level.notNull() && _level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold);
     }
 
-    public boolean inRanch() {
-        return _player.notNull() && _level.notNull() && _level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold;
+    public BoolVal inRanch() {
+        return new BoolVal(_player.notNull() && _level.notNull() && _level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold);
     }
 
 
     // ------------------------------------------------------------------------------------------------
     // Player-state events
-    public boolean isDead() {
-        return _screenMonitor.is(Screens.DEATH);
+    public BoolVal isDead() {
+        return new BoolVal(_screenMonitor.is(Screens.DEATH));
     }
 
-    public boolean isSleeping() {
-        return _player.notNull() && _player.isSleeping();
+    public BoolVal isSleeping() {
+        return new BoolVal(_player.notNull() && _player.isSleeping());
     }
 
-    public boolean isFishing() {
+    public BoolVal isFishing() {
         if (_player.isNull() || _level.isNull())
-            return false;
+            return new BoolVal(false);
 
         // The bopping of the fishing hook creates time periods where the hook is not detected as being in water.
         // To combat this, I make a small grace period of 1000 milliseconds.
@@ -260,126 +263,131 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
                 _latestFishingPos = null;
         }
 
-        return _latestFishingPos != null;
+        return new BoolVal(_latestFishingPos != null);
     }
 
-    public boolean isUnderWater() {
-        return _player.notNull() && _player.isUnderwater();
+    public BoolVal isUnderWater() {
+        return new BoolVal(_player.notNull() && _player.isUnderwater());
     }
 
-    public boolean inLava() {
-        return _player.notNull() && _player.isInLava();
+    public BoolVal inLava() {
+        return new BoolVal(_player.notNull() && _player.isInLava());
     }
 
 
     // ------------------------------------------------------------------------------------------------
     // Mount-like events
-    public boolean inMinecart() {
-        return _player.notNull() && _player.inMinecart();
+    public BoolVal inMinecart() {
+        return new BoolVal(_player.notNull() && _player.inMinecart());
     }
 
-    public boolean inBoat() {
-        return _player.notNull() && _player.inBoat();
+    public BoolVal inBoat() {
+        return new BoolVal(_player.notNull() && _player.inBoat());
     }
 
-    public boolean onHorse() {
-        return _player.notNull() && _player.onHorse();
+    public BoolVal onHorse() {
+        return new BoolVal(_player.notNull() && _player.onHorse());
     }
 
-    public boolean onDonkey() {
-        return _player.notNull() && _player.onDonkey();
+    public BoolVal onDonkey() {
+        return new BoolVal(_player.notNull() && _player.onDonkey());
     }
 
-    public boolean onPig() {
-        return _player.notNull() && _player.onPig();
+    public BoolVal onPig() {
+        return new BoolVal(_player.notNull() && _player.onPig());
     }
 
-    public boolean flyingElytra() {
-        return _player.notNull() && _player.elytraFlying();
+    public BoolVal flyingElytra() {
+        return new BoolVal(_player.notNull() && _player.elytraFlying());
     }
 
 
     // ------------------------------------------------------------------------------------------------
     // Combat events
-    public boolean inCombat() {
+    public BoolVal inCombat() {
         if (_combatMonitor.hasActiveCombatants()) {
             _latestCombatTime = System.currentTimeMillis();
-            return true;
+            return new BoolVal(true);
         }
-        return System.currentTimeMillis() - _latestCombatTime < _combatGracePeriod;
+        return new BoolVal(System.currentTimeMillis() - _latestCombatTime < _combatGracePeriod);
     }
 
-    public boolean inBossFight() {
-        return _player.isInBossFight();
+    public BoolVal inBossFight() {
+        return new BoolVal(_player.isInBossFight());
     }
 
 
 
     // ------------------------------------------------------------------------------------------------
     // World properties
-    public String getDimensionId() {
-        return _level.notNull() ? _level.getDimensionID() : "";
+    public StringVal getDimensionId() {
+        return new StringVal(_level.notNull() ? _level.getDimensionID() : "");
     }
 
-    public String getBiomeId() {
+    public StringVal getBiomeId() {
         if (_player.isNull() || _level.isNull())
-            return "";
-        return _level.getBiomeID(_player.blockPos());
+            return new StringVal("");
+        return new StringVal(_level.getBiomeID(_player.blockPos()));
     }
 
-    public List<String> getBiomeTagIDs() {
+    public ListVal getBiomeTagIDs() {
         if (_player.isNull() || _level.isNull())
-            return List.of();
-        return _level.getBiomeTagIDs(_player.blockPos());
+            return new ListVal(List.of());
+        return ListVal.ofStringList(_level.getBiomeTagIDs(_player.blockPos()));
     }
 
-    public int getTime() {
-        return (_level.notNull() ? _level.getTime() : 0) % 24000;
+    public IntVal getTime() {
+        return new IntVal((_level.notNull() ? _level.getTime() : 0) % 24000);
     }
 
-    public float getCaveScore() {
+    public FloatVal getCaveScore() {
         if (_player.isNull() || _level.isNull())
-            return 0;
-        return (float)(_cashedCaveScore = _caveDetector.getAveragedCaveScore(_level, _player).orElse(_cashedCaveScore));
+            return new FloatVal(0);
+        _cashedCaveScore = _caveDetector.getAveragedCaveScore(_level, _player).orElse(_cashedCaveScore);
+        return new FloatVal((float)(_cashedCaveScore));
     }
 
 
     // ------------------------------------------------------------------------------------------------
     // Player properties
-    public float getPlayerHealth() {
-        return (_player.notNull() ? _player.health() : 0);
+    public FloatVal getPlayerHealth() {
+        return new FloatVal(_player.notNull() ? _player.health() : 0);
     }
 
-    public float getPlayerMaxHealth() {
-        return (_player.notNull() ? _player.maxHealth() : 0);
+    public FloatVal getPlayerMaxHealth() {
+        return new FloatVal(_player.notNull() ? _player.maxHealth() : 0);
     }
 
-    public float getPlayerElevation() {
-        return (_player.notNull() ? (float)_player.vectorY() : 0);
+    public FloatVal getPlayerElevation() {
+        return new FloatVal(_player.notNull() ? (float)_player.vectorY() : 0);
     }
 
-    public String getVehicleId() {
+    public StringVal getVehicleId() {
         if (_player.isNull())
-            return "";
-        return _player.vehicleId().orElse("");
+            return new StringVal("");
+        return new StringVal(_player.vehicleId().orElse(""));
     }
 
-    public List<String> getActiveEffects() {
+    public ListVal getActiveEffects() {
         if (_player.isNull())
-            return List.of();
-        return _player.getActiveEffectIds();
+            return new ListVal(List.of());
+        return ListVal.ofStringList(_player.getActiveEffectIds());
     }
 
 
     // ------------------------------------------------------------------------------------------------
     // Combat properties
-    public int countCombatants() {
-        return _combatMonitor.countCombatants();
+    public IntVal countCombatants() {
+        return new IntVal(_combatMonitor.countCombatants());
     }
 
-    public List<String> getBosses() {
+    private StringVal getBoss() {
+        return (StringVal)getBosses().asList().stream().findFirst().orElse(new StringVal(""));
+    }
+
+    public ListVal getBosses() {
         if (_player.isNull())
-            return List.of();
-        return _player.getBosses();
+            return new ListVal(List.of());
+        return ListVal.ofStringList(_player.getBosses());
     }
 }

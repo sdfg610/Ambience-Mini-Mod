@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 public abstract class BaseClientConfig {
     public final Supplier<Boolean> notifyServerSupport;
+    public final Supplier<Boolean> verboseMode;
 
     public final Supplier<Integer> updateInterval;
     public final Supplier<Integer> nextMusicDelay;
@@ -37,8 +38,14 @@ public abstract class BaseClientConfig {
 
         notifyServerSupport = makeBoolOption(
                 "If enabled, upon joining a multiplayer server the client will notify whether the server has support for Ambience Mini. If no support, server-dependent features will be disabled. [Default: true]",
-                "Enabled",
+                "Notify_Server_Support",
                 true
+        );
+
+        verboseMode = makeBoolOption(
+                "If enabled, the mod will print debugging information to the terminal whenever the current playlist changes. Used for troubleshooting. [Default: false]",
+                "Verbose_Mode",
+                false
         );
 
         // Timing
@@ -154,7 +161,6 @@ public abstract class BaseClientConfig {
         postSetup();
     }
 
-    @SuppressWarnings("SameParameterValue")
     protected abstract Supplier<Boolean> makeBoolOption(String comment, String name, boolean defaultValue);
     protected abstract Supplier<Integer> makeIntOption(String comment, String name, int defaultValue, int min, int max);
 

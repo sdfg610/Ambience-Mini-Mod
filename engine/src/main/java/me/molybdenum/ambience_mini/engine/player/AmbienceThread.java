@@ -1,13 +1,15 @@
 package me.molybdenum.ambience_mini.engine.player;
 
-import me.molybdenum.ambience_mini.engine.player.music_picker.PlaylistChoice;
-import me.molybdenum.ambience_mini.engine.player.music_picker.VarEnv;
-import me.molybdenum.ambience_mini.engine.player.music_picker.rules.Rule;
-import javazoom.jlayer.decoder.JavaLayerException;
+import me.molybdenum.ambience_mini.engine.loader.interpreter.Interpreter;
+import me.molybdenum.ambience_mini.engine.loader.interpreter.PlaylistChoice;
+import me.molybdenum.ambience_mini.engine.loader.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.state.monitors.VolumeMonitor;
+import me.molybdenum.ambience_mini.engine.utils.Pair;
+import me.molybdenum.ambience_mini.engine.utils.Utils;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -24,12 +26,12 @@ public class AmbienceThread extends Thread
     private final long _updateIntervalMilliseconds;
     private final long _nextMusicDelayMilliseconds;
 
-
-    private boolean _kill = false;
+    private final boolean _verboseMode;
+    private List<Music> _currentPlaylist = null;
 
 
     private final Random _rand = new Random(System.nanoTime());
-    private final Rule _rule; // An object representation of the config file which decides the music.
+    private final Interpreter _playlistSelector;
 
     private MusicPlayer _mainPlayer = null;
     private MusicPlayer _interruptPlayer = null;
@@ -50,19 +52,24 @@ public class AmbienceThread extends Thread
     };
 
 
+    private boolean _kill = false;
+
+
     public AmbienceThread(
-        Rule rule,
+        Interpreter playlistSelector,
         Logger logger,
         Supplier<Boolean> isFocused,
         BaseClientConfig config
     ) {
-        _rule = rule;
+        _playlistSelector = playlistSelector;
         _logger = logger;
         _isFocused = isFocused;
 
         _lostFocusEnabled = config.lostFocusEnabled.get();
         _updateIntervalMilliseconds = config.updateInterval.get();
         _nextMusicDelayMilliseconds = config.nextMusicDelay.get();
+
+        _verboseMode = config.verboseMode.get();
 
         setDaemon(true);
         setName("Ambience Mini - Music Monitor Thread");
@@ -144,13 +151,31 @@ public class AmbienceThread extends Thread
     // Music and volume
     private void handleMusicCycle()
     {
-        PlaylistChoice nextChoice = _rule.getNext(VarEnv.empty());
+        ArrayList<Pair<String, Value>> trace = _verboseMode ? new ArrayList<>() : null;
+        PlaylistChoice nextChoice = _playlistSelector.selectPlaylist(trace);
         if (nextChoice == null)
             return;
 
         List<Music> nextPlaylist = nextChoice.playlist();
         boolean nextIsInterrupt = nextChoice.isInterrupt();
         boolean doFade = !nextChoice.isInstant();
+
+        if (_verboseMode && _currentPlaylist != nextPlaylist) {
+            _currentPlaylist = nextPlaylist;
+
+            if (nextIsInterrupt)
+                _logger.info("Selected new interrupt playlist: [{}]", String.join(", ", nextPlaylist.stream().map(m -> m.musicName).toList()));
+            else
+                _logger.info("Selected new playlist: [{}]", String.join(", ", nextPlaylist.stream().map(m -> m.musicName).toList()));
+
+            int maxKeyLength = trace.stream()
+                    .map(pair -> pair.left().length())
+                    .max(Integer::compareTo)
+                    .orElse(0);
+
+            List<String> values = trace.stream().map(pair -> "  " + Utils.padToLength(pair.left(), maxKeyLength) + " = " + pair.right().toString()).toList();
+            _logger.info("Values computed during selection:\n{}", String.join("\n", values));
+        }
 
         MusicPlayer activePlayer = nextIsInterrupt ? _interruptPlayer : _mainPlayer;
         Music currentMusic = activePlayer == null ? null : activePlayer.currentMusic;

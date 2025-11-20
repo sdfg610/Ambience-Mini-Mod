@@ -13,5 +13,5 @@ import java.util.Map;
 public class ClassInstanceMultiMapMixin<T> {
     @Final
     @Shadow
-    private Map<Class<?>, List<T>> byClass = Maps.newConcurrentMap();
+    private final Map<Class<?>, List<T>> byClass = Maps.newConcurrentMap();
 }
