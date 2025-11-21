@@ -8,7 +8,7 @@ public class ScreenState extends BaseScreenState
     private final Minecraft mc = Minecraft.getInstance();
 
     @Override
-    protected boolean isCurrentScreenNull() {
+    protected boolean isScreenNull() {
         return mc.screen == null;
     }
 }

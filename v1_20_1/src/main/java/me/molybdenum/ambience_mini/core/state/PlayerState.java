@@ -2,25 +2,19 @@ package me.molybdenum.ambience_mini.core.state;
 
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.BossHealthOverlay;
-import net.minecraft.client.gui.components.LerpingBossEvent;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.horse.Donkey;
 import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
 
 public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 {
-    private static final String OBF_MAP_BOSS_INFO = "f_93699_";
-
     private final Minecraft mc = Minecraft.getInstance();
 
 
@@ -196,25 +190,6 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
         return mc.player.fishing != null && mc.player.fishing.isInWater();
     }
 
-    @Override
-    public boolean isInBossFight() {
-        Map<UUID, LerpingBossEvent> bossMap =
-                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), OBF_MAP_BOSS_INFO);
-        return bossMap != null && !bossMap.isEmpty();
-    }
-
-    @Override
-    public List<String> getBosses() {
-        Map<UUID, LerpingBossEvent> bossMap =
-                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), OBF_MAP_BOSS_INFO);
-
-        return bossMap == null
-                ? List.of()
-                : bossMap.values()
-                    .stream()
-                    .map(bossEvent -> ((TranslatableContents)bossEvent.getName().getContents()).getKey())
-                    .toList();
-    }
 
     @Override
     public double distanceTo(Vec3 position) {

@@ -1,5 +1,7 @@
 package me.molybdenum.ambience_mini.engine.configuration.interpreter.values;
 
+import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.type.*;
+
 import java.util.List;
 
 public sealed abstract class Value permits BoolVal, FloatVal, IntVal, ListVal, StringVal
@@ -34,6 +36,22 @@ public sealed abstract class Value permits BoolVal, FloatVal, IntVal, ListVal, S
         if (this instanceof ListVal listVal)
             return listVal.value;
         throw new RuntimeException("Tried to get value as list, but value was: " + this.getClass().getName());
+    }
+
+
+    public static Value ofType(Type type) {
+        if (type instanceof BoolT)
+            return new BoolVal(false);
+        else if (type instanceof IntT)
+            return new IntVal(0);
+        else if (type instanceof FloatT)
+            return new FloatVal(0);
+        else if (type instanceof StringT)
+            return new StringVal("");
+        else if (type instanceof ListT)
+            return new ListVal(List.of());
+        else
+            throw new RuntimeException("Cannot create value of type: " + type.getClass().getName());
     }
 
 

@@ -4,6 +4,7 @@ import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.core.setup.ServerSetup;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseCombatState<TEntity, TVec3>
@@ -36,6 +37,17 @@ public abstract class BaseCombatState<TEntity, TVec3>
     }
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+    // Abstract API
+    public abstract boolean isEntityDead(TEntity entity);
+    public abstract int getEntityId(TEntity entity);
+
+    public abstract boolean inBossFight();
+    public abstract List<String> getBosses();
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Concrete API
     public int countCombatants() {
         // If there is server support, combatants that are targeting the player, but have not interacted with the player
         // yet, are still registered as a combatant -- albeit "inactive". If one combatant becomes active, all potential
@@ -100,10 +112,6 @@ public abstract class BaseCombatState<TEntity, TVec3>
     public void clearCombatants() {
         combatants.clear();
     }
-
-
-    public abstract boolean isEntityDead(TEntity entity);
-    public abstract int getEntityId(TEntity entity);
 
 
     class Combatant {

@@ -9,7 +9,7 @@ public class ScreenState extends BaseScreenState
 
 
     @Override
-    protected boolean isCurrentScreenNull()  {
+    protected boolean isScreenNull()  {
         return mc.screen == null;
     }
 }

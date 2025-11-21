@@ -2,10 +2,7 @@ package me.molybdenum.ambience_mini.core.state;
 
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.BossHealthOverlay;
-import net.minecraft.client.gui.components.LerpingBossEvent;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Pig;
@@ -14,12 +11,12 @@ import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.fml.util.ObfuscationReflectionHelper;
 import net.neoforged.neoforge.common.extensions.IHolderExtension;
 
 import java.util.*;
 
-public class PlayerState implements BasePlayerState<BlockPos, Vec3> {
+public class PlayerState implements BasePlayerState<BlockPos, Vec3>
+{
     private final Minecraft mc = Minecraft.getInstance();
 
 
@@ -196,25 +193,6 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3> {
         return mc.player.fishing != null && mc.player.fishing.isInWater();
     }
 
-    @Override
-    public boolean isInBossFight() {
-        Map<UUID, LerpingBossEvent> bossMap =
-                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), "events");
-        return bossMap != null && !bossMap.isEmpty();
-    }
-
-    @Override
-    public List<String> getBosses() {
-        Map<UUID, LerpingBossEvent> bossMap =
-                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), "events");
-
-        return bossMap == null
-                ? List.of()
-                : bossMap.values()
-                .stream()
-                .map(bossEvent -> ((TranslatableContents)bossEvent.getName().getContents()).getKey())
-                .toList();
-    }
 
     @Override
     public double distanceTo(Vec3 position) {

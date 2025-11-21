@@ -42,9 +42,6 @@ public interface BasePlayerState<TBlockPos, TVec3> {
 
     boolean fishingHookInWater();
 
-    boolean isInBossFight();
-    List<String> getBosses();
-
 
     // -----------------------------------------------------------------------------------------------------------------
     // Utils
