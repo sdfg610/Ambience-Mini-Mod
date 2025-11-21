@@ -1,6 +1,11 @@
 
 Version 2.3.2:
 
+- Made a more robust system event and property reading in an attempt to fix incorrect behavior, likely due to mod-interactions.
+
+
+Version 2.3.2:
+
 - Fixed crash-bug related to the less-than operator in music configurations.
 - Other fixes and improvements to code structure.
 
