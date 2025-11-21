@@ -17,8 +17,9 @@ public class LoginHandlers
     public static void onLoggingIn(final ClientPlayerNetworkEvent.LoggingIn event) {
         AmbienceMini.server().isOnLocalServer = Minecraft.getInstance().isLocalServer();
         AmbienceMini.server().hasServerSupport = event.getPlayer().connection.hasChannel(MobTargetUpdatePacket.TYPE.id());
+
         if (AmbienceMini.config().notifyServerSupport.get() && !AmbienceMini.server().isOnLocalServer)
-            AmbienceMini.notification().showToast(AmbienceMini.server().hasServerSupport ? AmLang.TOAST_HAS_SERVER_SUPPORT : AmLang.TOAST_NO_SERVER_SUPPORT);
+            AmbienceMini.notification().printToChat(AmbienceMini.server().hasServerSupport ? AmLang.TOAST_HAS_SERVER_SUPPORT : AmLang.TOAST_NO_SERVER_SUPPORT);
     }
 
     @SubscribeEvent
