@@ -12,7 +12,7 @@ which will be explained when met first in context.  */
 
 /* Imports here are inserted at the top of the generated lexer and parser. */
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expression.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.conf.*;
+import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.config.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.playlist.*;
 import java.util.ArrayList;

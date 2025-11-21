@@ -5,8 +5,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Utils {
-    public static final List<String> SUPPORTED_FILE_TYPES = List.of("mp3", "flac");
-
     public static String getFileExtension(String filename) {
         if (filename == null) {
             return null;

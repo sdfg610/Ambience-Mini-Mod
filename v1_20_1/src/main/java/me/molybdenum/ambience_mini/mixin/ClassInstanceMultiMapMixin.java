@@ -14,5 +14,5 @@ public class ClassInstanceMultiMapMixin<T> {
     /// Replace the standard hash-map with a concurrent hash-map to avoid a rare crash when the world and Ambience
     /// Mini tries to get, simultaneously and for the first time and in the same chunk, the entities in some area.
     @Final @Shadow
-    private Map<Class<?>, List<T>> byClass = Maps.newConcurrentMap();
+    private final Map<Class<?>, List<T>> byClass = Maps.newConcurrentMap();
 }

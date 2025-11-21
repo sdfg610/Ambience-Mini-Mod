@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.network.to_client;
 
-import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.network.Message;
+import me.molybdenum.ambience_mini.network.Networking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -24,9 +24,9 @@ public record MobTargetUpdateMessage(int entityID, boolean isTargetingPlayer) im
     @Override
     public void handle(Supplier<NetworkEvent.Context> context) {
         if (isTargetingPlayer)
-            AmbienceMini.combatMonitor.tryAddCombatantById(entityID, false);
+            Networking.combatState.tryAddCombatantById(entityID, false);
         else
-            AmbienceMini.combatMonitor.removeCombatant(entityID);
+            Networking.combatState.removeCombatant(entityID);
         context.get().setPacketHandled(true);
     }
 }

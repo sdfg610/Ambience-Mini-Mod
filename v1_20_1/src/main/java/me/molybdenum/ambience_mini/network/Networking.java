@@ -1,10 +1,13 @@
 package me.molybdenum.ambience_mini.network;
 
 import me.molybdenum.ambience_mini.AmbienceMini;
+import me.molybdenum.ambience_mini.core.state.CombatState;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.network.to_client.MobTargetUpdateMessage;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -23,6 +26,9 @@ public class Networking {
             .simpleChannel();
 
     private static int id = 0;
+
+    @OnlyIn(Dist.CLIENT)
+    public static CombatState combatState; // Used so often it might be better to cache it
 
 
     public static void initialize() {

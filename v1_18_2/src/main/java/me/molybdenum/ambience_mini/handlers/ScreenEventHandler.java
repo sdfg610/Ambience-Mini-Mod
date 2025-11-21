@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.handlers;
 
 import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.engine.state.monitors.Screens;
+import me.molybdenum.ambience_mini.engine.core.state.Screens;
 import net.minecraft.client.gui.screens.*;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
@@ -26,23 +26,23 @@ public class ScreenEventHandler
                 || screen instanceof ConnectScreen
                 || screen instanceof LevelLoadingScreen
                 || screen instanceof ReceivingLevelScreen)
-            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.JOINING);
+            AmbienceMini.screen().setMemorizedScreen(Screens.JOINING);
 
         else if (screen instanceof DisconnectedScreen
                 || screen instanceof DisconnectedRealmsScreen)
-            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.DISCONNECTED);
+            AmbienceMini.screen().setMemorizedScreen(Screens.DISCONNECTED);
 
         else if (screen instanceof WinScreen)
-            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.CREDITS);
+            AmbienceMini.screen().setMemorizedScreen(Screens.CREDITS);
 
         else if (screen instanceof TitleScreen
                 || screen instanceof JoinMultiplayerScreen
                 || screen instanceof DirectJoinServerScreen
                 || screen instanceof SelectWorldScreen
                 || screen instanceof CreateWorldScreen)
-            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.MAIN_MENU);
+            AmbienceMini.screen().setMemorizedScreen(Screens.MAIN_MENU);
 
         else if (screen instanceof DeathScreen)
-            AmbienceMini.screenMonitor.setMemorizedScreen(Screens.DEATH);
+            AmbienceMini.screen().setMemorizedScreen(Screens.DEATH);
     }
 }

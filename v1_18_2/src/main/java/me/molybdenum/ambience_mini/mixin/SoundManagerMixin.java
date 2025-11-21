@@ -1,14 +1,12 @@
 package me.molybdenum.ambience_mini.mixin;
 
-import me.molybdenum.ambience_mini.AmbienceMini;
-import me.molybdenum.ambience_mini.engine.state.monitors.VolumeMonitor;
+import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.sounds.SoundSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import oshi.util.tuples.Pair;
 
 @Mixin(SoundManager.class)
 public class SoundManagerMixin {
@@ -16,8 +14,8 @@ public class SoundManagerMixin {
     public void onUpdateSourceVolume(SoundSource p_120359_, float p_120360_, CallbackInfo ignored)
     {
         switch (p_120359_) {
-            case MASTER -> VolumeMonitor.setMasterVolume(p_120360_);
-            case MUSIC -> VolumeMonitor.setMusicVolume(p_120360_);
+            case MASTER -> VolumeState.setMasterVolume(p_120360_);
+            case MUSIC -> VolumeState.setMusicVolume(p_120360_);
         }
     }
 }

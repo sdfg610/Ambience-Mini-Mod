@@ -1,4 +1,10 @@
 
+Version 2.3.2:
+
+- Fixed crash-bug related to the less-than operator in music configurations.
+- Other fixes and improvements to code structure.
+
+
 Version 2.3.1:
 
 - Added a "verbose mode" forge-config option. When enabled, the values (of the events and properties) used to pick a playlist will be printed whenever the current playlist changes.

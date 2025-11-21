@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.handlers;
 
 import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.setup.AmBlockTagsProvider;
+import me.molybdenum.ambience_mini.tags.AmBlockTagsProvider;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;

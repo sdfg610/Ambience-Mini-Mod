@@ -28,8 +28,8 @@ public record MobTargetUpdatePacket(int entityID, boolean isTargetingPlayer) imp
     @Override
     public void handle(IPayloadContext context) {
         if (isTargetingPlayer)
-            AmbienceMini.combatMonitor.tryAddCombatantById(entityID, false);
+            AmbienceMini.combat().tryAddCombatantById(entityID, false);
         else
-            AmbienceMini.combatMonitor.removeCombatant(entityID);
+            AmbienceMini.combat().removeCombatant(entityID);
     }
 }

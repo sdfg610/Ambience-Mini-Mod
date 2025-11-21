@@ -21,17 +21,17 @@ public class CombatClientHandler
 {
     @SubscribeEvent
     public static void onGameModeChanged(final ClientPlayerChangeGameTypeEvent event) {
-        AmbienceMini.isSurvivalOrAdventureMode = event.getNewGameType().isSurvival();
-        if (!AmbienceMini.isSurvivalOrAdventureMode)
-            AmbienceMini.combatMonitor.clearCombatants();
+        if (!AmbienceMini.player().isSurvivalOrAdventureMode())
+            AmbienceMini.combat().clearCombatants();
     }
 
     @SubscribeEvent
     public static void onLivingAttackEvent(final LivingAttackEvent event) {
         if (event.getEntity() instanceof Player
                 && event.getSource() instanceof EntityDamageSource source
-                && source.getEntity().isAlive()) {
-            AmbienceMini.combatMonitor.tryAddCombatantByRef(source.getEntity(), true);
+                && source.getEntity() instanceof Mob attacker
+                && attacker.isAlive()) {
+            AmbienceMini.combat().tryAddCombatantByRef(attacker, true);
         }
     }
     @SubscribeEvent
@@ -39,7 +39,7 @@ public class CombatClientHandler
         if (event.getTarget() instanceof Mob target
                 && target.canAttackType(EntityType.PLAYER)
                 && target.isAlive()) {
-            AmbienceMini.combatMonitor.tryAddCombatantByRef(target, true);
+            AmbienceMini.combat().tryAddCombatantByRef(target, true);
         }
     }
 
@@ -48,9 +48,9 @@ public class CombatClientHandler
         if (event.getEntity() instanceof Player) {
             assert Minecraft.getInstance().player != null;
             if (!Minecraft.getInstance().player.isAlive()) // If on a lan server, another player's death will get here on the host
-                AmbienceMini.combatMonitor.clearCombatants();
+                AmbienceMini.combat().clearCombatants();
         }
         else
-            AmbienceMini.combatMonitor.removeCombatant(event.getEntity().getId());
+            AmbienceMini.combat().removeCombatant(event.getEntity().getId());
     }
 }

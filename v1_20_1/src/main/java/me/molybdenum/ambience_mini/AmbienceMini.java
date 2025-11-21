@@ -1,77 +1,55 @@
 package me.molybdenum.ambience_mini;
 
 import com.mojang.logging.LogUtils;
-import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
-import me.molybdenum.ambience_mini.engine.player.AmbienceThread;
+import me.molybdenum.ambience_mini.core.Core;
+import me.molybdenum.ambience_mini.core.util.Notification;
+import me.molybdenum.ambience_mini.engine.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.engine.loader.MusicLoader;
-import me.molybdenum.ambience_mini.engine.state.detectors.CaveDetector;
-import me.molybdenum.ambience_mini.engine.state.monitors.VolumeMonitor;
-import me.molybdenum.ambience_mini.engine.state.providers.GameStateProviderV1;
+import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
+import me.molybdenum.ambience_mini.handlers.KeyInputEventHandler;
 import me.molybdenum.ambience_mini.network.Networking;
-import me.molybdenum.ambience_mini.setup.ClientConfig;
-import me.molybdenum.ambience_mini.setup.KeyBindings;
-import me.molybdenum.ambience_mini.state.moniotors.CombatMonitor;
-import me.molybdenum.ambience_mini.state.moniotors.ScreenMonitor;
-import me.molybdenum.ambience_mini.state.readers.LevelReader_1_20;
-import me.molybdenum.ambience_mini.state.readers.PlayerReader_1_20;
+import me.molybdenum.ambience_mini.core.setup.ClientConfig;
+import me.molybdenum.ambience_mini.core.setup.KeyBindings;
+import me.molybdenum.ambience_mini.core.state.CombatState;
+import me.molybdenum.ambience_mini.core.state.ScreenState;
+import me.molybdenum.ambience_mini.core.state.LevelState;
+import me.molybdenum.ambience_mini.core.state.PlayerState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
-
-import java.util.function.Supplier;
 
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(Common.MOD_ID)
-public class AmbienceMini extends BaseAmbienceMini
+public class AmbienceMini
 {
-    // Utils
-    public static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
-
     public static final Logger LOGGER = LogUtils.getLogger();
-
-    // Setup
-    public static ClientConfig clientConfig;
-    public static KeyBindings keyBindings;
-
-    // State
-    public static PlayerReader_1_20 playerReader;
-    public static LevelReader_1_20 levelReader;
-    public static ScreenMonitor screenMonitor;
-    public static CombatMonitor combatMonitor;
-    public static CaveDetector<BlockPos, Vec3, BlockState> caveDetector;
-    public static GameStateProviderV1<BlockPos, Vec3, BlockState, Entity> gameStateProvider;
-
-    // Music
-    public static AmbienceThread ambienceThread;
+    public static Core core = null;
 
 
     public AmbienceMini(FMLJavaModLoadingContext context)
     {
         IEventBus modBus = context.getModEventBus();
-        modBus.addListener(AmbienceMini::commonSetup);
+
+        Networking.initialize();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
-            clientConfig = new ClientConfig(context);
+            core = new Core(LOGGER);
 
-            screenMonitor = new ScreenMonitor();
-            playerReader = new PlayerReader_1_20();
-            levelReader = new LevelReader_1_20();
+            core.notification = new Notification();
+            core.clientConfig = new ClientConfig(context);
+
+            core.playerState = new PlayerState();
+            core.levelState = new LevelState();
+            core.screenState = new ScreenState();
 
             modBus.addListener(AmbienceMini::registerKeybindings);
             modBus.addListener(AmbienceMini::loadComplete);
@@ -79,62 +57,48 @@ public class AmbienceMini extends BaseAmbienceMini
     }
 
 
-    private static void commonSetup(FMLCommonSetupEvent event)
-    {
-        Networking.initialize();
-    }
-
     public static void registerKeybindings(final RegisterKeyMappingsEvent event) {
-        keyBindings = new KeyBindings(event);
+        KeyInputEventHandler.keyBindings = core.keyBindings = new KeyBindings(event, core);
     }
 
     public static void loadComplete(final FMLLoadCompleteEvent event) {
-        combatMonitor = new CombatMonitor(clientConfig, playerReader, levelReader);
-        caveDetector = new CaveDetector<>(clientConfig);
+        core.combatState = new CombatState(core.clientConfig, core.playerState, core.levelState, core.serverSetup);
+        Networking.combatState = core.combatState;
 
-        gameStateProvider = new GameStateProviderV1<>(
-                clientConfig, playerReader, levelReader, screenMonitor, combatMonitor, caveDetector
-        );
-
-        VolumeMonitor.init(
-                clientConfig,
+        VolumeState.init(
+                core.clientConfig,
                 Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
                 Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC)
         );
 
-        tryReload();
+        core.tryReload();
     }
-
-
-    public static void tryReload()
-    {
-        if (ambienceThread != null)
-            ambienceThread.kill();
-
-        combatMonitor.clearCombatants();
-
-        MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, LOGGER, gameStateProvider).ifPresent(interpreter -> {
-            disableNativeMusicManager();
-
-            Supplier<Boolean> isFocused = Minecraft.getInstance()::isWindowActive;
-            ambienceThread = new AmbienceThread(
-                    interpreter, LOGGER, isFocused, clientConfig
-            );
-
-            LOGGER.info("Successfully loaded Ambience Mini");
-        });
-    }
-
-    public static void disableNativeMusicManager()
-    {
-        Minecraft mc = Minecraft.getInstance();
-        ObfuscationReflectionHelper.setPrivateValue(
-            Minecraft.class, mc, new NilMusicManager(mc), OBF_MC_MUSIC_MANAGER
-        );
-    }
-
 
     public static ResourceLocation rl(String path) {
         return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
+    }
+
+    public static Notification notification() {
+        return core.notification;
+    }
+
+    public static ClientConfig config() {
+        return core.clientConfig;
+    }
+
+    public static ServerSetup server() {
+        return core.serverSetup;
+    }
+
+    public static PlayerState player() {
+        return core.playerState;
+    }
+
+    public static ScreenState screen() {
+        return core.screenState;
+    }
+
+    public static CombatState combat() {
+        return core.combatState;
     }
 }
