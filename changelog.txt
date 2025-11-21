@@ -1,5 +1,5 @@
 
-Version 2.3.2:
+Version 2.3.3:
 
 - Made a more robust system event and property reading in an attempt to fix incorrect behavior, likely due to mod-interactions.
 
