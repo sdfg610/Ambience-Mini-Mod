@@ -15,8 +15,10 @@ subprojects {
     if(project.path == ":engine")
         return
 
-    version = mod_version
-    group = mod_group_id
+    if(project.path != ":ambience_ide") {
+        version = mod_version
+        group = mod_group_id
+    }
 
     plugins.withType(JavaPlugin).configureEach {
         dependencies {
