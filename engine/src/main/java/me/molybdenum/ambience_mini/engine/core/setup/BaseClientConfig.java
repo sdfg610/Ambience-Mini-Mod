@@ -3,31 +3,40 @@ package me.molybdenum.ambience_mini.engine.core.setup;
 import java.util.function.Supplier;
 
 public abstract class BaseClientConfig {
+    // Misc
     public final Supplier<Boolean> notifyServerSupport;
     public final Supplier<Boolean> verboseMode;
 
+    // Timing
     public final Supplier<Integer> updateInterval;
     public final Supplier<Integer> nextMusicDelay;
+    public final Supplier<Boolean> meticulousPlaylistSelector;
 
+    // Volume control
     public final Supplier<Boolean> lostFocusEnabled;
     public final Supplier<Boolean> ignoreMasterVolume;
 
+    // Village detection
     public final Supplier<Integer> villageScanHorizontalRadius;
     public final Supplier<Integer> villageScanVerticalRadius;
     public final Supplier<Integer> villagerCountThreshold;
 
+    // Ranch detection
     public final Supplier<Integer> ranchScanHorizontalRadius;
     public final Supplier<Integer> ranchScanVerticalRadius;
     public final Supplier<Integer> animalCountThreshold;
 
+    // Fishing
     public final Supplier<Integer> fishingTimeout;
     public final Supplier<Integer> fishingMoveThreshold;
 
+    // Cave detection
     public final Supplier<Integer> caveScoreRadius;
     public final Supplier<Integer> caveMeasureDistance;
     public final Supplier<Integer> yAxisGranularity;
     public final Supplier<Integer> xAxisGranularity;
 
+    // Combat detection
     public final Supplier<Integer> combatGracePeriod;
     public final Supplier<Integer> combatantTimeout;
     public final Supplier<Integer> leavingCombatDistance;
@@ -50,14 +59,20 @@ public abstract class BaseClientConfig {
 
         // Timing
         updateInterval = makeIntOption(
-                "The interval in milliseconds between checking the environment and possibly picking new music. [Default: 150]",
+                "The interval in milliseconds between checking the environment and possibly picking new music. [Default: 100]",
                 "Update_Interval",
-                150, 50, 10000
+                100, 50, 10000
         );
         nextMusicDelay = makeIntOption(
                 "The delay in milliseconds from when some music reaches the end until the next music begins. [Default: 4000]",
                 "Next_Music_Delay",
                 4000, 1000, 60000
+        );
+
+        meticulousPlaylistSelector = makeBoolOption(
+                "If enabled, the mod will double-check playlist selections before switching. This can be helpful to counteract unpredictable/sporadic effects from mod-interactions. Note that this option doubles the time it takes to change to a new playlist, but this can be corrected by decreasing the 'Update_Interval' if you feel the need. [Default: false]",
+                "Meticulous_Playlist_Selector",
+                false
         );
 
         // Volume control
@@ -140,7 +155,7 @@ public abstract class BaseClientConfig {
                 12, 4, 180
         );
 
-        // Combat
+        // Combat detection
         combatGracePeriod = makeIntOption(
                 "After leaving combat, the 'in_combat' event will stay active for the additional time (in milliseconds) given here, allowing new enemies to join the fight without music switching between combat and non-combat music. [Default: 2500]",
                 "Combat_Grace_Period",

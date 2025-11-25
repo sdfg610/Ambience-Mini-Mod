@@ -5,7 +5,6 @@ import me.molybdenum.ambience_mini.engine.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.PlaylistChoice;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.core.BaseCore;
-import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
 import me.molybdenum.ambience_mini.engine.utils.Pair;
 import me.molybdenum.ambience_mini.engine.utils.Utils;
@@ -13,6 +12,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -34,6 +34,11 @@ public class MusicThread extends Thread
 
     private final Random _rand = new Random(System.nanoTime());
     private final Interpreter _playlistSelector;
+
+    private final boolean _meticulousPlaylistSelector;
+    private final int _numLatestChoices = 3; // Code below is only designed to handle the value 3 here.
+    private int _nextChoiceIndex = 0;
+    private final PlaylistChoice[] _latestChoices = new PlaylistChoice[_numLatestChoices];
 
     private MusicPlayer _mainPlayer = null;
     private MusicPlayer _interruptPlayer = null;
@@ -70,6 +75,7 @@ public class MusicThread extends Thread
         _lostFocusEnabled = baseCore.clientConfig.lostFocusEnabled.get();
         _updateIntervalMilliseconds = baseCore.clientConfig.updateInterval.get();
         _nextMusicDelayMilliseconds = baseCore.clientConfig.nextMusicDelay.get();
+        _meticulousPlaylistSelector = baseCore.clientConfig.meticulousPlaylistSelector.get();
 
         _verboseMode = baseCore.clientConfig.verboseMode.get();
 
@@ -154,7 +160,9 @@ public class MusicThread extends Thread
     private void handleMusicCycle()
     {
         ArrayList<Pair<String, Value>> trace = _verboseMode ? new ArrayList<>() : null;
-        PlaylistChoice nextChoice = _playlistSelector.selectPlaylist(trace);
+        PlaylistChoice nextChoice = _meticulousPlaylistSelector
+                ? selectPlaylist(trace)
+                : _playlistSelector.selectPlaylist(trace);
         if (nextChoice == null)
             return;
 
@@ -225,6 +233,18 @@ public class MusicThread extends Thread
             activePlayer.playOrResume(doFade);
     }
 
+    private PlaylistChoice selectPlaylist(ArrayList<Pair<String, Value>> trace) {
+        _latestChoices[_nextChoiceIndex] = _playlistSelector.selectPlaylist(trace);
+        _nextChoiceIndex = (_nextChoiceIndex + 1) % _numLatestChoices;
+
+        // Hardcoded (for efficiency) majority vote between three latest choices.
+        if (Objects.equals(_latestChoices[0], _latestChoices[1]) || Objects.equals(_latestChoices[0], _latestChoices[2]))
+            return _latestChoices[0];
+        else if (Objects.equals(_latestChoices[1], _latestChoices[2]))
+            return _latestChoices[1];
+        else
+            return null;
+    }
 
     private Music selectMusic(List<Music> playlist, Music currentMusic) {
         if (playlist.isEmpty())
