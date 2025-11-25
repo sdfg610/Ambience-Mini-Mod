@@ -1,4 +1,9 @@
 
+Version 2.3.4:
+
+- Added forge-config option (meticulous playlist selector) for double-checking playlist selections to counteract incorrect readings caused by mod-interactions.
+
+
 Version 2.3.3:
 
 - Made a more robust system event and property reading in an attempt to fix incorrect behavior, likely due to mod-interactions.
