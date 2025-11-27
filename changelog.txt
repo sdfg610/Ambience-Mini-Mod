@@ -1,4 +1,10 @@
 
+Version 2.3.5:
+
+- Added language entry for "meticulous playlist selector" forge-config (only affects 1.21.1 and above).
+- Improved verbose mode.
+
+
 Version 2.3.4:
 
 - Added forge-config option (meticulous playlist selector) for double-checking playlist selections to counteract incorrect readings caused by mod-interactions.

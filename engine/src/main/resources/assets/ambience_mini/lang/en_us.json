@@ -17,6 +17,7 @@
   "ambience_mini.configuration.Verbose_Mode": "Verbose mode",
   "ambience_mini.configuration.Update_Interval": "Update interval",
   "ambience_mini.configuration.Next_Music_Delay": "Next music delay",
+  "ambience_mini.configuration.Meticulous_Playlist_Selector": "Meticulous playlist selector",
   "ambience_mini.configuration.Lost_Focus_FadeOut": "Lost focus fadeout",
   "ambience_mini.configuration.Ignore_Master_Volume": "Ignore master volume",
   "ambience_mini.configuration.Village_Scan_Horizontal_Radius": "Village scan: horizontal radius",

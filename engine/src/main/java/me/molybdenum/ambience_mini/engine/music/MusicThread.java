@@ -30,6 +30,7 @@ public class MusicThread extends Thread
 
     private final boolean _verboseMode;
     private List<Music> _currentPlaylist = null;
+    private long _tick = 0L;
 
 
     private final Random _rand = new Random(System.nanoTime());
@@ -159,7 +160,11 @@ public class MusicThread extends Thread
     // Music and volume
     private void handleMusicCycle()
     {
-        ArrayList<Pair<String, Value>> trace = _verboseMode ? new ArrayList<>() : null;
+        ArrayList<Pair<String, Value>> trace = null;
+        if (_verboseMode) {
+            trace = new ArrayList<>();
+            _tick++;
+        }
         PlaylistChoice nextChoice = _meticulousPlaylistSelector
                 ? selectPlaylist(trace)
                 : _playlistSelector.selectPlaylist(trace);
@@ -184,7 +189,7 @@ public class MusicThread extends Thread
                     .orElse(0);
 
             List<String> values = trace.stream().map(pair -> "  " + Utils.padToLength(pair.left(), maxKeyLength) + " = " + pair.right().toString()).toList();
-            _logger.info("Values computed during selection:\n{}", String.join("\n", values));
+            _logger.info("At tick '{}'. Values computed during selection:\n{}", _tick, String.join("\n", values));
         }
 
         MusicPlayer activePlayer = nextIsInterrupt ? _interruptPlayer : _mainPlayer;

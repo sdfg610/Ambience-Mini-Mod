@@ -101,20 +101,6 @@ public abstract class BaseGameStateProvider {
         for (var property : _properties)
             readings.add(new Pair<>("$" + property.name, property.getValue()));
 
-        int maxKeyLength = readings.stream()
-                .map(pair -> pair.left().length())
-                .max(Integer::compareTo)
-                .orElse(0);
-
-        StringBuilder sb = new StringBuilder();
-        for (var reading : readings) {
-            sb.append(' ');
-            sb.append(Utils.padToLength(reading.left(), maxKeyLength));
-            sb.append(" = ");
-            sb.append(reading.right().toString());
-            sb.append('\n');
-        }
-
-        return sb.toString();
+        return Utils.getKeyValuePairString(readings);
     }
 }

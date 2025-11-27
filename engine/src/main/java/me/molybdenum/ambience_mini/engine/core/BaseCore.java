@@ -70,7 +70,12 @@ public abstract class BaseCore<
         MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, logger, gameStateProvider).ifPresent(interpreter -> {
             disableNativeMusicManager();
             musicThread = new MusicThread(this, logger, interpreter);
-            logger.info("Successfully loaded Ambience Mini");
+
+            if (clientConfig.verboseMode.get()) {
+                logger.info("Successfully loaded Ambience Mini with configuration:\n{}", clientConfig.getConfigsString());
+            }
+            else
+                logger.info("Successfully loaded Ambience Mini");
         });
     }
 
