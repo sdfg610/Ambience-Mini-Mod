@@ -1,7 +1,0 @@
-rootProject.name = "ambience_ide"
-
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-    }
-}

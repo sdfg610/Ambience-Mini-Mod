@@ -12,10 +12,10 @@ subprojects {
         }
     }
 
-    if(project.path == ":engine")
+    if (project.path == ":engine")
         return
 
-    if(project.path != ":ambience_ide") {
+    if (project.path != ":ambience_ide") {
         version = mod_version
         group = mod_group_id
     }

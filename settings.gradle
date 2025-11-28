@@ -17,8 +17,8 @@ plugins {
 
 rootProject.name = 'AmbienceMini'
 include('engine')
+include('ambience_ide')
 include('v1_18_2')
 include('v1_19_2')
 include('v1_20_1')
 include('v1_21_1')
-include('ambience_ide')

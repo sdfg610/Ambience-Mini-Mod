@@ -1,23 +1,43 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '2.1.0'
-    id 'io.ktor.plugin' version '3.1.0'
+    id 'java'
+    id "war"
+    id "org.teavm" version "0.13.0"
+    id "org.gretty" version "4.0.3"
 }
+
+evaluationDependsOn(':engine')
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 group "me.molybdenum"
 version "1.0.0"
 
-application {
-    mainClass = "io.ktor.server.netty.EngineMain"
-}
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation "io.ktor:ktor-server-core-jvm:3.1.0"
-    implementation "io.ktor:ktor-server-netty:3.1.0"
-    implementation "ch.qos.logback:logback-classic:1.5.21"
-    implementation "io.ktor:ktor-server-config-yaml:3.1.0"
-    testImplementation "io.ktor:ktor-server-test-host:3.1.0"
-    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:2.1.0"
+    implementation teavm.libs.jsoApis
+}
+
+teavm {
+    all {
+        mainClass = "me.molybdenum.ambience_ide.Test"
+    }
+    js {
+        addedToWebApp = true
+
+        // this is also optional, default value is <project name>.js
+        targetFileName = "ambience_ide.js"
+    }
+    wasmGC {
+        addedToWebApp = true
+
+        // this is also optional, default value is <project name>.wasm
+        targetFileName = "ambience_ide.wasm"
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    source(project(':engine').sourceSets.main.allSource)
 }
