@@ -1,9 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>TeaVM example</title>
+    <title>Ambience Mini IDE</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-    <script type="text/javascript" charset="utf-8" src="js/ambience_ide.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <script type="text/javascript" charset="utf-8" src="index.js"></script>
+    <script type="text/javascript" charset="utf-8" src="/js/ambience_ide.js"></script>
+    <script language="Javascript" type="text/javascript" src="edit_area/edit_area_full.js"></script>
+    <script language="Javascript" type="text/javascript">
+        editAreaLoader.init({
+            id: "example_1",
+            allow_resize: "none",
+            allow_toggle: false,
+            word_wrap: true,
+			toolbar: "undo, redo, |, select_font, |, help"
+        });
+    </script>
+    <!-- |, change_smooth_selection, highlight, reset_highlight, -->
 </head>
-<body onload="main(['hey'])"></body>
+<body onload="onLoad()"> <!-- onload="main(['hey', 'there!'])" -->
+    <div class="box">
+        <div class="row header">
+            <div style="display: flex">
+                <img src="favicon.ico" alt="Ambience Mini Logo" style="height: 2.5em; padding-right: .25em"/>
+                <h1>Ambience Mini IDE</h1>
+            </div>
+            <hr style="margin-bottom: 0em">
+        </div>
+        <div class="row content" style="padding-top: 0.5em; padding-bottom: 0.5em">
+            <div style="display: flex; height: 100%;">
+                <div class="column left semi-box">
+                    <h2>Configuration:</h2>
+                    <textarea id="example_1" style="width: 100%; height: 100%;"></textarea>
+                </div>
+                <div class="column right semi-box">
+                    <h2>Events and properties:</h2>
+                </div>
+            </div>
+        </div>
+        <div class="row footer">
+            <hr style="margin-top: 0em">
+            <div style="display: flex">
+                <div class="column left">
+                    <h2>Messages:</h2>
+
+                </div>
+                <div class="column right">
+                    <h2>Output:</h2>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
 </html>
