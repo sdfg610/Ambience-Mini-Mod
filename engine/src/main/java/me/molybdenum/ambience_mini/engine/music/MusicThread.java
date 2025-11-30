@@ -161,12 +161,14 @@ public class MusicThread extends Thread
     private void handleMusicCycle()
     {
         ArrayList<Pair<String, Value>> trace = null;
+        ArrayList<String> messages = null;
         if (_verboseMode) {
             trace = new ArrayList<>();
+            messages = new ArrayList<>();
             _tick++;
         }
 
-        _playlistSelector.prepare(_verboseMode ? _logger : null);
+        _playlistSelector.prepare(messages);
         PlaylistChoice nextChoice = _meticulousPlaylistSelector
                 ? selectPlaylistMeticulously(trace)
                 : _playlistSelector.selectPlaylist(trace);
@@ -177,21 +179,19 @@ public class MusicThread extends Thread
         boolean nextIsInterrupt = nextChoice.isInterrupt();
         boolean doFade = !nextChoice.isInstant();
 
-        if (_verboseMode && _currentPlaylist != nextPlaylist) {
-            _currentPlaylist = nextPlaylist;
+        if (_verboseMode) {
+            if (_currentPlaylist != nextPlaylist) {
+                _currentPlaylist = nextPlaylist;
 
-            if (nextIsInterrupt)
-                _logger.info("Selected new interrupt playlist: [{}]", String.join(", ", nextPlaylist.stream().map(m -> m.musicName).toList()));
-            else
-                _logger.info("Selected new playlist: [{}]", String.join(", ", nextPlaylist.stream().map(m -> m.musicName).toList()));
+                if (nextIsInterrupt)
+                    _logger.info("At tick '{}'. Selected new interrupt playlist: [{}]", _tick, String.join(", ", nextPlaylist.stream().map(m -> m.musicName).toList()));
+                else
+                    _logger.info("At tick '{}'. Selected new playlist: [{}]", _tick, String.join(", ", nextPlaylist.stream().map(m -> m.musicName).toList()));
+                _logger.info("Values computed during selection:\n{}", Utils.getKeyValuePairString(trace));
+            }
 
-            int maxKeyLength = trace.stream()
-                    .map(pair -> pair.left().length())
-                    .max(Integer::compareTo)
-                    .orElse(0);
-
-            List<String> values = trace.stream().map(pair -> "  " + Utils.padToLength(pair.left(), maxKeyLength) + " = " + pair.right().toString()).toList();
-            _logger.info("At tick '{}'. Values computed during selection:\n{}", _tick, String.join("\n", values));
+            for (var msg : messages)
+                _logger.info("At tick '{}'. {}", _tick, msg);
         }
 
         MusicPlayer activePlayer = nextIsInterrupt ? _interruptPlayer : _mainPlayer;

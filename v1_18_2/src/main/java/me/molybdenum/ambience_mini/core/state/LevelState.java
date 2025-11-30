@@ -19,6 +19,7 @@ import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entity>
@@ -41,11 +42,11 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
 
     @Override
-    public void prepare(@Nullable Logger logger) {
+    public void prepare(@Nullable ArrayList<String> messages) {
         ClientLevel newLevel = mc.level;
         if (level != newLevel) {
-            if (logger != null)
-                logger.info("Level instance changed from '{}' to '{}' since last update.", getLevelString(level), getLevelString(newLevel));
+            if (messages != null)
+                messages.add("Level instance changed from '" + getLevelString(level) + "' to '" + getLevelString(newLevel) + "' since last update.");
             level = newLevel;
         }
     }

@@ -12,7 +12,6 @@ import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.util.*;
 
@@ -34,11 +33,11 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
 
     @Override
-    public void prepare(@Nullable Logger logger) {
+    public void prepare(@Nullable ArrayList<String> messages) {
         LocalPlayer newPlayer = mc.player;
         if (player != newPlayer) {
-            if (logger != null)
-                logger.info("Player instance changed from '{}' to '{}' since last update.", getPlayerString(player), getPlayerString(newPlayer));
+            if (messages != null)
+                messages.add("Player instance changed from '" + getPlayerString(player) + "' to '" + getPlayerString(newPlayer) + "' since last update.");
             player = newPlayer;
         }
     }

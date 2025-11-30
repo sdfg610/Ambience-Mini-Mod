@@ -1,7 +1,6 @@
 package me.molybdenum.ambience_mini.engine.core.state;
 
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +24,7 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
     public abstract boolean isNull();
     public abstract boolean notNull();
 
-    public abstract void prepare(@Nullable Logger logger);
+    public abstract void prepare(@Nullable ArrayList<String> messages);
 
 
     // ------------------------------------------------------------------------------------------------

@@ -13,7 +13,8 @@ import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.core.state.BaseScreenState;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
+
+import java.util.ArrayList;
 
 public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends BaseGameStateProvider
 {
@@ -164,9 +165,9 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
     // ------------------------------------------------------------------------------------------------
     // Execution
     @Override
-    public void prepare(@Nullable Logger logger) {
-        _player.prepare(logger);
-        _level.prepare(logger);
+    public void prepare(@Nullable ArrayList<String> messages) {
+        _player.prepare(messages);
+        _level.prepare(messages);
     }
 
 

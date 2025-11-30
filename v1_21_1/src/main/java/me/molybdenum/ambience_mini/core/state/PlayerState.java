@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.core.state;
 
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -12,22 +13,40 @@ import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.extensions.IHolderExtension;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.*;
 
 public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 {
     private final Minecraft mc = Minecraft.getInstance();
+    private LocalPlayer player = null;
 
 
     @Override
     public boolean isNull() {
-        return mc.player == null;
+        return player == null;
     }
 
     @Override
     public boolean notNull() {
-        return mc.player != null;
+        return player != null;
+    }
+
+
+    @Override
+    public void prepare(@Nullable ArrayList<String> messages) {
+        LocalPlayer newPlayer = mc.player;
+        if (player != newPlayer) {
+            if (messages != null)
+                messages.add("Player instance changed from '" + getPlayerString(player) + "' to '" + getPlayerString(newPlayer) + "' since last update.");
+            player = newPlayer;
+        }
+    }
+
+    private String getPlayerString(LocalPlayer pl) {
+        return pl == null ? "null" : pl.getId() + "/" + System.identityHashCode(pl);
     }
 
 
@@ -39,83 +58,83 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
     @Override
     public double vectorX() {
-        assert mc.player != null;
-        return mc.player.getX();
+        assert player != null;
+        return player.getX();
     }
 
     @Override
     public double vectorY() {
-        assert mc.player != null;
-        return mc.player.getY();
+        assert player != null;
+        return player.getY();
     }
 
     @Override
     public double vectorZ() {
-        assert mc.player != null;
-        return mc.player.getZ();
+        assert player != null;
+        return player.getZ();
     }
 
     @Override
     public Vec3 position() {
-        assert mc.player != null;
-        return mc.player.position();
+        assert player != null;
+        return player.position();
     }
 
     @Override
     public Vec3 eyePosition() {
-        assert mc.player != null;
-        return mc.player.getEyePosition();
+        assert player != null;
+        return player.getEyePosition();
     }
 
 
     @Override
     public int blockX() {
-        assert mc.player != null;
-        return mc.player.getBlockX();
+        assert player != null;
+        return player.getBlockX();
     }
 
     @Override
     public int blockY() {
-        assert mc.player != null;
-        return mc.player.getBlockY();
+        assert player != null;
+        return player.getBlockY();
     }
 
     @Override
     public int blockZ() {
-        assert mc.player != null;
-        return mc.player.getBlockY();
+        assert player != null;
+        return player.getBlockY();
     }
 
     @Override
     public BlockPos blockPos() {
-        assert mc.player != null;
-        return mc.player.blockPosition();
+        assert player != null;
+        return player.blockPosition();
     }
 
     @Override
     public BlockPos eyeBlockPos() {
-        assert mc.player != null;
-        Vec3 eyePos = mc.player.getEyePosition();
+        assert player != null;
+        Vec3 eyePos = player.getEyePosition();
         return BlockPos.containing(eyePos);
     }
 
 
     @Override
     public float health() {
-        assert mc.player != null;
-        return mc.player.getHealth();
+        assert player != null;
+        return player.getHealth();
     }
 
     @Override
     public float maxHealth() {
-        assert mc.player != null;
-        return mc.player.getMaxHealth();
+        assert player != null;
+        return player.getMaxHealth();
     }
 
     @Override
     public List<String> getActiveEffectIds() {
-        assert mc.player != null;
-        return mc.player.getActiveEffectsMap().keySet().stream()
+        assert player != null;
+        return player.getActiveEffectsMap().keySet().stream()
                 .map(IHolderExtension::getKey)
                 .filter(Objects::nonNull)
                 .map(ResourceKey::location)
@@ -126,77 +145,77 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
     @Override
     public boolean isSleeping() {
-        assert mc.player != null;
-        return mc.player.isSleeping();
+        assert player != null;
+        return player.isSleeping();
     }
 
     @Override
     public boolean isUnderwater() {
-        assert mc.player != null;
-        return mc.player.isUnderWater();
+        assert player != null;
+        return player.isUnderWater();
     }
 
     @Override
     public boolean isInLava() {
-        assert mc.player != null;
-        return mc.player.isInLava();
+        assert player != null;
+        return player.isInLava();
     }
 
 
     @Override
     public Optional<String> vehicleId() {
-        assert mc.player != null;
-        var vec = mc.player.getVehicle();
-        return vec != null ? Optional.ofNullable(mc.player.getVehicle().getEncodeId()) : Optional.empty();
+        assert player != null;
+        var vec = player.getVehicle();
+        return vec != null ? Optional.ofNullable(player.getVehicle().getEncodeId()) : Optional.empty();
     }
 
     @Override
     public boolean inMinecart() {
-        assert mc.player != null;
-        return mc.player.getVehicle() instanceof Minecart;
+        assert player != null;
+        return player.getVehicle() instanceof Minecart;
     }
 
     @Override
     public boolean inBoat() {
-        assert mc.player != null;
-        return mc.player.getVehicle() instanceof Boat;
+        assert player != null;
+        return player.getVehicle() instanceof Boat;
     }
 
     @Override
     public boolean onHorse() {
-        assert mc.player != null;
-        return mc.player.getVehicle() instanceof Horse;
+        assert player != null;
+        return player.getVehicle() instanceof Horse;
     }
 
     @Override
     public boolean onDonkey() {
-        assert mc.player != null;
-        return mc.player.getVehicle() instanceof Donkey;
+        assert player != null;
+        return player.getVehicle() instanceof Donkey;
     }
 
     @Override
     public boolean onPig() {
-        assert mc.player != null;
-        return mc.player.getVehicle() instanceof Pig;
+        assert player != null;
+        return player.getVehicle() instanceof Pig;
     }
 
     @Override
     public boolean elytraFlying() {
-        assert mc.player != null;
-        return mc.player.isFallFlying();
+        assert player != null;
+        return player.isFallFlying();
     }
 
 
     @Override
     public boolean fishingHookInWater() {
-        assert mc.player != null;
-        return mc.player.fishing != null && mc.player.fishing.isInWater();
+        assert player != null;
+        return player.fishing != null && player.fishing.isInWater();
     }
 
 
     @Override
     public double distanceTo(Vec3 position) {
-        assert mc.player != null;
-        return mc.player.position().distanceTo(position);
+        assert player != null;
+        return player.position().distanceTo(position);
     }
 }

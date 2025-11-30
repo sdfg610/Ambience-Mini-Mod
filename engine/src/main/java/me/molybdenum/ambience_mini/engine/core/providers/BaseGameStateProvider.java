@@ -95,7 +95,7 @@ public abstract class BaseGameStateProvider {
 
     // -----------------------------------------------------------------------------------------------------------------
     // Execution
-    public abstract void prepare(@Nullable Logger logger);
+    public abstract void prepare(@Nullable ArrayList<String> messages);
 
 
     // -----------------------------------------------------------------------------------------------------------------

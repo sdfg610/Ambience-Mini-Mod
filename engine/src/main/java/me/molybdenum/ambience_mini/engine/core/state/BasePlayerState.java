@@ -1,8 +1,8 @@
 package me.molybdenum.ambience_mini.engine.core.state;
 
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,7 +13,7 @@ public interface BasePlayerState<TBlockPos, TVec3>
     boolean isNull();
     boolean notNull();
 
-    void prepare(@Nullable Logger logger);
+    void prepare(@Nullable ArrayList<String> messages);
 
 
     // -----------------------------------------------------------------------------------------------------------------

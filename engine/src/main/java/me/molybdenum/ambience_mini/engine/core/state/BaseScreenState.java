@@ -1,6 +1,5 @@
 package me.molybdenum.ambience_mini.engine.core.state;
 
-import java.util.List;
 
 public abstract class BaseScreenState
 {
