@@ -3,6 +3,7 @@ package me.molybdenum.ambience_mini.core.state;
 import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.tags.AmTags;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -15,6 +16,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.List;
 
@@ -23,16 +26,32 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     private static final String OBF_INTEGRATED_SERVER_PAUSED = "f_120016_";
 
     private final Minecraft mc = Minecraft.getInstance();
+    private ClientLevel level = null;
 
 
     @Override
     public boolean isNull() {
-        return mc.level == null;
+        return level == null;
     }
 
     @Override
     public boolean notNull() {
-        return mc.level != null;
+        return level != null;
+    }
+
+
+    @Override
+    public void prepare(@Nullable Logger logger) {
+        ClientLevel newLevel = mc.level;
+        if (level != newLevel) {
+            if (logger != null)
+                logger.info("Level instance changed from '{}' to '{}' since last update.", getLevelString(level), getLevelString(newLevel));
+            level = newLevel;
+        }
+    }
+
+    private String getLevelString(ClientLevel lv) {
+        return lv == null ? "null" : lv.dimension().location() + "/" + lv.hashCode();
     }
 
 
@@ -45,14 +64,14 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public String getDimensionID() {
-        assert mc.level != null;
-        return mc.level.dimension().location().toString();
+        assert level != null;
+        return level.dimension().location().toString();
     }
 
     @Override
     public String getBiomeID(BlockPos blockPos) {
-        assert mc.level != null;
-        return mc.level.getBiome(blockPos).unwrap().map(
+        assert level != null;
+        return level.getBiome(blockPos).unwrap().map(
                 (resourceKey) -> resourceKey.location().toString(),
                 (biome) -> ""
         );
@@ -60,8 +79,8 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public List<String> getBiomeTagIDs(BlockPos blockPos) {
-        assert mc.level != null;
-        return mc.level.getBiome(blockPos)
+        assert level != null;
+        return level.getBiome(blockPos)
                 .tags()
                 .map(tag -> tag.location().toString())
                 .toList();
@@ -70,33 +89,33 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public int getTime() {
-        assert mc.level != null;
-        return (int) mc.level.getDayTime();
+        assert level != null;
+        return (int) level.getDayTime();
     }
 
 
     @Override
     public boolean isRaining() {
-        assert mc.level != null;
-        return mc.level.isRaining();
+        assert level != null;
+        return level.isRaining();
     }
 
     @Override
     public boolean isThundering() {
-        assert mc.level != null;
-        return mc.level.isThundering();
+        assert level != null;
+        return level.isThundering();
     }
 
     @Override
     public boolean isColdEnoughToSnow(BlockPos blockPos) {
-        assert mc.level != null;
-        return mc.level.getBiome(blockPos).value().coldEnoughToSnow(blockPos);
+        assert level != null;
+        return level.getBiome(blockPos).value().coldEnoughToSnow(blockPos);
     }
 
     @Override
     public Entity getEntityById(int id) {
-        assert mc.level != null;
-        return mc.level.getEntity(id);
+        assert level != null;
+        return level.getEntity(id);
     }
 
     @Override
@@ -118,27 +137,27 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public int getMaxSkyLightAt(BlockPos blockPos) {
-        assert mc.level != null;
-        return mc.level.getBrightness(LightLayer.SKY, blockPos);
+        assert level != null;
+        return level.getBrightness(LightLayer.SKY, blockPos);
     }
 
     @Override
     public int getBlockLightAt(BlockPos blockPos) {
-        assert mc.level != null;
-        return mc.level.getBrightness(LightLayer.BLOCK, blockPos);
+        assert level != null;
+        return level.getBrightness(LightLayer.BLOCK, blockPos);
     }
 
 
     @Override
     public BlockState getBlockState(BlockPos blockPos) {
-        assert mc.level != null;
-        return mc.level.getBlockState(blockPos);
+        assert level != null;
+        return level.getBlockState(blockPos);
     }
 
     @Override
     public BlockPos getNearestBlockOrFurthestAir(Vec3 from, Vec3 to) {
-        assert mc.level != null;
-        var hit = mc.level.clip(new ClipContext(
+        assert level != null;
+        var hit = level.clip(new ClipContext(
                 from, to,
                 ClipContext.Block.OUTLINE,
                 ClipContext.Fluid.NONE,
@@ -194,11 +213,11 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     // Utilities
     private <T extends Entity> List<T> getNearbyEntities(Class<T> clazz, BlockPos center, int horizontalRadius, int verticalRadius)
     {
-        assert mc.level != null;
+        assert level != null;
         var area = new AABB(
                 center.getX() - horizontalRadius, center.getY() - verticalRadius, center.getZ() - horizontalRadius,
                 center.getX() + horizontalRadius, center.getY() + verticalRadius, center.getZ() + horizontalRadius
         );
-        return mc.level.getEntitiesOfClass(clazz, area, ignore -> true);
+        return level.getEntitiesOfClass(clazz, area, ignore -> true);
     }
 }

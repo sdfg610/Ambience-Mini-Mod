@@ -10,6 +10,7 @@ import me.molybdenum.ambience_mini.engine.core.providers.BaseGameStateProvider;
 import me.molybdenum.ambience_mini.engine.utils.Pair;
 import me.molybdenum.ambience_mini.engine.utils.Utils;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -37,6 +38,10 @@ public class Interpreter
         this.schedule = initConf(config);
     }
 
+
+    public void prepare(@Nullable Logger logger) {
+        gameStateProvider.prepare(logger);
+    }
 
     public PlaylistChoice selectPlaylist(@Nullable ArrayList<Pair<String, Value>> trace) {
         @SuppressWarnings("DataFlowIssue")

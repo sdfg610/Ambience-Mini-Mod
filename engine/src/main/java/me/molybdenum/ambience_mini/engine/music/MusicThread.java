@@ -165,8 +165,10 @@ public class MusicThread extends Thread
             trace = new ArrayList<>();
             _tick++;
         }
+
+        _playlistSelector.prepare(_verboseMode ? _logger : null);
         PlaylistChoice nextChoice = _meticulousPlaylistSelector
-                ? selectPlaylist(trace)
+                ? selectPlaylistMeticulously(trace)
                 : _playlistSelector.selectPlaylist(trace);
         if (nextChoice == null)
             return;
@@ -238,7 +240,7 @@ public class MusicThread extends Thread
             activePlayer.playOrResume(doFade);
     }
 
-    private PlaylistChoice selectPlaylist(ArrayList<Pair<String, Value>> trace) {
+    private PlaylistChoice selectPlaylistMeticulously(ArrayList<Pair<String, Value>> trace) {
         _latestChoices[_nextChoiceIndex] = _playlistSelector.selectPlaylist(trace);
         _nextChoiceIndex = (_nextChoiceIndex + 1) % _numLatestChoices;
 

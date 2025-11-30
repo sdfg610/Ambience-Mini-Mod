@@ -12,6 +12,8 @@ import me.molybdenum.ambience_mini.engine.core.state.Screens;
 import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.core.state.BaseScreenState;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends BaseGameStateProvider
 {
@@ -156,6 +158,15 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
 
         //TODO: Structure detection maybe?
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Execution
+    @Override
+    public void prepare(@Nullable Logger logger) {
+        _player.prepare(logger);
+        _level.prepare(logger);
     }
 
 

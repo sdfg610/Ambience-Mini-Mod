@@ -2,7 +2,8 @@
 Version 2.3.5:
 
 - Added language entry for "meticulous playlist selector" forge-config (only affects 1.21.1 and above).
-- Improved verbose mode.
+- Verbose mode now prints more information.
+- Potentially increased stability of game-state reader.
 
 
 Version 2.3.4:

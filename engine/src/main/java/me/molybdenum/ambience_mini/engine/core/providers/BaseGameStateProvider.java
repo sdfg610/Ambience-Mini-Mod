@@ -5,6 +5,8 @@ import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.BoolV
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.utils.Pair;
 import me.molybdenum.ambience_mini.engine.utils.Utils;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -89,6 +91,11 @@ public abstract class BaseGameStateProvider {
                 .filter(property -> property.name.equals(name))
                 .findFirst();
     }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Execution
+    public abstract void prepare(@Nullable Logger logger);
 
 
     // -----------------------------------------------------------------------------------------------------------------

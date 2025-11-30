@@ -1,5 +1,8 @@
 package me.molybdenum.ambience_mini.engine.core.state;
 
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -17,11 +20,16 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
     public static final int MAX_LIGHT_LEVEL = 15;
 
 
-    // ------------------------------------------------------------------------------------------------
-    // Abstract API
+    // -----------------------------------------------------------------------------------------------------------------
+    // Execution
     public abstract boolean isNull();
     public abstract boolean notNull();
 
+    public abstract void prepare(@Nullable Logger logger);
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Abstract API
     public abstract boolean isWorldTickingPaused();
 
     public abstract String getDimensionID();
