@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.core.state;
 
+import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.tags.AmTags;
 import net.minecraft.client.Minecraft;
@@ -44,7 +45,7 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     @Override
     public void prepare(@Nullable ArrayList<String> messages) {
         ClientLevel newLevel = mc.level;
-        if (level != newLevel) {
+        if (level != newLevel && EssentialCompat.isNotFakeWorld(newLevel)) {
             if (messages != null)
                 messages.add("Level instance changed from '" + getLevelString(level) + "' to '" + getLevelString(newLevel) + "' since last update.");
             level = newLevel;

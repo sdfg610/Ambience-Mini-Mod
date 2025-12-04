@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.core.Core;
 import me.molybdenum.ambience_mini.core.util.Notification;
 import me.molybdenum.ambience_mini.engine.Common;
+import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
 import me.molybdenum.ambience_mini.handlers.KeyInputEventHandler;
@@ -19,6 +20,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -59,6 +61,8 @@ public class AmbienceMini
 
     public static void loadComplete(final FMLLoadCompleteEvent event)
     {
+        EssentialCompat.isLoaded = ModList.get().isLoaded("essential");
+
         VolumeState.init(
                 core.clientConfig,
                 Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),

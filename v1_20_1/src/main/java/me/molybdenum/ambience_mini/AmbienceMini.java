@@ -3,6 +3,7 @@ package me.molybdenum.ambience_mini;
 import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.core.Core;
 import me.molybdenum.ambience_mini.core.util.Notification;
+import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.Common;
 import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
@@ -20,6 +21,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -61,15 +63,18 @@ public class AmbienceMini
         KeyInputEventHandler.keyBindings = core.keyBindings = new KeyBindings(event, core);
     }
 
-    public static void loadComplete(final FMLLoadCompleteEvent event) {
-        core.combatState = new CombatState(core.clientConfig, core.playerState, core.levelState, core.serverSetup);
-        Networking.combatState = core.combatState;
+    public static void loadComplete(final FMLLoadCompleteEvent event)
+    {
+        EssentialCompat.isLoaded = ModList.get().isLoaded("essential");
 
         VolumeState.init(
                 core.clientConfig,
                 Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
                 Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC)
         );
+
+        core.combatState = new CombatState(core.clientConfig, core.playerState, core.levelState, core.serverSetup);
+        Networking.combatState = core.combatState;
 
         core.tryReload();
     }

@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.core.state;
 
+import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -35,7 +36,10 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
     @Override
     public void prepare(@Nullable ArrayList<String> messages) {
         LocalPlayer newPlayer = mc.player;
-        if (player != newPlayer) {
+        if (EssentialCompat.isLoaded && EssentialCompat.tryCaptureFakes(newPlayer, (player) -> player.getGameProfile().getName(), LocalPlayer::getLevel) && messages != null)
+            messages.add("Captured fake player and world from essential mod!");
+
+        if (player != newPlayer && EssentialCompat.isNotFakePlayer(newPlayer)) {
             if (messages != null)
                 messages.add("Player instance changed from '" + getPlayerString(player) + "' to '" + getPlayerString(newPlayer) + "' since last update.");
             player = newPlayer;
