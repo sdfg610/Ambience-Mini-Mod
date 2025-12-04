@@ -6,7 +6,6 @@ import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.Value
 import me.molybdenum.ambience_mini.engine.utils.Pair;
 import me.molybdenum.ambience_mini.engine.utils.Utils;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.function.BiConsumer;
