@@ -31,7 +31,14 @@ body {
   flex-flow: column;
   height: 100%;
   width: 100%;
-  padding: 1em;
+  padding: .75em;
+}
+
+.inner-box {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  width: 100%;
 }
 
 .box .row.header {
@@ -46,7 +53,7 @@ body {
 }
 
 .box .row.footer {
-  flex: 0 1 15em;
+  flex: 0 1 auto;
 }
 
 td {
@@ -68,4 +75,17 @@ td {
 .semi-box {
     display: flex;
     flex-flow: column;
+}
+
+.outer {
+  width:100%;
+  display: flex;
+  justify-content: center;
+}
+
+button {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration: none;
 }
