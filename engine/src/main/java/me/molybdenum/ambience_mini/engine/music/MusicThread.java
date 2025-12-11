@@ -4,6 +4,7 @@ import me.molybdenum.ambience_mini.engine.configuration.Music;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.PlaylistChoice;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.Value;
+import me.molybdenum.ambience_mini.engine.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.core.BaseCore;
 import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
 import me.molybdenum.ambience_mini.engine.utils.Pair;
@@ -35,6 +36,7 @@ public class MusicThread extends Thread
 
     private final Random _rand = new Random(System.nanoTime());
     private final Interpreter _playlistSelector;
+    private final MusicProvider _musicProvider;
 
     private final boolean _meticulousPlaylistSelector;
     private final int _numLatestChoices = 3; // Code below is only designed to handle the value 3 here.
@@ -65,11 +67,13 @@ public class MusicThread extends Thread
 
     @SuppressWarnings("rawtypes")
     public MusicThread(
-        BaseCore baseCore, // Raw use of BaseCore since we do not need to know the types used in implementation.
-        Logger logger,
-        Interpreter playlistSelector
+        BaseCore baseCore, // Raw use of BaseCore since we do not need to know the types used in implementation.,
+        Interpreter playlistSelector,
+        MusicProvider musicProvider,
+        Logger logger
     ) {
         _playlistSelector = playlistSelector;
+        _musicProvider = musicProvider;
         _logger = logger;
         _isFocused = baseCore::isFocused;
 
@@ -184,9 +188,9 @@ public class MusicThread extends Thread
                 _currentPlaylist = nextPlaylist;
 
                 if (nextIsInterrupt)
-                    _logger.info("At tick '{}'. Selected new interrupt playlist: [{}]", _tick, String.join(", ", nextPlaylist.stream().map(m -> m.musicName).toList()));
+                    _logger.info("At tick '{}'. Selected new interrupt playlist: [{}]", _tick, String.join(", ", nextPlaylist.stream().map(Music::musicPath).toList()));
                 else
-                    _logger.info("At tick '{}'. Selected new playlist: [{}]", _tick, String.join(", ", nextPlaylist.stream().map(m -> m.musicName).toList()));
+                    _logger.info("At tick '{}'. Selected new playlist: [{}]", _tick, String.join(", ", nextPlaylist.stream().map(Music::musicPath).toList()));
                 _logger.info("Values computed during selection:\n{}", Utils.getKeyValuePairString(trace));
             }
 
@@ -195,7 +199,7 @@ public class MusicThread extends Thread
         }
 
         MusicPlayer activePlayer = nextIsInterrupt ? _interruptPlayer : _mainPlayer;
-        Music currentMusic = activePlayer == null ? null : activePlayer.currentMusic;
+        Music currentMusic = activePlayer == null ? null : activePlayer.music;
 
         boolean musicStillValid = nextPlaylist.stream().anyMatch(music -> music.equals(currentMusic));
 
@@ -229,10 +233,10 @@ public class MusicThread extends Thread
             Music nextMusic = selectMusic(nextPlaylist, currentMusic);
             if (nextIsInterrupt) {
                 stopInterruptMusic(doFade);
-                _interruptPlayer = playMusic(nextMusic, doFade);
+                _interruptPlayer = playMusic(nextMusic, _musicProvider, doFade);
             } else {
                 stopMainMusic(doFade);
-                _mainPlayer = playMusic(nextMusic, doFade);
+                _mainPlayer = playMusic(nextMusic, _musicProvider, doFade);
             }
         }
 
@@ -267,10 +271,11 @@ public class MusicThread extends Thread
     }
 
 
-    private MusicPlayer playMusic(Music nextMusic, boolean fade) {
+    private MusicPlayer playMusic(Music nextMusic, MusicProvider musicProvider, boolean fade) {
         MusicPlayer musicPlayer = new MusicPlayer(
             nextMusic,
             VolumeState.getVolume(),
+            musicProvider,
             () -> _chooseNextMusicTime = System.currentTimeMillis() + _nextMusicDelayMilliseconds,
             _logger
         );

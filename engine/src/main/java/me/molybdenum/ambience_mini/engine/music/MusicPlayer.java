@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.music;
 
 import me.molybdenum.ambience_mini.engine.configuration.Music;
+import me.molybdenum.ambience_mini.engine.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.music.players.FlacPlayer;
 import me.molybdenum.ambience_mini.engine.music.players.MP3Player;
 import me.molybdenum.ambience_mini.engine.music.players.Player;
@@ -24,26 +25,28 @@ public class MusicPlayer
     private static final long FADE_STEP_MILLISECONDS = 75;
     private static final int FADE_STEP_COUNT = 10;
 
-    public final Music currentMusic;
+    public final Music music;
+    private final MusicProvider musicProvider;
     private Player _player = null;
     private float _currentGain;
 
 
-    public MusicPlayer(Music music, float volume, @Nullable Runnable onPlayedToEnd, Logger logger) {
-        currentMusic = music;
+    public MusicPlayer(Music music, float volume, MusicProvider musicProvider, @Nullable Runnable onPlayedToEnd, Logger logger) {
+        this.music = music;
+        this.musicProvider = musicProvider;
         try {
             _player = createPlayer(music, onPlayedToEnd, logger);
             setVolume(volume);
             _player.play();
         } catch (FileNotFoundException ex) {
-            logger.error("File '{}' not found. Fix your Ambience config!", currentMusic.musicName, ex);
+            logger.error("File '{}' not found. Fix your Ambience config!", music.musicPath(), ex);
         } catch (RuntimeException ex) {
-            logger.error("A problem happened while trying to play '{}'!", currentMusic.musicName, ex);
+            logger.error("A problem happened while trying to play '{}'!", music.musicPath(), ex);
         }
     }
 
     private Player createPlayer(Music music, @Nullable Runnable onPlayedToEnd, Logger logger) throws FileNotFoundException {
-        InputStream stream = currentMusic.getMusicStream();
+        InputStream stream = musicProvider.getMusicStream(music.musicPath());
 
         Consumer<Boolean> onFinished = wasStopped -> {
             try { stream.close(); }
@@ -61,7 +64,7 @@ public class MusicPlayer
         else if (music.isFLAC())
             return new FlacPlayer(
                     stream,
-                    music.musicName,
+                    music.musicPath(),
                     ex -> logger.error("Error in FLAC player thread", ex),
                     onFinished
             );
@@ -107,7 +110,7 @@ public class MusicPlayer
 
     // Volume
     public void setVolume(float volume) {
-        _currentGain = MIN_GAIN + ((DEFAULT_MAX_GAIN + currentMusic.gain) - MIN_GAIN) * volume;
+        _currentGain = MIN_GAIN + ((DEFAULT_MAX_GAIN + music.gain()) - MIN_GAIN) * volume;
         _player.setGain(_currentGain);
     }
 

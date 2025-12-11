@@ -114,7 +114,7 @@ public class Parser {
 		if (la.kind == 5) {
 			Get();
 			Expect(1);
-			IdentP ident = new IdentP(t.val); 
+			IdentP ident = new IdentP(t.val, t.line); 
 			Expect(6);
 			Playlist play = Play();
 			Expect(7);
@@ -161,19 +161,22 @@ public class Parser {
 			schedule = new Block(items); 
 		} else if (la.kind == 19) {
 			Get();
+			int line = t.line; 
 			Expect(20);
 			Expr expr = Expr();
 			Expect(21);
 			Schedule schedule2 = Shed();
-			schedule = new When(expr, schedule2); 
+			schedule = new When(expr, schedule2, line); 
 		} else if (la.kind == 22) {
 			Get();
+			int line = t.line; 
 			Schedule schedule2 = Shed();
-			schedule = new When(new BoolLit(true), schedule2); 
+			schedule = new When(new BoolLit(true), schedule2, line); 
 		} else if (la.kind == 23) {
 			Get();
+			int line = t.line; 
 			Schedule schedule2 = Shed();
-			schedule = new Interrupt(schedule2); 
+			schedule = new Interrupt(schedule2, line); 
 		} else SynErr(38);
 		return schedule;
 	}
@@ -195,12 +198,12 @@ public class Parser {
 			Expect(11);
 		} else if (la.kind == 1) {
 			Get();
-			play = new IdentP(t.val); 
+			play = new IdentP(t.val, t.line); 
 		} else if (la.kind == 12) {
 			Get();
 		} else if (la.kind == 4) {
 			Get();
-			StringLit file = new StringLit(removeFirstAndLast(t.val)); 
+			StringLit file = new StringLit(removeFirstAndLast(t.val)); int line = t.line; 
 			if (la.kind == 13) {
 				Get();
 				if (la.kind == 3) {
@@ -211,56 +214,56 @@ public class Parser {
 				gain = new FloatLit(Float.parseFloat(t.val));            
 				Expect(14);
 			}
-			play = new Load(file, gain);                           
+			play = new Load(file, gain, line);                           
 		} else SynErr(40);
 		return play;
 	}
 
 	Expr  Expr() {
 		Expr  expr;
-		BinaryOperators op = BinaryOperators.AND; 
+		BinaryOperators op = BinaryOperators.AND; int line = -1; 
 		expr = ExprEq();
 		while (la.kind == 24 || la.kind == 25) {
 			if (la.kind == 24) {
 				Get();
-				op = BinaryOperators.AND; 
+				op = BinaryOperators.AND; line = t.line; 
 			} else {
 				Get();
-				op = BinaryOperators.OR; 
+				op = BinaryOperators.OR; line = t.line; 
 			}
 			Expr expr2 = ExprEq();
-			expr = new BinaryOp(op, expr, expr2); 
+			expr = new BinaryOp(op, expr, expr2, line); 
 		}
 		return expr;
 	}
 
 	Expr  ExprEq() {
 		Expr  expr;
-		BinaryOperators op = BinaryOperators.EQ; 
+		BinaryOperators op = BinaryOperators.EQ; int line = -1; 
 		expr = ExprRel();
 		while (la.kind == 26 || la.kind == 27) {
 			if (la.kind == 26) {
 				Get();
-				op = BinaryOperators.EQ; 
+				op = BinaryOperators.EQ; line = t.line; 
 			} else {
 				Get();
-				op = BinaryOperators.APP_EQ; 
+				op = BinaryOperators.APP_EQ; line = t.line; 
 			}
 			Expr expr2 = ExprRel();
-			expr = new BinaryOp(op, expr, expr2); 
+			expr = new BinaryOp(op, expr, expr2, line); 
 		}
 		return expr;
 	}
 
 	Expr  ExprRel() {
 		Expr  expr;
-		BinaryOperators op = BinaryOperators.EQ; 
+		BinaryOperators op = BinaryOperators.EQ; int line = -1; 
 		expr = ExprTerm();
 		while (la.kind == 13) {
 			Get();
-			op = BinaryOperators.LT; 
+			op = BinaryOperators.LT; line = t.line; 
 			Expr expr2 = ExprTerm();
-			expr = new BinaryOp(op, expr, expr2); 
+			expr = new BinaryOp(op, expr, expr2, line); 
 		}
 		return expr;
 	}
@@ -271,7 +274,7 @@ public class Parser {
 		switch (la.kind) {
 		case 1: {
 			Get();
-			expr = new IdentE(t.val);                      
+			expr = new IdentE(t.val, t.line);                      
 			break;
 		}
 		case 2: {
@@ -302,13 +305,13 @@ public class Parser {
 		case 30: {
 			Get();
 			Expect(1);
-			expr = new GetEvent(new IdentE(t.val));              
+			expr = new GetEvent(new IdentE(t.val, t.line));    
 			break;
 		}
 		case 31: {
 			Get();
 			Expect(1);
-			expr = new GetProperty(new IdentE(t.val));             
+			expr = new GetProperty(new IdentE(t.val, t.line)); 
 			break;
 		}
 		case 32: case 33: {
@@ -319,13 +322,15 @@ public class Parser {
 				quantifier = Quantifiers.ALL; 
 			}
 			Expect(1);
-			String identifier = t.val; 
+			String identifier = t.val; int line = t.line; 
 			Expect(34);
+			int inLine = t.line; 
 			Expr list = Expr();
 			Expect(35);
+			int whereLine = t.line; 
 			Expr cond = Expr();
 			Expect(18);
-			expr = new QuantifierOp(quantifier, identifier, list, cond); 
+			expr = new QuantifierOp(quantifier, new IdentE(identifier, line), list, cond, inLine, whereLine); 
 			break;
 		}
 		case 20: {

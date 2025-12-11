@@ -1,14 +1,28 @@
 package me.molybdenum.ambience_ide;
 
-import me.molybdenum.ambience_mini.engine.Common;
-import org.teavm.jso.dom.html.HTMLDocument;
+import me.molybdenum.ambience_mini.engine.configuration.Music;
+import org.teavm.jso.JSExport;
+
 
 public class Test
 {
-    public static void main(String[] args) {
-        var document = HTMLDocument.current();
-        var div = document.createElement("div");
-        div.appendChild(document.createTextNode("TeaVM generated element + " + Common.MOD_ID + " + " + String.join(", ", args)));
-        document.getBody().appendChild(div);
+    @JSExport
+    public static String getAmbienceMiniVersion() {
+        return BuildConfig.APP_VERSION;
+    }
+
+    @JSExport
+    public static Music musicTest() {
+        return new Music("/test/path", 0.0f);
+    }
+
+    @JSExport
+    public static String musicName(Music music) {
+        return music.musicPath();
+    }
+
+    @JSExport
+    public static String getInterpreter(String musicConfig) {
+        return "";
     }
 }

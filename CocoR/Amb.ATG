@@ -11,10 +11,10 @@ which will be explained when met first in context.  */
 /* () is a grouping used alongside |. The parenthesis contains a series of strings separated by |. This means that exactly one of the strings is chosen. */
 
 /* Imports here are inserted at the top of the generated lexer and parser. */
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.expression.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.config.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.schedule.*;
-import me.molybdenum.ambience_mini.engine.loader.abstract_syntax.playlist.*;
+import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.expression.*;
+import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.config.*;
+import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.schedule.*;
+import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.playlist.*;
 import java.util.ArrayList;
 
 /* The required start of a Coco/R grammar file. "Program" specifies the starting symbol of the grammar. */
@@ -58,7 +58,7 @@ PRODUCTIONS
 File = Conf<out mainNode> .
 
 Conf<out Config conf>                (. conf = null; .)
-    = "playlist" IDENT               (. IdentP ident = new IdentP(t.val); .)
+    = "playlist" IDENT               (. IdentP ident = new IdentP(t.val, t.line); .)
       '=' Play<out Playlist play> ';'
       Conf<out Config inner>         (. conf = new PlaylistDecl(ident, play, inner); .)
     | Shed<out Schedule schedule>    (. conf = new ScheduleDecl(schedule); .)
@@ -78,12 +78,12 @@ PlayTerm<out Playlist play>               (. play = new Nil(); FloatLit gain = n
           }
         ]
       ']'
-    | IDENT                         (. play = new IdentP(t.val); .)
+    | IDENT                         (. play = new IdentP(t.val, t.line); .)
     | "NIL"
-    | STRING                    (. StringLit file = new StringLit(removeFirstAndLast(t.val)); .)
+    | STRING                    (. StringLit file = new StringLit(removeFirstAndLast(t.val)); int line = t.line; .)
             [ '<' (FLOAT|INT)   (. gain = new FloatLit(Float.parseFloat(t.val));            .)
               '>'
-            ]                   (. play = new Load(file, gain);                           .)
+            ]                   (. play = new Load(file, gain, line);                           .)
 .
 
 /*------------------------------------------------------------------------*/
@@ -97,49 +97,54 @@ Shed<out Schedule schedule>                  (. schedule = null; boolean instant
       { Shed<out Schedule schedule2>         (. items.add(schedule2); .)
       }
       "end"                                  (. schedule = new Block(items); .)
-    | "when" '(' Expr<out Expr expr>
-      ')' Shed<out Schedule schedule2>         (. schedule = new When(expr, schedule2); .)
-    | "default" Shed<out Schedule schedule2>   (. schedule = new When(new BoolLit(true), schedule2); .)
-    | "interrupt" Shed<out Schedule schedule2> (. schedule = new Interrupt(schedule2); .)
+    | "when"                                   (. int line = t.line; .)
+      '(' Expr<out Expr expr>
+      ')' Shed<out Schedule schedule2>         (. schedule = new When(expr, schedule2, line); .)
+    | "default"                      (. int line = t.line; .)
+      Shed<out Schedule schedule2>   (. schedule = new When(new BoolLit(true), schedule2, line); .)
+    | "interrupt"                       (. int line = t.line; .)
+      Shed<out Schedule schedule2>      (. schedule = new Interrupt(schedule2, line); .)
 .
 
 /*------------------------------------------------------------------------*/
-Expr<out Expr expr>              (. BinaryOperators op = BinaryOperators.AND; .)
+Expr<out Expr expr>              (. BinaryOperators op = BinaryOperators.AND; int line = -1; .)
     = ExprEq<out expr>
-    { ( "&&"                     (. op = BinaryOperators.AND; .)
-      | "||"                     (. op = BinaryOperators.OR; .)
-      ) ExprEq<out Expr expr2>   (. expr = new BinaryOp(op, expr, expr2); .)
+    { ( "&&"                     (. op = BinaryOperators.AND; line = t.line; .)
+      | "||"                     (. op = BinaryOperators.OR; line = t.line; .)
+      ) ExprEq<out Expr expr2>   (. expr = new BinaryOp(op, expr, expr2, line); .)
     }
 .
 
-ExprEq<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; .)
+ExprEq<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; int line = -1; .)
     = ExprRel<out expr>
-    { ( "=="                     (. op = BinaryOperators.EQ; .)
-      | "~~"                     (. op = BinaryOperators.APP_EQ; .)
-      ) ExprRel<out Expr expr2> (. expr = new BinaryOp(op, expr, expr2); .)
+    { ( "=="                     (. op = BinaryOperators.EQ; line = t.line; .)
+      | "~~"                     (. op = BinaryOperators.APP_EQ; line = t.line; .)
+      ) ExprRel<out Expr expr2> (. expr = new BinaryOp(op, expr, expr2, line); .)
     }
 .
 
-ExprRel<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; .)
+ExprRel<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; int line = -1; .)
     = ExprTerm<out expr>
-    { ( "<"                     (. op = BinaryOperators.LT; .)
-      ) ExprTerm<out Expr expr2> (. expr = new BinaryOp(op, expr, expr2); .)
+    { ( "<"                     (. op = BinaryOperators.LT; line = t.line; .)
+      ) ExprTerm<out Expr expr2> (. expr = new BinaryOp(op, expr, expr2, line); .)
     }
 .
 
 ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY; .)
-    = IDENT             (. expr = new IdentE(t.val);                      .)
+    = IDENT             (. expr = new IdentE(t.val, t.line);                      .)
     | INT               (. expr = new IntLit(Integer.parseInt(t.val));      .)
     | FLOAT             (. expr = new FloatLit(Float.parseFloat(t.val));    .)
     | STRING            (. expr = new StringLit(removeFirstAndLast(t.val)); .)
     | "true"            (. expr = new BoolLit(true);                        .)
     | "false"           (. expr = new BoolLit(false);                       .)
-    | '@' IDENT         (. expr = new GetEvent(new IdentE(t.val));              .)
-    | '$' IDENT         (. expr = new GetProperty(new IdentE(t.val));             .)
+    | '@' IDENT         (. expr = new GetEvent(new IdentE(t.val, t.line));    .)
+    | '$' IDENT         (. expr = new GetProperty(new IdentE(t.val, t.line)); .)
     | ("any" | "all"    (. quantifier = Quantifiers.ALL; .)
-      ) IDENT           (. String identifier = t.val; .)
-      "in" Expr<out Expr list> "where" Expr<out Expr cond> "end"
-                        (. expr = new QuantifierOp(quantifier, identifier, list, cond); .)
+      ) IDENT           (. String identifier = t.val; int line = t.line; .)
+      "in"                        (. int inLine = t.line; .)
+      Expr<out Expr list> "where" (. int whereLine = t.line; .)
+      Expr<out Expr cond> "end"
+                        (. expr = new QuantifierOp(quantifier, new IdentE(identifier, line), list, cond, inLine, whereLine); .)
     | '(' Expr<out expr> ')'
 .
 

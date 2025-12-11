@@ -6,12 +6,12 @@ import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.playlist
 import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.configuration.Music;
+import me.molybdenum.ambience_mini.engine.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.core.providers.BaseGameStateProvider;
 import me.molybdenum.ambience_mini.engine.utils.Pair;
 import me.molybdenum.ambience_mini.engine.utils.Utils;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,7 +21,6 @@ import java.util.stream.Stream;
 
 public class Interpreter
 {
-    private final String musicDirectory;
     private final BaseGameStateProvider gameStateProvider;
     private final Schedule schedule;
 
@@ -31,8 +30,10 @@ public class Interpreter
 
 
 
-    public Interpreter(Config config, String musicDirectory, BaseGameStateProvider gameStateProvider) {
-        this.musicDirectory = musicDirectory;
+    public Interpreter(
+            Config config,
+            BaseGameStateProvider gameStateProvider
+    ) {
         this.gameStateProvider = gameStateProvider;
         this.schedule = initConf(config);
     }
@@ -76,11 +77,11 @@ public class Interpreter
                 // Pre-compute playlist so we don't need to later.
                 String name = '\'' + (uniqueId++) + "-playlist";
                 rootEnv.bind(name, evalPlaylist(play.playlist(), rootEnv));
-                return new Play(new IdentP(name), play.isInstant());
+                return new Play(new IdentP(name, -1), play.isInstant());
             }
         }
         else if (schedule instanceof Interrupt interrupt) {
-            return new Interrupt(initSchedule(interrupt.body()));
+            return new Interrupt(initSchedule(interrupt.body()), interrupt.line());
         }
         else if (schedule instanceof Block block) {
             return new Block(
@@ -90,7 +91,7 @@ public class Interpreter
             );
         }
         else if (schedule instanceof When when)
-            return new When(when.condition(), initSchedule(when.body()));
+            return new When(when.condition(), initSchedule(when.body()), when.line());
         else
             throw new RuntimeException("Unhandled Schedule-type in initialization: " + schedule.getClass().getCanonicalName());
     }
@@ -131,8 +132,11 @@ public class Interpreter
                     evalPlaylist(concat.left(), env).stream(),
                     evalPlaylist(concat.right(), env).stream()
             ).toList();
-        else if (play instanceof Load load)
-            return List.of(new Music(Path.of(musicDirectory, load.file().value()), load.gain() != null ? load.gain().value() : 0f));
+        else if (play instanceof Load load) {
+            String musicPath = MusicProvider.validatePath(load.file().value()).getValue();
+            float baseGain = load.gain() != null ? load.gain().value() : 0f;
+            return List.of(new Music(musicPath, baseGain));
+        }
         else if (play instanceof Nil)
             return List.of();
         else
@@ -202,7 +206,7 @@ public class Interpreter
     // -----------------------------------------------------------------------------------------------------------------
     // Quantifier operations
     private Value evalQuantifierOp(QuantifierOp quanOp, VariableEnv env) {
-        String ident = quanOp.identifier();
+        String ident = quanOp.identifier().value();
         Predicate<Value> evaluator = elem -> evalExpr(quanOp.condition(), env.enterScope().bind(ident, elem)).asBoolean();
 
         List<Value> list = evalExpr(quanOp.list(), env).asList();

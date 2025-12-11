@@ -9,9 +9,6 @@ evaluationDependsOn(':engine')
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-group "me.molybdenum"
-version "1.0.0"
-
 repositories {
     mavenCentral()
 }
@@ -42,6 +39,24 @@ teavm {
         targetFileName = "ambience_ide.wasm"
     }
 }
+
+def generatedDir = "src/main/java/me/molybdenum/ambience_ide"
+
+tasks.register('generateBuildConfig') {
+    doLast {
+        def outputDir = file(generatedDir)
+        outputDir.mkdirs()
+        def file = new File(outputDir, "BuildConfig.java")
+        file.text = """package me.molybdenum.ambience_ide;
+ 
+public final class BuildConfig {
+    public static final String APP_VERSION = "${version}";
+}
+"""
+    }
+}
+
+compileJava.dependsOn "generateBuildConfig"
 
 tasks.withType(JavaCompile).configureEach {
     source(project(':engine').sourceSets.main.allSource)

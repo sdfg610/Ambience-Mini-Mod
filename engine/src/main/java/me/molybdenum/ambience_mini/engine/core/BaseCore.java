@@ -1,7 +1,9 @@
 package me.molybdenum.ambience_mini.engine.core;
 
 import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.engine.configuration.MusicLoader;
+import me.molybdenum.ambience_mini.engine.configuration.Loader;
+import me.molybdenum.ambience_mini.engine.configuration.music_provider.FileMusicProvider;
+import me.molybdenum.ambience_mini.engine.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.core.detectors.CaveDetector;
 import me.molybdenum.ambience_mini.engine.core.providers.GameStateProviderV1;
 import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
@@ -14,6 +16,9 @@ import me.molybdenum.ambience_mini.engine.core.state.BaseScreenState;
 import me.molybdenum.ambience_mini.engine.core.util.BaseNotification;
 import me.molybdenum.ambience_mini.engine.music.MusicThread;
 import org.slf4j.Logger;
+
+import java.io.*;
+import java.nio.file.Path;
 
 public abstract class BaseCore<
         TBlockPos, TVec3, TBlockState, TEntity, TKeyBinding, TComponent,
@@ -67,16 +72,21 @@ public abstract class BaseCore<
                 caveDetector
         );
 
-        MusicLoader.loadFrom(Common.AMBIENCE_DIRECTORY, logger, gameStateProvider).ifPresent(interpreter -> {
-            disableNativeMusicManager();
-            musicThread = new MusicThread(this, logger, interpreter);
 
-            if (clientConfig.verboseMode.get()) {
-                logger.info("Successfully loaded Ambience Mini with configuration:\n{}", clientConfig.getConfigsString());
-            }
-            else
-                logger.info("Successfully loaded Ambience Mini");
-        });
+        File configFile = Path.of(Common.AMBIENCE_DIRECTORY, Common.MUSIC_CONFIG_FILE).toFile();
+        try (InputStream configStream = new FileInputStream(configFile))
+        {
+            MusicProvider musicProvider = new FileMusicProvider(Path.of(Common.AMBIENCE_DIRECTORY, Common.MUSIC_DIRECTORY).toString());
+            Loader.loadFrom(configStream, musicProvider, gameStateProvider, logger).ifPresent(interpreter -> {
+                disableNativeMusicManager();
+                musicThread = new MusicThread(this, interpreter, musicProvider, logger);
+
+                if (clientConfig.verboseMode.get())
+                    logger.info("Successfully loaded Ambience Mini with configuration:\n{}", clientConfig.getConfigsString());
+                else
+                    logger.info("Successfully loaded Ambience Mini");
+            });
+        } catch (IOException ignored) { }
     }
 
 

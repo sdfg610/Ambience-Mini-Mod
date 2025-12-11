@@ -15,15 +15,24 @@
             word_wrap: true,
 			toolbar: "undo, redo, |, select_font, |, help"
         });
+
+        function init() {
+            var versionElem = document.getElementById('version');
+            versionElem.innerText = versionElem.innerText.replace("#version", getAmbienceMiniVersion());
+
+            var music = musicTest();
+            var name = musicName(music);
+        }
     </script>
     <!-- |, change_smooth_selection, highlight, reset_highlight, -->
 </head>
-<body onload="onLoad()"> <!-- onload="main(['hey', 'there!'])" -->
+<body onload="init()"> <!-- onload="main(['hey', 'there!'])" -->
     <div class="box">
         <div class="row header">
-            <div style="display: flex">
+            <div style="display: flex;">
                 <img src="favicon.ico" alt="Ambience Mini Logo" style="height: 2.5em; padding-right: .25em"/>
                 <h1>Ambience Mini IDE</h1>
+                <div style="padding: .75em 0em 0em .5em"><i><small id="version">(For version #version)</small></i></div>
             </div>
             <hr style="margin-bottom: 0em; margin-top: .5em">
         </div>
@@ -46,12 +55,12 @@
                             <hr style="margin-top: 0em">
                             <div style="display: flex; float: left; align-items:center;">
                                 <h2>Output:</h2>
-                                <button type="button" onclick="alert('Button clicked!')" style="padding: 0em 1em 0em 1em; margin: 0em 1em 0em 1em; height: 2em">
+                                <button type="button" onclick="alert('Button clicked!')" style="padding: 0em 1em 0em 1em; margin: 0em 1em 0em 1em; height: 1.9em">
                                     Compile and run
                                 </button>
                             </div>
                         </div>
-                        <div class="row content" style="border: 1px solid black; background-color: white; padding: .5em">
+                        <div id="output" class="row content" style="border: 1px solid black; background-color: white; padding: .5em">
                             <p>Test...</p>
                             <p>Test...</p>
                             <p>Test...</p>
