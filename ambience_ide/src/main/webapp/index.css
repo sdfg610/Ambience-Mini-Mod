@@ -6,8 +6,26 @@
 
 html *
 {
-   font-family: sans-serif;
+    font-family: sans-serif;
 }
+
+.name
+{
+    display: inline-block;
+    font-family: "Monaco", monospace;
+}
+
+.outputElement
+{
+    font-family: "Monaco", monospace;
+    padding-bottom: .6em;
+}
+
+input[type="radio"] {
+    margin-right: .5em;
+    display: inline-block;
+}
+
 
 hr {
   display: block;
@@ -70,6 +88,18 @@ td {
 .right {
     flex: 40%;
     height: 100%;
+}
+
+.left2 {
+    flex: 50%;
+    height: 100%;
+    padding-right: .5em;
+}
+
+.right2 {
+    flex: 50%;
+    height: 100%;
+    padding-left: .5em;
 }
 
 .semi-box {

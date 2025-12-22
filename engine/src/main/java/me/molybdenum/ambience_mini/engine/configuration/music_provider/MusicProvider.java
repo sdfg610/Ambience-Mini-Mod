@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 public interface MusicProvider
 {
@@ -15,7 +16,7 @@ public interface MusicProvider
 
 
     static Result<String> validatePath(String filePath) {
-        String pathSeparator = FileSystems.getDefault().getSeparator();
+        String pathSeparator = getPathSeparator();
         filePath = filePath.replace("\\", pathSeparator).replace("/", pathSeparator);
 
         Path path;
@@ -28,10 +29,19 @@ public interface MusicProvider
         if (path.isAbsolute())
             return Result.fail("Music paths must be relative. The path '" + path + "' is not.");
 
-        for (Path value : path)
-            if (value.toString().equals(".."))
+        var parts = path.toString().split(Pattern.quote(pathSeparator));
+        for (String part : parts)
+            if (part.equals(".."))
                 return Result.fail("Music paths cannot contain '..'-directories");
 
         return Result.of(path.toString());
+    }
+
+    private static String getPathSeparator() {
+        try {
+            return FileSystems.getDefault().getSeparator(); // Throws Exception in Ambience IDE
+        } catch (Exception ignored) {
+            return "/";
+        }
     }
 }

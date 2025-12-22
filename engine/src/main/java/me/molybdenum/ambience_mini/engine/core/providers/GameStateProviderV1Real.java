@@ -1,9 +1,5 @@
 package me.molybdenum.ambience_mini.engine.core.providers;
 
-import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.type.FloatT;
-import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.type.IntT;
-import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.type.ListT;
-import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.type.StringT;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.core.detectors.CaveDetector;
@@ -16,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
-public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends BaseGameStateProvider
+public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> extends GameStateProviderV1Template
 {
     // State
     private final BasePlayerState<TBlockPos, TVec3> _player;
@@ -49,11 +45,11 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
     private double _latestCaveScore = 0;
 
     // Properties used by other properties
-    private Property timeProp;
-    private Property bossesProp;
+    private final Property timeProp;
+    private final Property bossesProp;
 
 
-    public GameStateProviderV1(
+    public GameStateProviderV1Real(
         BaseClientConfig config,
         BasePlayerState<TBlockPos, TVec3> player,
         BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity> level,
@@ -83,82 +79,8 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
         _combatGracePeriod = config.combatGracePeriod.get();
 
-        RegisterEventsAndProperties();
-    }
-
-    private void RegisterEventsAndProperties()
-    {
-        ////
-        //// Events
-        ////
-        // Global events
-        registerEvent("main_menu", this::inMainMenu);
-        registerEvent("joining", this::isJoiningWorld);
-        registerEvent("disconnected", this::isDisconnected);
-        registerEvent("credits", this::onCreditsScreen);
-        registerEvent("paused", this::isPaused);
-        registerEvent("in_game", this::inGame);
-
-        // Time events
-        registerEvent("day", this::isDay);
-        registerEvent("dawn", this::isDawn);
-        registerEvent("dusk", this::isDusk);
-        registerEvent("night", this::isNight);
-
-        // Weather
-        registerEvent("downfall", this::isDownfall);
-        registerEvent("rain", this::isRaining);
-        registerEvent("snow", this::isSnowing);
-        registerEvent("thunder", this::isThundering);
-
-        // Special locations
-        registerEvent("village", this::inVillage);
-        registerEvent("ranch", this::inRanch);
-
-        // Player state
-        registerEvent("dead", this::isDead);
-        registerEvent("sleeping", this::isSleeping);
-        registerEvent("fishing", this::isFishing);
-        registerEvent("under_water", this::isUnderWater);
-        registerEvent("in_lava", this::inLava);
-
-        // Mounts
-        registerEvent("minecart", this::inMinecart);
-        registerEvent("boat", this::inBoat);
-        registerEvent("horse", this::onHorse);
-        registerEvent("donkey", this::onDonkey);
-        registerEvent("pig", this::onPig);
-        registerEvent("elytra", this::flyingElytra);
-
-        // Combat
-        registerEvent("in_combat", this::inCombat);
-        registerEvent("boss_fight", this::inBossFight);
-
-
-        ////
-        //// Properties
-        ////
-        // World properties
-        registerProperty("dimension", new StringT(), this::getDimensionId);
-        registerProperty("biome", new StringT(), this::getBiomeId);
-        registerProperty("biome_tags", new ListT(new StringT()), this::getBiomeTagIDs);
-        timeProp = registerProperty("time", new IntT(), this::getTime);
-        registerProperty("cave_score", new FloatT(), this::getCaveScore);
-
-        // Player properties
-        registerProperty("health", new FloatT(), this::getPlayerHealth);
-        registerProperty("max_health", new FloatT(), this::getPlayerMaxHealth);
-        registerProperty("elevation", new FloatT(), this::getPlayerElevation);
-        registerProperty("vehicle", new StringT(), this::getVehicleId);
-        registerProperty("effects", new ListT(new StringT()), this::getActiveEffects);
-
-        // Combat properties
-        registerProperty("combatant_count", new IntT(), this::countCombatants);
-        registerProperty("boss", new StringT(), this::getBoss);
-        bossesProp = registerProperty("bosses", new ListT(new StringT()), this::getBosses);
-
-
-        //TODO: Structure detection maybe?
+        timeProp = getProperty("time");
+        bossesProp = getProperty("bosses");
     }
 
 
@@ -173,28 +95,34 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Global events
+    @Override
     public BoolVal inMainMenu() {
         return new BoolVal(_screen.is(Screens.MAIN_MENU));
     }
 
+    @Override
     public BoolVal isJoiningWorld() {
         return new BoolVal(_screen.is(Screens.JOINING));
     }
 
+    @Override
     public BoolVal isDisconnected() {
         return new BoolVal(_screen.is(Screens.DISCONNECTED));
     }
 
+    @Override
     public BoolVal onCreditsScreen() {
         return new BoolVal(_screen.is(Screens.CREDITS));
     }
 
+    @Override
     public BoolVal isPaused() {
         if (_level.isNull())
             return null;
         return new BoolVal(_level.isWorldTickingPaused());
     }
 
+    @Override
     public BoolVal inGame() {
         return new BoolVal(_level.notNull());
     }
@@ -202,21 +130,25 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Time events
+    @Override
     public BoolVal isDay() {
         int time = timeProp.getValue().asInt();                  // "12542" is the time when beds can be used.
         return new BoolVal(time > 23500 || time <= 12500); // "23460" is the time from when beds cannot be used.
     }
 
+    @Override
     public BoolVal isDawn() {
         int time = timeProp.getValue().asInt();
         return new BoolVal(time > 23500 || time <= 2000);
     }
 
+    @Override
     public BoolVal isDusk() {
         int time = timeProp.getValue().asInt();
         return new BoolVal(time > 10300 && time <= 12500);
     }
 
+    @Override
     public BoolVal isNight() {
         int time = timeProp.getValue().asInt();
         return new BoolVal(time > 12500 && time <= 23500);
@@ -225,24 +157,28 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Weather events
+    @Override
     public BoolVal isDownfall() {
         if (_level.isNull())
             return null;
         return new BoolVal(_level.isRaining());
     }
 
+    @Override
     public BoolVal isRaining() {
         if (_player.isNull() || _level.isNull())
             return null;
         return new BoolVal(_level.isRaining() && !_level.isColdEnoughToSnow(_player.blockPos()));
     }
 
+    @Override
     public BoolVal isSnowing() {
         if (_player.isNull() || _level.isNull())
             return null;
         return new BoolVal(_level.isRaining() && _level.isColdEnoughToSnow(_player.blockPos()));
     }
 
+    @Override
     public BoolVal isThundering() {
         if (_level.isNull())
             return null;
@@ -252,12 +188,14 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Location events
+    @Override
     public BoolVal inVillage() {
         if (_player.isNull() || _level.isNull())
             return null;
         return new BoolVal(_level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold);
     }
 
+    @Override
     public BoolVal inRanch() {
         if (_player.isNull() || _level.isNull())
             return null;
@@ -267,16 +205,19 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Player-state events
+    @Override
     public BoolVal isDead() {
         return new BoolVal(_screen.is(Screens.DEATH));
     }
 
+    @Override
     public BoolVal isSleeping() {
         if (_player.isNull())
             return null;
         return new BoolVal(_player.isSleeping());
     }
 
+    @Override
     public BoolVal isFishing() {
         if (_player.isNull() || _level.isNull())
             return null;
@@ -298,12 +239,14 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
         return new BoolVal(_latestFishingPos != null);
     }
 
+    @Override
     public BoolVal isUnderWater() {
         if (_player.isNull())
             return null;
         return new BoolVal(_player.isUnderwater());
     }
 
+    @Override
     public BoolVal inLava() {
         if (_player.isNull())
             return null;
@@ -313,36 +256,42 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Mount-like events
+    @Override
     public BoolVal inMinecart() {
         if (_player.isNull())
             return null;
         return new BoolVal(_player.inMinecart());
     }
 
+    @Override
     public BoolVal inBoat() {
         if (_player.isNull())
             return null;
         return new BoolVal(_player.inBoat());
     }
 
+    @Override
     public BoolVal onHorse() {
         if (_player.isNull())
             return null;
         return new BoolVal(_player.onHorse());
     }
 
+    @Override
     public BoolVal onDonkey() {
         if (_player.isNull())
             return null;
         return new BoolVal(_player.onDonkey());
     }
 
+    @Override
     public BoolVal onPig() {
         if (_player.isNull())
             return null;
         return new BoolVal(_player.onPig());
     }
 
+    @Override
     public BoolVal flyingElytra() {
         if (_player.isNull())
             return null;
@@ -352,6 +301,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Combat events
+    @Override
     public BoolVal inCombat() {
         if (_combat.hasActiveCombatants()) {
             _latestCombatTime = System.currentTimeMillis();
@@ -360,6 +310,7 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
         return new BoolVal(System.currentTimeMillis() - _latestCombatTime < _combatGracePeriod);
     }
 
+    @Override
     public BoolVal inBossFight() {
         return new BoolVal(_combat.inBossFight());
     }
@@ -368,30 +319,35 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // World properties
+    @Override
     public StringVal getDimensionId() {
         if (_level.isNull())
             return null;
         return new StringVal(_level.getDimensionID());
     }
 
+    @Override
     public StringVal getBiomeId() {
         if (_player.isNull() || _level.isNull())
             return null;
         return new StringVal(_level.getBiomeID(_player.blockPos()));
     }
 
+    @Override
     public ListVal getBiomeTagIDs() {
         if (_player.isNull() || _level.isNull())
             return null;
         return ListVal.ofStringList(_level.getBiomeTagIDs(_player.blockPos()));
     }
 
+    @Override
     public IntVal getTime() {
         if (_level.isNull())
             return null;
         return new IntVal(_level.getTime() % 24000);
     }
 
+    @Override
     public FloatVal getCaveScore() {
         if (_player.isNull() || _level.isNull())
             return null;
@@ -402,30 +358,35 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Player properties
+    @Override
     public FloatVal getPlayerHealth() {
         if (_player.isNull())
             return null;
         return new FloatVal(_player.health());
     }
 
+    @Override
     public FloatVal getPlayerMaxHealth() {
         if (_player.isNull())
             return null;
         return new FloatVal(_player.maxHealth());
     }
 
+    @Override
     public FloatVal getPlayerElevation() {
         if (_player.isNull())
             return null;
         return new FloatVal((float)_player.vectorY());
     }
 
+    @Override
     public StringVal getVehicleId() {
         if (_player.isNull())
             return null;
         return new StringVal(_player.vehicleId().orElse(""));
     }
 
+    @Override
     public ListVal getActiveEffects() {
         if (_player.isNull())
             return null;
@@ -435,14 +396,17 @@ public class GameStateProviderV1<TBlockPos, TVec3, TBlockState, TEntity> extends
 
     // ------------------------------------------------------------------------------------------------
     // Combat properties
+    @Override
     public IntVal countCombatants() {
         return new IntVal(_combat.countCombatants());
     }
 
-    private StringVal getBoss() {
+    @Override
+    public StringVal getBoss() {
         return (StringVal)bossesProp.getValue().asList().stream().findFirst().orElse(new StringVal(""));
     }
 
+    @Override
     public ListVal getBosses() {
         return ListVal.ofStringList(_combat.getBosses());
     }

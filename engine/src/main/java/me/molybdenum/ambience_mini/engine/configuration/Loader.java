@@ -1,46 +1,37 @@
 package me.molybdenum.ambience_mini.engine.configuration;
 
+import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.config.Config;
+import me.molybdenum.ambience_mini.engine.configuration.errors.ExcError;
+import me.molybdenum.ambience_mini.engine.configuration.errors.LoadError;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.configuration.music_provider.MusicProvider;
-import me.molybdenum.ambience_mini.engine.configuration.semantic_analysis.SemError;
-import me.molybdenum.ambience_mini.engine.configuration.semantic_analysis.TypeEnv;
 import me.molybdenum.ambience_mini.engine.configuration.semantic_analysis.SemanticAnalysis;
 import me.molybdenum.ambience_mini.engine.configuration.syntactic_analysis.Parser;
-import me.molybdenum.ambience_mini.engine.configuration.syntactic_analysis.Scanner;
 import me.molybdenum.ambience_mini.engine.core.providers.BaseGameStateProvider;
-import org.slf4j.Logger;
 
 import java.io.InputStream;
-import java.util.List;
-import java.util.Optional;
+import java.util.ArrayList;
 
 public class Loader {
-    public static Optional<Interpreter> loadFrom(
-            InputStream musicConfig,
+    public static LoadResult loadFrom(
+            InputStream configStream,
             MusicProvider musicProvider,
-            BaseGameStateProvider gameStateProvider,
-            Logger logger
+            BaseGameStateProvider gameStateProvider
     ) {
+        ArrayList<LoadError> errors = new ArrayList<>();
+
         try {
-            Parser parser = new Parser(new Scanner(musicConfig), logger);
-            parser.Parse();
+            Config config = new Parser().Parse(configStream, errors);
+            var sem = new SemanticAnalysis(musicProvider, gameStateProvider);
+            sem.validate(config, errors);
 
-            if (!parser.hasErrors()) {
-                List<SemError> semErr = new SemanticAnalysis(musicProvider, gameStateProvider)
-                        .Conf(parser.mainNode, new TypeEnv())
-                        .toList();
-
-                if (semErr.isEmpty())
-                    return Optional.of(new Interpreter(parser.mainNode, gameStateProvider));
-                else
-                    for (SemError error : semErr)
-                        logger.error("Semantic error [line {}]: {}", error.line(), error.message());
-            }
+            if (errors.isEmpty())
+                return LoadResult.of(new Interpreter(config, gameStateProvider));
         }
         catch (Exception ex) {
-            logger.error("An exception occurred during parsing of the AmbienceMini Config:\n", ex);
+            errors.add(new ExcError(ex));
         }
 
-        return Optional.empty();
+        return LoadResult.fail(errors);
     }
 }

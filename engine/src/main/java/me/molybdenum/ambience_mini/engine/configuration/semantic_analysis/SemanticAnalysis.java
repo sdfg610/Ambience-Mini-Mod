@@ -1,5 +1,7 @@
 package me.molybdenum.ambience_mini.engine.configuration.semantic_analysis;
 
+import me.molybdenum.ambience_mini.engine.configuration.errors.LoadError;
+import me.molybdenum.ambience_mini.engine.configuration.errors.SemError;
 import me.molybdenum.ambience_mini.engine.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.music.MusicPlayer;
 import me.molybdenum.ambience_mini.engine.utils.Result;
@@ -14,79 +16,81 @@ import me.molybdenum.ambience_mini.engine.core.providers.BaseGameStateProvider;
 import me.molybdenum.ambience_mini.engine.core.providers.Property;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvider gameStateProvider)
 {
-    public Stream<SemError> Conf(Config config, TypeEnv env) {
-        ArrayList<SemError> errors = new ArrayList<>();
+    public void validate(Config config, ArrayList<LoadError> errors) {
+        Conf(config, new TypeEnv(), errors);
+    }
 
+
+    private void Conf(Config config, TypeEnv env, ArrayList<LoadError> errors) {
         if (config instanceof PlaylistDecl playlistDecl) {
             String name = playlistDecl.ident().value();
-
             if (!env.bind(name, new PlaylistT()))
                 errors.add(new SemError(playlistDecl.ident().line(), "Multiple definition of playlist: " + name));
 
-            Stream<SemError> plErr = PL(playlistDecl.playlist(), env);
-            Stream<SemError> confErr = Conf(playlistDecl.config(), env);
-
-            return Stream.concat(errors.stream(), Stream.concat(plErr, confErr));
+            PL(playlistDecl.playlist(), env, errors);
+            Conf(playlistDecl.config(), env, errors);
         }
-        else if (config instanceof ScheduleDecl scheduleDecl)
-            return Shed(scheduleDecl.schedule(), env);
-
-        throw new RuntimeException("Unhandled Conf-type: " + config.getClass().getCanonicalName());
+        else if (config instanceof ScheduleDecl scheduleDecl) {
+            Shed(scheduleDecl.schedule(), env, errors);
+        }
+        else if (config == null) {
+            return;
+        }
+        else
+            throw new RuntimeException("Unhandled Conf-type: " + config.getClass().getCanonicalName());
     }
 
-    private Stream<SemError> PL(Playlist play, TypeEnv env) {
+    private void PL(Playlist play, TypeEnv env, ArrayList<LoadError> errors) {
         if (play instanceof IdentP ident) {
             String name = ident.value();
             var binding = env.lookup(name);
             if (binding.isEmpty())
-                return Stream.of(new SemError(ident.line(), "Use of undefined playlist: " + name));
-
-            var type = binding.get();
-            return type instanceof PlaylistT
-                    ? Stream.empty()
-                    : Stream.of(new SemError(ident.line(), "The ident '" + name + "' was expected to be a playlist but has type '" + PrettyPrinter.getTypeString(type) + "'"));
+                errors.add(new SemError(ident.line(), "Use of undefined playlist: " + name));
+            else {
+                var type = binding.get();
+                if (!(type instanceof PlaylistT))
+                    errors.add(new SemError(ident.line(), "The ident '" + name + "' was expected to be a playlist but has type '" + PrettyPrinter.getTypeString(type) + "'"));
+            }
         }
-        else if (play instanceof Concat concat)
-            return Stream.concat(
-                    PL(concat.left(), env),
-                    PL(concat.right(), env)
-            );
+        else if (play instanceof Concat concat) {
+            PL(concat.left(), env, errors);
+            PL(concat.right(), env, errors);
+        }
         else if (play instanceof Load load) {
             Result<String> musicPathRes = MusicProvider.validatePath(load.file().value());
             if (musicPathRes.isFailure())
-                return Stream.of(new SemError(load.line(), musicPathRes.error));
-
-            String musicPath = musicPathRes.value;
-            if (!musicProvider.exists(musicPath))
-                return Stream.of(new SemError(load.line(), "Cannot find music file with name: '" + musicPath + "'"));
-            if (!MusicPlayer.SUPPORTED_FILE_TYPES.contains(Utils.getFileExtension(musicPath)))
-                return Stream.of(new SemError(load.line(), "The file type of '" + musicPath + "' is unsupported. Ambience Mini currently only supports file types: " + String.join(", ", MusicPlayer.SUPPORTED_FILE_TYPES)));
-
-            return Stream.empty();
+                errors.add(new SemError(load.line(), musicPathRes.error));
+            else {
+                String musicPath = musicPathRes.value;
+                if (!musicProvider.exists(musicPath))
+                    errors.add(new SemError(load.line(), "Cannot find music file with name: '" + musicPath + "'"));
+                if (!MusicPlayer.SUPPORTED_FILE_TYPES.contains(Utils.getFileExtension(musicPath)))
+                    errors.add(new SemError(load.line(), "The file type of '" + musicPath + "' is unsupported. Ambience Mini currently only supports file types: " + String.join(", ", MusicPlayer.SUPPORTED_FILE_TYPES)));
+            }
         }
-
-        else if (play instanceof Nil)
-            return Stream.empty();
-
-        throw new RuntimeException("Unhandled PL-type: " + play.getClass().getCanonicalName());
+        else if (play instanceof Nil || play == null) {
+            return;
+        }
+        else
+            throw new RuntimeException("Unhandled PL-type: " + play.getClass().getCanonicalName());
     }
 
-    private Stream<SemError> Shed(Schedule schedule, TypeEnv env) {
-        if (schedule instanceof Play play)
-            return PL(play.playlist(), env);
-        else if (schedule instanceof Block block)
-            return block.body().stream()
-                    .map(sh -> Shed(sh, env))
-                    .reduce(Stream.empty(), Stream::concat);
+    private void Shed(Schedule schedule, TypeEnv env, ArrayList<LoadError> errors) {
+        if (schedule instanceof Play play) {
+            PL(play.playlist(), env, errors);
+        }
+        else if (schedule instanceof Block block) {
+            for (var child : block.body())
+                Shed(child, env, errors);
+        }
         else if (schedule instanceof When when) {
-            ArrayList<SemError> errors = new ArrayList<>();
-
             Type type = Expr(when.condition(), env, errors);
             if (!(type instanceof BoolT) && type != null)
                 errors.add(new SemError(when.line(), "The condition inside a 'when' must result in a boolean value. Got '" + PrettyPrinter.getTypeString(type) + "'"));
@@ -94,28 +98,28 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
                 errors.add(new SemError(interrupt.line(), "An interrupt can only be a child of a block (begin/end). Not a 'when'."));
 
             env.openScope();
-            var errorsFromBody = Shed(when.body(), env);
+            Shed(when.body(), env, errors);
             env.closeScope();
-
-            return Stream.concat(errors.stream(), errorsFromBody);
         }
         else if (schedule instanceof Interrupt interrupt) {
             if (env.inInterrupt())
-                return Stream.of(new SemError(interrupt.line(), "An 'interrupt' may not occur inside the body of another 'interrupt'."));
+                errors.add(new SemError(interrupt.line(), "An 'interrupt' may not occur inside the body of another 'interrupt'."));
 
             env.enterInterrupt();
-            Stream<SemError> res = interrupt.body() instanceof When
-                    ? Shed(interrupt.body(), env)
-                    : Stream.of(new SemError(interrupt.line(), "The 'interrupt' keyword may only be followed by a 'when' clause."));
+            if (interrupt.body() instanceof When when)
+                Shed(when, env, errors);
+            else
+                errors.add(new SemError(interrupt.line(), "The 'interrupt' keyword may only be followed by a 'when' clause."));
             env.exitInterrupt();
-
-            return res;
         }
-
-        throw new RuntimeException("Unhandled Shed-type: " + schedule.getClass().getCanonicalName());
+        else if (schedule == null) {
+            return;
+        }
+        else
+            throw new RuntimeException("Unhandled Shed-type: " + schedule.getClass().getCanonicalName());
     }
 
-    public Type Expr(Expr expr, TypeEnv env, ArrayList<SemError> errors) {
+    private Type Expr(Expr expr, TypeEnv env, ArrayList<LoadError> errors) {
         if (expr instanceof IdentE ident) {
             Optional<Type> type = env.lookup(ident.value());
             if (type.isEmpty()) {
@@ -190,6 +194,9 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             env.closeScope();
 
             return new BoolT();
+        }
+        else if (expr == null) {
+            return null;
         }
         else
             throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());

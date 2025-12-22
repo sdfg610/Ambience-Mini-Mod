@@ -27,40 +27,28 @@ Coco/R itself) does not fall under the GNU General Public License.
 ------------------------------------------------------------------------*/
 -->begin
 
-import org.slf4j.Logger;
-
 public class Parser {
 -->constants
 	static final boolean _T = true;
 	static final boolean _x = false;
 	static final int minErrDist = 2;
 
-	public Token t;    // last recognized token
-	public Token la;   // lookahead token
+	Token t;    // last recognized token
+	Token la;   // lookahead token
 	int errDist = minErrDist;
-	
-	public Scanner scanner;
-	public Logger logger;
-	public Errors errors;
+
+	Scanner scanner;
+	Errors errors;
 
 	-->declarations
 
-	public Parser(Scanner scanner, Logger logger) {
-		this.scanner = scanner;
-		this.logger = logger;
-		errors = new Errors(logger);
-	}
+	public Parser() { }
 
 	void SynErr (int n) {
 		if (errDist >= minErrDist) errors.SynErr(la.line, la.col, n);
 		errDist = 0;
 	}
 
-	public void SemErr (String msg) {
-		if (errDist >= minErrDist) errors.SemErr(t.line, t.col, msg);
-		errDist = 0;
-	}
-	
 	void Get () {
 		for (;;) {
 			t = la;
@@ -73,15 +61,15 @@ public class Parser {
 			la = t;
 		}
 	}
-	
+
 	void Expect (int n) {
 		if (la.kind==n) Get(); else { SynErr(n); }
 	}
-	
+
 	boolean StartOf (int s) {
 		return set[s][la.kind];
 	}
-	
+
 	void ExpectWeak (int n, int follow) {
 		if (la.kind == n) Get();
 		else {
@@ -89,7 +77,7 @@ public class Parser {
 			while (!StartOf(follow)) Get();
 		}
 	}
-	
+
 	boolean WeakSeparator (int n, int syFol, int repFol) {
 		int kind = la.kind;
 		if (kind == n) { Get(); return true; }
@@ -103,15 +91,19 @@ public class Parser {
 			return StartOf(syFol);
 		}
 	}
-	
+
 -->productions
 
-	public void Parse() {
+	public Config Parse(InputStream inputStream, ArrayList<LoadError> errors) {
+		this.scanner = new Scanner(inputStream);
+		this.errors = new Errors(errors);
+
 		la = new Token();
-		la.val = "";		
+		la.val = "";
 		Get();
 -->parseRoot
 		scanner.buffer.Close();
+		return mainNode;
 	}
 
 	private static final boolean[][] set = {
@@ -119,58 +111,18 @@ public class Parser {
 	};
 } // end Parser
 
-
 class Errors {
-	public Logger logger;
+	ArrayList<LoadError> errors;
 
-	public int count = 0;                                     // number of errors detected
-	public String errMsgFormat = "-- line {0} col {1}: {2}"; // 0=line, 1=column, 2=text
-
-    public Errors(Logger logger) {
-        this.logger = logger;
+    public Errors(ArrayList<LoadError> errors) {
+        this.errors = errors;
     }
-	
-	protected void printMsg(int line, int column, String msg) {
-		StringBuffer b = new StringBuffer(errMsgFormat);
-		int pos = b.indexOf("{0}");
-		if (pos >= 0) { b.delete(pos, pos+3); b.insert(pos, line); }
-		pos = b.indexOf("{1}");
-		if (pos >= 0) { b.delete(pos, pos+3); b.insert(pos, column); }
-		pos = b.indexOf("{2}");
-		if (pos >= 0) b.replace(pos, pos+3, msg);
-		logger.error(b.toString());
-	}
-	
+
 	public void SynErr (int line, int col, int n) {
-		String s;
-		switch (n) {-->errors
-			default: s = "error " + n; break;
-		}
-		printMsg(line, col, s);
-		count++;
-	}
-
-	public void SemErr (int line, int col, String s) {	
-		printMsg(line, col, s);
-		count++;
-	}
-	
-	public void SemErr (String s) {
-		logger.error(s);
-		count++;
-	}
-	
-	public void Warning (int line, int col, String s) {	
-		printMsg(line, col, s);
-	}
-	
-	public void Warning (String s) {
-		logger.error(s);
-	}
+        String s;
+        switch (n) {-->errors
+            default: s = "error " + n; break;
+        }
+        errors.add(new SynError(line, col, s));
+    }
 } // Errors
-
-
-class FatalError extends RuntimeException {
-	public static final long serialVersionUID = 1L;
-	public FatalError(String s) { super(s); }
-}

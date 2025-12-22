@@ -92,6 +92,15 @@ public abstract class BaseGameStateProvider {
     }
 
 
+    public List<Event> getEvents() {
+        return _events;
+    }
+
+    public List<Property> getProperties() {
+        return _properties;
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
     // Execution
     public abstract void prepare(@Nullable ArrayList<String> messages);

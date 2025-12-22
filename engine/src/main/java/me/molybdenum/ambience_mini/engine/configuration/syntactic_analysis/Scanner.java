@@ -557,3 +557,9 @@ public class Scanner {
 	public void ResetPeek () { pt = tokens; }
 
 } // end Scanner
+
+
+class FatalError extends RuntimeException {
+	public static final long serialVersionUID = 1L;
+	public FatalError(String s) { super(s); }
+}
