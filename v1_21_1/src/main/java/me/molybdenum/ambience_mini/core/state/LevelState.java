@@ -20,7 +20,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.neoforged.fml.util.ObfuscationReflectionHelper;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +60,15 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     public boolean isWorldTickingPaused() {
         IntegratedServer srv = Minecraft.getInstance().getSingleplayerServer();
         return srv != null && (Boolean) ObfuscationReflectionHelper.getPrivateValue(IntegratedServer.class, srv, "paused");
+    }
+
+    @Override
+    public String getDifficulty() {
+        assert level != null;
+        if (level.getLevelData().isHardcore())
+            return "hardcore";
+        else
+            return level.getLevelData().getDifficulty().getKey();
     }
 
 

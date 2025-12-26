@@ -11,12 +11,15 @@ public class GameStateProviderV1Mock extends GameStateProviderV1Template
 {
     public HashMap<String, Boolean> eventValues = new HashMap<>();
     public HashMap<String, Object> propertyValues = new HashMap<>() {{
+        put(P_DIFFICULTY.name(), "peaceful");
         put(P_DIMENSION.name(), "minecraft:overworld");
         put(P_BIOME.name(), "minecraft:forest");
         put(P_BIOME_TAGS.name(), List.of("minecraft:is_beach", "minecraft:is_ocean"));
         put(P_TIME.name(), 0);
         put(P_CAVE_SCORE.name(), 0.0f);
+        put(P_SKYLIGHT_SCORE.name(), 0.0f);
 
+        put(P_GAME_MODE.name(), "survival");
         put(P_HEALTH.name(), 20f);
         put(P_MAX_HEALTH.name(), 20f);
         put(P_ELEVATION.name(), 80f);
@@ -166,6 +169,11 @@ public class GameStateProviderV1Mock extends GameStateProviderV1Template
         return new BoolVal(eventValues.get(E_IN_LAVA.name()));
     }
 
+    @Override
+    public BoolVal isDrowning() {
+        return new BoolVal(eventValues.get(E_DROWNING.name()));
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // Mount-like events
@@ -217,6 +225,11 @@ public class GameStateProviderV1Mock extends GameStateProviderV1Template
     // ------------------------------------------------------------------------------------------------
     // World properties
     @Override
+    public StringVal getDifficulty() {
+        return new StringVal(getPropertyValue(P_DIFFICULTY.name()));
+    }
+
+    @Override
     public StringVal getDimensionId() {
         return new StringVal(getPropertyValue(P_DIMENSION.name()));
     }
@@ -241,9 +254,19 @@ public class GameStateProviderV1Mock extends GameStateProviderV1Template
         return new FloatVal(getPropertyValue(P_CAVE_SCORE.name()));
     }
 
+    @Override
+    public FloatVal getSkylightScore() {
+        return new FloatVal(getPropertyValue(P_SKYLIGHT_SCORE.name()));
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // Player properties
+    @Override
+    public StringVal getGameMode() {
+        return new StringVal(getPropertyValue(P_GAME_MODE.name()));
+    }
+
     @Override
     public FloatVal getPlayerHealth() {
         return new FloatVal(getPropertyValue(P_HEALTH.name()));

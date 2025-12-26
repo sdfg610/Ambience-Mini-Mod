@@ -63,6 +63,15 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
         return srv != null && (Boolean) ObfuscationReflectionHelper.getPrivateValue(IntegratedServer.class, srv, OBF_INTEGRATED_SERVER_PAUSED);
     }
 
+    @Override
+    public String getDifficulty() {
+        assert level != null;
+        if (level.getLevelData().isHardcore())
+            return "hardcore";
+        else
+            return level.getLevelData().getDifficulty().getKey();
+    }
+
 
     @Override
     public String getDimensionID() {

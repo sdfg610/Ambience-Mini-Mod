@@ -1,4 +1,15 @@
 
+Version 2.4.0:
+
+-
+- Added event "drowning".
+- Added properties "game_mode" and "difficulty".
+- Added property "skylight_potential" for determining average maximum skylight (assuming middle of the day) in the player's vicinity.
+- Fixed a music engine crash when exiting a world.
+- Fixed a game crash when pressing "select new music" when no music is playing.
+- Fundamental restructuring of music engine to allow sharing code between the Minecraft mod and the Ambience Mini IDE.
+
+
 Version 2.3.6:
 
 - Made a fix to ignore the fake player and world that are intermittently put in place of real player and world by the Essential mod for a very short moment, and which caused Ambience Mini to read incorrect player and world state at random.

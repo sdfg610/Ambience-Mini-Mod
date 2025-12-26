@@ -58,8 +58,8 @@ public abstract class BaseCombatState<TEntity, TVec3>
     }
 
     public boolean hasActiveCombatants() {
-        if (!_playerState.isSurvivalOrAdventureMode())
-            return false; // If in creative, there is no combat
+        if (_playerState.isNull() || !_playerState.isSurvivalOrAdventureMode())
+            return false; // If in creative (or player is null), there is no combat
 
         recheckCombatants();
         return combatants.values().stream().anyMatch(com -> com.latestInteraction != Long.MIN_VALUE);

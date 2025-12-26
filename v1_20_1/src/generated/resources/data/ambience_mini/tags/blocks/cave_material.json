@@ -6,6 +6,7 @@
     "#forge:ores",
     "#forge:ores_in_ground/deepslate",
     "#forge:ores_in_ground/stone",
+    "minecraft:stone",
     "minecraft:bedrock",
     "minecraft:cobweb",
     "minecraft:glow_lichen",

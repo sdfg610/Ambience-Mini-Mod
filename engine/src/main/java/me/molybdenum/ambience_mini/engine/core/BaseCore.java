@@ -54,7 +54,6 @@ public abstract class BaseCore<
     public TScreenState screenState;
     public TCombatState combatState;
 
-    private CaveDetector<TBlockPos, TVec3, TBlockState> caveDetector;
     private GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> gameStateProvider;
 
     // Music
@@ -73,11 +72,10 @@ public abstract class BaseCore<
 
         combatState.clearCombatants();
 
-        caveDetector = new CaveDetector<>(clientConfig);
         gameStateProvider = new GameStateProviderV1Real<>(
                 clientConfig,
                 playerState, levelState, screenState, combatState,
-                caveDetector
+                new CaveDetector<>(clientConfig)
         );
 
         File configFile = Path.of(Common.AMBIENCE_DIRECTORY, Common.MUSIC_CONFIG_FILE).toFile();
@@ -112,10 +110,6 @@ public abstract class BaseCore<
         }
     }
 
-
-    public CaveDetector<TBlockPos, TVec3, TBlockState> getCaveDetector() {
-        return caveDetector;
-    }
 
     public GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> getGameStateProvider() {
         return gameStateProvider;

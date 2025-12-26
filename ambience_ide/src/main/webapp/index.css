@@ -80,24 +80,24 @@ td {
 }
 
 .left {
-    flex: 60%;
+    flex: 55%;
     height: 100%;
     padding-right: 1em;
 }
 
 .right {
-    flex: 40%;
+    flex: 45%;
     height: 100%;
 }
 
 .left2 {
-    flex: 50%;
+    flex: 45%;
     height: 100%;
     padding-right: .5em;
 }
 
 .right2 {
-    flex: 50%;
+    flex: 55%;
     height: 100%;
     padding-left: .5em;
 }

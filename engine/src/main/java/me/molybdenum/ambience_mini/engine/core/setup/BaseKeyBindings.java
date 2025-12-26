@@ -45,7 +45,10 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
         if (isClicked(nextMusicKey)) {
             core.notification.showToast(AmLang.TOAST_NEXT_MUSIC);
-            core.getMusicThread().forceSelectNewMusic();
+
+            var musicThread = core.getMusicThread();
+            if (musicThread != null)
+                musicThread.forceSelectNewMusic();
         }
 
         if (isClicked(printAll) && core.levelState.notNull() && core.playerState.notNull()) {

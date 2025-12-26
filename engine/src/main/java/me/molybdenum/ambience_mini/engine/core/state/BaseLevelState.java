@@ -30,6 +30,7 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
     // ------------------------------------------------------------------------------------------------
     // Abstract API
     public abstract boolean isWorldTickingPaused();
+    public abstract String getDifficulty();
 
     public abstract String getDimensionID();
     public abstract String getBiomeID(TBlockPos blockPos);

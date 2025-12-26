@@ -3,14 +3,12 @@ package me.molybdenum.ambience_mini.engine.core.providers;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.core.detectors.CaveDetector;
-import me.molybdenum.ambience_mini.engine.core.state.BaseCombatState;
-import me.molybdenum.ambience_mini.engine.core.state.Screens;
-import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
-import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
-import me.molybdenum.ambience_mini.engine.core.state.BaseScreenState;
+import me.molybdenum.ambience_mini.engine.core.state.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> extends GameStateProviderV1Template
 {
@@ -253,6 +251,13 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
         return new BoolVal(_player.isInLava());
     }
 
+    @Override
+    public BoolVal isDrowning() {
+        if (_player.isNull())
+            return null;
+        return new BoolVal(_player.isDrowning() && _player.isSurvivalOrAdventureMode());
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // Mount-like events
@@ -316,9 +321,15 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     }
 
 
-
     // ------------------------------------------------------------------------------------------------
     // World properties
+    @Override
+    public StringVal getDifficulty() {
+        if (_level.isNull())
+            return new StringVal("");
+        return new StringVal(_level.getDifficulty());
+    }
+
     @Override
     public StringVal getDimensionId() {
         if (_level.isNull())
@@ -355,9 +366,27 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
         return new FloatVal((float)(_latestCaveScore));
     }
 
+    @Override
+    public FloatVal getSkylightScore() {
+        if (_player.isNull() || _level.isNull())
+            return null;
+
+        List<BlockReading<TBlockPos, TBlockState>> readings = _level.readSurroundings(_player.eyePosition(), 12, 5, 32);
+        float averageSkyLight = readings.stream().collect(Collectors.averagingDouble(r -> _level.getAverageSkyLightingAround(r.blockPos()))).floatValue();
+
+        return new FloatVal(averageSkyLight);
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // Player properties
+    @Override
+    public StringVal getGameMode() {
+        if (_player.isNull())
+            return new StringVal("");
+        return new StringVal(_player.getGameMode());
+    }
+
     @Override
     public FloatVal getPlayerHealth() {
         if (_player.isNull())

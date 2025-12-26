@@ -19,6 +19,7 @@ public interface BasePlayerState<TBlockPos, TVec3>
     // -----------------------------------------------------------------------------------------------------------------
     // Player state
     boolean isSurvivalOrAdventureMode();
+    String getGameMode();
 
     double vectorX();
     double vectorY();
@@ -39,6 +40,7 @@ public interface BasePlayerState<TBlockPos, TVec3>
     boolean isSleeping();
     boolean isUnderwater();
     boolean isInLava();
+    boolean isDrowning();
 
     Optional<String> vehicleId();
     boolean inMinecart();

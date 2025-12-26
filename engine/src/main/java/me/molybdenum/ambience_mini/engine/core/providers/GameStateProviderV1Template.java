@@ -38,6 +38,7 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
     public static final EventTemplateV1 E_FISHING = new EventTemplateV1("fishing", instance -> instance::isFishing);
     public static final EventTemplateV1 E_UNDER_WATER = new EventTemplateV1("under_water", instance -> instance::isUnderWater);
     public static final EventTemplateV1 E_IN_LAVA = new EventTemplateV1("in_lava", instance -> instance::inLava);
+    public static final EventTemplateV1 E_DROWNING = new EventTemplateV1("drowning", instance -> instance::isDrowning);
 
     // Mount events
     public static final EventTemplateV1 E_MINECART = new EventTemplateV1("minecart", instance -> instance::inMinecart);
@@ -56,20 +57,23 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
             E_DAY, E_DAWN, E_DUSK, E_NIGHT,
             E_DOWNFALL, E_RAIN, E_SNOW, E_THUNDERING,
             E_VILLAGE, E_RANCH,
-            E_DEAD, E_SLEEPING, E_FISHING, E_UNDER_WATER, E_IN_LAVA,
+            E_DEAD, E_SLEEPING, E_FISHING, E_UNDER_WATER, E_IN_LAVA, E_DROWNING,
             E_MINECART, E_BOAT, E_HORSE, E_DONKEY, E_PIG, E_ELYTRA,
             E_IN_COMBAT, E_BOSS_FIGHT
     };
 
 
     // World properties
+    public static final PropertyTemplateV1 P_DIFFICULTY = new PropertyTemplateV1("difficulty", new StringT(), instance -> instance::getDifficulty);
     public static final PropertyTemplateV1 P_DIMENSION = new PropertyTemplateV1("dimension", new StringT(), instance -> instance::getDimensionId);
     public static final PropertyTemplateV1 P_BIOME = new PropertyTemplateV1("biome", new StringT(), instance -> instance::getBiomeId);
     public static final PropertyTemplateV1 P_BIOME_TAGS = new PropertyTemplateV1("biome_tags", new ListT(new StringT()), instance -> instance::getBiomeTagIDs);
     public static final PropertyTemplateV1 P_TIME = new PropertyTemplateV1("time", new IntT(), instance -> instance::getTime);
     public static final PropertyTemplateV1 P_CAVE_SCORE = new PropertyTemplateV1("cave_score", new FloatT(), instance -> instance::getCaveScore);
+    public static final PropertyTemplateV1 P_SKYLIGHT_SCORE = new PropertyTemplateV1("skylight_potential", new FloatT(), instance -> instance::getSkylightScore);
 
     // Player properties
+    public static final PropertyTemplateV1 P_GAME_MODE = new PropertyTemplateV1("game_mode", new StringT(), instance -> instance::getGameMode);
     public static final PropertyTemplateV1 P_HEALTH = new PropertyTemplateV1("health", new FloatT(), instance -> instance::getPlayerHealth);
     public static final PropertyTemplateV1 P_MAX_HEALTH = new PropertyTemplateV1("max_health", new FloatT(), instance -> instance::getPlayerMaxHealth);
     public static final PropertyTemplateV1 P_ELEVATION = new PropertyTemplateV1("elevation", new FloatT(), instance -> instance::getPlayerElevation);
@@ -82,8 +86,8 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
     public static final PropertyTemplateV1 P_BOSSES = new PropertyTemplateV1("bosses", new ListT(new StringT()), instance -> instance::getBosses);
 
     public static final PropertyTemplateV1[] PROPERTIES = new PropertyTemplateV1[] {
-            P_DIMENSION, P_BIOME, P_BIOME_TAGS, P_TIME, P_CAVE_SCORE,
-            P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
+            P_DIFFICULTY, P_DIMENSION, P_BIOME, P_BIOME_TAGS, P_TIME, P_CAVE_SCORE, P_SKYLIGHT_SCORE,
+            P_GAME_MODE, P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
             P_COMBATANT_COUNT, P_BOSS, P_BOSSES
     };
 
@@ -137,6 +141,7 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
     public abstract BoolVal isFishing();
     public abstract BoolVal isUnderWater();
     public abstract BoolVal inLava();
+    public abstract BoolVal isDrowning();
 
 
     // ------------------------------------------------------------------------------------------------
@@ -158,15 +163,18 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
 
     // ------------------------------------------------------------------------------------------------
     // World properties
+    public abstract StringVal getDifficulty();
     public abstract StringVal getDimensionId();
     public abstract StringVal getBiomeId();
     public abstract ListVal getBiomeTagIDs();
     public abstract IntVal getTime();
     public abstract FloatVal getCaveScore();
+    public abstract FloatVal getSkylightScore();
 
 
     // ------------------------------------------------------------------------------------------------
     // Player properties
+    public abstract StringVal getGameMode();
     public abstract FloatVal getPlayerHealth();
     public abstract FloatVal getPlayerMaxHealth();
     public abstract FloatVal getPlayerElevation();

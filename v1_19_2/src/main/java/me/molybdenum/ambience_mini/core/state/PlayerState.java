@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.animal.Pig;
@@ -22,16 +23,17 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 {
     private final Minecraft mc = Minecraft.getInstance();
     private LocalPlayer player = null;
+    private MultiPlayerGameMode gameMode = null;
 
 
     @Override
     public boolean isNull() {
-        return player == null;
+        return player == null || gameMode == null;
     }
 
     @Override
     public boolean notNull() {
-        return player != null;
+        return player != null && gameMode != null;
     }
 
 
@@ -46,6 +48,7 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
                 messages.add("Player instance changed from '" + getPlayerString(player) + "' to '" + getPlayerString(newPlayer) + "' since last update.");
             player = newPlayer;
         }
+        gameMode = mc.gameMode;
     }
 
     private String getPlayerString(LocalPlayer pl) {
@@ -55,7 +58,14 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
     @Override
     public boolean isSurvivalOrAdventureMode() {
-        return mc.gameMode == null || mc.gameMode.getPlayerMode().isSurvival();
+        assert gameMode != null;
+        return gameMode.getPlayerMode().isSurvival();
+    }
+
+    @Override
+    public String getGameMode() {
+        assert gameMode != null;
+        return gameMode.getPlayerMode().getName();
     }
 
 
@@ -162,6 +172,12 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
     public boolean isInLava() {
         assert player != null;
         return player.isInLava();
+    }
+
+    @Override
+    public boolean isDrowning() {
+        assert player != null;
+        return player.getAirSupply() <= 0;
     }
 
 
