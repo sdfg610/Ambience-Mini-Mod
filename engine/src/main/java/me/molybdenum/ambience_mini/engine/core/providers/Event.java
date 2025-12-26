@@ -11,8 +11,6 @@ public class Event {
     private final Supplier<BoolVal> _isActive;
     private final BiConsumer<Event, BoolVal> _onFired;
 
-    private BoolVal _latestValue = new BoolVal(false);
-
 
     public Event(String name, Supplier<BoolVal> isActive, BiConsumer<Event, BoolVal> onFired) {
         this.name = name;
@@ -23,8 +21,7 @@ public class Event {
 
     public BoolVal isActive() {
         BoolVal result = _isActive.get();
-        if (result != null) _latestValue = result;
-        _onFired.accept(this, _latestValue);
-        return _latestValue;
+        _onFired.accept(this, result);
+        return result;
     }
 }

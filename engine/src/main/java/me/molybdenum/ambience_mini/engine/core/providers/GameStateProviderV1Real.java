@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.engine.core.providers;
 
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
-import me.molybdenum.ambience_mini.engine.core.detectors.CaveDetector;
+import me.molybdenum.ambience_mini.engine.core.detectors.cave.CaveDetector;
 import me.molybdenum.ambience_mini.engine.core.state.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -116,7 +116,7 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public BoolVal isPaused() {
         if (_level.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_level.isWorldTickingPaused());
     }
 
@@ -158,28 +158,28 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public BoolVal isDownfall() {
         if (_level.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_level.isRaining());
     }
 
     @Override
     public BoolVal isRaining() {
         if (_player.isNull() || _level.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_level.isRaining() && !_level.isColdEnoughToSnow(_player.blockPos()));
     }
 
     @Override
     public BoolVal isSnowing() {
         if (_player.isNull() || _level.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_level.isRaining() && _level.isColdEnoughToSnow(_player.blockPos()));
     }
 
     @Override
     public BoolVal isThundering() {
         if (_level.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_level.isThundering());
     }
 
@@ -189,14 +189,14 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public BoolVal inVillage() {
         if (_player.isNull() || _level.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold);
     }
 
     @Override
     public BoolVal inRanch() {
         if (_player.isNull() || _level.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold);
     }
 
@@ -211,14 +211,14 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public BoolVal isSleeping() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.isSleeping());
     }
 
     @Override
     public BoolVal isFishing() {
         if (_player.isNull() || _level.isNull())
-            return null;
+            return BoolVal.FALSE;
 
         // The bopping of the fishing hook creates time periods where the hook is not detected as being in water.
         // To combat this, I make a small grace period of 1000 milliseconds.
@@ -240,21 +240,21 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public BoolVal isUnderWater() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.isUnderwater());
     }
 
     @Override
     public BoolVal inLava() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.isInLava());
     }
 
     @Override
     public BoolVal isDrowning() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.isDrowning() && _player.isSurvivalOrAdventureMode());
     }
 
@@ -264,42 +264,42 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public BoolVal inMinecart() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.inMinecart());
     }
 
     @Override
     public BoolVal inBoat() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.inBoat());
     }
 
     @Override
     public BoolVal onHorse() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.onHorse());
     }
 
     @Override
     public BoolVal onDonkey() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.onDonkey());
     }
 
     @Override
     public BoolVal onPig() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.onPig());
     }
 
     @Override
     public BoolVal flyingElytra() {
         if (_player.isNull())
-            return null;
+            return BoolVal.FALSE;
         return new BoolVal(_player.elytraFlying());
     }
 
@@ -326,42 +326,42 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public StringVal getDifficulty() {
         if (_level.isNull())
-            return new StringVal("");
+            return StringVal.EMPTY;
         return new StringVal(_level.getDifficulty());
     }
 
     @Override
     public StringVal getDimensionId() {
         if (_level.isNull())
-            return null;
+            return StringVal.EMPTY;
         return new StringVal(_level.getDimensionID());
     }
 
     @Override
     public StringVal getBiomeId() {
         if (_player.isNull() || _level.isNull())
-            return null;
+            return StringVal.EMPTY;
         return new StringVal(_level.getBiomeID(_player.blockPos()));
     }
 
     @Override
     public ListVal getBiomeTagIDs() {
         if (_player.isNull() || _level.isNull())
-            return null;
+            return ListVal.EMPTY;
         return ListVal.ofStringList(_level.getBiomeTagIDs(_player.blockPos()));
     }
 
     @Override
     public IntVal getTime() {
         if (_level.isNull())
-            return null;
+            return IntVal.ZERO;
         return new IntVal(_level.getTime() % 24000);
     }
 
     @Override
     public FloatVal getCaveScore() {
         if (_player.isNull() || _level.isNull())
-            return null;
+            return FloatVal.ZERO;
         _latestCaveScore = _caveDetector.getAveragedCaveScore(_level, _player).orElse(_latestCaveScore);
         return new FloatVal((float)(_latestCaveScore));
     }
@@ -369,9 +369,9 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public FloatVal getSkylightScore() {
         if (_player.isNull() || _level.isNull())
-            return null;
+            return FloatVal.ZERO;
 
-        List<BlockReading<TBlockPos, TBlockState>> readings = _level.readSurroundings(_player.eyePosition(), 12, 5, 32);
+        List<BlockReading<TBlockPos, TBlockState>> readings = _level.readSurroundings(_player.eyePosition(), 12, 7, 64);
         float averageSkyLight = readings.stream().collect(Collectors.averagingDouble(r -> _level.getAverageSkyLightingAround(r.blockPos()))).floatValue();
 
         return new FloatVal(averageSkyLight);
@@ -383,42 +383,42 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public StringVal getGameMode() {
         if (_player.isNull())
-            return new StringVal("");
+            return StringVal.EMPTY;
         return new StringVal(_player.getGameMode());
     }
 
     @Override
     public FloatVal getPlayerHealth() {
         if (_player.isNull())
-            return null;
+            return FloatVal.ZERO;
         return new FloatVal(_player.health());
     }
 
     @Override
     public FloatVal getPlayerMaxHealth() {
         if (_player.isNull())
-            return null;
+            return FloatVal.ZERO;
         return new FloatVal(_player.maxHealth());
     }
 
     @Override
     public FloatVal getPlayerElevation() {
         if (_player.isNull())
-            return null;
+            return FloatVal.ZERO;
         return new FloatVal((float)_player.vectorY());
     }
 
     @Override
     public StringVal getVehicleId() {
         if (_player.isNull())
-            return null;
+            return StringVal.EMPTY;
         return new StringVal(_player.vehicleId().orElse(""));
     }
 
     @Override
     public ListVal getActiveEffects() {
         if (_player.isNull())
-            return null;
+            return ListVal.EMPTY;
         return ListVal.ofStringList(_player.getActiveEffectIds());
     }
 

@@ -2,11 +2,11 @@ package me.molybdenum.ambience_mini.core.state;
 
 import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
-import me.molybdenum.ambience_mini.tags.AmTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.npc.Villager;
@@ -17,11 +17,12 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entity>
 {
@@ -167,6 +168,22 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     }
 
     @Override
+    public Object getBlock(BlockState blockState) {
+        return blockState.getBlock();
+    }
+
+    @Override
+    public String getBlockId(BlockState blockState) {
+        ResourceLocation loc = ForgeRegistries.BLOCKS.getKey(blockState.getBlock());
+        return loc == null ? "" : loc.toString();
+    }
+
+    @Override
+    public Stream<String> getBlockTags(BlockState blockState) {
+        return blockState.getTags().map(tag -> tag.location().toString());
+    }
+
+    @Override
     public BlockPos getNearestBlockOrFurthestAir(Vec3 from, Vec3 to) {
         assert level != null;
         var hit = level.clip(new ClipContext(
@@ -182,26 +199,6 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     @Override
     public boolean isAir(BlockState blockState) {
         return blockState.isAir();
-    }
-
-    @Override
-    public boolean isCaveMaterial(BlockState blockState) {
-        return blockState.is(AmTags.CAVE_MATERIAL);
-    }
-
-    @Override
-    public boolean isWeakCaveMaterial(BlockState blockState) {
-        return blockState.is(AmTags.WEAK_CAVE_MATERIAL);
-    }
-
-    @Override
-    public boolean isWeakNonCaveMaterial(BlockState blockState) {
-        return blockState.is(AmTags.WEAK_NON_CAVE_MATERIAL);
-    }
-
-    @Override
-    public boolean isNonCaveMaterial(BlockState blockState) {
-        return blockState.is(AmTags.NON_CAVE_MATERIAL);
     }
 
 

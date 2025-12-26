@@ -80,7 +80,7 @@ public class Test
         String name = '$' + pr.name;
 
         var eventControl = makeControlElem(doc);
-        eventControl.appendChild(makeNameElem(doc, name, 9.5f));
+        eventControl.appendChild(makeNameElem(doc, name, 11f));
 
         if (pr.type instanceof StringT)
             eventControl.appendChild(makeStringControl(doc, pr));

@@ -1,7 +1,7 @@
 
 Version 2.4.0:
 
--
+- Changed cave detection algorithm to work in multiplayer even when Ambience Mini is not installed on the server.
 - Added event "drowning".
 - Added properties "game_mode" and "difficulty".
 - Added property "skylight_potential" for determining average maximum skylight (assuming middle of the day) in the player's vicinity.

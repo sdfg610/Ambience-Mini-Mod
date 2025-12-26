@@ -49,13 +49,12 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
     public abstract int countNearbyAnimals(TBlockPos center, int horizontalRadius, int verticalRadius);
 
     public abstract TBlockState getBlockState(TBlockPos blockPos);
+    public abstract Object getBlock(TBlockState blockState);
+    public abstract String getBlockId(TBlockState blockState);
+    public abstract Stream<String> getBlockTags(TBlockState blockState);
     public abstract TBlockPos getNearestBlockOrFurthestAir(TVec3 from, TVec3 to);
 
     public abstract boolean isAir(TBlockState blockState);
-    public abstract boolean isCaveMaterial(TBlockState blockState);
-    public abstract boolean isWeakCaveMaterial(TBlockState blockState);
-    public abstract boolean isWeakNonCaveMaterial(TBlockState blockState);
-    public abstract boolean isNonCaveMaterial(TBlockState blockState);
 
     public abstract int getMaxSkyLightAt(TBlockPos blockPos);
     public abstract int getBlockLightAt(TBlockPos blockPos);

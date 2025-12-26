@@ -1,6 +1,9 @@
 package me.molybdenum.ambience_mini.engine.configuration.interpreter.values;
 
-public final class FloatVal extends Value {
+public final class FloatVal extends Value
+{
+    public static final FloatVal ZERO = new FloatVal(0f);
+
     public final float value;
 
     public FloatVal(float value) {

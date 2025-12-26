@@ -9,7 +9,7 @@ import me.molybdenum.ambience_mini.engine.configuration.errors.SynError;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.configuration.music_provider.FileMusicProvider;
 import me.molybdenum.ambience_mini.engine.configuration.music_provider.MusicProvider;
-import me.molybdenum.ambience_mini.engine.core.detectors.CaveDetector;
+import me.molybdenum.ambience_mini.engine.core.detectors.cave.CaveDetector;
 import me.molybdenum.ambience_mini.engine.core.providers.GameStateProviderV1Real;
 import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.core.setup.BaseKeyBindings;

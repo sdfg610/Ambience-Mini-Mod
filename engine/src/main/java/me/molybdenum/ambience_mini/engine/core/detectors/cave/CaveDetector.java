@@ -1,4 +1,4 @@
-package me.molybdenum.ambience_mini.engine.core.detectors;
+package me.molybdenum.ambience_mini.engine.core.detectors.cave;
 
 import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
@@ -6,12 +6,15 @@ import me.molybdenum.ambience_mini.engine.core.state.BlockReading;
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 public class CaveDetector<TBlockPos, TVec3, TBlockState>
 {
-    protected static final double Y_ROT_SKYWARD_THRESHOLD = 45.0;
+    private static final HashMap<Object, MaterialType> MATERIAL_CACHE = new HashMap<>();
+
+    private static final double Y_ROT_SKYWARD_THRESHOLD = 45.0;
 
     double SKY_ACCESS_BASE_WEIGHT = 1;
     double SKY_LIGHT_BASE_WEIGHT = .5;
@@ -229,23 +232,27 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
         TBlockPos bPos = reading.blockPos();
         TBlockState blockState = reading.blockState();
 
+        MaterialType type = getMaterialType(level, blockState);
         boolean isSkyward = reading.yRot() >= Y_ROT_SKYWARD_THRESHOLD;
         double maxSkyLight = level.getAverageSkyLightingAround(bPos);
         double blockLight = level.getAverageBlockLightingAround(bPos);
 
-        MaterialType type = MaterialType.AMBIGUOUS;
-        if (level.isAir(blockState))
-            type = MaterialType.AIR;
-        else if (level.isCaveMaterial(blockState))
-            type = MaterialType.CAVE;
-        else if (level.isWeakCaveMaterial(blockState))
-            type = MaterialType.WEAK_CAVE;
-        else if (level.isWeakNonCaveMaterial(blockState))
-            type = MaterialType.WEAK_NON_CAVE;
-        else if (level.isNonCaveMaterial(blockState))
-            type = MaterialType.NON_CAVE;
-
         return new Measurement(type, isSkyward, maxSkyLight, blockLight);
+    }
+
+    private MaterialType getMaterialType(
+            BaseLevelState<TBlockPos, TVec3, TBlockState, ?> level,
+            TBlockState blockState
+    ) {
+        if (level.isAir(blockState))
+            return MaterialType.AIR;
+
+        return MATERIAL_CACHE.computeIfAbsent(level.getBlock(blockState), (ignored) ->
+            MaterialRegistry.getBlockMaterial(
+                    level.getBlockId(blockState),
+                    level.getBlockTags(blockState)
+            )
+        );
     }
 
 
@@ -255,8 +262,4 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
             double maxSkyLightLevel,
             double blockLightLevel
     ) { }
-
-    private enum MaterialType {
-        AIR, CAVE, WEAK_CAVE, AMBIGUOUS, WEAK_NON_CAVE, NON_CAVE
-    }
 }
