@@ -1,4 +1,9 @@
 
+Version 2.4.1:
+
+- Fixed bug where certain ways of displaying boss names would cause the music engine to crash.
+
+
 Version 2.4.0:
 
 - Changed cave detection algorithm to work in multiplayer even when Ambience Mini is not installed on the server.

@@ -6,6 +6,8 @@ import me.molybdenum.ambience_mini.engine.core.state.BaseCombatState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.LerpingBossEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
@@ -59,7 +61,16 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
                 ? List.of()
                 : bossMap.values()
                 .stream()
-                .map(bossEvent -> ((TranslatableComponent)bossEvent.getName()).getKey())
+                .map(bossEvent -> extractBossKeyOrName(bossEvent.getName()))
                 .toList();
+    }
+
+    private static String extractBossKeyOrName(Component component) {
+        if (component instanceof TranslatableComponent tComp)
+            return tComp.getKey();
+        else if (component instanceof TextComponent tComp)
+            return tComp.getText();
+        else
+            return component.toString();
     }
 }
