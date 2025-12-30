@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.engine.core.setup;
 
 import me.molybdenum.ambience_mini.engine.AmLang;
 import me.molybdenum.ambience_mini.engine.core.BaseCore;
+import me.molybdenum.ambience_mini.engine.core.providers.BaseGameStateProvider;
 
 
 public abstract class BaseKeyBindings<TKeyBinding>
@@ -52,8 +53,16 @@ public abstract class BaseKeyBindings<TKeyBinding>
         }
 
         if (isClicked(printAll) && core.levelState.notNull() && core.playerState.notNull()) {
-            core.notification.showToast(AmLang.TOAST_PRINTING_ALL);
-            core.logger.info("All current Ambience Mini state:\n{}", core.getGameStateProvider().readAll());
+            BaseGameStateProvider provider = core.getGameStateProvider();
+            if (provider != null) {
+                core.notification.showToast(AmLang.TOAST_PRINTING_ALL);
+
+                long timeStart = System.currentTimeMillis();
+                String allState = provider.readAll();
+                long elapsedTime = System.currentTimeMillis() - timeStart;
+
+                core.logger.info("All current Ambience Mini state (took {} ms):\n{}", elapsedTime, allState);
+            }
         }
     }
 }

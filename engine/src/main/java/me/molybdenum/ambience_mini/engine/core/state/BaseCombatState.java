@@ -19,17 +19,18 @@ public abstract class BaseCombatState<TEntity, TVec3>
     protected final int _combatantTimeout;
     protected final int _leavingCombatDistance;
 
+    private static final long RECHECK_INTERVAL = 1000L;
     private long _latestRecheck = 0L;
 
 
     protected BaseCombatState(
             BaseClientConfig config,
-            BasePlayerState<?, TVec3> playerReader,
-            BaseLevelState<?, TVec3, ?, TEntity> levelReader,
+            BasePlayerState<?, TVec3> playerState,
+            BaseLevelState<?, TVec3, ?, TEntity> levelState,
             ServerSetup serverSetup
     ) {
-        _playerState = playerReader;
-        _levelState = levelReader;
+        _playerState = playerState;
+        _levelState = levelState;
         _serverSetup = serverSetup;
 
         _combatantTimeout = config.combatantTimeout.get();
@@ -58,16 +59,16 @@ public abstract class BaseCombatState<TEntity, TVec3>
     }
 
     public boolean hasActiveCombatants() {
-        if (_playerState.isNull() || !_playerState.isSurvivalOrAdventureMode())
-            return false; // If in creative (or player is null), there is no combat
-
-        recheckCombatants();
-        return combatants.values().stream().anyMatch(com -> com.latestInteraction != Long.MIN_VALUE);
+        if (_playerState.notNull() && _playerState.isSurvivalOrAdventureMode()) {
+            recheckCombatants();
+            return combatants.values().stream().anyMatch(com -> com.latestInteraction != Long.MIN_VALUE);
+        }
+        return false;
     }
 
     private void recheckCombatants() {
         long now = System.currentTimeMillis();
-        if (now - _latestRecheck > 1000) {
+        if (now - _latestRecheck > RECHECK_INTERVAL) {
             // Make new array list of entries to avoid concurrent modification
             for (var entry : new ArrayList<>(combatants.entrySet())) {
                 var combatant = entry.getValue();
@@ -95,7 +96,7 @@ public abstract class BaseCombatState<TEntity, TVec3>
     }
 
     private void addCombatant(int id, TEntity entity, boolean hasInteraction) {
-        if (_playerState.isSurvivalOrAdventureMode()) { // If in creative, there is no combat
+        if (_playerState.notNull() && _playerState.isSurvivalOrAdventureMode()) {
             var info = combatants.computeIfAbsent(id, ignored ->
                     new Combatant(entity == null ? _levelState.getEntityById(id) : entity) // Lookup if necessary
             );

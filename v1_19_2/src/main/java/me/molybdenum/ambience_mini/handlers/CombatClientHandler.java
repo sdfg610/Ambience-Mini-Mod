@@ -21,7 +21,7 @@ public class CombatClientHandler
 {
     @SubscribeEvent
     public static void onGameModeChanged(final ClientPlayerChangeGameTypeEvent event) {
-        if (!AmbienceMini.player().isSurvivalOrAdventureMode())
+        if (!event.getNewGameType().isSurvival())
             AmbienceMini.combat().clearCombatants();
     }
 

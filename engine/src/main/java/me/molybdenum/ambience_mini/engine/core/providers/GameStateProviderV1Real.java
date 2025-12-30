@@ -384,7 +384,7 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     public StringVal getGameMode() {
         if (_player.isNull())
             return StringVal.EMPTY;
-        return new StringVal(_player.getGameMode());
+        return new StringVal(_player.getGameModeName());
     }
 
     @Override
@@ -412,7 +412,7 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     public StringVal getVehicleId() {
         if (_player.isNull())
             return StringVal.EMPTY;
-        return new StringVal(_player.vehicleId().orElse(""));
+        return new StringVal(_player.vehicleId());
     }
 
     @Override

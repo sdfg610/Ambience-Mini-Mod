@@ -1,4 +1,11 @@
 
+Version 2.4.2:
+
+- Added forge-config option "Fadeout on jukebox" which when set to true (the default) makes the Ambience Mini music fade out when a jukebox is playing nearby.
+- Fixed crash when printing all state when Ambience Mini failed to load at startup and has not been reloaded.
+- Stability improvements related to combat and game-mode tracking.
+
+
 Version 2.4.1:
 
 - Fixed bug where certain ways of displaying boss names would cause the music engine to crash.

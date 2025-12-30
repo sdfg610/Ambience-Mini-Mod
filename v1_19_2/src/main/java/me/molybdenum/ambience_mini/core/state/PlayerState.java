@@ -1,39 +1,58 @@
 package me.molybdenum.ambience_mini.core.state;
 
-import com.mojang.logging.LogUtils;
-import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
+import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.ChannelAccess;
+import net.minecraft.client.sounds.SoundEngine;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.horse.Donkey;
 import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.entity.vehicle.Minecart;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 {
     private final Minecraft mc = Minecraft.getInstance();
     private LocalPlayer player = null;
-    private MultiPlayerGameMode gameMode = null;
+
+    private static final Method getPlayerInfoMethod = ObfuscationReflectionHelper.findMethod(AbstractClientPlayer.class, "m_108558_");
+    private static final String OBF_SOUND_ENGINE = "f_120349_";
+    private static final String OBF_INSTANCE_TO_CHANNEL = "f_120226_";
+
+    private static final JukeboxHelper<SoundInstance, ChannelAccess.ChannelHandle> jukeboxHelper = new JukeboxHelper<>(
+            ChannelAccess.ChannelHandle::isStopped,
+            (instance) -> instance.getSource() == SoundSource.RECORDS,
+            SoundInstance::getVolume,
+            (instance) -> instance.getSound().getAttenuationDistance(),
+            SoundInstance::getX, SoundInstance::getY, SoundInstance::getZ
+    );
 
 
     @Override
     public boolean isNull() {
-        return player == null || gameMode == null;
+        return player == null;
     }
 
     @Override
     public boolean notNull() {
-        return player != null && gameMode != null;
+        return player != null;
     }
 
 
@@ -48,7 +67,6 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
                 messages.add("Player instance changed from '" + getPlayerString(player) + "' to '" + getPlayerString(newPlayer) + "' since last update.");
             player = newPlayer;
         }
-        gameMode = mc.gameMode;
     }
 
     private String getPlayerString(LocalPlayer pl) {
@@ -58,14 +76,36 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
     @Override
     public boolean isSurvivalOrAdventureMode() {
-        assert gameMode != null;
-        return gameMode.getPlayerMode().isSurvival();
+        assert player != null;
+        return getGameMode().isSurvival();
     }
 
     @Override
-    public String getGameMode() {
-        assert gameMode != null;
-        return gameMode.getPlayerMode().getName();
+    public String getGameModeName() {
+        assert player != null;
+        return getGameMode().getName();
+    }
+
+    private GameType getGameMode() {
+        try {
+            return ((PlayerInfo)getPlayerInfoMethod.invoke(player)).getGameMode();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    @Override
+    public boolean canHearJukeboxMusic() {
+        assert player != null;
+        SoundEngine soundEngine = ObfuscationReflectionHelper.getPrivateValue(SoundManager.class, mc.getSoundManager(), OBF_SOUND_ENGINE);
+        Map<SoundInstance, ChannelAccess.ChannelHandle> instanceToChannel = ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class, soundEngine, OBF_INSTANCE_TO_CHANNEL);
+
+        assert instanceToChannel != null;
+        return jukeboxHelper.canHearJukebox(
+                instanceToChannel,
+                (x, y, z) -> Math.sqrt(player.getEyePosition().distanceToSqr(x, y, z))
+        );
     }
 
 
@@ -127,8 +167,7 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
     @Override
     public BlockPos eyeBlockPos() {
         assert player != null;
-        Vec3 eyePos = player.getEyePosition();
-        return new BlockPos(eyePos);
+        return new BlockPos(player.getEyePosition());
     }
 
 
@@ -182,10 +221,10 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
 
     @Override
-    public Optional<String> vehicleId() {
+    public String vehicleId() {
         assert player != null;
         var vec = player.getVehicle();
-        return vec != null ? Optional.ofNullable(player.getVehicle().getEncodeId()) : Optional.empty();
+        return vec != null ? vec.getEncodeId() : "";
     }
 
     @Override

@@ -6,6 +6,8 @@ import me.molybdenum.ambience_mini.engine.configuration.interpreter.PlaylistChoi
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.core.BaseCore;
+import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
+import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
 import me.molybdenum.ambience_mini.engine.utils.Pair;
 import me.molybdenum.ambience_mini.engine.utils.Utils;
@@ -25,6 +27,7 @@ public class MusicThread extends Thread
     private final Supplier<Boolean> _isFocused;
 
 
+    private final boolean _doFadeOnJukeBox;
     private final boolean _lostFocusEnabled;
     private final long _updateIntervalMilliseconds;
     private final long _nextMusicDelayMilliseconds;
@@ -37,6 +40,8 @@ public class MusicThread extends Thread
     private final Random _rand = new Random(System.nanoTime());
     private final Interpreter _playlistSelector;
     private final MusicProvider _musicProvider;
+    private final BasePlayerState<?, ?> _player;
+    private final BaseLevelState<?, ?, ?, ?> _level;
 
     private final boolean _meticulousPlaylistSelector;
     private final int _numLatestChoices = 3; // Code below is only designed to handle the value 3 here.
@@ -77,6 +82,10 @@ public class MusicThread extends Thread
         _logger = logger;
         _isFocused = baseCore::isFocused;
 
+        _player = baseCore.playerState;
+        _level = baseCore.levelState;
+
+        _doFadeOnJukeBox = baseCore.clientConfig.fadeOnJukeBox.get();
         _lostFocusEnabled = baseCore.clientConfig.lostFocusEnabled.get();
         _updateIntervalMilliseconds = baseCore.clientConfig.updateInterval.get();
         _nextMusicDelayMilliseconds = baseCore.clientConfig.nextMusicDelay.get();
@@ -97,7 +106,7 @@ public class MusicThread extends Thread
     {
         try {
             VolumeState.registerVolumeHandler(_volumeChangedHandler);
-            handleVolumeZero(VolumeState.getVolume());
+            handleVolumeZero(VolumeState.getTrueMusicVolume());
 
             long nextUpdate = System.currentTimeMillis();
             while (!_kill)
@@ -105,9 +114,6 @@ public class MusicThread extends Thread
                 // Update at most every "UPDATE_INTERVAL_MILLISECONDS".
                 TimeUnit.MILLISECONDS.sleep(nextUpdate - System.currentTimeMillis());
                 nextUpdate = System.currentTimeMillis() + _updateIntervalMilliseconds;
-
-                if (_volumeZero || handleUnfocused())
-                    continue;
 
                 handleMusicCycle();
             }
@@ -140,30 +146,12 @@ public class MusicThread extends Thread
 
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Player control
-    private void handleVolumeZero(float volume) {
-        _volumeZero = volume < .01f;
-        if (_volumeZero) {
-            stopMainMusic(false);
-            stopInterruptMusic(false);
-        }
-    }
-
-    private boolean handleUnfocused() {
-        if (_lostFocusEnabled) {
-            boolean isUnfocused = !_isFocused.get();
-            if (isUnfocused && !_isHalted)
-                haltMusic();
-            return isUnfocused;
-        }
-        return false;
-    }
-
-
-    // ----------------------------------------------------------------------------------------------------------------
     // Music and volume
     private void handleMusicCycle()
     {
+        if (_volumeZero || handleUnfocused())
+            return;
+
         ArrayList<Pair<String, Value>> trace = null;
         ArrayList<String> messages = null;
         if (_verboseMode) {
@@ -173,6 +161,9 @@ public class MusicThread extends Thread
         }
 
         _playlistSelector.prepare(messages);
+        if (handleJukebox())
+            return;
+
         PlaylistChoice nextChoice = _meticulousPlaylistSelector
                 ? selectPlaylistMeticulously(trace)
                 : _playlistSelector.selectPlaylist(trace);
@@ -204,6 +195,8 @@ public class MusicThread extends Thread
         boolean musicStillValid = nextPlaylist.stream().anyMatch(music -> music.equals(currentMusic));
 
         if (_isHalted) {
+            if (_verboseMode)
+                _logger.info("Resuming music!");
             _isHalted = false;
 
             if (!nextIsInterrupt)
@@ -271,10 +264,42 @@ public class MusicThread extends Thread
     }
 
 
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Music player controls
+    private void handleVolumeZero(float volume) {
+        _volumeZero = volume < .01f;
+        if (_volumeZero) {
+            stopMainMusic(false);
+            stopInterruptMusic(false);
+        }
+    }
+
+    private boolean handleUnfocused() {
+        if (_lostFocusEnabled) {
+            boolean isUnfocused = !_isFocused.get();
+            if (isUnfocused && !_isHalted)
+                haltMusic();
+            return isUnfocused;
+        }
+        return false;
+    }
+
+    private boolean handleJukebox() {
+        if (_doFadeOnJukeBox && _player.notNull() && _level.notNull()) {
+            boolean isPlaying = _player.canHearJukeboxMusic() && !_level.isWorldTickingPaused();
+            if (isPlaying && !_isHalted)
+                haltMusic();
+            return isPlaying;
+        }
+        return false;
+    }
+
+
     private MusicPlayer playMusic(Music nextMusic, MusicProvider musicProvider, boolean fade) {
         MusicPlayer musicPlayer = new MusicPlayer(
             nextMusic,
-            VolumeState.getVolume(),
+            VolumeState.getTrueMusicVolume(),
             musicProvider,
             () -> _chooseNextMusicTime = System.currentTimeMillis() + _nextMusicDelayMilliseconds,
             _logger
@@ -287,6 +312,9 @@ public class MusicThread extends Thread
 
     private void haltMusic()
     {
+        if (!_isHalted && _verboseMode)
+            _logger.info("Halting music!");
+
         _isHalted = true;
         if(_interruptPlayer != null)
             _interruptPlayer.pause(true);

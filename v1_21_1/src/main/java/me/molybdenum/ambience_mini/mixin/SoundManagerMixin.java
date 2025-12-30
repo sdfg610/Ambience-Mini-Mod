@@ -16,6 +16,7 @@ public class SoundManagerMixin {
         switch (p_120359_) {
             case MASTER -> VolumeState.setMasterVolume(p_120360_);
             case MUSIC -> VolumeState.setMusicVolume(p_120360_);
+            case RECORDS -> VolumeState.setRecordVolume(p_120360_);
         }
     }
 }

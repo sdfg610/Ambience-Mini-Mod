@@ -70,7 +70,8 @@ public class AmbienceMini
         VolumeState.init(
                 core.clientConfig,
                 Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
-                Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC)
+                Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC),
+                Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS)
         );
 
         core.combatState = new CombatState(core.clientConfig, core.playerState, core.levelState, core.serverSetup);
@@ -93,10 +94,6 @@ public class AmbienceMini
 
     public static ServerSetup server() {
         return core.serverSetup;
-    }
-
-    public static PlayerState player() {
-        return core.playerState;
     }
 
     public static ScreenState screen() {

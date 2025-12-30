@@ -20,6 +20,7 @@ public abstract class BaseClientConfig {
     public final Supplier<Boolean> meticulousPlaylistSelector;
 
     // Volume control
+    public final Supplier<Boolean> fadeOnJukeBox;
     public final Supplier<Boolean> lostFocusEnabled;
     public final Supplier<Boolean> ignoreMasterVolume;
 
@@ -83,8 +84,13 @@ public abstract class BaseClientConfig {
         );
 
         // Volume control
+        fadeOnJukeBox = registerBoolOption(
+                "Fade out Ambience Mini's music when a jukebox is playing music nearby. [Default true]",
+                "Fade_On_Jukebox",
+                true
+        );
         lostFocusEnabled = registerBoolOption(
-                "Fade Out Sound Volume on Game Lost Focus. [Default: true]",
+                "Fade out Ambience Mini's music when the game window is unfocused. [Default: true]",
                 "Lost_Focus_FadeOut",
                 true
         );
