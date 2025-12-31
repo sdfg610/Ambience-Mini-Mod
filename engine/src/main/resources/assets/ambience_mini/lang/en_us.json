@@ -2,6 +2,7 @@
   "mod_name": "Ambience Mini",
 
   "key.reload": "Reload",
+  "key.play_pause": "Pause and resume music",
   "key.next_music": "Change music",
   "key.print_all": "Print all readings",
 
@@ -11,6 +12,9 @@
 
   "toast.has_server_support": "Detected server support for Ambience Mini! Server-dependent features are enabled.",
   "toast.no_server_support": "No server support for Ambience Mini! Server-dependent features are disabled.",
+
+  "toast.pausing_music": "Pausing music...",
+  "toast.resuming_music": "Resuming music...",
 
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
   "ambience_mini.configuration.Notify_Server_Support": "Notify server support",

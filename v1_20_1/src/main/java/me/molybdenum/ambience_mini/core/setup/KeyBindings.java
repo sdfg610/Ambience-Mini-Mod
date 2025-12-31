@@ -25,6 +25,11 @@ public class KeyBindings extends BaseKeyBindings<KeyMapping>
     }
 
     @Override
+    protected int keyEnd() {
+        return InputConstants.KEY_END;
+    }
+
+    @Override
     protected int keyPageUp() {
         return InputConstants.KEY_PAGEUP;
     }

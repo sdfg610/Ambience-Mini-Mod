@@ -1,4 +1,10 @@
 
+Version 2.4.3:
+
+-
+- Added keybinding to pause and resume music (default "End").
+
+
 Version 2.4.2:
 
 - Added forge-config option "Fadeout on jukebox" which when set to true (the default) makes the Ambience Mini music fade out when a jukebox is playing nearby.

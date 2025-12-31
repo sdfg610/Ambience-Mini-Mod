@@ -54,6 +54,8 @@ public class MusicThread extends Thread
     private boolean _isHalted = false;
     private long _chooseNextMusicTime = 0L;
 
+    private boolean _isPaused = false;
+
 
     private boolean _volumeZero = false;
     private final Consumer<Float> _volumeChangedHandler = volume -> {
@@ -144,12 +146,24 @@ public class MusicThread extends Thread
         }
     }
 
+    public void pause() {
+        _isPaused = true;
+    }
+
+    public void play() {
+        _isPaused = false;
+    }
+
+    public boolean isPaused() {
+        return _isPaused;
+    }
+
 
     // ----------------------------------------------------------------------------------------------------------------
     // Music and volume
     private void handleMusicCycle()
     {
-        if (_volumeZero || handleUnfocused())
+        if (_volumeZero || handlePaused() || handleUnfocused())
             return;
 
         ArrayList<Pair<String, Value>> trace = null;
@@ -293,6 +307,12 @@ public class MusicThread extends Thread
             return isPlaying;
         }
         return false;
+    }
+
+    private boolean handlePaused() {
+        if (_isPaused && !_isHalted)
+            haltMusic();
+        return _isPaused;
     }
 
 

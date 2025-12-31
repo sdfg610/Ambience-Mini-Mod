@@ -11,6 +11,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
     private final BaseCore core;
 
     public TKeyBinding reloadKey;
+    public TKeyBinding playPauseKey;
     public TKeyBinding nextMusicKey;
     public TKeyBinding printAll;
 
@@ -23,12 +24,14 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
     public void registerKeys() {
         reloadKey = createAndRegister(AmLang.KEY_RELOAD, keyP());
+        playPauseKey = createAndRegister(AmLang.KEY_PLAY_PAUSE, keyEnd());
         nextMusicKey = createAndRegister(AmLang.KEY_NEXT_MUSIC, keyPageUp());
         printAll = createAndRegister(AmLang.KEY_PRINT_ALL, keyPageDown());
     }
 
 
     protected abstract int keyP();
+    protected abstract int keyEnd();
     protected abstract int keyPageUp();
     protected abstract int keyPageDown();
 
@@ -44,12 +47,27 @@ public abstract class BaseKeyBindings<TKeyBinding>
             core.tryReload();
         }
 
+        if (isClicked(playPauseKey)) {
+            var musicThread = core.getMusicThread();
+            if (musicThread != null) {
+                if (musicThread.isPaused()) {
+                    core.notification.showToast(AmLang.TOAST_RESUMING_MUSIC);
+                    musicThread.play();
+                } else {
+                    core.notification.showToast(AmLang.TOAST_PAUSING_MUSIC);
+                    musicThread.pause();
+                }
+            }
+        }
+
         if (isClicked(nextMusicKey)) {
             core.notification.showToast(AmLang.TOAST_NEXT_MUSIC);
 
             var musicThread = core.getMusicThread();
-            if (musicThread != null)
+            if (musicThread != null) {
                 musicThread.forceSelectNewMusic();
+                musicThread.play();
+            }
         }
 
         if (isClicked(printAll) && core.levelState.notNull() && core.playerState.notNull()) {
