@@ -1,7 +1,7 @@
 
 Version 2.4.3:
 
--
+- Fixed crash related to jukebox music detection.
 - Added keybinding to pause and resume music (default "End").
 
 

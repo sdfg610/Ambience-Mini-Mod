@@ -73,6 +73,9 @@ public interface BasePlayerState<TBlockPos, TVec3>
         private final Function<TSoundInstance, Double> getY;
         private final Function<TSoundInstance, Double> getZ;
 
+        private boolean latestResult = false;
+
+
         public JukeboxHelper(
                 Function<TChannelHandle, Boolean> isStopped,
                 Function<TSoundInstance, Boolean> isRecordSource,
@@ -93,15 +96,21 @@ public interface BasePlayerState<TBlockPos, TVec3>
         }
 
         public boolean canHearJukebox(Map<TSoundInstance, TChannelHandle> instanceToChannel, TriFunction<Double, Double, Double, Double> getDistanceToPlayerFrom) {
-            return instanceToChannel.entrySet().stream().anyMatch(entry -> {
-                TSoundInstance instance = entry.getKey();
-                if (!isRecordSource.apply(instance) || isStopped.apply(entry.getValue()))
-                    return false;
+            try {
+                ArrayList<Map.Entry<TSoundInstance, TChannelHandle>> sounds = new ArrayList<>(instanceToChannel.entrySet()); // Should counteract most concurrent modification exceptions.
+                latestResult = sounds.stream().anyMatch(entry -> {
+                    TSoundInstance instance = entry.getKey();
+                    if (!isRecordSource.apply(instance) || isStopped.apply(entry.getValue()))
+                        return false;
 
-                double distanceToMusic = getDistanceToPlayerFrom.apply(getX.apply(instance), getY.apply(instance), getZ.apply(instance));
-                double musicRange = Math.max(getVolume.apply(instance), 1.0F) * getAttenuationDistance.apply(instance) * (0.75 + (VolumeState.getTrueRecordVolume() * 0.25)); // Music range scales really weirdly with record volume...
-                return distanceToMusic < musicRange;
-            });
+                    double distanceToMusic = getDistanceToPlayerFrom.apply(getX.apply(instance), getY.apply(instance), getZ.apply(instance));
+                    double musicRange = Math.max(getVolume.apply(instance), 1.0F) * getAttenuationDistance.apply(instance) * (0.75 + (VolumeState.getTrueRecordVolume() * 0.25)); // Music range scales really weirdly with record volume...
+                    return distanceToMusic < musicRange;
+                });
+            }
+            catch (Exception ignored) { } // We might hit a concurrent modification exception. Just ignore it cus' its not the end of thw world and I can't find a simple way to fix it.
+
+            return latestResult;
         }
     }
 }
