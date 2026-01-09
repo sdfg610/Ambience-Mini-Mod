@@ -11,16 +11,18 @@ public enum AmLang
     KEY_NEXT_MUSIC("key.next_music"),
     KEY_PRINT_ALL("key.print_all"),
 
-    // Toasts
-    TOAST_RELOAD("toast.reload_description"),
-    TOAST_NEXT_MUSIC("toast.next_music_description"),
-    TOAST_PRINTING_ALL("toast.printing_all"),
+    // Messages
+    MSG_RELOAD("message.reload_description"),
+    MSG_NEXT_MUSIC("message.next_music_description"),
+    MSG_PRINTING_ALL("message.printing_all"),
 
-    TOAST_HAS_SERVER_SUPPORT("toast.has_server_support"),
-    TOAST_NO_SERVER_SUPPORT("toast.no_server_support"),
+    MSG_HAS_SERVER_SUPPORT("message.has_server_support"),
+    MSG_NO_SERVER_SUPPORT("message.no_server_support"),
 
-    TOAST_PAUSING_MUSIC("toast.pausing_music"),
-    TOAST_RESUMING_MUSIC("toast.resuming_music")
+    MSG_PAUSING_MUSIC("message.pausing_music"),
+    MSG_RESUMING_MUSIC("message.resuming_music"),
+
+    MSG_PLAYER_CRASHED("message.player_crashed")
 
     ;
 

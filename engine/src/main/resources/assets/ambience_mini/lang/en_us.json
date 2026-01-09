@@ -6,15 +6,17 @@
   "key.next_music": "Change music",
   "key.print_all": "Print all readings",
 
-  "toast.reload_description": "Trying to reload music player...",
-  "toast.next_music_description": "Selecting new music...",
-  "toast.printing_all": "Printing all events and properties to the Minecraft log...",
+  "message.reload_description": "Trying to reload music player...",
+  "message.next_music_description": "Selecting new music...",
+  "message.printing_all": "Printing all events and properties to the Minecraft log...",
 
-  "toast.has_server_support": "Detected server support for Ambience Mini! Server-dependent features are enabled.",
-  "toast.no_server_support": "No server support for Ambience Mini! Server-dependent features are disabled.",
+  "message.has_server_support": "Detected server support for Ambience Mini! Server-dependent features are enabled.",
+  "message.no_server_support": "No server support for Ambience Mini! Server-dependent features are disabled.",
 
-  "toast.pausing_music": "Pausing music...",
-  "toast.resuming_music": "Resuming music...",
+  "message.pausing_music": "Pausing music...",
+  "message.resuming_music": "Resuming music...",
+
+  "message.player_crashed": "Music player crashed! Press '%s' to reload Ambience Mini. See logs for details.",
 
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
   "ambience_mini.configuration.Notify_Server_Support": "Notify server support",

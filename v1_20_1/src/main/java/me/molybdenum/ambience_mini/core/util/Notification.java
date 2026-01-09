@@ -14,8 +14,8 @@ public class Notification extends BaseNotification<Component>
 
 
     @Override
-    protected Component makeTranslatable(String key) {
-        return Component.translatable(key);
+    protected Component makeTranslatable(String key, Object... arguments) {
+        return Component.translatable(key, arguments);
     }
 
     @Override

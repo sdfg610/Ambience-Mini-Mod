@@ -39,11 +39,16 @@ public abstract class BaseKeyBindings<TKeyBinding>
     protected abstract TKeyBinding createAndRegister(AmLang description, int defaultKey);
     protected abstract boolean isClicked(TKeyBinding binding);
 
+    public abstract String getKeyString(TKeyBinding binding);
+    public String getReloadKeyString() {
+        return getKeyString(reloadKey);
+    }
+
 
     public void handleKeyInput()
     {
         if (isClicked(reloadKey)) {
-            core.notification.showToast(AmLang.TOAST_RELOAD);
+            core.notification.showToast(AmLang.MSG_RELOAD);
             core.tryReload();
         }
 
@@ -51,17 +56,17 @@ public abstract class BaseKeyBindings<TKeyBinding>
             var musicThread = core.getMusicThread();
             if (musicThread != null) {
                 if (musicThread.isPaused()) {
-                    core.notification.showToast(AmLang.TOAST_RESUMING_MUSIC);
+                    core.notification.showToast(AmLang.MSG_RESUMING_MUSIC);
                     musicThread.play();
                 } else {
-                    core.notification.showToast(AmLang.TOAST_PAUSING_MUSIC);
+                    core.notification.showToast(AmLang.MSG_PAUSING_MUSIC);
                     musicThread.pause();
                 }
             }
         }
 
         if (isClicked(nextMusicKey)) {
-            core.notification.showToast(AmLang.TOAST_NEXT_MUSIC);
+            core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
 
             var musicThread = core.getMusicThread();
             if (musicThread != null) {
@@ -73,7 +78,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
         if (isClicked(printAll) && core.levelState.notNull() && core.playerState.notNull()) {
             BaseGameStateProvider provider = core.getGameStateProvider();
             if (provider != null) {
-                core.notification.showToast(AmLang.TOAST_PRINTING_ALL);
+                core.notification.showToast(AmLang.MSG_PRINTING_ALL);
 
                 long timeStart = System.currentTimeMillis();
                 String allState = provider.readAll();

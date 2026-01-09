@@ -51,4 +51,9 @@ public class KeyBindings extends BaseKeyBindings<KeyMapping>
     protected boolean isClicked(KeyMapping keyMapping) {
         return keyMapping.consumeClick();
     }
+
+    @Override
+    public String getKeyString(KeyMapping keyMapping) {
+        return keyMapping.getTranslatedKeyMessage().getString().toUpperCase();
+    }
 }

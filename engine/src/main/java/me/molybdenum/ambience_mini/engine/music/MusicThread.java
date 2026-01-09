@@ -1,14 +1,17 @@
 package me.molybdenum.ambience_mini.engine.music;
 
+import me.molybdenum.ambience_mini.engine.AmLang;
 import me.molybdenum.ambience_mini.engine.configuration.Music;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.PlaylistChoice;
 import me.molybdenum.ambience_mini.engine.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.core.BaseCore;
+import me.molybdenum.ambience_mini.engine.core.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
+import me.molybdenum.ambience_mini.engine.core.util.BaseNotification;
 import me.molybdenum.ambience_mini.engine.utils.Pair;
 import me.molybdenum.ambience_mini.engine.utils.Utils;
 import org.slf4j.Logger;
@@ -42,6 +45,8 @@ public class MusicThread extends Thread
     private final MusicProvider _musicProvider;
     private final BasePlayerState<?, ?> _player;
     private final BaseLevelState<?, ?, ?, ?> _level;
+    private final BaseNotification<?> _notification;
+    private final BaseKeyBindings<?> _keyBindings;
 
     private final boolean _meticulousPlaylistSelector;
     private final int _numLatestChoices = 3; // Code below is only designed to handle the value 3 here.
@@ -86,6 +91,8 @@ public class MusicThread extends Thread
 
         _player = baseCore.playerState;
         _level = baseCore.levelState;
+        _notification = baseCore.notification;
+        _keyBindings = baseCore.keyBindings;
 
         _doFadeOnJukeBox = baseCore.clientConfig.fadeOnJukeBox.get();
         _lostFocusEnabled = baseCore.clientConfig.lostFocusEnabled.get();
@@ -121,7 +128,10 @@ public class MusicThread extends Thread
             }
         }
         catch (Exception ex) {
-            _logger.error("Error in AmbienceThread.run()", ex);
+            if (!(ex instanceof InterruptedException)) {
+                _notification.printToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
+                _logger.error("Error in AmbienceThread.run()", ex);
+            }
             stopMainMusic(false);
             stopInterruptMusic(false);
         }
