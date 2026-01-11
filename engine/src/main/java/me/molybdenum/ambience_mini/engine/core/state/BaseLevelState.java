@@ -53,6 +53,7 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
     public abstract String getBlockId(TBlockState blockState);
     public abstract Stream<String> getBlockTags(TBlockState blockState);
     public abstract TBlockPos getNearestBlockOrFurthestAir(TVec3 from, TVec3 to);
+    public abstract TBlockPos getAirJustBeforeLookedAtBlockIfInRange(TVec3 from, TVec3 to);
 
     public abstract boolean isAir(TBlockState blockState);
 
@@ -85,6 +86,11 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
     public TBlockPos getNearestBlockOrFurthestAir(TVec3 fromVec, double xRot, double yRot, double distance) {
         TVec3 toVec = offsetVectorByAngle(fromVec, xRot, yRot, distance);
         return getNearestBlockOrFurthestAir(fromVec, toVec);
+    }
+
+    public TBlockPos getAirJustBeforeLookedAtBlockIfInRange(TVec3 fromVec, double xRot, double yRot, double distance) {
+        TVec3 toVec = offsetVectorByAngle(fromVec, xRot, yRot, distance);
+        return getAirJustBeforeLookedAtBlockIfInRange(fromVec, toVec);
     }
 
 

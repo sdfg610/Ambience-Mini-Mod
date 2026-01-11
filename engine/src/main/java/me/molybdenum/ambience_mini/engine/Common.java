@@ -9,4 +9,7 @@ public class Common
     public static final String AMBIENCE_DIRECTORY = "ambience_music";
     public static final String MUSIC_DIRECTORY = "music";
     public static final String MUSIC_CONFIG_FILE = "music_config.txt";
+
+    // Areas
+    public static final float AREA_SELECTION_RANGE = 48f;
 }
