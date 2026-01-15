@@ -1,9 +1,9 @@
-package me.molybdenum.ambience_mini.core.area;
+package me.molybdenum.ambience_mini.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import me.molybdenum.ambience_mini.engine.core.areas.BaseRenderer;
-import me.molybdenum.ambience_mini.engine.core.areas.Point;
+import me.molybdenum.ambience_mini.engine.render.BaseRenderer;
+import me.molybdenum.ambience_mini.engine.core.areas.Vector3;
 import net.minecraft.client.renderer.GameRenderer;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -59,7 +59,7 @@ public class Renderer extends BaseRenderer<BufferBuilder>
 
 
     @Override
-    protected void drawLine(BufferBuilder builder, Point first, Point last) {
+    protected void drawLine(BufferBuilder builder, Vector3 first, Vector3 last) {
         int alpha = getAlpha();
         var sizes = getNormalSize(first, last);
         builder.vertex(pose, first.x(), first.y(), first.z())
@@ -74,7 +74,7 @@ public class Renderer extends BaseRenderer<BufferBuilder>
     }
 
     @Override
-    protected void drawRectangle(BufferBuilder builder, Point corner1, Point corner2, Point corner3, Point corner4) {
+    protected void drawRectangle(BufferBuilder builder, Vector3 corner1, Vector3 corner2, Vector3 corner3, Vector3 corner4) {
         int alpha = getAlpha() / 2;
         builder.vertex(pose, corner1.x(), corner1.y(), corner1.z())
                 .color(red, green, blue, alpha)

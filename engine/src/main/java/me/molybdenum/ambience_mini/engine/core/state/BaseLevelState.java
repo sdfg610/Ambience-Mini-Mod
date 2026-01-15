@@ -28,11 +28,15 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
 
 
     // ------------------------------------------------------------------------------------------------
-    // Abstract API
+    // World-info
     public abstract boolean isWorldTickingPaused();
     public abstract String getDifficulty();
 
     public abstract String getDimensionID();
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Primary State
     public abstract String getBiomeID(TBlockPos blockPos);
     public abstract List<String> getBiomeTagIDs(TBlockPos blockPos);
 
@@ -61,6 +65,10 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
     public abstract int getBlockLightAt(TBlockPos blockPos);
 
     public abstract TBlockPos vectorToBlockPos(TVec3 position);
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Utility
     public abstract TBlockPos offsetBlockPos(TBlockPos blockPos, int x, int y, int z);
     public abstract TVec3 offsetVector(TVec3 position, double x, double y, double z);
 

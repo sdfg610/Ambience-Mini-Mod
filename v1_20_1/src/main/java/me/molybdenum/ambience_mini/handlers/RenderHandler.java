@@ -2,10 +2,10 @@ package me.molybdenum.ambience_mini.handlers;
 
 import com.mojang.blaze3d.vertex.*;
 import me.molybdenum.ambience_mini.AmbienceMini;
-import me.molybdenum.ambience_mini.core.area.Renderer;
+import me.molybdenum.ambience_mini.render.Renderer;
 import me.molybdenum.ambience_mini.core.state.LevelState;
 import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.engine.core.areas.Point;
+import me.molybdenum.ambience_mini.engine.core.areas.Vector3;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -36,7 +36,7 @@ public class RenderHandler
         poseStack.translate(-viewFrom.x, -viewFrom.y, -viewFrom.z);
 
         renderer.setPoseAndNormal(poseStack.last());
-        renderer.renderPointerBox(new Point(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
+        renderer.renderPointerBox(new Vector3(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
 
         poseStack.popPose();
     }

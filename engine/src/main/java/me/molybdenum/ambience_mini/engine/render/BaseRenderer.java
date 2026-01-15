@@ -1,10 +1,10 @@
-package me.molybdenum.ambience_mini.engine.core.areas;
+package me.molybdenum.ambience_mini.engine.render;
 
-import me.molybdenum.ambience_mini.engine.utils.Pair;
+import me.molybdenum.ambience_mini.engine.core.areas.Area;
+import me.molybdenum.ambience_mini.engine.core.areas.Vector3;
 import me.molybdenum.ambience_mini.engine.utils.QuadConsumer;
 import me.molybdenum.ambience_mini.engine.utils.Triple;
 
-import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -18,17 +18,17 @@ public abstract class BaseRenderer<TBuilder> {
     protected abstract TBuilder setupRectangleBuilder();
     protected abstract void renderAndTearDown(TBuilder builder);
 
-    protected abstract void drawLine(TBuilder builder, Point first, Point last);
-    protected abstract void drawRectangle(TBuilder builder, Point corner1, Point corner2, Point corner3, Point corner4);
+    protected abstract void drawLine(TBuilder builder, Vector3 first, Vector3 last);
+    protected abstract void drawRectangle(TBuilder builder, Vector3 corner1, Vector3 corner2, Vector3 corner3, Vector3 corner4);
 
 
-    public void renderLines(Consumer<BiConsumer<Point, Point>> build) {
+    public void renderLines(Consumer<BiConsumer<Vector3, Vector3>> build) {
         TBuilder builder = setupLineBuilder();
         build.accept((left, right) -> drawLine(builder, left, right));
         renderAndTearDown(builder);
     }
 
-    public void renderRectangles(Consumer<QuadConsumer<Point, Point, Point, Point>> build) {
+    public void renderRectangles(Consumer<QuadConsumer<Vector3, Vector3, Vector3, Vector3>> build) {
         TBuilder builder = setupRectangleBuilder();
         build.accept((c1, c2, c3, c4) -> drawRectangle(builder, c1, c2, c3, c4));
         renderAndTearDown(builder);
@@ -39,12 +39,11 @@ public abstract class BaseRenderer<TBuilder> {
         renderBox(area.getMinimumPoint(), area.getSize());
     }
 
-    public void renderPointerBox(Point block) {
-        renderBox(block, new Point(1,1,1));
+    public void renderPointerBox(Vector3 block) {
+        renderBox(block, new Vector3(1,1,1));
     }
 
-
-    private void renderBox(Point minimum, Point size)
+    private void renderBox(Vector3 minimum, Vector3 size)
     {
         var pX = minimum.offsetX(size.x());
         var pY = minimum.offsetY(size.y());
@@ -92,7 +91,7 @@ public abstract class BaseRenderer<TBuilder> {
         return (int)(255 * (0.7 + 0.3 * Math.sin(Math.PI/1000 * (System.currentTimeMillis() % 2000))));
     }
 
-    protected Triple<Float, Float, Float> getNormalSize(Point first, Point last) {
+    protected Triple<Float, Float, Float> getNormalSize(Vector3 first, Vector3 last) {
         double xLength = last.x() - first.x();
         double yLength = last.y() - first.y();
         double zLength = last.z() - first.z();

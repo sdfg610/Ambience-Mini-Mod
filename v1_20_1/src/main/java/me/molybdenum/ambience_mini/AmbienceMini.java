@@ -39,8 +39,6 @@ public class AmbienceMini
 
     public AmbienceMini(FMLJavaModLoadingContext context)
     {
-        IEventBus modBus = context.getModEventBus();
-
         Networking.initialize();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
@@ -53,6 +51,7 @@ public class AmbienceMini
             core.levelState = new LevelState();
             core.screenState = new ScreenState();
 
+            IEventBus modBus = context.getModEventBus();
             modBus.addListener(AmbienceMini::registerKeybindings);
             modBus.addListener(AmbienceMini::loadComplete);
         }
