@@ -28,11 +28,11 @@ import java.util.function.Consumer;
 import javax.sound.sampled.*;
 
 import org.jetbrains.annotations.NotNull;
-import org.jflac.FLACDecoder;
-import org.jflac.frame.Frame;
-import org.jflac.metadata.Metadata;
-import org.jflac.metadata.StreamInfo;
-import org.jflac.util.ByteData;
+import org.jflac_am_custom.FLACDecoder;
+import org.jflac_am_custom.frame.Frame;
+import org.jflac_am_custom.metadata.Metadata;
+import org.jflac_am_custom.metadata.StreamInfo;
+import org.jflac_am_custom.util.ByteData;
 
 
 /**

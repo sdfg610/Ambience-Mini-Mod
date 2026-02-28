@@ -1,4 +1,10 @@
 
+Version 2.4.4:
+
+- Added "how to reload music player" message when music player crashes
+- Fixed crash where Ambience Mini's modified copy of the FLAC library can cause a crash with other FLAC libraries.
+
+
 Version 2.4.3:
 
 - Fixed crash related to jukebox music detection.
