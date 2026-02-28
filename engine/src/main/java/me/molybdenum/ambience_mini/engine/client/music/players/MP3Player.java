@@ -19,8 +19,8 @@
 
 package me.molybdenum.ambience_mini.engine.client.music.players;
 
-import javazoom.jlayer.decoder.*;
-import javazoom.jlayer.audio.JavaSoundAudioDevice;
+import javazoom.jlayer_am_custom.decoder.*;
+import javazoom.jlayer_am_custom.audio.JavaSoundAudioDevice;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;

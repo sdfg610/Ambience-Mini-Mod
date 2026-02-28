@@ -2,7 +2,12 @@
 Version 2.5.0:
 
 -
-- Added a chat-message which tells how to restart the music player whenever the music player crashes.
+
+
+Version 2.4.4:
+
+- Added "how to reload music player" message when music player crashes
+- Fixed crash where Ambience Mini's modified copy of the FLAC library can cause a crash with other FLAC libraries.
 
 
 Version 2.4.3:
