@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.handlers;
 
 import me.molybdenum.ambience_mini.AmbienceMini;
-import me.molybdenum.ambience_mini.engine.Common;
+import me.molybdenum.ambience_mini.engine.shared.Common;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;

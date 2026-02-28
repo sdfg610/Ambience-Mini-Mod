@@ -1,8 +1,8 @@
 package me.molybdenum.ambience_mini.handlers;
 
 import me.molybdenum.ambience_mini.AmbienceMini;
-import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.engine.core.state.Screens;
+import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.client.core.state.Screens;
 import net.minecraft.client.gui.screens.*;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;

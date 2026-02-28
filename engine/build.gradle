@@ -20,3 +20,24 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+
+def generatedDir = "src/main/java/me/molybdenum/ambience_mini/engine/shared/"
+
+tasks.register('generateBuildConfig') {
+    doLast {
+        def outputDir = file(generatedDir)
+        outputDir.mkdirs()
+        def file = new File(outputDir, "BuildConfig.java")
+        file.text = """package me.molybdenum.ambience_mini.engine.shared;
+
+import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
+ 
+public final class BuildConfig {
+    public static final AmVersion APP_VERSION = AmVersion.ofString("${version}");
+}
+"""
+    }
+}
+
+compileJava.dependsOn "generateBuildConfig"

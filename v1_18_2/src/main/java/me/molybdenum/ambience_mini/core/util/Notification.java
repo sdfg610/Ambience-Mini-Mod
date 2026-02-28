@@ -1,7 +1,6 @@
 package me.molybdenum.ambience_mini.core.util;
 
-import me.molybdenum.ambience_mini.engine.AmLang;
-import me.molybdenum.ambience_mini.engine.core.util.BaseNotification;
+import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.network.chat.Component;

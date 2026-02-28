@@ -24,7 +24,7 @@ gretty {
 
 teavm {
     all {
-        mainClass = "me.molybdenum.ambience_ide.Test"
+        mainClass = "me.molybdenum.ambience_ide.Main"
     }
     js {
         addedToWebApp = true
@@ -39,24 +39,6 @@ teavm {
         targetFileName = "ambience_ide.wasm"
     }
 }
-
-def generatedDir = "src/main/java/me/molybdenum/ambience_ide"
-
-tasks.register('generateBuildConfig') {
-    doLast {
-        def outputDir = file(generatedDir)
-        outputDir.mkdirs()
-        def file = new File(outputDir, "BuildConfig.java")
-        file.text = """package me.molybdenum.ambience_ide;
- 
-public final class BuildConfig {
-    public static final String APP_VERSION = "${version}";
-}
-"""
-    }
-}
-
-compileJava.dependsOn "generateBuildConfig"
 
 tasks.withType(JavaCompile).configureEach {
     source(project(':engine').sourceSets.main.allSource)

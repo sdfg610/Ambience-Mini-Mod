@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.mixin;
 
-import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
+import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.sounds.SoundSource;
 import org.spongepowered.asm.mixin.Mixin;

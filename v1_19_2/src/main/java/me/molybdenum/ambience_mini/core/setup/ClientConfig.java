@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.core.setup;
 
-import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
+import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;

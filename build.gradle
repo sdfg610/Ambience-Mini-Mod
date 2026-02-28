@@ -14,8 +14,6 @@ subprojects {
         }
     }
 
-    if (project.path != ":engine") {
-        project.version = mod_version
-        project.group = mod_group_id
-    }
+    project.version = mod_version
+    project.group = mod_group_id
 }

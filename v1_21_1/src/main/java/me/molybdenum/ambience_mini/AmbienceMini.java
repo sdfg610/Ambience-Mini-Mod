@@ -1,11 +1,11 @@
 package me.molybdenum.ambience_mini;
 
-import me.molybdenum.ambience_mini.core.Core;
+import me.molybdenum.ambience_mini.core.ClientCore;
 import me.molybdenum.ambience_mini.core.util.Notification;
-import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
-import me.molybdenum.ambience_mini.engine.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
+import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
+import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
+import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
 import me.molybdenum.ambience_mini.handlers.KeyInputEventHandler;
 import me.molybdenum.ambience_mini.network.Networking;
 import me.molybdenum.ambience_mini.core.setup.ClientConfig;
@@ -36,7 +36,7 @@ import net.neoforged.fml.ModContainer;
 @Mod(Common.MOD_ID)
 public class AmbienceMini {
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static Core core = null;
+    public static ClientCore core = null;
 
 
     public AmbienceMini(IEventBus modEventBus, ModContainer modContainer)
@@ -44,7 +44,7 @@ public class AmbienceMini {
         modEventBus.addListener(AmbienceMini::registerPayloads);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
-            core = new Core(LOGGER);
+            core = new ClientCore(LOGGER);
 
             core.notification = new Notification();
             core.clientConfig = new ClientConfig(modContainer);
@@ -83,7 +83,7 @@ public class AmbienceMini {
         core.combatState = new CombatState(core.clientConfig, core.playerState, core.levelState, core.serverSetup);
         Networking.combatState = core.combatState;
 
-        core.tryReload();
+        core.tryReloadMusicEngine();
     }
 
 

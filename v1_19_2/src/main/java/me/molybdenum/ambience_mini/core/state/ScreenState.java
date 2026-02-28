@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.core.state;
 
-import me.molybdenum.ambience_mini.engine.core.state.BaseScreenState;
+import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
 import net.minecraft.client.Minecraft;
 
 public class ScreenState extends BaseScreenState

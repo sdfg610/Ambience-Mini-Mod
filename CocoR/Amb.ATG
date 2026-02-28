@@ -11,12 +11,12 @@ which will be explained when met first in context.  */
 /* () is a grouping used alongside |. The parenthesis contains a series of strings separated by |. This means that exactly one of the strings is chosen. */
 
 /* Imports here are inserted at the top of the generated lexer and parser. */
-import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.expression.*;
-import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.config.*;
-import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.schedule.*;
-import me.molybdenum.ambience_mini.engine.configuration.abstract_syntax.playlist.*;
-import me.molybdenum.ambience_mini.engine.configuration.errors.LoadError;
-import me.molybdenum.ambience_mini.engine.configuration.errors.SynError;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.expression.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.config.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.schedule.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
+import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
 
 import java.io.InputStream;
 import java.util.ArrayList;

@@ -5,18 +5,32 @@
   "key.play_pause": "Pause and resume music",
   "key.next_music": "Change music",
   "key.print_all": "Print all readings",
+  "key.toggle_areas": "Toggle area view",
+  "key.area_confirm": "Area confirm",
+  "key.area_cancle": "Area cancel",
 
   "message.reload_description": "Trying to reload music player...",
   "message.next_music_description": "Selecting new music...",
   "message.printing_all": "Printing all events and properties to the Minecraft log...",
 
-  "message.has_server_support": "Detected server support for Ambience Mini! Server-dependent features are enabled.",
-  "message.no_server_support": "No server support for Ambience Mini! Server-dependent features are disabled.",
+  "message.full_server_support": "Detected full server support for Ambience Mini! All server-dependent features are enabled.",
+  "message.partial_server_support": "Detected partial server support for Ambience Mini! Some server-dependent features are enabled.",
+  "message.outdated_version_on_server": "Ambience Mini version on server is too old! All server-dependent features are disabled.",
+  "message.no_server_support": "No server support for Ambience Mini! All server-dependent features are disabled.",
 
   "message.pausing_music": "Pausing music...",
   "message.resuming_music": "Resuming music...",
 
+  "message.area_view_off": "Area view disabled",
+  "message.area_selector_enabled": "Area selector enabled",
+  "message.area_constructor_enabled": "Area constructor enabled",
+  "message.area_invalid_location": "Cannot extend or contract the area to this location.",
+  "message.area_look_at_destination": "Please look at the point you would like to extend or constrict the area to.",
+
   "message.player_crashed": "Music player crashed! Press '%s' to reload Ambience Mini. See logs for details.",
+  "message.unhandled_message": "Received an unknown type of message from server! See logs for more info.",
+
+  "string.area_name": "Area name",
 
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
   "ambience_mini.configuration.Notify_Server_Support": "Notify server support",

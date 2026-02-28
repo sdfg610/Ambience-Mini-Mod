@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.core.state;
 
-import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
-import me.molybdenum.ambience_mini.engine.core.state.BaseLevelState;
+import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
+import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.server.IntegratedServer;
@@ -14,10 +14,12 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -185,14 +187,23 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     @Override
     public BlockPos getNearestBlockOrFurthestAir(Vec3 from, Vec3 to) {
         assert level != null;
-        var hit = level.clip(new ClipContext(
+        BlockHitResult hit = getClip(from, to);
+        return hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos() : vectorToBlockPos(to);
+    }
+
+    @Override
+    public BlockPos getAirJustBeforeLookedAtBlockIfInRange(Vec3 from, Vec3 to) {
+        assert level != null;
+        BlockHitResult hit = getClip(from, to);
+        return hit.getType() == HitResult.Type.BLOCK ? new BlockPos(hit.getDirection().getNormal().offset(hit.getBlockPos())) : null;
+    }
+
+    private @NotNull BlockHitResult getClip(Vec3 from, Vec3 to) {
+        return level.clip(new ClipContext(
                 from, to,
-                ClipContext.Block.OUTLINE,
-                ClipContext.Fluid.NONE,
+                ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE,
                 null
         ));
-
-        return hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos() : vectorToBlockPos(to);
     }
 
     @Override

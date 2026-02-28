@@ -1,12 +1,11 @@
 package me.molybdenum.ambience_mini.core.state;
 
-import me.molybdenum.ambience_mini.engine.core.setup.BaseClientConfig;
-import me.molybdenum.ambience_mini.engine.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.core.state.BaseCombatState;
+import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
+import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
+import me.molybdenum.ambience_mini.engine.client.core.state.BaseCombatState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.LerpingBossEvent;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.network.chat.contents.TranslatableContents;

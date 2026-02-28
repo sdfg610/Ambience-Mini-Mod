@@ -1,15 +1,15 @@
 package me.molybdenum.ambience_mini.core.setup;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import me.molybdenum.ambience_mini.core.Core;
-import me.molybdenum.ambience_mini.engine.AmLang;
-import me.molybdenum.ambience_mini.engine.core.setup.BaseKeyBindings;
+import me.molybdenum.ambience_mini.core.ClientCore;
+import me.molybdenum.ambience_mini.engine.shared.AmLang;
+import me.molybdenum.ambience_mini.engine.client.core.setup.BaseKeyBindings;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.client.ClientRegistry;
 
 public class KeyBindings extends BaseKeyBindings<KeyMapping>
 {
-    public KeyBindings(Core core) {
+    public KeyBindings(ClientCore core) {
         super(core);
         registerKeys();
     }

@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.core.state;
 
-import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
-import me.molybdenum.ambience_mini.engine.core.state.BasePlayerState;
+import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
+import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;

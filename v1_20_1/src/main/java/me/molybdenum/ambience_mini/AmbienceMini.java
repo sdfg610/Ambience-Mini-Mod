@@ -1,25 +1,32 @@
 package me.molybdenum.ambience_mini;
 
 import com.mojang.logging.LogUtils;
-import me.molybdenum.ambience_mini.core.Core;
-import me.molybdenum.ambience_mini.core.util.Notification;
-import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
-import me.molybdenum.ambience_mini.engine.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
-import me.molybdenum.ambience_mini.handlers.KeyInputEventHandler;
+import me.molybdenum.ambience_mini.client.core.ClientCore;
+import me.molybdenum.ambience_mini.client.core.areas.ClientAreaManager;
+import me.molybdenum.ambience_mini.client.core.networking.ClientNetworkManager;
+import me.molybdenum.ambience_mini.client.core.render.drawer.Drawer;
+import me.molybdenum.ambience_mini.client.core.state.*;
+import me.molybdenum.ambience_mini.client.core.util.Notification;
+import me.molybdenum.ambience_mini.client.core.render.area.AreaRenderer;
+import me.molybdenum.ambience_mini.client.handlers.RenderHandler;
+import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
+import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
+import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
+import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
 import me.molybdenum.ambience_mini.network.Networking;
-import me.molybdenum.ambience_mini.core.setup.ClientConfig;
-import me.molybdenum.ambience_mini.core.setup.KeyBindings;
-import me.molybdenum.ambience_mini.core.state.CombatState;
-import me.molybdenum.ambience_mini.core.state.ScreenState;
-import me.molybdenum.ambience_mini.core.state.LevelState;
-import me.molybdenum.ambience_mini.core.state.PlayerState;
+import me.molybdenum.ambience_mini.client.core.setup.*;
+import me.molybdenum.ambience_mini.server.core.ServerCore;
+import me.molybdenum.ambience_mini.server.core.managers.ClientManager;
+import me.molybdenum.ambience_mini.server.core.managers.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.server.*;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -31,75 +38,101 @@ import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(Common.MOD_ID)
-public class AmbienceMini
+public class AmbienceMini extends BaseAmbienceMini
 {
+    // Common
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static Core core = null;
+
+    // Client
+    private static ClientConfig clientConfig;
+    private static KeyBindings keyBindings;
+    public static ClientCore clientCore = null;
+
+    // Server
+    public static ServerCore serverCore = null;
 
 
     public AmbienceMini(FMLJavaModLoadingContext context)
     {
         Networking.initialize();
 
+        MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStarting);
+        MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStopping);
+
+        IEventBus modBus = context.getModEventBus();
+        modBus.addListener(AmbienceMini::loadComplete);
+
         if (FMLEnvironment.dist == Dist.CLIENT) {
-            core = new Core(LOGGER);
-
-            core.notification = new Notification();
-            core.clientConfig = new ClientConfig(context);
-
-            core.playerState = new PlayerState();
-            core.levelState = new LevelState();
-            core.screenState = new ScreenState();
-
-            IEventBus modBus = context.getModEventBus();
+            clientConfig = new ClientConfig(context);
+            modBus.addListener(AmbienceMini::registerGuiOverlays);
             modBus.addListener(AmbienceMini::registerKeybindings);
-            modBus.addListener(AmbienceMini::loadComplete);
         }
-    }
-
-
-    public static void registerKeybindings(final RegisterKeyMappingsEvent event) {
-        KeyInputEventHandler.keyBindings = core.keyBindings = new KeyBindings(event, core);
-    }
-
-    public static void loadComplete(final FMLLoadCompleteEvent event)
-    {
-        EssentialCompat.isLoaded = ModList.get().isLoaded("essential");
-
-        VolumeState.init(
-                core.clientConfig,
-                Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
-                Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC),
-                Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS)
-        );
-
-        core.combatState = new CombatState(core.clientConfig, core.playerState, core.levelState, core.serverSetup);
-        Networking.combatState = core.combatState;
-
-        core.tryReload();
     }
 
     public static ResourceLocation rl(String path) {
         return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
     }
 
-    public static Notification notification() {
-        return core.notification;
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Client
+    private static void registerGuiOverlays(final RegisterGuiOverlaysEvent event) {
+        event.registerAboveAll("test_overlay", RenderHandler::renderAreaOverlay);
     }
 
-    public static ClientConfig config() {
-        return core.clientConfig;
+    private static void registerKeybindings(final RegisterKeyMappingsEvent event) {
+        keyBindings = new KeyBindings(event);
     }
 
-    public static ServerSetup server() {
-        return core.serverSetup;
+    private static void loadComplete(final FMLLoadCompleteEvent event)
+    {
+        CompatManager.init(ModList.get()::isLoaded);
+
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            VolumeState.init(
+                    clientConfig,
+                    Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
+                    Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC),
+                    Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS)
+            );
+
+            Notification notification = new Notification();
+            clientCore = new ClientCore(
+                    LOGGER,
+                    notification, new ClientNetworkManager(),
+                    new ClientAreaManager(), new AreaRenderer(notification, new Drawer()),
+                    new ServerSetup(), clientConfig, keyBindings,
+                    new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
+            );
+            clientCore.tryReloadMusicEngine();
+
+            fireClientCoreInit();
+        }
     }
 
-    public static ScreenState screen() {
-        return core.screenState;
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Server
+    private static void onServerStarting(final ServerStartingEvent event) {
+        serverCore = new ServerCore(
+                LOGGER,
+                new ClientManager(),
+                new ServerNetworkManager()
+        );
     }
 
-    public static CombatState combat() {
-        return core.combatState;
+    private static void onServerStopping(final ServerStoppedEvent ignored) {
+        serverCore.stop();
+        serverCore = null;
+    }
+
+
+    public static ClientManager clients() {
+        return serverCore.clientManager;
+    }
+
+    public static ServerNetworkManager serverNetwork() {
+        return serverCore.networkManager;
     }
 }

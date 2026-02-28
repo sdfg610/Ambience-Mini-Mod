@@ -1,12 +1,12 @@
 package me.molybdenum.ambience_mini;
 
 import com.mojang.logging.LogUtils;
-import me.molybdenum.ambience_mini.core.Core;
+import me.molybdenum.ambience_mini.core.ClientCore;
 import me.molybdenum.ambience_mini.core.util.Notification;
-import me.molybdenum.ambience_mini.engine.Common;
-import me.molybdenum.ambience_mini.engine.compatibility.EssentialCompat;
-import me.molybdenum.ambience_mini.engine.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.core.state.VolumeState;
+import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
+import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
+import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
 import me.molybdenum.ambience_mini.handlers.KeyInputEventHandler;
 import me.molybdenum.ambience_mini.network.Networking;
 import me.molybdenum.ambience_mini.core.setup.ClientConfig;
@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 public class AmbienceMini
 {
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static Core core = null;
+    public static ClientCore core = null;
 
 
     public AmbienceMini()
@@ -43,7 +43,7 @@ public class AmbienceMini
         Networking.initialize();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
-            core = new Core(LOGGER);
+            core = new ClientCore(LOGGER);
 
             core.notification = new Notification();
             core.clientConfig = new ClientConfig();
@@ -72,7 +72,7 @@ public class AmbienceMini
 
         KeyInputEventHandler.keyBindings = core.keyBindings = new KeyBindings(core);
 
-        core.tryReload();
+        core.tryReloadMusicEngine();
     }
 
 

@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.network;
 
 import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.core.state.CombatState;
-import me.molybdenum.ambience_mini.engine.Common;
+import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.network.to_client.MobTargetUpdateMessage;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;

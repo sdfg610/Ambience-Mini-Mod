@@ -1,8 +1,8 @@
 package me.molybdenum.ambience_mini.handlers;
 
 import me.molybdenum.ambience_mini.AmbienceMini;
-import me.molybdenum.ambience_mini.engine.AmLang;
-import me.molybdenum.ambience_mini.engine.Common;
+import me.molybdenum.ambience_mini.engine.shared.AmLang;
+import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.network.Networking;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -20,7 +20,7 @@ public class LoginHandler
         AmbienceMini.server().hasServerSupport = Networking.INSTANCE.isRemotePresent(event.getConnection());
 
         if (AmbienceMini.config().notifyServerSupport.get() && !AmbienceMini.server().isOnLocalServer)
-            AmbienceMini.notification().printToChat(AmbienceMini.server().hasServerSupport ? AmLang.MSG_HAS_SERVER_SUPPORT : AmLang.MSG_NO_SERVER_SUPPORT);
+            AmbienceMini.notification().printToChat(AmbienceMini.server().hasServerSupport ? AmLang.MSG_FULL_SERVER_SUPPORT : AmLang.MSG_NO_SERVER_SUPPORT);
     }
 
     @SubscribeEvent

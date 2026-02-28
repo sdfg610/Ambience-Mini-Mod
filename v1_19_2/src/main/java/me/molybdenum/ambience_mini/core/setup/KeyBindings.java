@@ -1,9 +1,9 @@
 package me.molybdenum.ambience_mini.core.setup;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import me.molybdenum.ambience_mini.engine.AmLang;
-import me.molybdenum.ambience_mini.engine.core.BaseCore;
-import me.molybdenum.ambience_mini.engine.core.setup.BaseKeyBindings;
+import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.shared.AmLang;
+import me.molybdenum.ambience_mini.engine.client.core.setup.BaseKeyBindings;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 
@@ -13,7 +13,7 @@ public class KeyBindings extends BaseKeyBindings<KeyMapping>
 
 
     @SuppressWarnings("rawtypes")
-    public KeyBindings(RegisterKeyMappingsEvent event, BaseCore core) {
+    public KeyBindings(RegisterKeyMappingsEvent event, BaseClientCore core) {
         super(core);
         this.event = event;
         registerKeys();

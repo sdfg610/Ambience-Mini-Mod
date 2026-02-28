@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.handlers;
 
-import me.molybdenum.ambience_mini.engine.Common;
+import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.network.to_client.MobTargetUpdatePacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.EventPriority;
