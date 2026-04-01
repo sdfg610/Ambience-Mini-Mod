@@ -1,12 +1,22 @@
 package me.molybdenum.ambience_mini.engine.shared.areas;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Direction;
 import me.molybdenum.ambience_mini.engine.client.core.render.Vector3d;
+import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
+import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 
 public record Vector3i(int x, int y, int z) {
     public static final Vector3i ZERO = new Vector3i(0,0,0);
     public static final Vector3i ONE = new Vector3i(1,1,1);
+
+
+    public Vector3i(AmReader reader) {
+        this(reader.readInt(), reader.readInt(), reader.readInt());
+    }
+
 
     public Vector3i offset(int x, int y, int z) {
         return new Vector3i(this.x + x, this.y + y, this.z + z);
@@ -76,5 +86,25 @@ public record Vector3i(int x, int y, int z) {
         ).offset(1,1,1).subtract(min);
 
         return new Pair<>(min, size);
+    }
+
+
+    public JsonObject toJson() {
+        JsonObject obj = new JsonObject();
+        obj.add("x", new JsonPrimitive(x));
+        obj.add("y", new JsonPrimitive(y));
+        obj.add("z", new JsonPrimitive(z));
+        return obj;
+    }
+
+    public static Vector3i fromJson(JsonObject obj) {
+        return new Vector3i(obj.get("x").getAsInt(), obj.get("y").getAsInt(), obj.get("z").getAsInt());
+    }
+
+
+    public void writeTo(AmWriter writer) {
+        writer.writeInt(x);
+        writer.writeInt(y);
+        writer.writeInt(z);
     }
 }

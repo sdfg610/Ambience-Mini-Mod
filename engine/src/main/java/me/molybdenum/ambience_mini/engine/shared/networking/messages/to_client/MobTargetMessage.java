@@ -4,7 +4,7 @@ import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
-public class MobTargetMessage implements AmMessage {
+public class MobTargetMessage extends AmMessage {
     public int entityID;
     public boolean isTargetingPlayer;
 

@@ -13,14 +13,14 @@ import net.minecraftforge.fml.common.Mod;
 public class PlayerEventHandler
 {
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onLoggingOut(final PlayerEvent.Clone event) {
+    public static void onPlayerClone(final PlayerEvent.Clone event) {
         if (!event.isCanceled() && event.getEntity() instanceof ServerPlayer newPlayer && event.getOriginal() instanceof ServerPlayer oldPlayer)
-            AmbienceMini.serverCore.clientManager.renewPlayer(oldPlayer, newPlayer);
+            AmbienceMini.serverCore.networkManager.renewPlayerModVersion(oldPlayer, newPlayer);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onLoggingOut(final PlayerEvent.PlayerLoggedOutEvent event) {
         if (!event.isCanceled() && event.getEntity() instanceof ServerPlayer player)
-            AmbienceMini.serverCore.clientManager.removePlayer(player);
+            AmbienceMini.serverCore.networkManager.removePlayerModVersion(player);
     }
 }

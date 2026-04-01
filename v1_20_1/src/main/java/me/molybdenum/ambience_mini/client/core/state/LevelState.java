@@ -2,7 +2,6 @@ package me.molybdenum.ambience_mini.client.core.state;
 
 import me.molybdenum.ambience_mini.engine.client.core.render.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
-import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -24,40 +23,34 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entity>
+public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entity, ClientLevel>
 {
     private static final String OBF_INTEGRATED_SERVER_PAUSED = "f_120016_";
 
     private final Minecraft mc = Minecraft.getInstance();
-    private ClientLevel level = null;
 
 
     @Override
     public boolean isNull() {
-        return level == null;
+        return cachedLevel == null;
     }
 
     @Override
     public boolean notNull() {
-        return level != null;
+        return cachedLevel != null;
     }
 
 
     @Override
-    public void prepare(@Nullable ArrayList<String> messages) {
-        ClientLevel newLevel = mc.level;
-        if (level != newLevel && EssentialCompat.isNotFakeWorld(newLevel)) {
-            if (messages != null)
-                messages.add("Level instance changed from '" + getLevelString(level) + "' to '" + getLevelString(newLevel) + "' since last update.");
-            level = newLevel;
-        }
+    protected ClientLevel getCurrentLevel() {
+        return mc.level;
     }
 
-    private String getLevelString(ClientLevel lv) {
+    @Override
+    protected String getLevelString(ClientLevel lv) {
         return lv == null ? "null" : lv.dimension().location() + "/" + lv.hashCode();
     }
     
@@ -70,24 +63,24 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public String getDifficulty() {
-        assert level != null;
-        if (level.getLevelData().isHardcore())
+        assert cachedLevel != null;
+        if (cachedLevel.getLevelData().isHardcore())
             return "hardcore";
         else
-            return level.getLevelData().getDifficulty().getKey();
+            return cachedLevel.getLevelData().getDifficulty().getKey();
     }
 
 
     @Override
     public String getDimensionID() {
-        assert level != null;
-        return level.dimension().location().toString();
+        assert cachedLevel != null;
+        return cachedLevel.dimension().location().toString();
     }
 
     @Override
     public String getBiomeID(BlockPos blockPos) {
-        assert level != null;
-        return level.getBiome(blockPos).unwrap().map(
+        assert cachedLevel != null;
+        return cachedLevel.getBiome(blockPos).unwrap().map(
                 (resourceKey) -> resourceKey.location().toString(),
                 (biome) -> ""
         );
@@ -95,8 +88,8 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public List<String> getBiomeTagIDs(BlockPos blockPos) {
-        assert level != null;
-        return level.getBiome(blockPos)
+        assert cachedLevel != null;
+        return cachedLevel.getBiome(blockPos)
                 .tags()
                 .map(tag -> tag.location().toString())
                 .toList();
@@ -105,34 +98,34 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public int getTime() {
-        assert level != null;
-        return (int) level.getDayTime();
+        assert cachedLevel != null;
+        return (int) cachedLevel.getDayTime();
     }
 
 
     @Override
     public boolean isRaining() {
-        assert level != null;
-        return level.isRaining();
+        assert cachedLevel != null;
+        return cachedLevel.isRaining();
     }
 
     @Override
     public boolean isThundering() {
-        assert level != null;
-        return level.isThundering();
+        assert cachedLevel != null;
+        return cachedLevel.isThundering();
     }
 
     @Override
     public boolean isColdEnoughToSnow(BlockPos blockPos) {
-        assert level != null;
-        return level.getBiome(blockPos).value().coldEnoughToSnow(blockPos);
+        assert cachedLevel != null;
+        return cachedLevel.getBiome(blockPos).value().coldEnoughToSnow(blockPos);
     }
 
 
     @Override
     public Entity getEntityById(int id) {
-        assert level != null;
-        return level.getEntity(id);
+        assert cachedLevel != null;
+        return cachedLevel.getEntity(id);
     }
 
     @Override
@@ -154,21 +147,21 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public int getMaxSkyLightAt(BlockPos blockPos) {
-        assert level != null;
-        return level.getBrightness(LightLayer.SKY, blockPos);
+        assert cachedLevel != null;
+        return cachedLevel.getBrightness(LightLayer.SKY, blockPos);
     }
 
     @Override
     public int getBlockLightAt(BlockPos blockPos) {
-        assert level != null;
-        return level.getBrightness(LightLayer.BLOCK, blockPos);
+        assert cachedLevel != null;
+        return cachedLevel.getBrightness(LightLayer.BLOCK, blockPos);
     }
 
 
     @Override
     public BlockState getBlockState(BlockPos blockPos) {
-        assert level != null;
-        return level.getBlockState(blockPos);
+        assert cachedLevel != null;
+        return cachedLevel.getBlockState(blockPos);
     }
 
     @Override
@@ -189,20 +182,20 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public BlockPos getNearestBlockOrFurthestAir(Vec3 from, Vec3 to) {
-        assert level != null;
+        assert cachedLevel != null;
         BlockHitResult hit = getClip(from, to);
         return hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos() : vectorToBlockPos(to);
     }
 
     @Override
     public BlockPos getAirJustBeforeLookedAtBlockIfInRange(Vec3 from, Vec3 to) {
-        assert level != null;
+        assert cachedLevel != null;
         BlockHitResult hit = getClip(from, to);
         return hit.getType() == HitResult.Type.BLOCK ? new BlockPos(hit.getDirection().getNormal().offset(hit.getBlockPos())) : null;
     }
 
     private @NotNull BlockHitResult getClip(Vec3 from, Vec3 to) {
-        return level.clip(new ClipContext(
+        return cachedLevel.clip(new ClipContext(
                 from, to,
                 ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE,
                 null
@@ -248,11 +241,11 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     // Utilities
     private <T extends Entity> List<T> getNearbyEntities(Class<T> clazz, BlockPos center, int horizontalRadius, int verticalRadius)
     {
-        assert level != null;
+        assert cachedLevel != null;
         var area = new AABB(
                 center.getX() - horizontalRadius, center.getY() - verticalRadius, center.getZ() - horizontalRadius,
                 center.getX() + horizontalRadius, center.getY() + verticalRadius, center.getZ() + horizontalRadius
         );
-        return level.getEntitiesOfClass(clazz, area, ignore -> true);
+        return cachedLevel.getEntitiesOfClass(clazz, area, ignore -> true);
     }
 }

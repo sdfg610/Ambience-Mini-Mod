@@ -1,8 +1,9 @@
 package me.molybdenum.ambience_mini.engine.client.core;
 
-import me.molybdenum.ambience_mini.engine.client.core.areas.BaseClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
+import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.BuildConfig;
 import me.molybdenum.ambience_mini.engine.shared.Common;
@@ -25,7 +26,7 @@ import me.molybdenum.ambience_mini.engine.client.core.state.BaseCombatState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
 import me.molybdenum.ambience_mini.engine.client.music.MusicThread;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.ModVersionMessage;
+import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.ClientInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
 import org.slf4j.Logger;
 
@@ -37,26 +38,26 @@ public abstract class BaseClientCore<
         TBlockPos, TVec3, TBlockState, TEntity, TKeyBinding, TComponent,
         TNotification extends BaseNotification<TComponent>,
         TNetworkManager extends BaseClientNetworkManager,
-        TAreaManager extends BaseClientAreaManager,
-        TAreaRenderer extends BaseAreaRenderer<TVec3, TBlockPos>,
+        TAreaRenderer extends BaseAreaRenderer<TVec3, TBlockPos, ?>, // Last type, namely TScreen, is never exposed to a public interface.
         TClientConfig extends BaseClientConfig,
         TKeyBindings extends BaseKeyBindings<TKeyBinding>,
         TPlayerState extends BasePlayerState<TBlockPos, TVec3>,
-        TLevelState extends BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>,
+        TLevelState extends BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, ?>, // Last type, namely TClientLevel, is never exposed to a public interface.
         TScreenState extends BaseScreenState,
         TCombatState extends BaseCombatState<TEntity, TVec3>
 > {
-    private static final MusicProvider musicProvider = new FileMusicProvider(Path.of(Common.AMBIENCE_DIRECTORY, Common.MUSIC_DIRECTORY).toString());
+    private static final MusicProvider musicProvider = new FileMusicProvider(Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_DIRECTORY).toString());
 
     // Utils
     public final Logger logger;
+    public final ClientNameCache nameCache;
     public final TNotification notification;
 
     // Networking
     public final TNetworkManager networkManager;
 
     // Areas
-    public final TAreaManager areaManager;
+    public final ClientAreaManager areaManager;
     public final TAreaRenderer areaRenderer;
 
     // Setup
@@ -78,9 +79,10 @@ public abstract class BaseClientCore<
 
     public BaseClientCore(
             Logger logger,
+            ClientNameCache nameCache,
             TNotification notification,
             TNetworkManager networkManager,
-            TAreaManager areaManager,
+            ClientAreaManager areaManager,
             TAreaRenderer areaRenderer,
             ServerSetup serverSetup,
             TClientConfig clientConfig,
@@ -92,6 +94,7 @@ public abstract class BaseClientCore<
     ) {
         this.logger = logger;
 
+        this.nameCache = nameCache;
         this.notification = notification;
         this.networkManager = networkManager;
         this.areaManager = areaManager;
@@ -104,11 +107,14 @@ public abstract class BaseClientCore<
         this.screenState = screenState;
         this.combatState = combatState;
 
+        this.nameCache.init(this);
         this.networkManager.init(this);
-        this.areaRenderer.init(areaManager, levelState, notification);
+        this.areaManager.init(this);
+        this.areaRenderer.init(this, levelState);
         this.keyBindings.init(this);
-        this.combatState.init(clientConfig, playerState, levelState, serverSetup);
+        this.combatState.init(this, playerState, levelState);
     }
+
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -142,7 +148,7 @@ public abstract class BaseClientCore<
                 new CaveDetector<>(clientConfig)
         );
 
-        File configFile = Path.of(Common.AMBIENCE_DIRECTORY, Common.MUSIC_CONFIG_FILE).toFile();
+        File configFile = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_CONFIG_FILE).toFile();
         try (InputStream configStream = new FileInputStream(configFile)) {
             Loader.loadFrom(configStream, musicProvider, gameStateProvider).match(
                     this::initMusicThread,
@@ -177,26 +183,38 @@ public abstract class BaseClientCore<
 
     // -----------------------------------------------------------------------------------------------------------------
     // Common Handlers
-    public void onLoggedIn(AmVersion serverVersion, boolean isOnLocalServer) {
+    public void onLoggedIn(AmVersion serverVersion, boolean isOnLocalServer, String playerUUID, String playerName) {
         serverSetup.serverVersion = serverVersion;
         serverSetup.isOnLocalServer = isOnLocalServer;
 
+        this.nameCache.clearCache();
+        this.nameCache.setCurrentPlayer(playerUUID, playerName);
+
         if (serverVersion != null && serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
-            networkManager.sendToServer(new ModVersionMessage(BuildConfig.APP_VERSION.toString()));
+            networkManager.sendToServer(new ClientInfoMessage(
+                    BuildConfig.APP_VERSION.toString(),
+                    playerUUID,
+                    playerName
+            ));
+
+        this.areaManager.loadAreas();
+        this.areaRenderer.clear();
 
         if (clientConfig.notifyServerSupport.get() && !isOnLocalServer) {
             if (serverVersion == null)
-                notification.printToChat(AmLang.MSG_NO_SERVER_SUPPORT);
+                notification.printTranslatableToChat(AmLang.MSG_NO_SERVER_SUPPORT);
             else if (serverVersion.isGreaterThanOrEqual(BuildConfig.APP_VERSION))
-                notification.printToChat(AmLang.MSG_FULL_SERVER_SUPPORT);
+                notification.printTranslatableToChat(AmLang.MSG_FULL_SERVER_SUPPORT);
             else if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
-                notification.printToChat(AmLang.MSG_PARTIAL_SERVER_SUPPORT);
+                notification.printTranslatableToChat(AmLang.MSG_PARTIAL_SERVER_SUPPORT);
             else
-                notification.printToChat(AmLang.MSG_OUTDATED_VERSION_ON_SERVER);
+                notification.printTranslatableToChat(AmLang.MSG_OUTDATED_VERSION_ON_SERVER);
         }
     }
 
     public void onLoggedOut() {
+        this.nameCache.setCurrentPlayer(null, null);
+
         serverSetup.reset();
         combatState.clearCombatants();
     }

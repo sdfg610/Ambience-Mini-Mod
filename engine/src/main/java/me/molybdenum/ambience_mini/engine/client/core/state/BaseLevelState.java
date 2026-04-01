@@ -2,14 +2,20 @@ package me.molybdenum.ambience_mini.engine.client.core.state;
 
 import me.molybdenum.ambience_mini.engine.client.core.render.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
+import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
+public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TClientLevel>
 {
+    private final ArrayList<Consumer<String>> levelChangedListeners = new ArrayList<>();
+
+    protected TClientLevel cachedLevel = null;
+
     // RotX = sideways [-180.0 ; +179.99999]
     // RotY = up/down [-90.0 ; +90.0]
     // (X:0,Y:0) = (south, horizontal)
@@ -26,7 +32,18 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
     public abstract boolean isNull();
     public abstract boolean notNull();
 
-    public abstract void prepare(@Nullable ArrayList<String> messages);
+    public void prepare(@Nullable ArrayList<String> messages) {
+        TClientLevel newLevel = getCurrentLevel();
+        if (cachedLevel != newLevel && EssentialCompat.isNotFakeWorld(newLevel)) {
+            if (messages != null)
+                messages.add("Level instance changed from '" + getLevelString(cachedLevel) + "' to '" + getLevelString(newLevel) + "' since last update.");
+            cachedLevel = newLevel;
+            fireLevelChanged(cachedLevel == null ? null : getDimensionID());
+        }
+    }
+
+    protected abstract TClientLevel getCurrentLevel();
+    protected abstract String getLevelString(TClientLevel level);
 
 
     // ------------------------------------------------------------------------------------------------
@@ -169,6 +186,23 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity>
                 offsetBlockPos(bPos, 0,-1,0),
                 offsetBlockPos(bPos, 0,0,1),
                 offsetBlockPos(bPos, 0,0,-1)
+        );
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Listeners
+    public void addLevelChangedListener(Consumer<String> listener) {
+        levelChangedListeners.add(listener);
+    }
+
+    public void removeLevelChangedListener(Consumer<String> listener) {
+        levelChangedListeners.remove(listener);
+    }
+
+    protected void fireLevelChanged(String newDimensionId) {
+        levelChangedListeners.forEach(
+                listener -> listener.accept(newDimensionId)
         );
     }
 }

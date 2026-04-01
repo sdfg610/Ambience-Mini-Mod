@@ -32,11 +32,23 @@ public enum AmLang
     MSG_AREA_CONSTRUCTOR_ENABLED("message.area_constructor_enabled"),
     MSG_AREA_INVALID_LOCATION("message.area_invalid_location"),
     MSG_AREA_LOOK_AT_DESTINATION("message.area_look_at_destination"),
+    MSG_AREA_CANNOT_EDIT("message.area_cannot_edit"),
 
     MSG_PLAYER_CRASHED("message.player_crashed"),
     MSG_UNHANDLED_MESSAGE("message.unhandled_message"),
+    MSG_UNHANDLED_CLIENT_MESSAGE("message.unhandled_client_message"),
+    MSG_MESSAGE_CAUSED_SERVER_ERROR("message.message_caused_server_error"),
 
-    STRING_AREA_NAME("string.area_name")
+    STRING_AREA_NAME("string.area_name"),
+    STRING_OWNERSHIP_AND_SHARING("string.ownership_and_sharing"),
+    STRING_PRIVATE("string.private"),
+    STRING_SHARED("string.shared"),
+    STRING_PUBLIC("string.public"),
+    STRING_LOCAL("string.local"),
+    STRING_SAVE("string.save"),
+    STRING_CANCEL("string.cancel"),
+    STRING_EDIT_BOUNDS("string.edit_bounds"),
+    STRING_DELETE("string.delete")
 
     ;
 

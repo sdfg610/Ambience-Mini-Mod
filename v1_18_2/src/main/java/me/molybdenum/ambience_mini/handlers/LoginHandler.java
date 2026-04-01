@@ -20,7 +20,7 @@ public class LoginHandler
         AmbienceMini.server().hasServerSupport = Networking.INSTANCE.isRemotePresent(event.getConnection());
 
         if (AmbienceMini.config().notifyServerSupport.get() && !AmbienceMini.server().isOnLocalServer)
-            AmbienceMini.notification().printToChat(AmbienceMini.server().hasServerSupport ? AmLang.MSG_FULL_SERVER_SUPPORT : AmLang.MSG_NO_SERVER_SUPPORT);
+            AmbienceMini.notification().printTranslatableToChat(AmbienceMini.server().hasServerSupport ? AmLang.MSG_FULL_SERVER_SUPPORT : AmLang.MSG_NO_SERVER_SUPPORT);
     }
 
     @SubscribeEvent

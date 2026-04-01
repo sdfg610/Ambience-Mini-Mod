@@ -21,8 +21,10 @@ public class LoginHandlers
     @SubscribeEvent
     public static void onLoggingIn(final ClientPlayerNetworkEvent.LoggingIn event) {
         AmbienceMini.clientCore.onLoggedIn(
-                extractModVersion(event.getConnection()).orElse(null),
-                Minecraft.getInstance().isLocalServer()
+                extractModVersion(event.getConnection()),
+                Minecraft.getInstance().isLocalServer(),
+                event.getPlayer().getGameProfile().getId().toString(),
+                event.getPlayer().getGameProfile().getName()
         );
     }
 
@@ -32,13 +34,13 @@ public class LoginHandlers
     }
 
 
-    private static Optional<AmVersion> extractModVersion(Connection connection) {
+    private static AmVersion extractModVersion(Connection connection) {
         var data = NetworkHooks.getConnectionData(connection);
         if (data != null) {
             Pair<String, String> modInfo = data.getModData().getOrDefault(Common.MOD_ID, null);
             if (modInfo != null)
-                return AmVersion.tryOfString(modInfo.getValue());
+                return AmVersion.tryOfString(modInfo.getValue()).orElse(AmVersion.ZERO);
         }
-        return Optional.empty();
+        return AmVersion.ZERO;
     }
 }

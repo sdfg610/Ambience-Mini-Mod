@@ -2,7 +2,6 @@ package me.molybdenum.ambience_mini;
 
 import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.client.core.ClientCore;
-import me.molybdenum.ambience_mini.client.core.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.client.core.render.drawer.Drawer;
 import me.molybdenum.ambience_mini.client.core.state.*;
@@ -10,6 +9,10 @@ import me.molybdenum.ambience_mini.client.core.util.Notification;
 import me.molybdenum.ambience_mini.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.client.handlers.RenderHandler;
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
+import me.molybdenum.ambience_mini.engine.client.core.areas.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.areas.ServerAreaManager;
+import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.shared.Common;
@@ -17,8 +20,7 @@ import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
 import me.molybdenum.ambience_mini.network.Networking;
 import me.molybdenum.ambience_mini.client.core.setup.*;
 import me.molybdenum.ambience_mini.server.core.ServerCore;
-import me.molybdenum.ambience_mini.server.core.managers.ClientManager;
-import me.molybdenum.ambience_mini.server.core.managers.ServerNetworkManager;
+import me.molybdenum.ambience_mini.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
@@ -98,9 +100,9 @@ public class AmbienceMini extends BaseAmbienceMini
 
             Notification notification = new Notification();
             clientCore = new ClientCore(
-                    LOGGER,
+                    LOGGER, new ClientNameCache(),
                     notification, new ClientNetworkManager(),
-                    new ClientAreaManager(), new AreaRenderer(notification, new Drawer()),
+                    new ClientAreaManager(), new AreaRenderer(new Drawer()),
                     new ServerSetup(), clientConfig, keyBindings,
                     new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );
@@ -116,21 +118,23 @@ public class AmbienceMini extends BaseAmbienceMini
     // Server
     private static void onServerStarting(final ServerStartingEvent event) {
         serverCore = new ServerCore(
+                event.getServer(),
                 LOGGER,
-                new ClientManager(),
-                new ServerNetworkManager()
+                new ServerNameCache(),
+                new ServerNetworkManager(),
+                new ServerAreaManager()
         );
+        serverCore.init();
+        serverCore.onStarted();
     }
 
     private static void onServerStopping(final ServerStoppedEvent ignored) {
-        serverCore.stop();
-        serverCore = null;
+        if (serverCore != null) {
+            serverCore.onStopping();
+            serverCore = null;
+        }
     }
 
-
-    public static ClientManager clients() {
-        return serverCore.clientManager;
-    }
 
     public static ServerNetworkManager serverNetwork() {
         return serverCore.networkManager;

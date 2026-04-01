@@ -19,7 +19,7 @@ public class LoginHandlers
         AmbienceMini.server().hasServerSupport = event.getPlayer().connection.hasChannel(MobTargetUpdatePacket.TYPE.id());
 
         if (AmbienceMini.config().notifyServerSupport.get() && !AmbienceMini.server().isOnLocalServer)
-            AmbienceMini.notification().printToChat(AmbienceMini.server().hasServerSupport ? AmLang.MSG_FULL_SERVER_SUPPORT : AmLang.MSG_NO_SERVER_SUPPORT);
+            AmbienceMini.notification().printTranslatableToChat(AmbienceMini.server().hasServerSupport ? AmLang.MSG_FULL_SERVER_SUPPORT : AmLang.MSG_NO_SERVER_SUPPORT);
     }
 
     @SubscribeEvent

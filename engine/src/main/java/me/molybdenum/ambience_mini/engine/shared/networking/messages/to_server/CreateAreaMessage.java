@@ -5,8 +5,7 @@ import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
-public class CreateAreaMessage implements AmMessage
-{
+public class CreateAreaMessage extends AmMessage {
     public Area area;
 
 
@@ -24,6 +23,6 @@ public class CreateAreaMessage implements AmMessage
 
     @Override
     public void readFrom(AmReader reader) {
-        this.area = reader.readTo(new Area());
+        this.area = reader.read(Area::new);
     }
 }

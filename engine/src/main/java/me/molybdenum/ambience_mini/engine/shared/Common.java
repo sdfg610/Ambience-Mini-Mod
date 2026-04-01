@@ -5,8 +5,12 @@ public class Common
     // Mod
     public static final String MOD_ID = "ambience_mini";
 
+    // Storage
+    public static final String AM_STORAGE_DIRECTORY = "am_storage";
+    public static final String NAME_CACHE_FILE_NAME = "name_cache.json";
+
     // Configuration
-    public static final String AMBIENCE_DIRECTORY = "ambience_music";
+    public static final String AMBIENCE_MUSIC_DIRECTORY = "ambience_music";
     public static final String MUSIC_DIRECTORY = "music";
     public static final String MUSIC_CONFIG_FILE = "music_config.txt";
 

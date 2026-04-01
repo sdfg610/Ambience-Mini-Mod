@@ -44,7 +44,7 @@ public class MusicThread extends Thread
     private final Interpreter _playlistSelector;
     private final MusicProvider _musicProvider;
     private final BasePlayerState<?, ?> _player;
-    private final BaseLevelState<?, ?, ?, ?> _level;
+    private final BaseLevelState<?, ?, ?, ?, ?> _level;
     private final BaseNotification<?> _notification;
     private final BaseKeyBindings<?> _keyBindings;
 
@@ -129,7 +129,7 @@ public class MusicThread extends Thread
         }
         catch (Exception ex) {
             if (!(ex instanceof InterruptedException)) {
-                _notification.printToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
+                _notification.printTranslatableToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
                 _logger.error("Error in AmbienceThread.run()", ex);
             }
             stopMainMusic(false);

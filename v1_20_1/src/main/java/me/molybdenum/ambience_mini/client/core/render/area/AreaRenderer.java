@@ -2,30 +2,27 @@ package me.molybdenum.ambience_mini.client.core.render.area;
 
 import com.mojang.blaze3d.vertex.*;
 import me.molybdenum.ambience_mini.client.core.render.drawer.Drawer;
-import me.molybdenum.ambience_mini.client.core.util.Notification;
+import me.molybdenum.ambience_mini.engine.client.core.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Cube;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
-import me.molybdenum.ambience_mini.engine.client.core.render.areas.IAreaScreen;
+import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
+import me.molybdenum.ambience_mini.engine.shared.areas.Area;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Checkbox;
-import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 
-public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos>
+public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos, Screen>
 {
-    private final Notification notification;
     private final Drawer drawer;
     private Frustum frustum;
 
 
-    public AreaRenderer(Notification notification, Drawer drawer) {
+    public AreaRenderer(Drawer drawer) {
         super(drawer);
-        this.notification = notification;
         this.drawer = drawer;
     }
 
@@ -42,10 +39,16 @@ public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos>
         return frustum.isVisible(new AABB(from.x(), from.y(), from.z(), to.x(), to.y(), to.z()));
     }
 
+
     @Override
-    protected IAreaScreen<EditBox, Checkbox, Button> createAndShowAreaScreen() {
-        AreaScreen screen = new AreaScreen(this, new AreaScreenSymbiote(notification, this, getSelectedArea()));
+    protected Screen createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper) {
+        return new AreaScreen(new AreaScreenSymbiote(
+                selectedArea, drawer, notification, this, areaHelper
+        ));
+    }
+
+    @Override
+    protected void openScreen(Screen screen) {
         Minecraft.getInstance().setScreen(screen);
-        return screen;
     }
 }

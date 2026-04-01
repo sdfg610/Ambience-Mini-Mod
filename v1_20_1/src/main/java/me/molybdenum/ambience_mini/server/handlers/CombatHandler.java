@@ -28,7 +28,7 @@ public class CombatHandler
 
     private static void sendTargetMessage(int entityId, boolean isTargetingPlayer, ServerPlayer player) {
         // Only send packet if client has compatible version Ambience Mini installed.
-        if (AmbienceMini.clients().getModVersion(player).isGreaterThanOrEqual(AmVersion.V_2_5_0))
+        if (AmbienceMini.serverNetwork().getPlayerModVersion(player).isGreaterThanOrEqual(AmVersion.V_2_5_0))
             AmbienceMini.serverNetwork().sendToPlayer(new MobTargetMessage(entityId, isTargetingPlayer), player);
     }
 }

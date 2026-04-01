@@ -35,7 +35,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
 
 
     public Optional<Double> getAveragedCaveScore(
-            BaseLevelState<TBlockPos, TVec3, TBlockState, ?> level,
+            BaseLevelState<TBlockPos, TVec3, TBlockState, ?, ?> level,
             BasePlayerState<TBlockPos, TVec3> player
     ) {
         List<Double> scores = new ArrayList<>();
@@ -58,7 +58,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
     }
 
     protected double computeScore(
-            BaseLevelState<TBlockPos, TVec3, TBlockState, ?> level,
+            BaseLevelState<TBlockPos, TVec3, TBlockState, ?, ?> level,
             List<BlockReading<TBlockPos, TBlockState>> readings
     ){
         List<Measurement> measurements = readings.stream()
@@ -226,7 +226,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
 
 
     private Measurement measure(
-            BaseLevelState<TBlockPos, TVec3, TBlockState, ?> level,
+            BaseLevelState<TBlockPos, TVec3, TBlockState, ?, ?> level,
             BlockReading<TBlockPos, TBlockState> reading
     ) {
         TBlockPos bPos = reading.blockPos();
@@ -241,7 +241,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
     }
 
     private MaterialType getMaterialType(
-            BaseLevelState<TBlockPos, TVec3, TBlockState, ?> level,
+            BaseLevelState<TBlockPos, TVec3, TBlockState, ?, ?> level,
             TBlockState blockState
     ) {
         if (level.isAir(blockState))

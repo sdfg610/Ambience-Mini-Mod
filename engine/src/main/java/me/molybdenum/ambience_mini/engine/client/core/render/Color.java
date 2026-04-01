@@ -10,8 +10,12 @@ public class Color
 
     // Area colors
     public static final Color AREA_LOOKING = new Color(178, 178, 255);
-    public static final Color AREA_VALID = new Color(144, 238, 144);
-    public static final Color AREA_ERROR = new Color(204, 2, 2);
+    public static final Color AREA_OWNED = new Color(178, 178, 255);
+    public static final Color AREA_NON_OWNED_SHARED = new Color(178, 178, 255);
+    public static final Color AREA_PUBLIC = new Color(178, 178, 255);
+
+    public static final Color EXTENSION_VALID = new Color(144, 238, 144);
+    public static final Color EXTENSION_ERROR = new Color(204, 2, 2);
 
     public final byte r, g, b;
 

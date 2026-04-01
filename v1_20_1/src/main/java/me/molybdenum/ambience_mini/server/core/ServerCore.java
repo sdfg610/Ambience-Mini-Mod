@@ -1,19 +1,39 @@
 package me.molybdenum.ambience_mini.server.core;
 
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
-import me.molybdenum.ambience_mini.server.core.managers.ClientManager;
-import me.molybdenum.ambience_mini.server.core.managers.ServerNetworkManager;
+import me.molybdenum.ambience_mini.engine.server.core.areas.ServerAreaManager;
+import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
+import me.molybdenum.ambience_mini.server.core.networking.ServerNetworkManager;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
 
+import java.nio.file.Path;
+
 public class ServerCore extends BaseServerCore<
-        ServerPlayer, ClientManager, ServerNetworkManager
+        ServerPlayer,
+        ServerNetworkManager,
+        ServerAreaManager
 > {
+    private final MinecraftServer server;
+
+
     public ServerCore(
+            MinecraftServer server,
             Logger logger,
-            ClientManager baseClientManager,
-            ServerNetworkManager networkManager
+            ServerNameCache nameCache,
+            ServerNetworkManager networkManager,
+            ServerAreaManager areaManager
     ) {
-        super(logger, baseClientManager, networkManager);
+        super(logger, nameCache, networkManager, areaManager);
+
+        this.server = server;
+    }
+
+
+    @Override
+    public Path getWorldRootPath() {
+        return server.getWorldPath(LevelResource.ROOT).normalize();
     }
 }

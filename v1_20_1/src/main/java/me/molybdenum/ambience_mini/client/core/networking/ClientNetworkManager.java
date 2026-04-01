@@ -6,7 +6,7 @@ import me.molybdenum.ambience_mini.network.Networking;
 
 public class ClientNetworkManager extends BaseClientNetworkManager {
     @Override
-    public void sendToServer(AmMessage message) {
+    protected void sendToServerInternal(AmMessage message) {
         Networking.sendToServer(message);
     }
 }

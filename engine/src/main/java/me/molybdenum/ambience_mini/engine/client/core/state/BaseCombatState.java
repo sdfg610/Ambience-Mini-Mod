@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
+import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
@@ -13,7 +14,7 @@ public abstract class BaseCombatState<TEntity, TVec3>
     private final ConcurrentHashMap<Integer, Combatant> combatants = new ConcurrentHashMap<>();
 
     private BasePlayerState<?, TVec3> _playerState;
-    private BaseLevelState<?, TVec3, ?, TEntity> _levelState;
+    private BaseLevelState<?, TVec3, ?, TEntity, ?> _levelState;
     private ServerSetup _serverSetup;
 
     // Fields for handling leaving combat with no server support
@@ -24,21 +25,21 @@ public abstract class BaseCombatState<TEntity, TVec3>
     private long _latestRecheck = 0L;
 
 
+    @SuppressWarnings("rawtypes")
     public void init(
-            BaseClientConfig config,
+            BaseClientCore core,
             BasePlayerState<?, TVec3> playerState,
-            BaseLevelState<?, TVec3, ?, TEntity> levelState,
-            ServerSetup serverSetup
+            BaseLevelState<?, TVec3, ?, TEntity, ?> levelState
     ) {
         if (_playerState != null)
             throw new RuntimeException("Multiple calls to 'BaseCombatState.init'!");
 
         _playerState = playerState;
         _levelState = levelState;
-        _serverSetup = serverSetup;
+        _serverSetup = core.serverSetup;
 
-        _combatantTimeout = config.combatantTimeout.get();
-        _leavingCombatDistance = config.leavingCombatDistance.get();
+        _combatantTimeout = core.clientConfig.combatantTimeout.get();
+        _leavingCombatDistance = core.clientConfig.leavingCombatDistance.get();
     }
 
 

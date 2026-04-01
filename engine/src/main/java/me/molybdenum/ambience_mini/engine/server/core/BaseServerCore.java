@@ -1,39 +1,76 @@
 package me.molybdenum.ambience_mini.engine.server.core;
 
-import me.molybdenum.ambience_mini.engine.server.core.managers.BaseServerNetworkManager;
-import me.molybdenum.ambience_mini.engine.server.core.managers.BaseClientManager;
+import me.molybdenum.ambience_mini.engine.server.core.areas.ServerAreaManager;
+import me.molybdenum.ambience_mini.engine.server.core.networking.BaseServerNetworkManager;
+import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.shared.Common;
 import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public abstract class BaseServerCore<
         TServerPlayer,
-        TClientManager extends BaseClientManager<TServerPlayer>,
-        TNetworkManager extends BaseServerNetworkManager<TServerPlayer>
+        TNetworkManager extends BaseServerNetworkManager<TServerPlayer>,
+        TAreaManager extends ServerAreaManager
 > {
     // Utils
     public final Logger logger;
-
-    // Setup
-    public final TClientManager clientManager;
+    public final ServerNameCache nameCache;
 
     // Networking
     public final TNetworkManager networkManager;
+    public final TAreaManager areaManager;
 
 
     public BaseServerCore(
             Logger logger,
-            TClientManager clientManager,
-            TNetworkManager networkManager
+            ServerNameCache nameCache,
+            TNetworkManager networkManager,
+            TAreaManager areaManager
     ) {
         this.logger = logger;
+        this.nameCache = nameCache;
 
-        this.clientManager = clientManager;
         this.networkManager = networkManager;
+        this.areaManager = areaManager;
+    }
+
+    public void init() {
+        this.nameCache.init(this);
 
         this.networkManager.init(this);
+        this.areaManager.init(this);
     }
 
 
-    public void stop() {
-        // TODO!!!!!!   E.g. save areas
+    // -----------------------------------------------------------------------------------------------------------------
+    // Concrete API
+    public Path getAmStoragePath() {
+        Path storagePath = getWorldRootPath().resolve(Common.AM_STORAGE_DIRECTORY);
+        if (!storagePath.toFile().exists()) {
+            try {
+                Files.createDirectory(storagePath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return storagePath;
     }
+
+
+    public void onStarted() {
+        this.nameCache.loadCache();
+    }
+
+    public void onStopping() {
+        this.nameCache.saveCache();
+        // TODO: Save areas
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Abstract API
+    public abstract Path getWorldRootPath();
 }

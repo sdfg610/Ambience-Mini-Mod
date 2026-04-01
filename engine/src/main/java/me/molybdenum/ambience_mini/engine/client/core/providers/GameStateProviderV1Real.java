@@ -14,7 +14,7 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
 {
     // State
     private final BasePlayerState<TBlockPos, TVec3> _player;
-    private final BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity> _level;
+    private final BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, ?> _level;
     private final BaseScreenState _screen;
     private final BaseCombatState<TEntity, TVec3> _combat;
     private final CaveDetector<TBlockPos, TVec3, TBlockState> _caveDetector;
@@ -50,7 +50,7 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     public GameStateProviderV1Real(
         BaseClientConfig config,
         BasePlayerState<TBlockPos, TVec3> player,
-        BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity> level,
+        BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, ?> level,
         BaseScreenState screenMonitor,
         BaseCombatState<TEntity, TVec3> combatMonitor,
         CaveDetector<TBlockPos, TVec3, TBlockState> caveDetector

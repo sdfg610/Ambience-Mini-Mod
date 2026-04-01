@@ -4,25 +4,25 @@ import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
-public class ModVersionMessage implements AmMessage
-{
-    public String modVersion;
+
+public class GetNameCacheMessage extends AmMessage {
+    public String playerUuid;
 
 
-    public ModVersionMessage() { }
+    public GetNameCacheMessage() { }
 
-    public ModVersionMessage(String modVersion) {
-        this.modVersion = modVersion;
+    public GetNameCacheMessage(String playerUuid) {
+        this.playerUuid = playerUuid;
     }
 
 
     @Override
     public void writeTo(AmWriter writer) {
-        writer.writeString(modVersion);
+        writer.writeString(playerUuid);
     }
 
     @Override
     public void readFrom(AmReader reader) {
-        modVersion = reader.readString();
+        playerUuid = reader.readString();
     }
 }

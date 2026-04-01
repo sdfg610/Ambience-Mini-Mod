@@ -13,11 +13,15 @@ public abstract class BaseNotification<TComponent>
     }
 
 
-    public void printToChat(AmLang key, Object... arguments) {
-        printToChat(makeTranslatable(key.key, arguments));
+    public void printTranslatableToChat(AmLang key, Object... arguments) {
+        printTranslatableToChat(key.key, arguments);
     }
 
-    public void printToChat(String text) {
+    public void printTranslatableToChat(String key, Object... arguments) {
+        printToChat(makeTranslatable(key, arguments));
+    }
+
+    public void printLiteralToChat(String text) {
         printToChat(makeLiteral(text));
     }
 

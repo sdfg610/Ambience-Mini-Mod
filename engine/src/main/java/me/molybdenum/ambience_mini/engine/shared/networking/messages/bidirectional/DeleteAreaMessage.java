@@ -4,8 +4,7 @@ import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
-public class DeleteAreaMessage implements AmMessage
-{
+public class DeleteAreaMessage extends AmMessage {
     public int areaId;
 
 

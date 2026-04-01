@@ -1,5 +1,8 @@
 package me.molybdenum.ambience_mini.engine.shared.utils;
 
+import java.util.function.Function;
+
+
 public class Result<T> {
     private final boolean isSuccess;
 
@@ -14,19 +17,21 @@ public class Result<T> {
     }
 
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isSuccess() {
         return isSuccess;
     }
-
-    public boolean isFailure() {
-        return !isSuccess;
-    }
-
 
     public T getValue() {
         if (isSuccess)
             return value;
         throw new IllegalStateException("Tried to get value of failure-result.");
+    }
+
+    public <E> Result<E> map(Function<T, E> onResult) {
+        return isSuccess
+                ? Result.of(onResult.apply(value))
+                : Result.fail(error);
     }
 
 

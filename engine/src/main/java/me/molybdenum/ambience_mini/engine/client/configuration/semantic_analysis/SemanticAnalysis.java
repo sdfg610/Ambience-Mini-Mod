@@ -65,7 +65,7 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
         }
         else if (play instanceof Load load) {
             Result<String> musicPathRes = MusicProvider.validatePath(load.file().value());
-            if (musicPathRes.isFailure())
+            if (!musicPathRes.isSuccess())
                 errors.add(new SemError(load.line(), musicPathRes.error));
             else {
                 String musicPath = musicPathRes.value;

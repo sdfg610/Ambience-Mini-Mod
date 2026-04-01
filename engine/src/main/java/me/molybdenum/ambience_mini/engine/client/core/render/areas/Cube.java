@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.render.Vector3d;
+import me.molybdenum.ambience_mini.engine.shared.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
 import org.jetbrains.annotations.Nullable;
 
@@ -63,6 +64,10 @@ public class Cube
                 northWest, northEast, southWest, southEast
         };
         faces = new Face[] { north, south, east, west, top, bottom };
+    }
+
+    public Cube(Area area) {
+        this(area.fromBlock, area.toBlock);
     }
 
     public Vector3i getFromBlock() {

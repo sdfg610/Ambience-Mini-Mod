@@ -1,6 +1,5 @@
 package me.molybdenum.ambience_mini.client.handlers;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import me.molybdenum.ambience_mini.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.shared.Common;
 import net.minecraft.client.Minecraft;
@@ -17,8 +16,5 @@ public class KeyInputEventHandler
     public static void keyEvent(final InputEvent.Key event) {
         if (Minecraft.getInstance().isWindowActive())
             AmbienceMini.clientCore.keyBindings.handleKeyInput();
-
-        if (event.getKey() == InputConstants.KEY_K)
-            AmbienceMini.clientCore.areaRenderer.openAreaScreen();
     }
 }

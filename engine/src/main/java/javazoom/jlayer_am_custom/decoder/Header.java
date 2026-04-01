@@ -333,8 +333,6 @@ public final class Header
 				h_vbr_frames = (tmp[0] << 24)&0xFF000000 | (tmp[1] << 16)&0x00FF0000 | (tmp[2] << 8)&0x0000FF00 | tmp[3]&0x000000FF;
 				length += 4;	
 				//System.out.println("VBR:"+vbri+" Frames:"+ h_vbr_frames +" Size:"+h_vbr_bytes);
-				// TOC
-				// TODO				
 			}
 		}
 		catch (ArrayIndexOutOfBoundsException e)

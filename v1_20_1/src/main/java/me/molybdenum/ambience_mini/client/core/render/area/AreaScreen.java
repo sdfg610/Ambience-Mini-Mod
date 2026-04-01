@@ -1,9 +1,6 @@
 package me.molybdenum.ambience_mini.client.core.render.area;
 
-import me.molybdenum.ambience_mini.engine.client.core.render.areas.AbstractAreaScreenSymbiote;
-import me.molybdenum.ambience_mini.engine.client.core.render.areas.IAreaScreen;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
+import me.molybdenum.ambience_mini.engine.client.core.render.areas.IAreaScreenAccessor;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
@@ -13,25 +10,15 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 
-public class AreaScreen extends Screen implements IAreaScreen<EditBox, Checkbox, Button>
+public class AreaScreen extends Screen
 {
-    private final AreaRenderer areaRenderer;
-    private final AbstractAreaScreenSymbiote<EditBox, Checkbox, Button> symbiote;
+    private final AreaScreenAccessor accessor = new AreaScreenAccessor();
 
-    // TODO: How to best generalize this thing!????????
-
-    Checkbox cbxPrivate = new Checkbox(30, 60, 20, 20, Component.literal("content"), true);
-    Checkbox cbxShared = new Checkbox(30, 60, 20, 20, Component.literal("content"), true);
-    Checkbox cbxPublic = new Checkbox(30, 60, 20, 20, Component.literal("content"), true);
-
-    Button btnConfirm = Button.builder(Component.literal("content"), (button) -> {}).pos(30, 90).size(20, 50).build();
-    Button btnCancel = Button.builder(Component.literal("content"), (button) -> {}).pos(30, 90).size(20, 50).build();
-    Button btnEditBounds = Button.builder(Component.literal("content"), (button) -> {}).pos(30, 90).size(20, 50).build();
+    private final AreaScreenSymbiote symbiote;
 
 
-    public AreaScreen(AreaRenderer areaRenderer, AbstractAreaScreenSymbiote<EditBox, Checkbox, Button> symbiote) {
+    public AreaScreen(AreaScreenSymbiote symbiote) {
         super(Component.literal("Area screen"));
-        this.areaRenderer = areaRenderer;
         this.symbiote = symbiote;
     }
 
@@ -39,7 +26,7 @@ public class AreaScreen extends Screen implements IAreaScreen<EditBox, Checkbox,
     @Override
     protected void init() {
         super.init();
-        symbiote.init(this);
+        symbiote.init(accessor);
     }
 
     @Override
@@ -55,34 +42,41 @@ public class AreaScreen extends Screen implements IAreaScreen<EditBox, Checkbox,
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        areaRenderer.setup(graphics.pose().last(), null);    // |
-        areaRenderer.renderGeneralAreaScreen(width, height);        // TODO: Generalise these two lines
+        symbiote.setup(graphics.pose().last());
+        symbiote.renderGeneralAreaScreen(width, height);
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
-
     @Override
-    public void addTextBox(EditBox editBox) {
-        this.addRenderableWidget(editBox);
+    public void onClose() { // This only fires when pressing Escape
+        super.onClose();
+        symbiote.onClose();
     }
 
-    @Override
-    public void addCheckBox(Checkbox checkbox) {
-        this.addRenderableWidget(checkbox);
-    }
+    private class AreaScreenAccessor implements IAreaScreenAccessor<EditBox, Checkbox, Button> {
+        @Override
+        public void addTextBox(EditBox editBox) {
+            AreaScreen.this.addRenderableWidget(editBox);
+        }
 
-    @Override
-    public void addButton(Button button) {
-        this.addRenderableWidget(button);
-    }
+        @Override
+        public void addCheckBox(Checkbox checkbox) {
+            AreaScreen.this.addRenderableWidget(checkbox);
+        }
 
-    @Override
-    public int screenWidth() {
-        return this.width;
-    }
+        @Override
+        public void addButton(Button button) {
+            AreaScreen.this.addRenderableWidget(button);
+        }
 
-    @Override
-    public int screenHeight() {
-        return this.height;
+        @Override
+        public int screenWidth() {
+            return AreaScreen.this.width;
+        }
+
+        @Override
+        public int screenHeight() {
+            return AreaScreen.this.height;
+        }
     }
 }
