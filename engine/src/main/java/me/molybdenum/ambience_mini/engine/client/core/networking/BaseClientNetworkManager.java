@@ -4,10 +4,7 @@ import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.bidirectional.*;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.FailureMessage;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.MobTargetMessage;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.PutNameCacheMessage;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.SuccessMessage;
+import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.*;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 
@@ -66,6 +63,11 @@ public abstract class BaseClientNetworkManager
         else if (message instanceof DeleteAreaMessage msg)
             handleDeleteAreaMessage(msg);
 
+        else if (message instanceof PutChunkReferenceMessage msg)
+            handlePutChunkReferenceMessage(msg);
+        else if (message instanceof PutChunkStructuresMessage msg)
+            handlePutChunkStructuresMessage(msg);
+
         else if (message instanceof PutNameCacheMessage msg)
             handlePutNameCacheMessage(msg);
 
@@ -78,7 +80,7 @@ public abstract class BaseClientNetworkManager
 
     // Success and failure responses
     private void handleFailureMessage(FailureMessage msg) {
-        core.notification.printTranslatableToChat(msg.translationKey, (Object[])msg.arguments);
+        core.notification.printTranslatableToChat(msg.translationKey, msg.arguments);
         var handler = handlers.remove(msg.handlerID);
         if (handler != null)
             handler.right().run();
@@ -108,6 +110,25 @@ public abstract class BaseClientNetworkManager
 
     private void handleDeleteAreaMessage(DeleteAreaMessage msg) {
         core.areaManager.deleteArea(msg.areaId);
+    }
+
+
+    // Structures
+    private void handlePutChunkReferenceMessage(PutChunkReferenceMessage msg) {
+        core.structureCache.setReferences(
+                msg.dimension,
+                msg.chunkPos,
+                msg.startChunks
+        );
+    }
+
+    private void handlePutChunkStructuresMessage(PutChunkStructuresMessage msg) {
+        for (var entry : msg.chunkToStructures.entrySet())
+            core.structureCache.setStructures(
+                    msg.dimension,
+                    entry.getKey(),
+                    entry.getValue()
+            );
     }
 
 

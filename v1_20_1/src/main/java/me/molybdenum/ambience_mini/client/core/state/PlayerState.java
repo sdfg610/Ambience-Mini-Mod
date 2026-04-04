@@ -56,7 +56,7 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
 
     @Override
-    public void prepare(@Nullable ArrayList<String> messages) {
+    public void prepare(@Nullable ArrayList<String> messages) {   // TODO: Generalize TLocalPlayer
         LocalPlayer newPlayer = mc.player;
         if (EssentialCompat.isLoaded && EssentialCompat.tryCaptureFakes(newPlayer, (player) -> player.getGameProfile().getName(), LocalPlayer::level) && messages != null)
             messages.add("Captured fake player and world from essential mod!");
@@ -68,26 +68,30 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
         }
     }
 
+
+    @Override
+    public String getUUID() {
+        return player == null ? null : player.getStringUUID();
+    }
+
     private String getPlayerString(LocalPlayer pl) {
         return pl == null ? "null" : pl.getId() + "/" + System.identityHashCode(pl);
     }
 
 
     @Override
-    public boolean isSurvivalOrAdventureMode() {
-        assert player != null;
-        return getGameMode().isSurvival();
+    public Boolean isSurvivalOrAdventureMode() {
+        return player == null ? null : Objects.requireNonNull(getGameMode()).isSurvival();
     }
 
     @Override
     public String getGameModeName() {
-        assert player != null;
-        return getGameMode().getName();
+        return player == null ? null : Objects.requireNonNull(getGameMode()).getName();
     }
 
     private GameType getGameMode() {
         try {
-            return ((PlayerInfo)getPlayerInfoMethod.invoke(player)).getGameMode();
+            return player == null ? null : ((PlayerInfo)getPlayerInfoMethod.invoke(player)).getGameMode();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -95,8 +99,10 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
 
     @Override
-    public boolean canHearJukeboxMusic() {
-        assert player != null;
+    public Boolean canHearJukeboxMusic() {
+        if (player == null)
+            return null;
+
         SoundEngine soundEngine = ObfuscationReflectionHelper.getPrivateValue(SoundManager.class, mc.getSoundManager(), OBF_SOUND_ENGINE);
         Map<SoundInstance, ChannelAccess.ChannelHandle> instanceToChannel = ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class, soundEngine, OBF_INSTANCE_TO_CHANNEL);
 
@@ -109,83 +115,71 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
 
     @Override
-    public double vectorX() {
-        assert player != null;
-        return player.getX();
+    public Double vectorX() {
+        return player == null ? null : player.getX();
     }
 
     @Override
-    public double vectorY() {
-        assert player != null;
-        return player.getY();
+    public Double vectorY() {
+        return player == null ? null : player.getY();
     }
 
     @Override
-    public double vectorZ() {
-        assert player != null;
-        return player.getZ();
+    public Double vectorZ() {
+        return player == null ? null : player.getZ();
     }
 
     @Override
     public Vec3 position() {
-        assert player != null;
-        return player.position();
+        return player == null ? null : player.position();
     }
 
     @Override
     public Vec3 eyePosition() {
-        assert player != null;
-        return player.getEyePosition();
+        return player == null ? null : player.getEyePosition();
     }
 
 
     @Override
-    public int blockX() {
-        assert player != null;
-        return player.getBlockX();
+    public Integer blockX() {
+        return player == null ? null : player.getBlockX();
     }
 
     @Override
-    public int blockY() {
-        assert player != null;
-        return player.getBlockY();
+    public Integer blockY() {
+        return player == null ? null : player.getBlockY();
     }
 
     @Override
-    public int blockZ() {
-        assert player != null;
-        return player.getBlockY();
+    public Integer blockZ() {
+        return player == null ? null : player.getBlockY();
     }
 
     @Override
     public BlockPos blockPos() {
-        assert player != null;
-        return player.blockPosition();
+        return player == null ? null : player.blockPosition();
     }
 
     @Override
     public BlockPos eyeBlockPos() {
-        assert player != null;
-        return BlockPos.containing(player.getEyePosition());
+        return player == null ? null : BlockPos.containing(player.getEyePosition());
     }
 
 
     @Override
-    public float health() {
-        assert player != null;
-        return player.getHealth();
+    public Float health() {
+        return player == null ? null : player.getHealth();
     }
 
     @Override
-    public float maxHealth() {
-        assert player != null;
-        return player.getMaxHealth();
+    public Float maxHealth() {
+        return player == null ? null : player.getMaxHealth();
     }
 
     @Override
     public List<String> getActiveEffectIds() {
-        assert player != null;
-        return player.getActiveEffectsMap().keySet().stream()
+        return player == null ? null
+                : player.getActiveEffectsMap().keySet().stream()
                 .map(ForgeRegistries.MOB_EFFECTS::getKey)
                 .filter(Objects::nonNull)
                 .map(Object::toString)
@@ -194,84 +188,74 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
 
     @Override
-    public boolean isSleeping() {
-        assert player != null;
-        return player.isSleeping();
+    public Boolean isSleeping() {
+        return player == null ? null : player.isSleeping();
     }
 
     @Override
-    public boolean isUnderwater() {
-        assert player != null;
-        return player.isUnderWater();
+    public Boolean isUnderwater() {
+        return player == null ? null : player.isUnderWater();
     }
 
     @Override
-    public boolean isInLava() {
-        assert player != null;
-        return player.isInLava();
+    public Boolean isInLava() {
+        return player == null ? null : player.isInLava();
     }
 
     @Override
-    public boolean isDrowning() {
-        assert player != null;
-        return player.getAirSupply() <= 0;
+    public Boolean isDrowning() {
+        return player == null ? null : player.getAirSupply() <= 0;
     }
 
 
     @Override
     public String vehicleId() {
-        assert player != null;
+        if (player == null)
+            return null;
+
         var vec = player.getVehicle();
-        return vec != null ? vec.getEncodeId() : "";
+        return vec != null ? vec.getEncodeId() : null;
     }
 
     @Override
-    public boolean inMinecart() {
-        assert player != null;
-        return player.getVehicle() instanceof Minecart;
+    public Boolean inMinecart() {
+        return player == null ? null : player.getVehicle() instanceof Minecart;
     }
 
     @Override
-    public boolean inBoat() {
-        assert player != null;
-        return player.getVehicle() instanceof Boat;
+    public Boolean inBoat() {
+        return player == null ? null : player.getVehicle() instanceof Boat;
     }
 
     @Override
-    public boolean onHorse() {
-        assert player != null;
-        return player.getVehicle() instanceof Horse;
+    public Boolean onHorse() {
+        return player == null ? null : player.getVehicle() instanceof Horse;
     }
 
     @Override
-    public boolean onDonkey() {
-        assert player != null;
-        return player.getVehicle() instanceof Donkey;
+    public Boolean onDonkey() {
+        return player == null ? null : player.getVehicle() instanceof Donkey;
     }
 
     @Override
-    public boolean onPig() {
-        assert player != null;
-        return player.getVehicle() instanceof Pig;
+    public Boolean onPig() {
+        return player == null ? null : player.getVehicle() instanceof Pig;
     }
 
     @Override
-    public boolean elytraFlying() {
-        assert player != null;
-        return player.isFallFlying();
+    public Boolean elytraFlying() {
+        return player == null ? null : player.isFallFlying();
     }
 
 
     @Override
-    public boolean fishingHookInWater() {
-        assert player != null;
-        return player.fishing != null && player.fishing.isInWater();
+    public Boolean fishingHookInWater() {
+        return player == null ? null : player.fishing != null && player.fishing.isInWater();
     }
 
 
     @Override
-    public double distanceTo(Vec3 position) {
-        assert player != null;
-        return player.position().distanceTo(position);
+    public Double distanceTo(Vec3 position) {
+        return player == null ? null : player.position().distanceTo(position);
     }
 }

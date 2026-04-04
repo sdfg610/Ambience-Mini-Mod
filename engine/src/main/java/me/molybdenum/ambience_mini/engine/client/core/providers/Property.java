@@ -10,11 +10,11 @@ public class Property {
     public final String name;
     public final Type type;
 
-    private final Supplier<Value> _getter;
-    private final BiConsumer<Property, Value> _onFired;
+    private final Supplier<Value<?>> _getter;
+    private final BiConsumer<Property, Value<?>> _onFired;
 
 
-    public Property(String name, Type type, Supplier<Value> getter, BiConsumer<Property, Value> onFired) {
+    public Property(String name, Type type, Supplier<Value<?>> getter, BiConsumer<Property, Value<?>> onFired) {
         this.name = name;
         this.type = type;
         this._getter = getter;
@@ -22,8 +22,8 @@ public class Property {
     }
 
 
-    public Value getValue() {
-        Value result = _getter.get();
+    public Value<?> getValue() {
+        Value<?> result = _getter.get();
         _onFired.accept(this, result);
         return result;
     }

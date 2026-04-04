@@ -15,7 +15,6 @@ import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Playl
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.FakeMusicProvider;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Event;
-import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderV1Mock;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Property;
 import me.molybdenum.ambience_mini.engine.shared.BuildConfig;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
@@ -89,7 +88,7 @@ public class Main
             eventControl.appendChild(makeIntegerControl(doc, pr));
         else if (pr.type instanceof FloatT)
             eventControl.appendChild(makeFloatControl(doc, pr));
-        else if (pr.type instanceof ListT listT && listT.elementType() instanceof StringT)
+        else if (pr.type instanceof ListT listT && listT.elementType instanceof StringT)
             eventControl.appendChild(makeStringListControl(doc, pr));
 
         return eventControl;
@@ -214,7 +213,7 @@ public class Main
         var output = doc.getElementById("output");
         output.appendChild(makeParagraph(doc, "Success!"));
 
-        ArrayList<Pair<String, Value>> trace = new ArrayList<>();
+        ArrayList<Pair<String, Value<?>>> trace = new ArrayList<>();
         PlaylistChoice choice = interpreter.selectPlaylist(trace);
         if (choice == null)
             output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));

@@ -6,11 +6,14 @@ import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmRead
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
 public class PutAreaMessage extends AmMessage {
-    public Area area;
-    public boolean overwriteIfExists;
+    public final Area area;
+    public final boolean overwriteIfExists;
 
 
-    public PutAreaMessage() {}
+    public PutAreaMessage(AmReader reader) {
+        this.area = new Area(reader);
+        this.overwriteIfExists = reader.readBoolean();
+    }
 
     public PutAreaMessage(Area area) {
         this.area = area;
@@ -27,11 +30,5 @@ public class PutAreaMessage extends AmMessage {
     public void writeTo(AmWriter writer) {
         area.writeTo(writer);
         writer.writeBoolean(overwriteIfExists);
-    }
-
-    @Override
-    public void readFrom(AmReader reader) {
-        this.area = reader.read(Area::new);
-        this.overwriteIfExists = reader.readBoolean();
     }
 }

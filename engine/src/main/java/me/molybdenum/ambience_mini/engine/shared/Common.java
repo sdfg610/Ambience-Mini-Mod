@@ -17,8 +17,11 @@ public class Common
     // Areas
     public static final float AREA_SELECTION_RANGE = 48f;
     public static final float AREA_LINE_WIDTH = 2f;
-    public static final int MAX_AREA_NAME_LENGTH = 40;
+    public static final int MAX_AREA_NAME_LENGTH = 50;   // TODO: Check and enforce this everywhere!
+
+    // Warden
+    public static final int WARDEN_SEARCH_RADIUS = 32; // 2 chunks
 
     // Networking
-    public static final String PROTOCOL_VERSION = "1";
+    public static final String PROTOCOL_VERSION = "1"; // Should never actually change to preserve backwards compatibility
 }

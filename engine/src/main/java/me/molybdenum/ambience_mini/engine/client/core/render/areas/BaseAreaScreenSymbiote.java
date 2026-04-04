@@ -1,8 +1,8 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
-import me.molybdenum.ambience_mini.engine.client.core.areas.AreaHelper;
+import me.molybdenum.ambience_mini.engine.client.core.locations.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
-import me.molybdenum.ambience_mini.engine.client.core.render.Vector2i;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
@@ -25,6 +25,7 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
 
     private final Area area;
     private final BaseDrawer baseDrawer;
+    private final BaseNotification<?> notification;
     private final BaseAreaRenderer<?,?,?> areaRenderer;
     private final AreaHelper areaHelper;
 
@@ -77,6 +78,7 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
         // Core state
         this.area = area;
         this.baseDrawer = baseDrawer;
+        this.notification = notification;
         this.areaRenderer = areaRenderer;
         this.areaHelper = areaHelper;
 
@@ -271,6 +273,11 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
     private void onConfirmClicked() {
         if (!allowInput)
             return;
+
+        if (getValue(txtAreaName).isBlank()) {
+            notification.printTranslatableToChat(AmLang.MSG_AREA_NAME_CANNOT_BLANK);
+            return;
+        }
 
         allowInput = false;
         area.name = getValue(txtAreaName);

@@ -16,7 +16,7 @@ public abstract class BaseGameStateProvider {
     private final ArrayList<Event> _events = new ArrayList<>();
     private final ArrayList<Property> _properties = new ArrayList<>();
 
-    private final ArrayList<BiConsumer<String, Value>> _onFiredListeners = new ArrayList<>();
+    private final ArrayList<BiConsumer<String, Value<?>>> _onFiredListeners = new ArrayList<>();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ public abstract class BaseGameStateProvider {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    protected Property registerProperty(String name, Type type, Supplier<Value> getter) {
+    protected Property registerProperty(String name, Type type, Supplier<Value<?>> getter) {
         if (_properties.stream().anyMatch(ev -> ev.name.equals(name)))
             throw new RuntimeException("Duplicate registration of AmbienceMini-property: " + name);
 
@@ -42,11 +42,11 @@ public abstract class BaseGameStateProvider {
     }
 
 
-    public void registerOnFiredListener(BiConsumer<String, Value> onFired) {
+    public void registerOnFiredListener(BiConsumer<String, Value<?>> onFired) {
         _onFiredListeners.add(onFired);
     }
 
-    public void unregisterOnFiredListener(BiConsumer<String, Value> onFired) {
+    public void unregisterOnFiredListener(BiConsumer<String, Value<?>> onFired) {
         _onFiredListeners.remove(onFired);
     }
 
@@ -56,7 +56,7 @@ public abstract class BaseGameStateProvider {
             listener.accept('@' + event.name, boolVal);
     }
 
-    private void onPropertyFired(Property property, Value value) {
+    private void onPropertyFired(Property property, Value<?> value) {
         for (var listener : _onFiredListeners)
             listener.accept('$' + property.name, value);
     }
@@ -109,7 +109,7 @@ public abstract class BaseGameStateProvider {
     // -----------------------------------------------------------------------------------------------------------------
     // Debugging
     public String readAll() {
-        ArrayList<Pair<String, Value>> readings = new ArrayList<>();
+        ArrayList<Pair<String, Value<?>>> readings = new ArrayList<>();
 
         for (var event : _events)
             readings.add(new Pair<>("@" + event.name, event.isActive()));

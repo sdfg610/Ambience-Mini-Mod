@@ -9,9 +9,10 @@ import me.molybdenum.ambience_mini.client.core.util.Notification;
 import me.molybdenum.ambience_mini.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.client.handlers.RenderHandler;
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
-import me.molybdenum.ambience_mini.engine.client.core.areas.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
-import me.molybdenum.ambience_mini.engine.server.core.areas.ServerAreaManager;
+import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
@@ -20,6 +21,7 @@ import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
 import me.molybdenum.ambience_mini.network.Networking;
 import me.molybdenum.ambience_mini.client.core.setup.*;
 import me.molybdenum.ambience_mini.server.core.ServerCore;
+import me.molybdenum.ambience_mini.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -100,7 +102,7 @@ public class AmbienceMini extends BaseAmbienceMini
 
             Notification notification = new Notification();
             clientCore = new ClientCore(
-                    LOGGER, new ClientNameCache(),
+                    LOGGER, new ClientNameCache(), new StructureCache(),
                     notification, new ClientNetworkManager(),
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
                     new ServerSetup(), clientConfig, keyBindings,
@@ -121,8 +123,9 @@ public class AmbienceMini extends BaseAmbienceMini
                 event.getServer(),
                 LOGGER,
                 new ServerNameCache(),
-                new ServerNetworkManager(),
-                new ServerAreaManager()
+                new ServerAreaManager(),
+                new StructureReader(event.getServer()),
+                new ServerNetworkManager()
         );
         serverCore.init();
         serverCore.onStarted();

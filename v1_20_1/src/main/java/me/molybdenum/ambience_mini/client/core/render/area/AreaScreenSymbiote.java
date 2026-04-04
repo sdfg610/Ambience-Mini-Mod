@@ -2,8 +2,8 @@ package me.molybdenum.ambience_mini.client.core.render.area;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.molybdenum.ambience_mini.client.core.render.drawer.Drawer;
-import me.molybdenum.ambience_mini.engine.client.core.areas.AreaHelper;
-import me.molybdenum.ambience_mini.engine.client.core.render.Vector2i;
+import me.molybdenum.ambience_mini.engine.client.core.locations.AreaHelper;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaScreenSymbiote;
 import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;

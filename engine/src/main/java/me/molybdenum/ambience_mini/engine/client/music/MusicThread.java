@@ -16,16 +16,15 @@ import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class MusicThread extends Thread
 {
+    private static final int AVERAGE_OVER = 10;
+
     private final Logger _logger;
     private final Supplier<Boolean> _isFocused;
 
@@ -73,6 +72,9 @@ public class MusicThread extends Thread
             _interruptPlayer.setVolume(volume);
     };
 
+    private long _benchmarkTime = 0;
+    private int _benchmarkIndex = 0;
+    private final long[] _benchmarks = new long[AVERAGE_OVER];
 
     private boolean _kill = false;
 
@@ -176,12 +178,14 @@ public class MusicThread extends Thread
         if (_volumeZero || handlePaused() || handleUnfocused())
             return;
 
-        ArrayList<Pair<String, Value>> trace = null;
+        ArrayList<Pair<String, Value<?>>> trace = null;
         ArrayList<String> messages = null;
         if (_verboseMode) {
             trace = new ArrayList<>();
             messages = new ArrayList<>();
             _tick++;
+
+            _benchmarkTime = System.currentTimeMillis();
         }
 
         _playlistSelector.prepare(messages);
@@ -199,6 +203,10 @@ public class MusicThread extends Thread
         boolean doFade = !nextChoice.isInstant();
 
         if (_verboseMode) {
+            long selectTime = System.currentTimeMillis() - _benchmarkTime;
+            _benchmarks[_benchmarkIndex] = selectTime;
+            _benchmarkIndex = (_benchmarkIndex + 1) % AVERAGE_OVER;
+
             if (_currentPlaylist != nextPlaylist) {
                 _currentPlaylist = nextPlaylist;
 
@@ -207,6 +215,7 @@ public class MusicThread extends Thread
                 else
                     _logger.info("At tick '{}'. Selected new playlist: [{}]", _tick, String.join(", ", nextPlaylist.stream().map(Music::musicPath).toList()));
                 _logger.info("Values computed during selection:\n{}", Utils.getKeyValuePairString(trace));
+                _logger.info("Playlist selection took {}ms. The average time is currently {}ms.", selectTime, Arrays.stream(_benchmarks).average().orElse(Double.MIN_VALUE));
             }
 
             for (var msg : messages)
@@ -261,7 +270,7 @@ public class MusicThread extends Thread
             activePlayer.playOrResume(doFade);
     }
 
-    private PlaylistChoice selectPlaylistMeticulously(ArrayList<Pair<String, Value>> trace) {
+    private PlaylistChoice selectPlaylistMeticulously(ArrayList<Pair<String, Value<?>>> trace) {
         _latestChoices[_nextChoiceIndex] = _playlistSelector.selectPlaylist(trace);
         _nextChoiceIndex = (_nextChoiceIndex + 1) % _numLatestChoices;
 

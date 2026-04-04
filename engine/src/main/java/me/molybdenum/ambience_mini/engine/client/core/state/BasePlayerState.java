@@ -20,47 +20,47 @@ public interface BasePlayerState<TBlockPos, TVec3>
 
     // -----------------------------------------------------------------------------------------------------------------
     // Player state
-    boolean isSurvivalOrAdventureMode();
+    String getUUID();
+    Boolean isSurvivalOrAdventureMode();
     String getGameModeName();
 
-    boolean canHearJukeboxMusic();
+    Boolean canHearJukeboxMusic();
 
-    double vectorX();
-    double vectorY();
-    double vectorZ();
+    Double vectorX();
+    Double vectorY();
+    Double vectorZ();
     TVec3 position();
     TVec3 eyePosition();
 
-    int blockX();
-    int blockY();
-    int blockZ();
+    Integer blockX();
+    Integer blockY();
+    Integer blockZ();
     TBlockPos blockPos();
     TBlockPos eyeBlockPos();
 
-    float health();
-    float maxHealth();
+    Float health();
+    Float maxHealth();
     List<String> getActiveEffectIds();
 
-    boolean isSleeping();
-    boolean isUnderwater();
-    boolean isInLava();
-    boolean isDrowning();
+    Boolean isSleeping();
+    Boolean isUnderwater();
+    Boolean isInLava();
+    Boolean isDrowning();
 
     String vehicleId();
-    boolean inMinecart();
-    boolean inBoat();
-    boolean onHorse();
-    boolean onDonkey();
-    boolean onPig();
-    boolean elytraFlying();
+    Boolean inMinecart();
+    Boolean inBoat();
+    Boolean onHorse();
+    Boolean onDonkey();
+    Boolean onPig();
+    Boolean elytraFlying();
 
-    boolean fishingHookInWater();
+    Boolean fishingHookInWater();
 
 
     // -----------------------------------------------------------------------------------------------------------------
     // Utils
-    double distanceTo(TVec3 position);
-
+    Double distanceTo(TVec3 position);
 
 
     class JukeboxHelper<TSoundInstance, TChannelHandle> {

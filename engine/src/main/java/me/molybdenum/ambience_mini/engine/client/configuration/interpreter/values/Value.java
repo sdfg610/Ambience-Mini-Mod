@@ -1,59 +1,111 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueList;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-public sealed abstract class Value permits BoolVal, FloatVal, IntVal, ListVal, StringVal
+public sealed abstract class Value<T> permits AreaVal, BoolVal, FloatVal, IntVal, ListVal, StringVal, UndefinedVal
 {
-    public boolean asBoolean() {
-        if (this instanceof BoolVal boolVal)
-            return boolVal.value;
-        throw new RuntimeException("Tried to get value as boolean, but value was: " + this.getClass().getName());
-    }
+    protected final T value;
 
-    public int asInt() {
-        if (this instanceof IntVal intVal)
-            return intVal.value;
-        throw new RuntimeException("Tried to get value as int, but value was: " + this.getClass().getName());
-    }
 
-    public float asFloat() {
-        if (this instanceof IntVal intVal)
-            return intVal.value;
-        if (this instanceof FloatVal floatVal)
-            return floatVal.value;
-        throw new RuntimeException("Tried to get value as float, but value was: " + this.getClass().getName());
-    }
-
-    public String asString() {
-        if (this instanceof StringVal stringVal)
-            return stringVal.value;
-        throw new RuntimeException("Tried to get value as string, but value was: " + this.getClass().getName());
-    }
-
-    public List<Value> asList() {
-        if (this instanceof ListVal listVal)
-            return listVal.value;
-        throw new RuntimeException("Tried to get value as list, but value was: " + this.getClass().getName());
+    protected Value(T value) {
+        this.value = value;
     }
 
 
-    public static Value ofType(Type type) {
-        if (type instanceof BoolT)
-            return new BoolVal(false);
-        else if (type instanceof IntT)
-            return new IntVal(0);
-        else if (type instanceof FloatT)
-            return new FloatVal(0);
-        else if (type instanceof StringT)
-            return new StringVal("");
-        else if (type instanceof ListT)
-            return new ListVal(List.of());
-        else
-            throw new RuntimeException("Cannot create value of type: " + type.getClass().getName());
+    // -----------------------------------------------------------------------------------------------------------------
+    // Abstract API
+    public abstract String toStringInner(@NotNull T value);
+
+    public abstract boolean equals(Value<?> other);
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Public API
+    public boolean isUndefined() {
+        return value == null;
+    }
+
+    public Optional<T> getValue() {
+        return Optional.ofNullable(value);
+    }
+
+    public <V> V map(Function<T, V> body) {
+        return value == null ? null : body.apply(value);
+    }
+
+    public <V> V match(Function<T, V> ifDefined, Supplier<V> ifUndefined) {
+        return value == null ? ifUndefined.get() : ifDefined.apply(value);
+    }
+
+    public Value<?> mapOrUndefined(Function<T, Value<?>> body) {
+        return value == null ? new UndefinedVal() : body.apply(value);
     }
 
 
-    public abstract String toString();
+    @Override
+    public String toString() {
+        return value == null ? "undefined" : toStringInner(value);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Conversions
+    public Optional<Boolean> asBool() {
+        return this instanceof BoolVal val ? Optional.ofNullable(val.value) : Optional.empty();
+    }
+
+    public <V> V mapBool(Function<Boolean, V> body) {
+        return this instanceof BoolVal val ? val.map(body) : null;
+    }
+
+
+    public Optional<Integer> asInt() {
+        return this instanceof IntVal val ? Optional.ofNullable(val.value) : Optional.empty();
+    }
+
+    public <V> V mapInt(Function<Integer, V> body) {
+        return this instanceof IntVal val ? val.map(body) : null;
+    }
+
+
+    public Optional<Float> asFloat() {
+        return this instanceof FloatVal fVal
+                ? Optional.ofNullable(fVal.value)
+                : (this instanceof IntVal iVal
+                    ? Optional.of(iVal.value).map(Integer::floatValue)
+                    : Optional.empty()
+                );
+    }
+
+    public <V> V mapFloat(Function<Float, V> body) {
+        return this instanceof FloatVal val
+                ? val.map(body)
+                : (this instanceof IntVal val
+                        ? val.map(i -> body.apply(i.floatValue()))
+                        : null
+                );
+    }
+
+
+    public Optional<String> asString() {
+        return this instanceof StringVal val ? Optional.ofNullable(val.value) : Optional.empty();
+    }
+
+    public <V> V mapString(Function<String, V> body) {
+        return this instanceof StringVal val ? val.map(body) : null;
+    }
+
+
+    public Optional<ValueList> asList() {
+        return this instanceof ListVal val ? Optional.ofNullable(val.value) : Optional.empty();
+    }
+
+    public <V> V mapList(Function<ValueList, V> body) {
+        return this instanceof ListVal val ? val.map(body) : null;
+    }
 }

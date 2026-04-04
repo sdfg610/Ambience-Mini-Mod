@@ -110,7 +110,9 @@ public class PrettyPrinter {
         else if (expr instanceof GetProperty getProperty)
             return '$' + getProperty.propertyName().value();
         else if (expr instanceof BinaryOp binOp)
-            return surround(binOp.left()) + getBinaryOpString(binOp.op()) + surround(binOp.right());
+            return printBinaryOp(binOp.op(), binOp.left(), binOp.right());
+        else if (expr instanceof Accessor acc)
+            return printAccessor(acc);
         else if (expr instanceof QuantifierOp quanOp)
             return String.format(
                     "%s %s in %s has %s end",
@@ -122,7 +124,6 @@ public class PrettyPrinter {
         else
             throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
     }
-
     private static String surround(Expr expr)
     {
         if (expr instanceof BinaryOp)
@@ -131,19 +132,22 @@ public class PrettyPrinter {
     }
 
 
-    public static String getBinaryOpString(BinaryOperators op)
-    {
+    public static String printBinaryOp(BinaryOperators op, Expr left, Expr right) {
+        String l = surround(left);
+        String r = surround(right);
         return switch (op) {
-            case EQ -> " == ";
-            case APP_EQ -> " ~~ ";
-            case AND -> " && ";
-            case OR -> " || ";
-            case LT -> " < ";
+            case EQ -> l + " == " + r;
+            case APP_EQ -> l + " ~~ " + r;
+            case MATCH -> l + " *~ " + r;
+            case AND -> l + " && " + r;
+            case OR -> l + " || " + r;
+            case LT -> l + " < " + r;
+            case LE -> l + " <= " + r;
+            case INDEXER -> l + "[" + r + "]";
         };
     }
 
-    public static String getQuantifierString(Quantifiers op)
-    {
+    public static String getQuantifierString(Quantifiers op) {
         return switch (op) {
             case ANY -> "any";
             case ALL -> "all";
@@ -151,7 +155,9 @@ public class PrettyPrinter {
     }
 
     public static String getTypeString(Type type) {
-        if (type instanceof BoolT)
+        if (type instanceof AnyT)
+            return "any";
+        else if (type instanceof BoolT)
             return "bool";
         else if (type instanceof IntT)
             return "int";
@@ -159,13 +165,22 @@ public class PrettyPrinter {
             return "float";
         else if (type instanceof StringT)
             return "string";
-        else if (type instanceof ListT listT)
-            return "list<" + getTypeString(listT.elementType()) + ">";
         else if (type instanceof PlaylistT)
             return "playlist";
+        else if (type instanceof AreaT)
+            return "area";
+        else if (type instanceof ListT listT)
+            return "list<" + getTypeString(listT.elementType) + ">";
+        else if (type instanceof MapT mapT)
+            return "map<" + getTypeString(mapT.keyType) + ", " + getTypeString(mapT.valueType) + ">";
         else if (type == null)
             return "null";
 
         throw new RuntimeException("Unhandled Type-type: " + type.getClass().getCanonicalName());
     }
+
+    private static String printAccessor(Accessor acc) {
+        return printExpr(acc.base()) + "." + acc.field().value();
+    }
+
 }

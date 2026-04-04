@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.server.core;
 
-import me.molybdenum.ambience_mini.engine.server.core.areas.ServerAreaManager;
+import me.molybdenum.ambience_mini.engine.server.core.locations.BaseStructureReader;
+import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.networking.BaseServerNetworkManager;
 import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.shared.Common;
@@ -13,28 +14,35 @@ import java.nio.file.Path;
 public abstract class BaseServerCore<
         TServerPlayer,
         TNetworkManager extends BaseServerNetworkManager<TServerPlayer>,
+        TStructureReader extends BaseStructureReader<TServerPlayer, ?, ?>,
         TAreaManager extends ServerAreaManager
 > {
     // Utils
     public final Logger logger;
     public final ServerNameCache nameCache;
 
+    // Locations
+    public final TAreaManager areaManager;
+    public final TStructureReader structureReader;
+
     // Networking
     public final TNetworkManager networkManager;
-    public final TAreaManager areaManager;
 
 
     public BaseServerCore(
             Logger logger,
             ServerNameCache nameCache,
-            TNetworkManager networkManager,
-            TAreaManager areaManager
+            TAreaManager areaManager,
+            TStructureReader structureReader,
+            TNetworkManager networkManager
     ) {
         this.logger = logger;
         this.nameCache = nameCache;
 
-        this.networkManager = networkManager;
         this.areaManager = areaManager;
+        this.structureReader = structureReader;
+
+        this.networkManager = networkManager;
     }
 
     public void init() {

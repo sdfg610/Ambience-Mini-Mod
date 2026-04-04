@@ -1,4 +1,4 @@
-package me.molybdenum.ambience_mini.engine.server.core.areas;
+package me.molybdenum.ambience_mini.engine.server.core.locations;
 
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
 import me.molybdenum.ambience_mini.engine.shared.Common;

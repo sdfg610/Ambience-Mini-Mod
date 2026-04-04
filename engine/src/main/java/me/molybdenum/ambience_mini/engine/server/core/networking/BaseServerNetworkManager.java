@@ -20,10 +20,10 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     private final ConcurrentHashMap<TServerPlayer, AmVersion> playerToVersion = new ConcurrentHashMap<>();
 
     // Core functionality
-    private BaseServerCore<TServerPlayer, ?, ?> core = null;
+    private BaseServerCore<TServerPlayer, ?, ?, ?> core = null;
 
 
-    public void init(BaseServerCore<TServerPlayer, ?, ?> core) {
+    public void init(BaseServerCore<TServerPlayer, ?, ?, ?> core) {
         if (this.core != null)
             throw new RuntimeException("Multiple calls to 'BaseServerNetworkManager.init'!");
         this.core = core;
@@ -36,7 +36,7 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     // Abstract API
     public abstract void sendToPlayer(AmMessage message, TServerPlayer player);
 
-    protected abstract String getPlayerUUID(TServerPlayer player);
+    protected abstract String getServerPlayerUUID(TServerPlayer player);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -59,8 +59,11 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
                 response = handlePutAreaMessage(msg, sender);
             else if (message instanceof DeleteAreaMessage msg)
                 response = handleDeleteAreaMessage(msg, sender);
-            else if (message instanceof RequestAreasMessage msg)
+            else if (message instanceof GetAreasMessage msg)
                 response = handleRequestAreasMessage(msg, sender);
+
+            else if (message instanceof GetStructuresMessage msg)
+                response = handleGetStructuresMessage(msg, sender);
 
             else if (message instanceof GetNameCacheMessage msg)
                 response = handleGetNameCacheMessage(msg, sender);
@@ -90,32 +93,42 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
 
     // Areas
     private AmMessage handleCreateAreaMessage(CreateAreaMessage msg, TServerPlayer sender) {
-        core.areaManager.createArea(msg.area);
+        core.areaManager.createArea(msg.area); // TODO: Validate area contents such as names
         return msg.success();
     }
 
     private AmMessage handlePutAreaMessage(PutAreaMessage msg, TServerPlayer sender) {
-        if (!msg.area.canBeEditedBy(getPlayerUUID(sender)))
+        if (!msg.area.canBeEditedBy(getServerPlayerUUID(sender)))
             return msg.failure(AmLang.MSG_AREA_CANNOT_EDIT);
 
-        core.areaManager.putArea(msg.area);
+        core.areaManager.putArea(msg.area); // TODO: Validate area contents such as names
         return msg.success();
     }
 
     private AmMessage handleDeleteAreaMessage(DeleteAreaMessage msg, TServerPlayer sender) {
         Area area = core.areaManager.getAreaById(msg.areaId);
-        if (area.canBeEditedBy(getPlayerUUID(sender)))
+        if (area.canBeEditedBy(getServerPlayerUUID(sender)))
             return msg.failure(AmLang.MSG_AREA_CANNOT_EDIT);
 
         core.areaManager.deleteArea(msg.areaId);
         return msg.success();
     }
 
-    private AmMessage handleRequestAreasMessage(RequestAreasMessage msg, TServerPlayer sender) {
-        core.areaManager.getAreasVisibleTo(getPlayerUUID(sender)).forEach(
+    private AmMessage handleRequestAreasMessage(GetAreasMessage msg, TServerPlayer sender) {
+        core.areaManager.getAreasVisibleTo(getServerPlayerUUID(sender)).forEach(
                 area -> sendToPlayer(new PutAreaMessage(area, false), sender)
         );
 
+        return msg.success();
+    }
+
+
+    // Structures
+    private AmMessage handleGetStructuresMessage(GetStructuresMessage msg, TServerPlayer sender) {
+        sendToPlayer(
+                msg.getReferences ? core.structureReader.getReferences(sender) : core.structureReader.getStructures(sender),
+                sender
+        );
         return msg.success();
     }
 
@@ -137,7 +150,7 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
             if (version.isGreaterThanOrEqual(AmVersion.V_2_5_0)) {
                 switch (operation) {
                     case PUT -> {
-                        AmMessage msg = area.canBeSeenBy(getPlayerUUID(player))
+                        AmMessage msg = area.canBeSeenBy(getServerPlayerUUID(player))
                                 ? new PutAreaMessage(area)
                                 : new DeleteAreaMessage(area.id);
                         sendToPlayer(msg, player);

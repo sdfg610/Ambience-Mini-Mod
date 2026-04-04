@@ -9,12 +9,6 @@ public class Utils {
         return String.format("%-" + length + "s", str);
     }
 
-    public static <A, B> Stream<Pair<A, B>> zip(List<A> as, List<B> bs) {
-        return IntStream
-                .range(0, Math.min(as.size(), bs.size()))
-                .mapToObj(i -> new Pair<>(as.get(i), bs.get(i)));
-    }
-
     public static <T> String getKeyValuePairString(List<Pair<String, T>> pairs) {
         int maxKeyLength = pairs.stream()
                 .map(pair -> pair.left().length())

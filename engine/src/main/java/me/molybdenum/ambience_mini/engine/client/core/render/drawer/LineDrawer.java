@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.core.render.drawer;
 
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Cube;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
-import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 
 public interface LineDrawer {
     void drawLine(Vector3i p1, Vector3i p2, Color color, int alpha);

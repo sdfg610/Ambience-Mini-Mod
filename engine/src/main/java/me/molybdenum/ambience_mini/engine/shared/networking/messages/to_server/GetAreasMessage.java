@@ -4,13 +4,12 @@ import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
-public class RequestAreasMessage extends AmMessage
+public class GetAreasMessage extends AmMessage
 {
-    public RequestAreasMessage() { }
+    public GetAreasMessage(AmReader reader) { }
+
+    public GetAreasMessage() { }
 
     @Override
     public void writeTo(AmWriter writer) { }
-
-    @Override
-    public void readFrom(AmReader reader) { }
 }

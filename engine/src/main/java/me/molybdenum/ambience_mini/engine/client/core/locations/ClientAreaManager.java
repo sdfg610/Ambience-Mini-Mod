@@ -1,11 +1,12 @@
-package me.molybdenum.ambience_mini.engine.client.core.areas;
+package me.molybdenum.ambience_mini.engine.client.core.locations;
 
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.areas.AreaOperation;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.RequestAreasMessage;
+import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.GetAreasMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,12 @@ public class ClientAreaManager
                 .toList();
     }
 
+    public List<Area> getIntersectingAreas(String dimension, Vector3d position) {
+        return areas.values().stream()
+                .filter(area -> area.dimension.equals(dimension) && area.contains(position))
+                .toList();
+    }
+
 
     public void putArea(Area area) {
         Area oldArea = areas.put(area.id, area);
@@ -64,7 +71,7 @@ public class ClientAreaManager
 
     public void loadAreas() {
         areas.clear();
-        networkManager.sendToServer(new RequestAreasMessage());
+        networkManager.sendToServer(new GetAreasMessage());
         // TODO: Load from local
     }
 

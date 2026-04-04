@@ -40,6 +40,17 @@ public class MessageSerializer extends AmSerializer
 
 
     @Override
+    public double readDouble() {
+        return buffer.readDouble();
+    }
+
+    @Override
+    public void writeDouble(double value) {
+        buffer.writeDouble(value);
+    }
+
+
+    @Override
     public String readString() {
         boolean hasValue = buffer.readBoolean();
         if (hasValue) {

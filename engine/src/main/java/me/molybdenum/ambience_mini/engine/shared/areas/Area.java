@@ -2,9 +2,11 @@ package me.molybdenum.ambience_mini.engine.shared.areas;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmSerializable;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 
 public class Area implements AmSerializable {
     public int id;
@@ -15,6 +17,15 @@ public class Area implements AmSerializable {
     public Vector3i fromBlock;
     public Vector3i toBlock;
 
+
+    public Area(AmReader reader) {
+        this.id = reader.readInt();
+        this.name = reader.readString();
+        this.dimension = reader.readString();
+        this.owner = new Owner(reader);
+        this.fromBlock = new Vector3i(reader);
+        this.toBlock = new Vector3i(reader);
+    }
 
     public Area() {
         this(Integer.MIN_VALUE, null, null, null, null, null);
@@ -49,6 +60,14 @@ public class Area implements AmSerializable {
         return ownerUUID == null || owner.isShared() || playerUUID.equals(ownerUUID);
     }
 
+    public boolean contains(Vector3d position) {
+        return Vector3i.minAndMaxOf(fromBlock, toBlock.offset(1,1,1)).destruct((min, max) ->
+            position.x() >= min.x() && position.x() <= max.x()
+                && position.y() >= min.y() && position.y() <= max.y()
+                && position.z() >= min.z() && position.z() <= max.z()
+        );
+    }
+
 
     @Override
     public void writeTo(AmWriter writer) {
@@ -58,17 +77,6 @@ public class Area implements AmSerializable {
         owner.writeTo(writer);
         fromBlock.writeTo(writer);
         toBlock.writeTo(writer);
-    }
-
-
-    @Override
-    public void readFrom(AmReader reader) {
-        this.id = reader.readInt();
-        this.name = reader.readString();
-        this.dimension = reader.readString();
-        this.owner = new Owner(reader);
-        this.fromBlock = new Vector3i(reader);
-        this.toBlock = new Vector3i(reader);
     }
 
 

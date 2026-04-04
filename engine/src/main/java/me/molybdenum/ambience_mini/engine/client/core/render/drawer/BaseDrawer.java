@@ -1,8 +1,8 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.drawer;
 
-import me.molybdenum.ambience_mini.engine.client.core.render.Vector2i;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
-import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import me.molybdenum.ambience_mini.engine.shared.utils.Triple;
 
 import java.util.function.Consumer;

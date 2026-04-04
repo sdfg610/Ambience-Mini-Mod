@@ -8,10 +8,11 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.e
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.kinds.AccessibleV;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.kinds.IndexableV;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStateProvider;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
-import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -19,10 +20,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Interpreter
 {
+    private final static UndefinedVal UNDEFINED = new UndefinedVal();
+
     private final BaseGameStateProvider gameStateProvider;
     private final Schedule schedule;
 
@@ -45,9 +49,9 @@ public class Interpreter
         gameStateProvider.prepare(messages);
     }
 
-    public PlaylistChoice selectPlaylist(@Nullable ArrayList<Pair<String, Value>> trace) {
+    public PlaylistChoice selectPlaylist(@Nullable ArrayList<Pair<String, Value<?>>> trace) {
         @SuppressWarnings("DataFlowIssue")
-        BiConsumer<String, Value> tracer = (name, val) -> trace.add(new Pair<>(name, val));
+        BiConsumer<String, Value<?>> tracer = (name, val) -> trace.add(new Pair<>(name, val));
 
         if (trace != null) gameStateProvider.registerOnFiredListener(tracer);
         PlaylistChoice choice = evalSchedule(schedule, rootEnv.enterScope());
@@ -85,6 +89,9 @@ public class Interpreter
         else if (schedule instanceof Interrupt interrupt) {
             return new Interrupt(initSchedule(interrupt.body()), interrupt.line());
         }
+        else if (schedule instanceof Let let) {
+            return new Let(let.type(), let.ident(), let.value(), initSchedule(let.body()), let.line());
+        }
         else if (schedule instanceof Block block) {
             return new Block(
                     block.body().stream()
@@ -118,9 +125,15 @@ public class Interpreter
                     .findFirst().orElse(null);
         }
         else if (schedule instanceof When when) {
-            return evalExpr(when.condition(), env).asBoolean()
-                    ? evalSchedule(when.body(), env)
-                    : null;
+            return evalExpr(when.condition(), env).mapBool(
+                    b -> b ? evalSchedule(when.body(), env) : null
+            );
+        }
+        else if (schedule instanceof Let let) {
+            return evalSchedule(
+                    let.body(),
+                    env.enterScope().bind(let.ident().value(), evalExpr(let.value(), env))
+            );
         }
         else
             throw new RuntimeException("Unhandled Schedule-type in evaluator: " + schedule.getClass().getCanonicalName());
@@ -145,9 +158,11 @@ public class Interpreter
             throw new RuntimeException("Unhandled Playlist-type in evaluator: " + play.getClass().getCanonicalName());
     }
 
-    private Value evalExpr(Expr expr, VariableEnv env) {
+    private Value<?> evalExpr(Expr expr, VariableEnv env) {
         if (expr instanceof IdentE identE)
             return env.lookup(identE.value());
+        else if (expr instanceof UndefinedLit)
+            return new UndefinedVal();
         else if (expr instanceof BoolLit boolLit)
             return new BoolVal(boolLit.value());
         else if (expr instanceof IntLit intLit)
@@ -160,8 +175,12 @@ public class Interpreter
             return gameStateProvider.getEvent(getEvent.eventName().value()).isActive();
         else if (expr instanceof GetProperty property)
             return gameStateProvider.getProperty(property.propertyName().value()).getValue();
+        else if (expr instanceof UnaryOp unOp)
+            return evalUnOp(unOp, env);
         else if (expr instanceof BinaryOp binOp)
             return evalBinOp(binOp, env);
+        else if (expr instanceof Accessor acc)
+            return evalAccessor(acc, env);
         else if (expr instanceof QuantifierOp quanOp)
             return evalQuantifierOp(quanOp, env);
 
@@ -170,51 +189,119 @@ public class Interpreter
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Binary operations
-    private Value evalBinOp(BinaryOp binOp, VariableEnv env) {
-        Value left = evalExpr(binOp.left(), env);
+    // Unary operations
+    private Value<?> evalUnOp(UnaryOp unOp, VariableEnv env) {
+        Value<?> val = evalExpr(unOp.expr(), env);
 
-        return switch (binOp.op()) {
-            case EQ     -> new BoolVal( opEQ(left, evalExpr(binOp.right(), env)) );
-            case APP_EQ -> new BoolVal( left.asString().contains(evalExpr(binOp.right(), env).asString()) );
-            case AND    -> new BoolVal( left.asBoolean() && evalExpr(binOp.right(), env).asBoolean() );
-            case OR     -> new BoolVal( left.asBoolean() || evalExpr(binOp.right(), env).asBoolean() );
-            case LT     -> new BoolVal( opLE(left, evalExpr(binOp.right(), env)) );
+        return switch (unOp.op()) {
+            case NOT -> new BoolVal(val.mapBool(b -> !b));
+            case NEG -> opNeg(val);
         };
     }
 
-    private boolean opEQ(Value leftVal, Value rightVal) {
-        if (leftVal instanceof BoolVal left && rightVal instanceof BoolVal right)
-            return left.value == right.value;
-        else if (leftVal instanceof IntVal left && rightVal instanceof IntVal right)
-            return left.value == right.value;
-        else if (leftVal instanceof FloatVal left && rightVal instanceof FloatVal right)
-            return left.value == right.value;
-        else if (leftVal instanceof StringVal left && rightVal instanceof StringVal right)
-            return left.value.equals(right.value);
-        else if (leftVal instanceof ListVal left && rightVal instanceof ListVal right)
-            return Utils.zip(left.value, right.value).allMatch(pair -> opEQ(pair.left(), pair.right()));
-        else
-            throw new RuntimeException("Eq operation could not handle values of type: " + leftVal.getClass().getName() + " and " + rightVal.getClass().getName());
+    private Value<?> opNeg(Value<?> value) {
+        var i = value.asInt();
+        if (i.isPresent())
+            return new IntVal(-i.get());
+
+        var f = value.asFloat();
+        return f.isPresent() ? new FloatVal(f.get()) : UNDEFINED;
     }
 
-    private boolean opLE(Value left, Value right) {
-        if (left instanceof FloatVal || right instanceof FloatVal)
-            return left.asFloat() < right.asFloat();
-        else
-            return left.asInt() < right.asInt();
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Binary operations
+    private Value<?> evalBinOp(BinaryOp binOp, VariableEnv env) {
+        Value<?> left = evalExpr(binOp.left(), env);
+        Supplier<Value<?>> right = () -> evalExpr(binOp.right(), env);
+
+        return switch (binOp.op()) {
+            case EQ     -> new BoolVal( left.equals(right.get()) );
+            case APP_EQ -> opAppEq(left, right.get());
+            case MATCH  -> opMatch(left, right.get());
+            case AND    -> opAnd(left, right);
+            case OR     -> opOr(left, right);
+            case LT     -> opLt(left, right.get());
+            case LE     -> opLe(left, right.get());
+            case INDEXER -> opIndex(left, right.get());
+        };
     }
+
+    private BoolVal opAppEq(Value<?> v1, Value<?> v2) {
+        return new BoolVal(
+                v1.mapString(s1 -> v2.mapString(s1::contains))
+        );
+    }
+
+    private BoolVal opMatch(Value<?> v1, Value<?> v2) {
+        return new BoolVal(
+                v1.mapString(s1 -> v2.mapString(s2 -> {
+                    try {
+                        return s1.matches(s2);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }))
+        );
+    }
+
+    private BoolVal opAnd(Value<?> left, Supplier<Value<?>> right) {
+        return new BoolVal(left.mapBool(b1 ->
+            b1 ? right.get().asBool().orElse(null) : Boolean.FALSE
+        ));
+    }
+
+    private BoolVal opOr(Value<?> left, Supplier<Value<?>> right) {
+        return new BoolVal(left.mapBool(b1 ->
+                b1 ? Boolean.TRUE : right.get().asBool().orElse(null)
+        ));
+    }
+
+    private BoolVal opLt(Value<?> left, Value<?> right) {
+        return new BoolVal(
+                left instanceof FloatVal || right instanceof FloatVal
+                        ? left.mapFloat(f1 -> right.mapFloat(f2 -> f1 < f2))
+                        : left.mapInt(f1 -> right.mapInt(f2 -> f1 < f2))
+        );
+    }
+
+    private BoolVal opLe(Value<?> left, Value<?> right) {
+        return new BoolVal(
+                left instanceof FloatVal || right instanceof FloatVal
+                        ? left.mapFloat(f1 -> right.mapFloat(f2 -> f1 <= f2))
+                        : left.mapInt(f1 -> right.mapInt(f2 -> f1 <= f2))
+        );
+    }
+
+    private Value<?> opIndex(Value<?> base, Value<?> index) {
+        return base instanceof IndexableV indexable
+                ? indexable.getIndex(index)
+                : UNDEFINED;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Accessors
+    private Value<?> evalAccessor(Accessor acc, VariableEnv env) {
+        return evalExpr(acc.base(), env) instanceof AccessibleV accessible
+                ? accessible.getField(acc.field().value())
+                : UNDEFINED;
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
     // Quantifier operations
-    private Value evalQuantifierOp(QuantifierOp quanOp, VariableEnv env) {
+    private BoolVal evalQuantifierOp(QuantifierOp quanOp, VariableEnv env) {
         String ident = quanOp.identifier().value();
-        Predicate<Value> evaluator = elem -> evalExpr(quanOp.condition(), env.enterScope().bind(ident, elem)).asBoolean();
+        Predicate<Value<?>> evaluator = elem -> evalExpr(quanOp.condition(), env.enterScope().bind(ident, elem)).asBool().orElse(false);
 
-        List<Value> list = evalExpr(quanOp.list(), env).asList();
-        return switch (quanOp.quantifier()) {
-            case ALL -> new BoolVal(list.stream().allMatch(evaluator));
-            case ANY -> new BoolVal(list.stream().anyMatch(evaluator));
-        };
+        return new BoolVal(
+                evalExpr(quanOp.list(), env).mapList(list ->
+                        switch (quanOp.quantifier()) {
+                            case ALL -> list.stream().allMatch(evaluator);
+                            case ANY -> list.stream().anyMatch(evaluator);
+                        }
+                )
+        );
     }
 }

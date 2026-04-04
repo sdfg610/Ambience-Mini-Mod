@@ -13,7 +13,7 @@ public class ServerNetworkManager extends BaseServerNetworkManager<ServerPlayer>
     }
 
     @Override
-    protected String getPlayerUUID(ServerPlayer serverPlayer) {
+    protected String getServerPlayerUUID(ServerPlayer serverPlayer) {
         return serverPlayer.getGameProfile().getId().toString();
     }
 }

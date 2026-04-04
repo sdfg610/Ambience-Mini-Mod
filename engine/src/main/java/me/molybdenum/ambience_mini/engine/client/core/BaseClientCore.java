@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core;
 
-import me.molybdenum.ambience_mini.engine.client.core.areas.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
 import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
@@ -51,6 +52,7 @@ public abstract class BaseClientCore<
     // Utils
     public final Logger logger;
     public final ClientNameCache nameCache;
+    public final StructureCache structureCache;
     public final TNotification notification;
 
     // Networking
@@ -80,6 +82,7 @@ public abstract class BaseClientCore<
     public BaseClientCore(
             Logger logger,
             ClientNameCache nameCache,
+            StructureCache structureCache,
             TNotification notification,
             TNetworkManager networkManager,
             ClientAreaManager areaManager,
@@ -95,6 +98,7 @@ public abstract class BaseClientCore<
         this.logger = logger;
 
         this.nameCache = nameCache;
+        this.structureCache = structureCache;
         this.notification = notification;
         this.networkManager = networkManager;
         this.areaManager = areaManager;
@@ -108,6 +112,7 @@ public abstract class BaseClientCore<
         this.combatState = combatState;
 
         this.nameCache.init(this);
+        this.structureCache.init(this);
         this.networkManager.init(this);
         this.areaManager.init(this);
         this.areaRenderer.init(this, levelState);
@@ -143,9 +148,7 @@ public abstract class BaseClientCore<
 
         combatState.clearCombatants();
         gameStateProvider = new GameStateProviderV1Real<>(
-                clientConfig,
-                playerState, levelState, screenState, combatState,
-                new CaveDetector<>(clientConfig)
+                this, playerState, levelState, combatState
         );
 
         File configFile = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_CONFIG_FILE).toFile();
@@ -187,8 +190,9 @@ public abstract class BaseClientCore<
         serverSetup.serverVersion = serverVersion;
         serverSetup.isOnLocalServer = isOnLocalServer;
 
-        this.nameCache.clearCache();
-        this.nameCache.setCurrentPlayer(playerUUID, playerName);
+        structureCache.clear();
+        nameCache.clear();
+        nameCache.setCurrentPlayer(playerUUID, playerName);
 
         if (serverVersion != null && serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
             networkManager.sendToServer(new ClientInfoMessage(
@@ -197,8 +201,8 @@ public abstract class BaseClientCore<
                     playerName
             ));
 
-        this.areaManager.loadAreas();
-        this.areaRenderer.clear();
+        areaManager.loadAreas();
+        areaRenderer.clear();
 
         if (clientConfig.notifyServerSupport.get() && !isOnLocalServer) {
             if (serverVersion == null)
@@ -213,7 +217,8 @@ public abstract class BaseClientCore<
     }
 
     public void onLoggedOut() {
-        this.nameCache.setCurrentPlayer(null, null);
+        structureCache.clear();
+        nameCache.clear();
 
         serverSetup.reset();
         combatState.clearCombatants();

@@ -1,16 +1,31 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values;
 
-public final class BoolVal extends Value
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
+
+public final class BoolVal extends Value<Boolean>
 {
+    public static final BoolVal UNDEFINED = new BoolVal();
     public static final BoolVal FALSE = new BoolVal(false);
 
-    public final boolean value;
 
-    public BoolVal(boolean value) {
-        this.value = value;
+    public BoolVal() {
+        super(null);
     }
 
-    public String toString() {
-        return Boolean.toString(value);
+    public BoolVal(Boolean value) {
+        super(value);
+    }
+
+
+    @Override
+    public String toStringInner(@NotNull Boolean value) {
+        return value.toString();
+    }
+
+    @Override
+    public boolean equals(Value<?> other) {
+        return Objects.equals(value, other.value);
     }
 }

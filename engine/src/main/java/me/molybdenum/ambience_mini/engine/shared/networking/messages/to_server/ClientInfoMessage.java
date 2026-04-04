@@ -12,7 +12,11 @@ public class ClientInfoMessage extends AmMessage {
     public String playerName;
 
 
-    public ClientInfoMessage() { }
+    public ClientInfoMessage(AmReader reader) {
+        modVersion = reader.readString();
+        playerUUID = reader.readString();
+        playerName = reader.readString();
+    }
 
     public ClientInfoMessage(
             String modVersion,
@@ -30,12 +34,5 @@ public class ClientInfoMessage extends AmMessage {
         writer.writeString(modVersion);
         writer.writeString(playerUUID);
         writer.writeString(playerName);
-    }
-
-    @Override
-    public void readFrom(AmReader reader) {
-        modVersion = reader.readString();
-        playerUUID = reader.readString();
-        playerName = reader.readString();
     }
 }

@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.client.core.state;
 
-import me.molybdenum.ambience_mini.engine.client.core.render.Vector3d;
-import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.LightLayer;
@@ -56,9 +57,9 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     
 
     @Override
-    public boolean isWorldTickingPaused() {
+    public Boolean isWorldTickingPaused() {
         IntegratedServer srv = Minecraft.getInstance().getSingleplayerServer();
-        return srv != null && (Boolean) ObfuscationReflectionHelper.getPrivateValue(IntegratedServer.class, srv, OBF_INTEGRATED_SERVER_PAUSED);
+        return srv == null ? null : ObfuscationReflectionHelper.getPrivateValue(IntegratedServer.class, srv, OBF_INTEGRATED_SERVER_PAUSED);
     }
 
     @Override
@@ -97,35 +98,30 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
 
     @Override
-    public int getTime() {
-        assert cachedLevel != null;
-        return (int) cachedLevel.getDayTime();
+    public Integer getTime() {
+        return cachedLevel == null ? null : (int)cachedLevel.getDayTime();
     }
 
 
     @Override
-    public boolean isRaining() {
-        assert cachedLevel != null;
-        return cachedLevel.isRaining();
+    public Boolean isRaining() {
+        return cachedLevel == null ? null : cachedLevel.isRaining();
     }
 
     @Override
-    public boolean isThundering() {
-        assert cachedLevel != null;
-        return cachedLevel.isThundering();
+    public Boolean isThundering() {
+        return cachedLevel == null ? null : cachedLevel.isThundering();
     }
 
     @Override
-    public boolean isColdEnoughToSnow(BlockPos blockPos) {
-        assert cachedLevel != null;
-        return cachedLevel.getBiome(blockPos).value().coldEnoughToSnow(blockPos);
+    public Boolean isColdEnoughToSnow(BlockPos blockPos) {
+        return cachedLevel == null ? null : cachedLevel.getBiome(blockPos).value().coldEnoughToSnow(blockPos);
     }
 
 
     @Override
     public Entity getEntityById(int id) {
-        assert cachedLevel != null;
-        return cachedLevel.getEntity(id);
+        return cachedLevel == null ? null : cachedLevel.getEntity(id);
     }
 
     @Override
@@ -135,33 +131,41 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
 
     @Override
-    public int countNearbyVillagers(BlockPos center, int horizontalRadius, int verticalRadius) {
-        return getNearbyEntities(Villager.class, center, horizontalRadius, verticalRadius).size();
+    public Integer countNearbyVillagers(BlockPos center, int horizontalRadius, int verticalRadius) {
+        return cachedLevel == null ? null : getNearbyEntities(Villager.class, center, horizontalRadius, verticalRadius).size();
     }
 
     @Override
-    public int countNearbyAnimals(BlockPos center, int horizontalRadius, int verticalRadius) {
-        return getNearbyEntities(Animal.class, center, horizontalRadius, verticalRadius).size();
+    public Integer countNearbyAnimals(BlockPos center, int horizontalRadius, int verticalRadius) {
+        return cachedLevel == null ? null : getNearbyEntities(Animal.class, center, horizontalRadius, verticalRadius).size();
+    }
+
+    @Override
+    public Double shortestDistanceToWarden(Vec3 position, int cubeSearchRadius) {
+        if (cachedLevel == null)
+            return null;
+
+        var min = getNearbyEntities(Warden.class, BlockPos.containing(position), cubeSearchRadius, cubeSearchRadius).stream()
+                .mapToDouble(warden -> warden.getEyePosition().distanceTo(position))
+                .min();
+        return min.isPresent() ? min.getAsDouble() : null;
     }
 
 
     @Override
-    public int getMaxSkyLightAt(BlockPos blockPos) {
-        assert cachedLevel != null;
-        return cachedLevel.getBrightness(LightLayer.SKY, blockPos);
+    public Integer getMaxSkyLightAt(BlockPos blockPos) {
+        return cachedLevel == null ? null : cachedLevel.getBrightness(LightLayer.SKY, blockPos);
     }
 
     @Override
-    public int getBlockLightAt(BlockPos blockPos) {
-        assert cachedLevel != null;
-        return cachedLevel.getBrightness(LightLayer.BLOCK, blockPos);
+    public Integer getBlockLightAt(BlockPos blockPos) {
+        return cachedLevel == null ? null : cachedLevel.getBrightness(LightLayer.BLOCK, blockPos);
     }
 
 
     @Override
     public BlockState getBlockState(BlockPos blockPos) {
-        assert cachedLevel != null;
-        return cachedLevel.getBlockState(blockPos);
+        return cachedLevel == null ? null : cachedLevel.getBlockState(blockPos);
     }
 
     @Override
@@ -182,16 +186,10 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public BlockPos getNearestBlockOrFurthestAir(Vec3 from, Vec3 to) {
-        assert cachedLevel != null;
+        if (cachedLevel == null)
+            return null;
         BlockHitResult hit = getClip(from, to);
         return hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos() : vectorToBlockPos(to);
-    }
-
-    @Override
-    public BlockPos getAirJustBeforeLookedAtBlockIfInRange(Vec3 from, Vec3 to) {
-        assert cachedLevel != null;
-        BlockHitResult hit = getClip(from, to);
-        return hit.getType() == HitResult.Type.BLOCK ? new BlockPos(hit.getDirection().getNormal().offset(hit.getBlockPos())) : null;
     }
 
     private @NotNull BlockHitResult getClip(Vec3 from, Vec3 to) {

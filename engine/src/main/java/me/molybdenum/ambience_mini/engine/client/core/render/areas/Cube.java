@@ -1,8 +1,8 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
-import me.molybdenum.ambience_mini.engine.client.core.render.Vector3d;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.areas.Area;
-import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;

@@ -1,8 +1,9 @@
 package me.molybdenum.ambience_mini.server.core;
 
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
-import me.molybdenum.ambience_mini.engine.server.core.areas.ServerAreaManager;
+import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
+import me.molybdenum.ambience_mini.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.server.core.networking.ServerNetworkManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,6 +15,7 @@ import java.nio.file.Path;
 public class ServerCore extends BaseServerCore<
         ServerPlayer,
         ServerNetworkManager,
+        StructureReader,
         ServerAreaManager
 > {
     private final MinecraftServer server;
@@ -23,10 +25,11 @@ public class ServerCore extends BaseServerCore<
             MinecraftServer server,
             Logger logger,
             ServerNameCache nameCache,
-            ServerNetworkManager networkManager,
-            ServerAreaManager areaManager
+            ServerAreaManager areaManager,
+            StructureReader structureReader,
+            ServerNetworkManager networkManager
     ) {
-        super(logger, nameCache, networkManager, areaManager);
+        super(logger, nameCache, areaManager, structureReader, networkManager);
 
         this.server = server;
     }

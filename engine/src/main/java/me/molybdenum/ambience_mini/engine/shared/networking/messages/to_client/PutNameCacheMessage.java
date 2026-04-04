@@ -11,7 +11,10 @@ public class PutNameCacheMessage extends AmMessage {
     public String playerName;
 
 
-    public PutNameCacheMessage() { }
+    public PutNameCacheMessage(AmReader reader) {
+        playerUuid = reader.readString();
+        playerName = reader.readString();
+    }
 
     public PutNameCacheMessage(String playerUuid, String playerName) {
         this.playerUuid = playerUuid;
@@ -23,11 +26,5 @@ public class PutNameCacheMessage extends AmMessage {
     public void writeTo(AmWriter writer) {
         writer.writeString(playerUuid);
         writer.writeString(playerName);
-    }
-
-    @Override
-    public void readFrom(AmReader reader) {
-        playerUuid = reader.readString();
-        playerName = reader.readString();
     }
 }

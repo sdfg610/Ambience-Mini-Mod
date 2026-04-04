@@ -1,7 +1,28 @@
 
 Version 2.5.0:
 
--
+- Added a client-side-based system for configuring areas where server-support allows sharing areas with other players.
+- Added "$areas" property which contains a list of all areas the player is currently touching.
+    * "$areas" is ordered by the volume of areas in increasing order (first name is that of the smallest area).
+- Added "$uuid" property for getting the id of the player. (Can be used to check area ownership.)
+- Added "@warden_nearby" event which is active when a Warden is within 32 blocks (2 chunks) of the player.
+- Added "$structure" property which contains a list of the ids of all structures that the player is in.
+    * Note that even if the "structure blocks" are removed, the "structure bounding box" still exists.
+
+- Flags ...
+
+- **Breaking change:** Changed the syntax for "all/any [x] in [list] **where** [condition] end" to "all/any [x] in [list] **has** [condition] end"
+- Added indexing operator "[]" for lists where the first element has index '0'. Example: "list[0]".
+- All values in the configuration language can now have an "undefined" value in case an operation could not be completed.
+  * For example, "list[n] == undefined" if there is no element at index "n" in the list.
+  * Also, if no world is currently loaded, events such as "@rain" will also have "@rain == undefined".
+- Added operator "string *~ regex" for matching strings with regular expressions.
+- Added more number-comparison operators: "<=", ">", and ">=".
+- Added unary operators for logical not '!' and for number negation '-'.
+- Added the constant "undefined" which can be of any type.
+- Added field access notation "value.field". As an example "area.name" gets the name of an area, whereas "area.owner" gets the owner's id (if the area is owned).
+- Added "let [name] = [value] in [schedule]" for introducing named values in a schedule.
+- Fixed bug in list equality check where equality was only checked up to the length of the shortest list.
 
 
 Version 2.4.4:

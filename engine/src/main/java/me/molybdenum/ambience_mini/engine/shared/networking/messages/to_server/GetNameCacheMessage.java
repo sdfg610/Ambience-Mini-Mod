@@ -9,7 +9,9 @@ public class GetNameCacheMessage extends AmMessage {
     public String playerUuid;
 
 
-    public GetNameCacheMessage() { }
+    public GetNameCacheMessage(AmReader reader) {
+        playerUuid = reader.readString();
+    }
 
     public GetNameCacheMessage(String playerUuid) {
         this.playerUuid = playerUuid;
@@ -19,10 +21,5 @@ public class GetNameCacheMessage extends AmMessage {
     @Override
     public void writeTo(AmWriter writer) {
         writer.writeString(playerUuid);
-    }
-
-    @Override
-    public void readFrom(AmReader reader) {
-        playerUuid = reader.readString();
     }
 }

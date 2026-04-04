@@ -1,16 +1,16 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.areas.*;
+import me.molybdenum.ambience_mini.engine.client.core.locations.*;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
-import me.molybdenum.ambience_mini.engine.client.core.render.Vector2i;
-import me.molybdenum.ambience_mini.engine.client.core.render.Vector3d;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.LineDrawer;
 import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
 import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
-import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.engine.shared.areas.*;
@@ -79,7 +79,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         this.areaHelper = new AreaHelper(core, () -> selectedCube);
 
         this.areaManager.addAreaUpdatedListener((area, operation) -> {
-                if (!level.isNull() && area.dimension.equals(level.getDimensionID()))
+                if (area.dimension.equals(getDimensionID()))
                     synchronized (areaIdToCube) {
                         switch (operation) {
                             case PUT -> areaIdToCube.put(area.id, new Pair<>(area, new Cube(area)));
@@ -111,6 +111,9 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
     // -----------------------------------------------------------------------------------------------------------------
     // Abstract API
     protected abstract boolean isVisible(Cube cube);
+
+    protected abstract String getDimensionID();
+    protected abstract TBlockPos getAirJustBeforeLookedAtBlockIfInRange(TVec3 from, TVec3 to);
 
     protected abstract TScreen createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper);
     protected abstract void openScreen(TScreen screen);
@@ -162,7 +165,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
 
         Vector3d camPos = level.toAmVector3d(cameraPos);
         Vector3d camDir = Vector3d.ofRotationAndDistance(cameraRotX, cameraRotY, Common.AREA_SELECTION_RANGE);
-        Supplier<Vector3i> lookPos = () -> level.toAmVector3i(level.getAirJustBeforeLookedAtBlockIfInRange(cameraPos, cameraRotX, cameraRotY, Common.AREA_SELECTION_RANGE));
+        Supplier<Vector3i> lookPos = () -> level.toAmVector3i(getAirJustBeforeLookedAtBlockIfInRange(cameraPos, level.offsetVectorByAngle(cameraPos, cameraRotX, cameraRotY, Common.AREA_SELECTION_RANGE)));
 
         tickAndRenderNonSelectedAreas(camPos, camDir);
         if (selectedArea != null)
@@ -294,7 +297,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
                 renderSimpleBox(minAndSize.left(), minAndSize.right(), Color.WHITE, 1);
 
                 if (consumeConfirmInput()) {
-                    selectedArea = new Area(level.getDimensionID(), Owner.ofPlayerUUID(areaHelper.getPlayerUUID()), areaFromBlock, lookPos);
+                    selectedArea = new Area(getDimensionID(), Owner.ofPlayerUUID(areaHelper.getPlayerUUID()), areaFromBlock, lookPos);
                     selectedCube = new Cube(selectedArea);
                     areaFromBlock = null;
 

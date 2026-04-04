@@ -4,37 +4,30 @@ import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Handler;
 
 public class FailureMessage extends AmMessage {
-    public String translationKey;
-    public String[] arguments;
+    public final String translationKey;
+    public final List<String> arguments;
 
 
-    public FailureMessage() { }
+    public FailureMessage(AmReader reader) {
+        this.translationKey = reader.readString();
+        this.arguments = reader.readStringList();
+    }
 
     public FailureMessage(int handlerId, String translationKey, String... arguments) {
         this.handlerID = handlerId;
         this.translationKey = translationKey;
-        this.arguments = arguments;
+        this.arguments = Arrays.stream(arguments).toList();
     }
 
 
     @Override
     public void writeTo(AmWriter writer) {
         writer.writeString(translationKey);
-        writer.writeInt(arguments.length);
-        for (var arg : arguments)
-            writer.writeString(arg);
-    }
-
-    @Override
-    public void readFrom(AmReader reader) {
-        this.translationKey = reader.readString();
-        int length = reader.readInt();
-        this.arguments = new String[length];
-        for (int i = 0; i < length; i++) {
-            this.arguments[i] = reader.readString();
-        }
+        writer.writeStringList(arguments);
     }
 }

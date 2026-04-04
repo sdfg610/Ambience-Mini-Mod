@@ -31,6 +31,7 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
     // Location events
     public static final EventTemplateV1 E_VILLAGE = new EventTemplateV1("village", instance -> instance::inVillage);
     public static final EventTemplateV1 E_RANCH = new EventTemplateV1("ranch", instance -> instance::inRanch);
+    public static final EventTemplateV1 E_WARDEN_NEARBY = new EventTemplateV1("warden_nearby", instance -> instance::wardenNearby);
 
     // Player state events
     public static final EventTemplateV1 E_DEAD = new EventTemplateV1("dead", instance -> instance::isDead);
@@ -56,7 +57,7 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
             E_MAIN_MENU, E_JOINING, E_DISCONNECTED, E_CREDITS, E_PAUSED, E_IN_GAME,
             E_DAY, E_DAWN, E_DUSK, E_NIGHT,
             E_DOWNFALL, E_RAIN, E_SNOW, E_THUNDERING,
-            E_VILLAGE, E_RANCH,
+            E_VILLAGE, E_RANCH, E_WARDEN_NEARBY,
             E_DEAD, E_SLEEPING, E_FISHING, E_UNDER_WATER, E_IN_LAVA, E_DROWNING,
             E_MINECART, E_BOAT, E_HORSE, E_DONKEY, E_PIG, E_ELYTRA,
             E_IN_COMBAT, E_BOSS_FIGHT
@@ -72,7 +73,12 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
     public static final PropertyTemplateV1 P_CAVE_SCORE = new PropertyTemplateV1("cave_score", new FloatT(), instance -> instance::getCaveScore);
     public static final PropertyTemplateV1 P_SKYLIGHT_SCORE = new PropertyTemplateV1("skylight_potential", new FloatT(), instance -> instance::getSkylightScore);
 
+    // Location properties
+    public static final PropertyTemplateV1 P_AREAS = new PropertyTemplateV1("areas", new ListT(new AreaT()), instance -> instance::getIntersectingAreas);
+    public static final PropertyTemplateV1 P_STRUCTURES = new PropertyTemplateV1("structures", new ListT(new AreaT()), instance -> instance::getIntersectingStructures);
+
     // Player properties
+    public static final PropertyTemplateV1 P_UUID = new PropertyTemplateV1("uuid", new StringT(), instance -> instance::getPlayerUUID);
     public static final PropertyTemplateV1 P_GAME_MODE = new PropertyTemplateV1("game_mode", new StringT(), instance -> instance::getGameMode);
     public static final PropertyTemplateV1 P_HEALTH = new PropertyTemplateV1("health", new FloatT(), instance -> instance::getPlayerHealth);
     public static final PropertyTemplateV1 P_MAX_HEALTH = new PropertyTemplateV1("max_health", new FloatT(), instance -> instance::getPlayerMaxHealth);
@@ -85,9 +91,12 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
     public static final PropertyTemplateV1 P_BOSS = new PropertyTemplateV1("boss", new StringT(), instance -> instance::getBoss);
     public static final PropertyTemplateV1 P_BOSSES = new PropertyTemplateV1("bosses", new ListT(new StringT()), instance -> instance::getBosses);
 
+    // Flag properties
+
     public static final PropertyTemplateV1[] PROPERTIES = new PropertyTemplateV1[] {
             P_DIFFICULTY, P_DIMENSION, P_BIOME, P_BIOME_TAGS, P_TIME, P_CAVE_SCORE, P_SKYLIGHT_SCORE,
-            P_GAME_MODE, P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
+            P_AREAS, P_STRUCTURES,
+            P_UUID, P_GAME_MODE, P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
             P_COMBATANT_COUNT, P_BOSS, P_BOSSES
     };
 
@@ -132,6 +141,7 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
     // Location events
     public abstract BoolVal inVillage();
     public abstract BoolVal inRanch();
+    public abstract BoolVal wardenNearby();
 
 
     // ------------------------------------------------------------------------------------------------
@@ -173,7 +183,14 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
 
 
     // ------------------------------------------------------------------------------------------------
+    // Location properties
+    public abstract ListVal getIntersectingAreas();
+    public abstract ListVal getIntersectingStructures();
+
+
+    // ------------------------------------------------------------------------------------------------
     // Player properties
+    public abstract StringVal getPlayerUUID();
     public abstract StringVal getGameMode();
     public abstract FloatVal getPlayerHealth();
     public abstract FloatVal getPlayerMaxHealth();
@@ -197,6 +214,6 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
     public record PropertyTemplateV1(
             String name,
             Type type,
-            Function<GameStateProviderV1Template, Supplier<Value>> getter
+            Function<GameStateProviderV1Template, Supplier<Value<?>>> getter
     ) {}
 }

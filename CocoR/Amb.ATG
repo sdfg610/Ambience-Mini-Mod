@@ -15,6 +15,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.e
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.config.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
 
@@ -100,6 +101,11 @@ Shed<out Schedule schedule>                  (. schedule = null; boolean instant
     | "when"                                   (. int line = t.line; .)
       '(' Expr<out Expr expr>
       ')' Shed<out Schedule schedule2>         (. schedule = new When(expr, schedule2, line); .)
+    | "let"                               (. int line = t.line; Type type = null; .)
+      IDENT                               (. IdentE ident = new IdentE(t.val, t.line); .)
+      [ ':' Type<out type> ]
+      '=' Expr<out Expr expr>
+      "in" Shed<out Schedule shed>        (. schedule = new Let(type, ident, expr, shed, line); .)
     | "default"                      (. int line = t.line; .)
       Shed<out Schedule schedule2>   (. schedule = new When(new BoolLit(true), schedule2, line); .)
     | "interrupt"                       (. int line = t.line; .)
@@ -107,7 +113,7 @@ Shed<out Schedule schedule>                  (. schedule = null; boolean instant
 .
 
 /*------------------------------------------------------------------------*/
-Expr<out Expr expr>              (. BinaryOperators op = BinaryOperators.AND; int line = -1; .)
+Expr<out Expr expr>              (. BinaryOperators op; int line = -1; .)
     = ExprEq<out expr>
     { ( "&&"                     (. op = BinaryOperators.AND; line = t.line; .)
       | "||"                     (. op = BinaryOperators.OR; line = t.line; .)
@@ -115,19 +121,45 @@ Expr<out Expr expr>              (. BinaryOperators op = BinaryOperators.AND; in
     }
 .
 
-ExprEq<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; int line = -1; .)
+ExprEq<out Expr expr>            (. BinaryOperators op; int line = -1; .)
     = ExprRel<out expr>
     { ( "=="                     (. op = BinaryOperators.EQ; line = t.line; .)
       | "~~"                     (. op = BinaryOperators.APP_EQ; line = t.line; .)
-      ) ExprRel<out Expr expr2> (. expr = new BinaryOp(op, expr, expr2, line); .)
+      | "*~"                     (. op = BinaryOperators.MATCH; line = t.line; .)
+      ) ExprRel<out Expr expr2>  (. expr = new BinaryOp(op, expr, expr2, line); .)
+      | "!="                     (. line = t.line; .)
+        ExprRel<out Expr expr2>  (. expr = new UnaryOp(UnaryOperators.NOT, new BinaryOp(BinaryOperators.EQ, expr, expr2, line), line); .)
     }
 .
 
-ExprRel<out Expr expr>            (. BinaryOperators op = BinaryOperators.EQ; int line = -1; .)
+ExprRel<out Expr expr>            (. BinaryOperators op; int line = -1; .)
+    = ExprPre<out expr>
+      { "<" (. line = t.line; .)
+        ExprPre<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LT, expr, expr2, line); .)
+      | ">" (. line = t.line; .)
+        ExprPre<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LT, expr2, expr, line); .)
+      | "<=" (. line = t.line; .)
+        ExprPre<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LE, expr, expr2, line); .)
+      | ">=" (. line = t.line; .)
+        ExprPre<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LE, expr2, expr, line); .)
+      }
+.
+
+ExprPre<out Expr expr> (. expr = null; UnaryOperators op; int line; .)
+    = ( '!'  (. op = UnaryOperators.NOT; .)
+      | '-'  (. op = UnaryOperators.NEG; .)
+      )      (.  line = t.line; .)
+      ExprPre<out expr>  (. expr = new UnaryOp(op, expr, line); .)
+    | ExprSuf<out expr>
+.
+
+ExprSuf<out Expr expr>
     = ExprTerm<out expr>
-    { ( "<"                     (. op = BinaryOperators.LT; line = t.line; .)
-      ) ExprTerm<out Expr expr2> (. expr = new BinaryOp(op, expr, expr2, line); .)
-    }
+      { '['                       (. int line = t.line; .)
+        Expr<out Expr index> ']'  (. expr = new BinaryOp(BinaryOperators.INDEXER, expr, index, line); .)
+      | '.'    (. int line = t.line; .)
+        IDENT  (. expr = new Accessor(expr, new IdentE(t.val, t.line), line); .)
+      }
 .
 
 ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY; .)
@@ -137,15 +169,28 @@ ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY
     | STRING            (. expr = new StringLit(removeFirstAndLast(t.val)); .)
     | "true"            (. expr = new BoolLit(true);                        .)
     | "false"           (. expr = new BoolLit(false);                       .)
+    | "undefined"       (. expr = new UndefinedLit(); .)
     | '@' IDENT         (. expr = new GetEvent(new IdentE(t.val, t.line));    .)
     | '$' IDENT         (. expr = new GetProperty(new IdentE(t.val, t.line)); .)
     | ("any" | "all"    (. quantifier = Quantifiers.ALL; .)
       ) IDENT           (. String identifier = t.val; int line = t.line; .)
       "in"                        (. int inLine = t.line; .)
-      Expr<out Expr list> "where" (. int whereLine = t.line; .)
+      Expr<out Expr list> "has" (. int whereLine = t.line; .)
       Expr<out Expr cond> "end"
                         (. expr = new QuantifierOp(quantifier, new IdentE(identifier, line), list, cond, inLine, whereLine); .)
     | '(' Expr<out expr> ')'
+.
+
+
+Type<out Type type>  (. type = null; .)
+    = "bool"         (. type = BoolT.INSTANCE; .)
+    | "int"          (. type = IntT.INSTANCE; .)
+    | "float"        (. type = FloatT.INSTANCE; .)
+    | "string"       (. type = StringT.INSTANCE; .)
+    | "area"         (. type = AreaT.INSTANCE; .)
+    | "playlist"     (. type = PlaylistT.INSTANCE; .)
+    | "list" '<' Type<out Type elemType> '>' (. type = new ListT(elemType); .)
+//    | "map" '<' Type<out Type keyType> ',' Type<out Type valueType> '>' (. type = new ListT(elemType); .)
 .
 
 END File. // Must refer to the same non-terminal as "COMPILER" at the top.

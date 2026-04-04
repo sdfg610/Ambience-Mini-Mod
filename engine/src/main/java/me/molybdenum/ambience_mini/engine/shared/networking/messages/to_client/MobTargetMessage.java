@@ -5,11 +5,14 @@ import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmRead
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
 public class MobTargetMessage extends AmMessage {
-    public int entityID;
-    public boolean isTargetingPlayer;
+    public final int entityID;
+    public final boolean isTargetingPlayer;
 
 
-    public MobTargetMessage() { }
+    public MobTargetMessage(AmReader reader) {
+        entityID = reader.readInt();
+        isTargetingPlayer = reader.readBoolean();
+    }
 
     public MobTargetMessage(int entityID, boolean isTargetingPlayer) {
         this.entityID = entityID;
@@ -21,11 +24,5 @@ public class MobTargetMessage extends AmMessage {
     public void writeTo(AmWriter writer) {
         writer.writeInt(entityID);
         writer.writeBoolean(isTargetingPlayer);
-    }
-
-    @Override
-    public void readFrom(AmReader reader) {
-        entityID = reader.readInt();
-        isTargetingPlayer = reader.readBoolean();
     }
 }

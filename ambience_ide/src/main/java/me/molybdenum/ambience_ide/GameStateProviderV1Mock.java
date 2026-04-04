@@ -1,6 +1,7 @@
-package me.molybdenum.ambience_mini.engine.client.core.providers;
+package me.molybdenum.ambience_ide;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
+import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderV1Template;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;

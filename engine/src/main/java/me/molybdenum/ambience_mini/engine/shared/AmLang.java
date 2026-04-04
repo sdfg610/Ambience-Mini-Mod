@@ -33,6 +33,7 @@ public enum AmLang
     MSG_AREA_INVALID_LOCATION("message.area_invalid_location"),
     MSG_AREA_LOOK_AT_DESTINATION("message.area_look_at_destination"),
     MSG_AREA_CANNOT_EDIT("message.area_cannot_edit"),
+    MSG_AREA_NAME_CANNOT_BLANK("message.area_name_cannot_blank"),
 
     MSG_PLAYER_CRASHED("message.player_crashed"),
     MSG_UNHANDLED_MESSAGE("message.unhandled_message"),

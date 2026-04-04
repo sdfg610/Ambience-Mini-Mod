@@ -5,7 +5,7 @@ import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmRead
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
 public class SuccessMessage extends AmMessage {
-    public SuccessMessage() { }
+    public SuccessMessage(AmReader reader) { }
 
     public SuccessMessage(int handlerID) {
         this.handlerID = handlerID;
@@ -14,7 +14,4 @@ public class SuccessMessage extends AmMessage {
 
     @Override
     public void writeTo(AmWriter writer) { }
-
-    @Override
-    public void readFrom(AmReader reader) { }
 }

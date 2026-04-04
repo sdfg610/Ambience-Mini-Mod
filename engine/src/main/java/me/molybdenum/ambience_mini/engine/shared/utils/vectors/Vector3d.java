@@ -1,23 +1,17 @@
-package me.molybdenum.ambience_mini.engine.client.core.render;
+package me.molybdenum.ambience_mini.engine.shared.utils.vectors;
 
-import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
+import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
+import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmSerializable;
+import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 
-public record Vector3d(double x, double y, double z)
+public record Vector3d(double x, double y, double z) implements AmSerializable
 {
+    public Vector3d(AmReader reader) {
+        this(reader.readDouble(), reader.readDouble(), reader.readDouble());
+    }
+
     public Vector3d offset(double x, double y, double z) {
         return new Vector3d(this.x + x, this.y + y, this.z + z);
-    }
-
-    public Vector3d offsetX(double x) {
-        return new Vector3d(this.x + x, this.y, this.z);
-    }
-
-    public Vector3d offsetY(double y) {
-        return new Vector3d(this.x, this.y + y, this.z);
-    }
-
-    public Vector3d offsetZ(double z) {
-        return new Vector3d(this.x, this.y, this.z + z);
     }
 
 
@@ -74,5 +68,13 @@ public record Vector3d(double x, double y, double z)
         double vecZ = Math.cos(-yRot * (Math.PI / 180.0) - Math.PI) * -Math.cos(-xRot * (Math.PI / 180.0));
 
         return new Vector3d(vecX * length, vecY * length, vecZ * length);
+    }
+
+
+    @Override
+    public void writeTo(AmWriter writer) {
+        writer.writeDouble(x);
+        writer.writeDouble(y);
+        writer.writeDouble(z);
     }
 }

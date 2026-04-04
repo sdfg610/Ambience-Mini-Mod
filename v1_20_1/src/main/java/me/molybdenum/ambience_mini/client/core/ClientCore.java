@@ -12,7 +12,8 @@ import me.molybdenum.ambience_mini.client.core.state.ScreenState;
 import me.molybdenum.ambience_mini.client.core.util.Notification;
 import me.molybdenum.ambience_mini.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.areas.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
 import net.minecraft.client.KeyMapping;
@@ -36,6 +37,7 @@ public class ClientCore extends BaseClientCore<
     public ClientCore(
             Logger logger,
             ClientNameCache nameCache,
+            StructureCache structureCache,
             Notification notification,
             ClientNetworkManager networkManager,
             ClientAreaManager areaManager,
@@ -48,7 +50,7 @@ public class ClientCore extends BaseClientCore<
             ScreenState screenState,
             CombatState combatState
     ) {
-        super(logger, nameCache, notification, networkManager, areaManager, renderer, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
+        super(logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
     }
 
 

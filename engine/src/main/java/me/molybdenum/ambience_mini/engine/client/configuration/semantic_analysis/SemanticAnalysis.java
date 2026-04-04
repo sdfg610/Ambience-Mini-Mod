@@ -9,6 +9,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.s
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.SemError;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.AnyT;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.client.configuration.pretty_printer.PrettyPrinter;
 import me.molybdenum.ambience_mini.engine.client.music.MusicPlayer;
@@ -18,7 +19,6 @@ import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStatePro
 import me.molybdenum.ambience_mini.engine.client.core.providers.Property;
 
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Optional;
 
 public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvider gameStateProvider)
@@ -101,6 +101,17 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             Shed(when.body(), env, errors);
             env.closeScope();
         }
+        else if (schedule instanceof Let let) {
+            Type expectedType = let.type();
+            Type actualType = Expr(let.value(), env, errors);
+            if (expectedType != null && !expectedType.equalTo(actualType))
+                errors.add(new SemError(let.line(), "A 'let' command expected a value of type '" + PrettyPrinter.getTypeString(expectedType) + "' but got '" + PrettyPrinter.getTypeString(actualType) + "'"));
+
+            env.openScope();
+            env.bind(let.ident().value(), expectedType == null ? actualType : expectedType);
+            Shed(let.body(), env, errors);
+            env.closeScope();
+        }
         else if (schedule instanceof Interrupt interrupt) {
             if (env.inInterrupt())
                 errors.add(new SemError(interrupt.line(), "An 'interrupt' may not occur inside the body of another 'interrupt'."));
@@ -128,6 +139,8 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             }
             return type.get();
         }
+        else if (expr instanceof UndefinedLit)
+            return new AnyT();
         else if (expr instanceof BoolLit)
             return new BoolT();
         else if (expr instanceof IntLit)
@@ -149,39 +162,78 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             }
             return prop.get().type;
         }
+        else if (expr instanceof UnaryOp unOp) {
+            Type type = Expr(unOp.expr(), env, errors);
+            return switch (unOp.op()) {
+                case NOT -> {
+                    if (type != null && !(type instanceof BoolT))
+                        errors.add(new SemError(unOp.opLine(), "Argument of '!' must be of type bool. Got '" + PrettyPrinter.getTypeString(type) + "'"));
+                    yield new BoolT();
+                }
+                case NEG -> {
+                    if (isNumber(type))
+                        yield type;
+                    else if (isNotNumber(type))
+                        errors.add(new SemError(unOp.opLine(), "Argument of unary '-' must be a number type. Got '" + PrettyPrinter.getTypeString(type) + "'"));
+                    yield null;
+                }
+            };
+        }
         else if (expr instanceof BinaryOp binOp) {
             Type typeLeft = Expr(binOp.left(), env, errors);
             Type typeRight = Expr(binOp.right(), env, errors);
 
-            if (typeLeft != null && typeRight != null) // Only check if both types are known, else we get useless errors.
-                switch (binOp.op()) {
-                    case EQ -> {
-                        if (!Objects.equals(typeLeft, typeRight))
-                            errors.add(new SemError(binOp.opLine(), "Arguments of '==' must be of same type. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
-                    }
-                    case APP_EQ -> {
-                        if (!(typeLeft instanceof StringT) || !(typeRight instanceof StringT))
-                            errors.add(new SemError(binOp.opLine(), "Arguments of '~~' must both be of type string. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
-                    }
-                    case AND -> {
-                        if (!(typeLeft instanceof BoolT) || !(typeRight instanceof BoolT))
-                            errors.add(new SemError(binOp.opLine(), "Arguments of '&&' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
-                    }
-                    case OR -> {
-                        if (!(typeLeft instanceof BoolT) || !(typeRight instanceof BoolT))
-                            errors.add(new SemError(binOp.opLine(), "Arguments of '||' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
-                    }
-                    case LT -> {
-                        if (isNotNumber(typeLeft) || isNotNumber(typeRight))
-                            errors.add(new SemError(binOp.opLine(), "Arguments of '<' must both be numbers. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
-                    }
+            return switch (binOp.op()) {
+                case EQ -> {
+                    if (isNotEqual(typeLeft, typeRight))
+                        errors.add(new SemError(binOp.line(), "Arguments of '==' must be of same type. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                    yield new BoolT();
                 }
-
-            return new BoolT();
+                case APP_EQ -> {
+                    if (isNotString(typeLeft) || isNotString(typeRight))
+                        errors.add(new SemError(binOp.line(), "Arguments of '~~' must both be of type string. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                    yield new BoolT();
+                }
+                case MATCH -> {
+                    if (isNotString(typeLeft) || isNotString(typeRight))
+                        errors.add(new SemError(binOp.line(), "Arguments of '*~' must both be of type string. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                    yield new BoolT();
+                }
+                case AND -> {
+                    if (isNotBool(typeLeft) || isNotBool(typeRight))
+                        errors.add(new SemError(binOp.line(), "Arguments of '&&' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                    yield new BoolT();
+                }
+                case OR -> {
+                    if (isNotBool(typeLeft) || isNotBool(typeRight))
+                        errors.add(new SemError(binOp.line(), "Arguments of '||' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                    yield new BoolT();
+                }
+                case LT -> {
+                    if (isNotNumber(typeLeft) || isNotNumber(typeRight))
+                        errors.add(new SemError(binOp.line(), "Arguments of '<' and '>' must both be numbers. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                    yield new BoolT();
+                }
+                case LE -> {
+                    if (isNotNumber(typeLeft) || isNotNumber(typeRight))
+                        errors.add(new SemError(binOp.line(), "Arguments of '<=' and '>=' must both be numbers. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                    yield new BoolT();
+                }
+                case INDEXER -> {
+                    if (typeLeft instanceof IndexableT indexer) {
+                        if (isNotEqual(typeRight, indexer.indexerType()))
+                            errors.add(new SemError(binOp.line(), "A value of type '" + PrettyPrinter.getTypeString(typeLeft) + "' requires an indexer of type '" + PrettyPrinter.getTypeString(indexer.indexerType()) + "'. Got '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                        yield indexer.outputType();
+                    }
+                    else if (typeLeft != null)
+                        errors.add(new SemError(binOp.line(), "A value of type '" + PrettyPrinter.getTypeString(typeLeft) + "' cannot be indexed using '[]'."));
+                    yield null;
+                }
+            };
         }
         else if (expr instanceof QuantifierOp quanOp) {
             Type typeList = Expr(quanOp.list(), env, errors);
-            if (typeList != null && !(typeList instanceof ListT))
+            if (isNotList(typeList))
                 errors.add(new SemError(quanOp.inLine(), "The expression after 'in' in a list quantifier must be a list, but got '" + PrettyPrinter.getTypeString(typeList) + "'"));
 
             env.openScope();
@@ -195,6 +247,20 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
 
             return new BoolT();
         }
+        else if (expr instanceof Accessor accessor) {
+            Type type = Expr(accessor.base(), env, errors);
+            IdentE field = accessor.field();
+
+            if (type instanceof AccessibleT acc) {
+                Type fieldT = acc.getField(field.value());
+                if (fieldT != null)
+                    return fieldT;
+                errors.add(new SemError(field.line(), "A value of type '" + PrettyPrinter.getTypeString(type) + "' does not contain the field '" + field.value() + "'."));
+            }
+            else if (type != null)
+                errors.add(new SemError(accessor.line(), "A value of type '" + PrettyPrinter.getTypeString(type) + "' does not have any fields to access."));
+            return null;
+        }
         else if (expr == null) {
             return null;
         }
@@ -202,13 +268,36 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             throw new RuntimeException("Unhandled Expr-type: " + expr.getClass().getCanonicalName());
     }
 
-    private boolean isNotNumber(Type type) {
-        return !(type instanceof IntT) && !(type instanceof FloatT);
+
+    private boolean isNotEqual(Type t1, Type t2) {
+        return t1 != null && t2 != null && !t1.equalTo(t2);
     }
+
+    private boolean isNotBool(Type type) {
+        return type != null && !type.isBool();
+    }
+
+    private boolean isNotString(Type type) {
+        return type != null && !type.isString();
+    }
+
+    private boolean isNotList(Type type) {
+        return type != null && !type.isList();
+    }
+
+
+    private boolean isNumber(Type type) {
+        return type instanceof IntT || type instanceof FloatT;
+    }
+
+    private boolean isNotNumber(Type type) {
+        return type != null && !isNumber(type);
+    }
+
 
     private Type tryGetListElementType(Type type) {
         if (type instanceof ListT list)
-            return list.elementType();
+            return list.elementType;
         return null;
     }
 }

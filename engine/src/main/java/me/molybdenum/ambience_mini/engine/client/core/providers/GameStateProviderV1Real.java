@@ -1,9 +1,13 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
+import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
 import me.molybdenum.ambience_mini.engine.client.core.state.*;
+import me.molybdenum.ambience_mini.engine.shared.Common;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -15,9 +19,12 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     // State
     private final BasePlayerState<TBlockPos, TVec3> _player;
     private final BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, ?> _level;
-    private final BaseScreenState _screen;
     private final BaseCombatState<TEntity, TVec3> _combat;
     private final CaveDetector<TBlockPos, TVec3, TBlockState> _caveDetector;
+
+    private final BaseScreenState _screen;
+    private final ClientAreaManager _areaManager;
+    private final StructureCache _structureCache;
 
     // Config
     private final int _villageScanHorizontalRadius;
@@ -47,23 +54,25 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     private final Property bossesProp;
 
 
+    @SuppressWarnings("rawtypes")
     public GameStateProviderV1Real(
-        BaseClientConfig config,
+        BaseClientCore core,
         BasePlayerState<TBlockPos, TVec3> player,
         BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, ?> level,
-        BaseScreenState screenMonitor,
-        BaseCombatState<TEntity, TVec3> combatMonitor,
-        CaveDetector<TBlockPos, TVec3, TBlockState> caveDetector
+        BaseCombatState<TEntity, TVec3> combatMonitor
     ) {
         super();
 
         _player = player;
         _level = level;
-
-        _screen = screenMonitor;
         _combat = combatMonitor;
-        _caveDetector = caveDetector;
+        _caveDetector = new CaveDetector<>(core.clientConfig);
 
+        _screen = core.screenState;
+        _areaManager = core.areaManager;
+        _structureCache = core.structureCache;
+
+        var config = core.clientConfig;
         _villageScanHorizontalRadius = config.villageScanHorizontalRadius.get();
         _villageScanVerticalRadius = config.villageScanVerticalRadius.get();
         _villagerCountThreshold = config.villagerCountThreshold.get();
@@ -116,7 +125,7 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public BoolVal isPaused() {
         if (_level.isNull())
-            return BoolVal.FALSE;
+            return BoolVal.UNDEFINED;
         return new BoolVal(_level.isWorldTickingPaused());
     }
 
@@ -130,26 +139,32 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     // Time events
     @Override
     public BoolVal isDay() {
-        int time = timeProp.getValue().asInt();                  // "12542" is the time when beds can be used.
-        return new BoolVal(time > 23500 || time <= 12500); // "23460" is the time from when beds cannot be used.
+        // "12542" is the time from when beds can be used.
+        // "23460" is the time from when beds cannot be used.
+        return new BoolVal(
+                timeProp.getValue().mapInt(time -> time > 23500 || time <= 12500)
+        );
     }
 
     @Override
     public BoolVal isDawn() {
-        int time = timeProp.getValue().asInt();
-        return new BoolVal(time > 23500 || time <= 2000);
+        return new BoolVal(
+                timeProp.getValue().mapInt(time -> time > 23500 || time <= 2000)
+        );
     }
 
     @Override
     public BoolVal isDusk() {
-        int time = timeProp.getValue().asInt();
-        return new BoolVal(time > 10300 && time <= 12500);
+        return new BoolVal(
+                timeProp.getValue().mapInt(time -> time > 10300 && time <= 12500)
+        );
     }
 
     @Override
     public BoolVal isNight() {
-        int time = timeProp.getValue().asInt();
-        return new BoolVal(time > 12500 && time <= 23500);
+        return new BoolVal(
+                timeProp.getValue().mapInt(time -> time > 12500 && time <= 23500)
+        );
     }
 
 
@@ -157,29 +172,25 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     // Weather events
     @Override
     public BoolVal isDownfall() {
-        if (_level.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_level.isRaining());
     }
 
     @Override
     public BoolVal isRaining() {
         if (_player.isNull() || _level.isNull())
-            return BoolVal.FALSE;
+            return BoolVal.UNDEFINED;
         return new BoolVal(_level.isRaining() && !_level.isColdEnoughToSnow(_player.blockPos()));
     }
 
     @Override
     public BoolVal isSnowing() {
         if (_player.isNull() || _level.isNull())
-            return BoolVal.FALSE;
+            return BoolVal.UNDEFINED;
         return new BoolVal(_level.isRaining() && _level.isColdEnoughToSnow(_player.blockPos()));
     }
 
     @Override
     public BoolVal isThundering() {
-        if (_level.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_level.isThundering());
     }
 
@@ -189,15 +200,24 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public BoolVal inVillage() {
         if (_player.isNull() || _level.isNull())
-            return BoolVal.FALSE;
+            return BoolVal.UNDEFINED;
         return new BoolVal(_level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold);
     }
 
     @Override
     public BoolVal inRanch() {
         if (_player.isNull() || _level.isNull())
-            return BoolVal.FALSE;
+            return BoolVal.UNDEFINED;
         return new BoolVal(_level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold);
+    }
+
+    @Override
+    public BoolVal wardenNearby() {
+        if (_player.isNull() || _level.isNull())
+            return BoolVal.UNDEFINED;
+
+        Double distance = _level.shortestDistanceToWarden(_player.eyePosition(), Common.WARDEN_SEARCH_RADIUS);
+        return distance == null ? BoolVal.FALSE : new BoolVal(distance <= Common.WARDEN_SEARCH_RADIUS);
     }
 
 
@@ -210,15 +230,13 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
 
     @Override
     public BoolVal isSleeping() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_player.isSleeping());
     }
 
     @Override
     public BoolVal isFishing() {
         if (_player.isNull() || _level.isNull())
-            return BoolVal.FALSE;
+            return BoolVal.UNDEFINED;
 
         // The bopping of the fishing hook creates time periods where the hook is not detected as being in water.
         // To combat this, I make a small grace period of 1000 milliseconds.
@@ -239,23 +257,19 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
 
     @Override
     public BoolVal isUnderWater() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_player.isUnderwater());
     }
 
     @Override
     public BoolVal inLava() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_player.isInLava());
     }
 
     @Override
     public BoolVal isDrowning() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
-        return new BoolVal(_player.isDrowning() && _player.isSurvivalOrAdventureMode());
+        return _player.isNull()
+                ? BoolVal.UNDEFINED
+                : new BoolVal(_player.isDrowning() && _player.isSurvivalOrAdventureMode());
     }
 
 
@@ -263,43 +277,31 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     // Mount-like events
     @Override
     public BoolVal inMinecart() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_player.inMinecart());
     }
 
     @Override
     public BoolVal inBoat() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_player.inBoat());
     }
 
     @Override
     public BoolVal onHorse() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_player.onHorse());
     }
 
     @Override
     public BoolVal onDonkey() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_player.onDonkey());
     }
 
     @Override
     public BoolVal onPig() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_player.onPig());
     }
 
     @Override
     public BoolVal flyingElytra() {
-        if (_player.isNull())
-            return BoolVal.FALSE;
         return new BoolVal(_player.elytraFlying());
     }
 
@@ -308,6 +310,9 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     // Combat events
     @Override
     public BoolVal inCombat() {
+        if (_level.isNull())
+            return BoolVal.UNDEFINED;
+
         if (_combat.hasActiveCombatants()) {
             _latestCombatTime = System.currentTimeMillis();
             return new BoolVal(true);
@@ -317,7 +322,9 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
 
     @Override
     public BoolVal inBossFight() {
-        return new BoolVal(_combat.inBossFight());
+        return _level.isNull()
+                ? BoolVal.UNDEFINED
+                : new BoolVal(_combat.inBossFight());
     }
 
 
@@ -325,43 +332,42 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     // World properties
     @Override
     public StringVal getDifficulty() {
-        if (_level.isNull())
-            return StringVal.EMPTY;
-        return new StringVal(_level.getDifficulty());
+        return _level.isNull()
+                ? StringVal.UNDEFINED
+                : new StringVal(_level.getDifficulty());
     }
 
     @Override
     public StringVal getDimensionId() {
-        if (_level.isNull())
-            return StringVal.EMPTY;
-        return new StringVal(_level.getDimensionID());
+        return _level.isNull()
+                ? StringVal.UNDEFINED
+                : new StringVal(_level.getDimensionID());
     }
 
     @Override
     public StringVal getBiomeId() {
-        if (_player.isNull() || _level.isNull())
-            return StringVal.EMPTY;
-        return new StringVal(_level.getBiomeID(_player.blockPos()));
+        return _player.isNull() || _level.isNull()
+                ? StringVal.UNDEFINED
+                : new StringVal(_level.getBiomeID(_player.blockPos()));
     }
 
     @Override
     public ListVal getBiomeTagIDs() {
-        if (_player.isNull() || _level.isNull())
-            return ListVal.EMPTY;
-        return ListVal.ofStringList(_level.getBiomeTagIDs(_player.blockPos()));
+        return _player.isNull() || _level.isNull()
+                ? ListVal.UNDEFINED
+                : ListVal.ofStringList(_level.getBiomeTagIDs(_player.blockPos()));
     }
 
     @Override
     public IntVal getTime() {
-        if (_level.isNull())
-            return IntVal.ZERO;
-        return new IntVal(_level.getTime() % 24000);
+        return _level.isNull() ? IntVal.UNDEFINED : new IntVal(_level.getTime() % 24000);
     }
 
     @Override
     public FloatVal getCaveScore() {
         if (_player.isNull() || _level.isNull())
-            return FloatVal.ZERO;
+            return FloatVal.UNDEFINED;
+
         _latestCaveScore = _caveDetector.getAveragedCaveScore(_level, _player).orElse(_latestCaveScore);
         return new FloatVal((float)(_latestCaveScore));
     }
@@ -369,7 +375,7 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @Override
     public FloatVal getSkylightScore() {
         if (_player.isNull() || _level.isNull())
-            return FloatVal.ZERO;
+            return FloatVal.UNDEFINED;
 
         List<BlockReading<TBlockPos, TBlockState>> readings = _level.readSurroundings(_player.eyePosition(), 12, 7, 64);
         float averageSkyLight = readings.stream().collect(Collectors.averagingDouble(r -> _level.getAverageSkyLightingAround(r.blockPos()))).floatValue();
@@ -379,46 +385,66 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
 
 
     // ------------------------------------------------------------------------------------------------
+    // Location properties
+    @Override
+    public ListVal getIntersectingAreas() {
+        if (_player.isNull() || _level.isNull())
+            return ListVal.UNDEFINED;
+
+        return new ListVal(
+                _areaManager.getIntersectingAreas(
+                        _level.getDimensionID(),
+                        _level.toAmVector3d(_player.eyePosition())
+                ).stream().map(AreaVal::new)
+        );
+    }
+
+    @Override
+    public ListVal getIntersectingStructures() {
+        if (_player.isNull() || _level.isNull())
+            return ListVal.UNDEFINED;
+
+        //noinspection DataFlowIssue
+        return ListVal.ofStringList(
+                _structureCache.getIntersectingStructures(_level.getDimensionID(), _level.toAmVector3d(_player.eyePosition()).round())
+        );
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
     // Player properties
     @Override
+    public StringVal getPlayerUUID() {
+        return new StringVal(_player.getUUID());
+    }
+
+    @Override
     public StringVal getGameMode() {
-        if (_player.isNull())
-            return StringVal.EMPTY;
         return new StringVal(_player.getGameModeName());
     }
 
     @Override
     public FloatVal getPlayerHealth() {
-        if (_player.isNull())
-            return FloatVal.ZERO;
         return new FloatVal(_player.health());
     }
 
     @Override
     public FloatVal getPlayerMaxHealth() {
-        if (_player.isNull())
-            return FloatVal.ZERO;
         return new FloatVal(_player.maxHealth());
     }
 
     @Override
     public FloatVal getPlayerElevation() {
-        if (_player.isNull())
-            return FloatVal.ZERO;
-        return new FloatVal((float)_player.vectorY());
+        return new FloatVal(_player.vectorY().floatValue());
     }
 
     @Override
     public StringVal getVehicleId() {
-        if (_player.isNull())
-            return StringVal.EMPTY;
         return new StringVal(_player.vehicleId());
     }
 
     @Override
     public ListVal getActiveEffects() {
-        if (_player.isNull())
-            return ListVal.EMPTY;
         return ListVal.ofStringList(_player.getActiveEffectIds());
     }
 
@@ -432,7 +458,9 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
 
     @Override
     public StringVal getBoss() {
-        return (StringVal)bossesProp.getValue().asList().stream().findFirst().orElse(new StringVal(""));
+        return (StringVal)bossesProp.getValue().mapList(
+                lst -> lst.stream().findFirst().orElse(new StringVal())
+        );
     }
 
     @Override

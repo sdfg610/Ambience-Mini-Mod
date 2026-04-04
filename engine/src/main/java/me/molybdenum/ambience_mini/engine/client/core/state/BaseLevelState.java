@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
-import me.molybdenum.ambience_mini.engine.client.core.render.Vector3d;
-import me.molybdenum.ambience_mini.engine.shared.areas.Vector3i;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,7 +48,7 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TCl
 
     // ------------------------------------------------------------------------------------------------
     // World-info
-    public abstract boolean isWorldTickingPaused();
+    public abstract Boolean isWorldTickingPaused();
     public abstract String getDifficulty();
 
     public abstract String getDimensionID();
@@ -59,29 +59,29 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TCl
     public abstract String getBiomeID(TBlockPos blockPos);
     public abstract List<String> getBiomeTagIDs(TBlockPos blockPos);
 
-    public abstract int getTime();
+    public abstract Integer getTime();
 
-    public abstract boolean isRaining();
-    public abstract boolean isThundering();
-    public abstract boolean isColdEnoughToSnow(TBlockPos blockPos);
+    public abstract Boolean isRaining();
+    public abstract Boolean isThundering();
+    public abstract Boolean isColdEnoughToSnow(TBlockPos blockPos);
 
     public abstract TEntity getEntityById(int id);
     public abstract TVec3 getEntityPosition(TEntity entity);
 
-    public abstract int countNearbyVillagers(TBlockPos center, int horizontalRadius, int verticalRadius);
-    public abstract int countNearbyAnimals(TBlockPos center, int horizontalRadius, int verticalRadius);
+    public abstract Integer countNearbyVillagers(TBlockPos center, int horizontalRadius, int verticalRadius);
+    public abstract Integer countNearbyAnimals(TBlockPos center, int horizontalRadius, int verticalRadius);
+    public abstract Double shortestDistanceToWarden(TVec3 position, int cubeSearchRadius);
 
     public abstract TBlockState getBlockState(TBlockPos blockPos);
     public abstract Object getBlock(TBlockState blockState);
     public abstract String getBlockId(TBlockState blockState);
     public abstract Stream<String> getBlockTags(TBlockState blockState);
     public abstract TBlockPos getNearestBlockOrFurthestAir(TVec3 from, TVec3 to);
-    public abstract TBlockPos getAirJustBeforeLookedAtBlockIfInRange(TVec3 from, TVec3 to);
 
     public abstract boolean isAir(TBlockState blockState);
 
-    public abstract int getMaxSkyLightAt(TBlockPos blockPos);
-    public abstract int getBlockLightAt(TBlockPos blockPos);
+    public abstract Integer getMaxSkyLightAt(TBlockPos blockPos);
+    public abstract Integer getBlockLightAt(TBlockPos blockPos);
 
 
     // ------------------------------------------------------------------------------------------------
@@ -114,11 +114,6 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TCl
     public TBlockPos getNearestBlockOrFurthestAir(TVec3 fromVec, double xRot, double yRot, double distance) {
         TVec3 toVec = offsetVectorByAngle(fromVec, xRot, yRot, distance);
         return getNearestBlockOrFurthestAir(fromVec, toVec);
-    }
-
-    public TBlockPos getAirJustBeforeLookedAtBlockIfInRange(TVec3 fromVec, double xRot, double yRot, double distance) {
-        TVec3 toVec = offsetVectorByAngle(fromVec, xRot, yRot, distance);
-        return getAirJustBeforeLookedAtBlockIfInRange(fromVec, toVec);
     }
 
 

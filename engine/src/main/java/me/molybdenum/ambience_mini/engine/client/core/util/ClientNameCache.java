@@ -57,7 +57,9 @@ public class ClientNameCache
         });
     }
 
-    public void clearCache() {
+    public void clear() {
         playerNameCache.clear();
+        this.currentPlayerUUID = null;
+        this.currentPlayerName = null;
     }
 }

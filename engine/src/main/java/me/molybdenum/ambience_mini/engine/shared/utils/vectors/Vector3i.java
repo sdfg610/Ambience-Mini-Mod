@@ -1,9 +1,8 @@
-package me.molybdenum.ambience_mini.engine.shared.areas;
+package me.molybdenum.ambience_mini.engine.shared.utils.vectors;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Direction;
-import me.molybdenum.ambience_mini.engine.client.core.render.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
@@ -67,25 +66,42 @@ public record Vector3i(int x, int y, int z) {
     }
 
 
+    public boolean isInside(Vector3i min, Vector3i max) {
+        return x >= min.x() && x <= max.x
+                && y >= min.y && y <= max.y
+                && z >= min.z && z <= max.z;
+    }
+
+
     public Vector3d toVector3d() {
         return new Vector3d(x, y, z);
     }
 
+    public Vector2i toChunkPos() {
+        return new Vector2i(x / 16, z / 16);
+    }
+
 
     public static Pair<Vector3i, Vector3i> minAndSizeOf(Vector3i from, Vector3i to) {
+        return minAndMaxOf(from, to).destruct(
+                (min, max) -> new Pair<>(min, max.offset(1,1,1).subtract(min))
+        );
+    }
+
+    public static Pair<Vector3i, Vector3i> minAndMaxOf(Vector3i from, Vector3i to) {
         Vector3i min = new Vector3i(
                 Math.min(from.x(), to.x()),
                 Math.min(from.y(), to.y()),
                 Math.min(from.z(), to.z())
         );
 
-        Vector3i size = new Vector3i(
+        Vector3i max = new Vector3i(
                 Math.max(from.x(), to.x()),
                 Math.max(from.y(), to.y()),
                 Math.max(from.z(), to.z())
-        ).offset(1,1,1).subtract(min);
+        );
 
-        return new Pair<>(min, size);
+        return new Pair<>(min, max);
     }
 
 

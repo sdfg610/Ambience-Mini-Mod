@@ -14,7 +14,9 @@ public class Owner implements AmSerializable
 
 
     public Owner(AmReader reader) {
-        readFrom(reader);
+        ownership = reader.readBoolean()
+                ? Owned.fromReader(reader)
+                : Ownerless.fromReader(reader);
     }
 
     public Owner(Ownership ownership) {
@@ -27,10 +29,6 @@ public class Owner implements AmSerializable
 
     public String getOwnerIdIfOwned() {
         return ownership instanceof Owned owned ? owned.playerUUID : null;
-    }
-
-    public boolean isOwnedBy(String playerUUID) {
-        return ownership instanceof Owned owned && owned.playerUUID.equals(playerUUID);
     }
 
     public boolean isPrivate() {
@@ -61,13 +59,6 @@ public class Owner implements AmSerializable
     public void writeTo(AmWriter writer) {
         writer.writeBoolean(ownership instanceof Owned);
         ownership.writeTo(writer);
-    }
-
-    @Override
-    public void readFrom(AmReader reader) {
-        ownership = reader.readBoolean()
-                ? Owned.fromReader(reader)
-                : Ownerless.fromReader(reader);
     }
 
 
