@@ -12,11 +12,11 @@
   "message.reload_description": "Trying to reload music player...",
   "message.next_music_description": "Selecting new music...",
   "message.printing_all": "Printing all events and properties to the Minecraft log...",
+  "message.not_running": "The music player is not running...",
 
   "message.full_server_support": "Detected full server support for Ambience Mini! All server-dependent features are enabled.",
-  "message.partial_server_support": "Detected partial server support for Ambience Mini! Some server-dependent features are enabled.",
-  "message.outdated_version_on_server": "Ambience Mini version on server is too old! All server-dependent features are disabled.",
-  "message.no_server_support": "No server support for Ambience Mini! All server-dependent features are disabled.",
+  "message.partial_server_support": "Detected partial server support for Ambience Mini! Some server-dependent features might be enabled.",
+  "message.no_server_support": "No server support for Ambience Mini detected! All server-dependent features are disabled.",
 
   "message.pausing_music": "Pausing music...",
   "message.resuming_music": "Resuming music...",

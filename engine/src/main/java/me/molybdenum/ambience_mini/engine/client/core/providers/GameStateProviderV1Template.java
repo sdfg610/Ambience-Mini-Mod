@@ -75,7 +75,7 @@ public abstract class GameStateProviderV1Template extends BaseGameStateProvider
 
     // Location properties
     public static final PropertyTemplateV1 P_AREAS = new PropertyTemplateV1("areas", new ListT(new AreaT()), instance -> instance::getIntersectingAreas);
-    public static final PropertyTemplateV1 P_STRUCTURES = new PropertyTemplateV1("structures", new ListT(new AreaT()), instance -> instance::getIntersectingStructures);
+    public static final PropertyTemplateV1 P_STRUCTURES = new PropertyTemplateV1("structures", new ListT(new StringT()), instance -> instance::getIntersectingStructures);
 
     // Player properties
     public static final PropertyTemplateV1 P_UUID = new PropertyTemplateV1("uuid", new StringT(), instance -> instance::getPlayerUUID);

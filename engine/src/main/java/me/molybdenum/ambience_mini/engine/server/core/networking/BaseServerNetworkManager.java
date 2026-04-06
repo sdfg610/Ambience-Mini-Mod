@@ -93,21 +93,44 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
 
     // Areas
     private AmMessage handleCreateAreaMessage(CreateAreaMessage msg, TServerPlayer sender) {
-        core.areaManager.createArea(msg.area); // TODO: Validate area contents such as names
+        String owner = msg.area.owner.getOwnerIdIfOwned();
+        if (owner != null && !owner.equals(getServerPlayerUUID(sender))) {
+            core.logger.error("A player cannot create an area to be owned by another player!");
+            return msg.failure(AmLang.MSG_MESSAGE_CAUSED_SERVER_ERROR);
+        }
+
+        var error = core.areaManager.createArea(msg.area);
+        if (error.isPresent()) {
+            core.logger.error("Error when creating area: {}", error.get());
+            return msg.failure(AmLang.MSG_MESSAGE_CAUSED_SERVER_ERROR);
+        }
+
         return msg.success();
     }
 
     private AmMessage handlePutAreaMessage(PutAreaMessage msg, TServerPlayer sender) {
-        if (!msg.area.canBeEditedBy(getServerPlayerUUID(sender)))
+        String senderID = getServerPlayerUUID(sender);
+        if (!msg.area.canBeEditedBy(senderID))
             return msg.failure(AmLang.MSG_AREA_CANNOT_EDIT);
 
-        core.areaManager.putArea(msg.area); // TODO: Validate area contents such as names
+        String owner = msg.area.owner.getOwnerIdIfOwned();
+        if (owner != null && !owner.equals(senderID)) {
+            core.logger.error("A player cannot update an area to be owned by another player!");
+            return msg.failure(AmLang.MSG_MESSAGE_CAUSED_SERVER_ERROR);
+        }
+
+        var error = core.areaManager.putArea(msg.area);
+        if (error.isPresent()) {
+            core.logger.error("Error when updating area: {}", error.get());
+            return msg.failure(AmLang.MSG_MESSAGE_CAUSED_SERVER_ERROR);
+        }
+
         return msg.success();
     }
 
     private AmMessage handleDeleteAreaMessage(DeleteAreaMessage msg, TServerPlayer sender) {
         Area area = core.areaManager.getAreaById(msg.areaId);
-        if (area.canBeEditedBy(getServerPlayerUUID(sender)))
+        if (!area.canBeEditedBy(getServerPlayerUUID(sender)))
             return msg.failure(AmLang.MSG_AREA_CANNOT_EDIT);
 
         core.areaManager.deleteArea(msg.areaId);
@@ -126,7 +149,9 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     // Structures
     private AmMessage handleGetStructuresMessage(GetStructuresMessage msg, TServerPlayer sender) {
         sendToPlayer(
-                msg.getReferences ? core.structureReader.getReferences(sender) : core.structureReader.getStructures(sender),
+                msg.getReferences
+                        ? core.structureReader.getReferences(sender, msg.chunksToFetch)
+                        : core.structureReader.getStructures(sender, msg.chunksToFetch),
                 sender
         );
         return msg.success();

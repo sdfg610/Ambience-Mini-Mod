@@ -18,10 +18,10 @@ public enum AmLang
     MSG_RELOAD("message.reload_description"),
     MSG_NEXT_MUSIC("message.next_music_description"),
     MSG_PRINTING_ALL("message.printing_all"),
+    MSG_NOT_RUNNING("message.not_running"),
 
     MSG_FULL_SERVER_SUPPORT("message.full_server_support"),
     MSG_PARTIAL_SERVER_SUPPORT("message.partial_server_support"),
-    MSG_OUTDATED_VERSION_ON_SERVER("message.partial_server_support"),
     MSG_NO_SERVER_SUPPORT("message.no_server_support"),
 
     MSG_PAUSING_MUSIC("message.pausing_music"),

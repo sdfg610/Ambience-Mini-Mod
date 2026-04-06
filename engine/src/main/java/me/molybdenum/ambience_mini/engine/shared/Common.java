@@ -7,6 +7,7 @@ public class Common
 
     // Storage
     public static final String AM_STORAGE_DIRECTORY = "am_storage";
+    public static final String AM_LOCAL_STORAGE_DIRECTORY = "am_local";
     public static final String NAME_CACHE_FILE_NAME = "name_cache.json";
 
     // Configuration
@@ -17,7 +18,7 @@ public class Common
     // Areas
     public static final float AREA_SELECTION_RANGE = 48f;
     public static final float AREA_LINE_WIDTH = 2f;
-    public static final int MAX_AREA_NAME_LENGTH = 50;   // TODO: Check and enforce this everywhere!
+    public static final int MAX_AREA_NAME_LENGTH = 50;
 
     // Warden
     public static final int WARDEN_SEARCH_RADIUS = 32; // 2 chunks

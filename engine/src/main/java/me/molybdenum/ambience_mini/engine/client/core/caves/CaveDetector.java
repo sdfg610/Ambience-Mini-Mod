@@ -36,7 +36,7 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
 
     public Optional<Double> getAveragedCaveScore(
             BaseLevelState<TBlockPos, TVec3, TBlockState, ?, ?> level,
-            BasePlayerState<TBlockPos, TVec3> player
+            BasePlayerState<TBlockPos, TVec3, ?> player
     ) {
         List<Double> scores = new ArrayList<>();
         for (int xOff = -_caveScoreRadius; xOff <= _caveScoreRadius; xOff++)

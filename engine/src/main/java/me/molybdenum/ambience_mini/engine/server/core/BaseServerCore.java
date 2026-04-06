@@ -70,11 +70,12 @@ public abstract class BaseServerCore<
 
     public void onStarted() {
         this.nameCache.loadCache();
+        this.areaManager.loadAllAreas();
     }
 
     public void onStopping() {
         this.nameCache.saveCache();
-        // TODO: Save areas
+        this.areaManager.saveAllAreas();
     }
 
 

@@ -35,17 +35,6 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
 
     @Override
-    public boolean isNull() {
-        return cachedLevel == null;
-    }
-
-    @Override
-    public boolean notNull() {
-        return cachedLevel != null;
-    }
-
-
-    @Override
     protected ClientLevel getCurrentLevel() {
         return mc.level;
     }

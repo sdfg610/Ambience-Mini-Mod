@@ -2,7 +2,9 @@ package me.molybdenum.ambience_mini.engine.client.core.locations;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
+import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.GetStructuresMessage;
+import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
@@ -15,30 +17,36 @@ public class StructureCache {
     private final Map<String, SubCache> dimensionToCache = new ConcurrentHashMap<>();
 
     private BaseClientNetworkManager network;
+    private ServerSetup serverSetup;
 
 
     @SuppressWarnings("rawtypes")
     public void init(
             BaseClientCore core
     ) {
+        if (this.network != null)
+            throw new RuntimeException("Multiple calls to 'StructureCache.init'!");
+
         this.network = core.networkManager;
+        this.serverSetup = core.serverSetup;
     }
 
 
     public List<String> getIntersectingStructures(String dimension, Vector3i position) {
-        var structures = getSubCache(dimension).getStructuresAt(position);
+        if (!serverSetup.serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
+            return null;
 
-        return Arrays.stream(structures)
+        return getSubCache(dimension).getStructuresAt(position).map(amStructures ->
+                Arrays.stream(amStructures)
                 .filter(struct -> struct.containsPosition(position))
                 .map(struct -> struct.name)
-                .toList();
+                .toList()
+        ).orElse(null);
     }
 
 
-    public void setReferences(String dimension, Vector2i chunkPos, List<Vector2i> references) {
-        Vector2i[] refs = new Vector2i[references.size()];
-        references.toArray(refs);
-        getSubCache(dimension).setReferences(chunkPos, refs);
+    public void setReferences(String dimension, Map<Vector2i, List<Vector2i>> chunkToReferences) {
+        getSubCache(dimension).setReferences(chunkToReferences);
     }
 
 
@@ -60,11 +68,13 @@ public class StructureCache {
 
 
     class SubCache {
+
         private static final long FETCH_TIMEOUT = 1000;
         private static final int CACHE_SIZE = 10;
-        private static final AmStructure[] NO_STRUCTS = {};
 
+        private static final int FETCH_RADIUS = 2;
         private long lastFetchTime = 0;
+
         private int cacheIndex;
 
         @SuppressWarnings("unchecked")
@@ -74,29 +84,27 @@ public class StructureCache {
         private final Map<Vector2i, Vector2i[][]> regionToReferences = new ConcurrentHashMap<>(); // Other chunks references the chunk in which a structure starts.
 
 
-        protected AmStructure[] getStructuresAt(Vector3i position) {
+        protected Optional<AmStructure[]> getStructuresAt(Vector3i position) {
             var chunkPos = position.toChunkPos();
             var cache = getFromCache(chunkPos);
             if (cache != null)
-                return cache;
+                return Optional.of(cache);
+
+            requestMissingReferences(chunkPos);
 
             Vector2i[] references = getReferences(chunkPos);
-            if (references == null) {
-                tryFetchReferences();
-                return NO_STRUCTS;
-            }
+            if (references == null)
+                return Optional.empty();
 
             ArrayList<AmStructure> allStructures = new ArrayList<>();
             for (var mainChunkPos : references) {
                 var structures = getStructures(mainChunkPos);
-                if (structures == null) {
-                    tryFetchStructures();
-                    return NO_STRUCTS;
-                }
+                if (structures == null)
+                    return Optional.empty();
                 allStructures.addAll(Arrays.asList(structures));
             }
 
-            return putToCacheAndGet(chunkPos, allStructures);
+            return Optional.of(putToCacheAndGet(chunkPos, allStructures));
         }
 
 
@@ -108,10 +116,10 @@ public class StructureCache {
             return null;
         }
 
-        private AmStructure[] putToCacheAndGet(Vector2i chunk, List<AmStructure> structures) {
+        private AmStructure[] putToCacheAndGet(Vector2i chunkPos, List<AmStructure> structures) {
             AmStructure[] structuresArray = new AmStructure[structures.size()];
             structures.toArray(structuresArray);
-            chunkToStructuresCache[(cacheIndex++) % CACHE_SIZE] = new Pair<>(chunk, structuresArray);
+            chunkToStructuresCache[(cacheIndex++) % CACHE_SIZE] = new Pair<>(chunkPos, structuresArray);
             return structuresArray;
         }
 
@@ -120,8 +128,16 @@ public class StructureCache {
             return getReferenceRegion(chunkPos)[getChunkRegionIndex(chunkPos)];
         }
 
-        protected void setReferences(Vector2i chunkPos, Vector2i[] references) {
-            getReferenceRegion(chunkPos)[getChunkRegionIndex(chunkPos)] = references;
+        protected void setReferences(Map<Vector2i, List<Vector2i>> chunkToReferences) {
+            for (var entry : chunkToReferences.entrySet()) {
+                var chunkPos = entry.getKey();
+                var references = entry.getValue();
+
+                Vector2i[] refs = new Vector2i[references.size()];
+                references.toArray(refs);
+                getReferenceRegion(chunkPos)[getChunkRegionIndex(chunkPos)] = refs;
+                requestMissingStructures(refs);
+            }
             lastFetchTime = 0L;
         }
 
@@ -136,7 +152,6 @@ public class StructureCache {
 
         protected void setStructures(Vector2i chunkPos, AmStructure[] structures) {
             getStructureRegion(chunkPos)[getChunkRegionIndex(chunkPos)] = structures;
-            lastFetchTime = 0L;
         }
 
         private AmStructure[][] getStructureRegion(Vector2i chunkPos) {
@@ -150,20 +165,34 @@ public class StructureCache {
         }
 
 
-        private void tryFetchReferences() {
-            tryFetch(true);
-        }
-
-        private void tryFetchStructures() {
-            tryFetch(false);
-        }
-
-        private void tryFetch(boolean getReferences) {
+        private void requestMissingReferences(Vector2i centerChunk) {
             long now = System.currentTimeMillis();
-            if (now - lastFetchTime > FETCH_TIMEOUT) { // Wait for 'FETCH_TIMEOUT' milliseconds before re-issuing a fetch request.
+            if (now - lastFetchTime > FETCH_TIMEOUT) {
                 lastFetchTime = now;
-                network.sendToServer(new GetStructuresMessage(getReferences));
+                ArrayList<Vector2i> chunks = new ArrayList<>();
+
+                int min = -FETCH_RADIUS + 1;
+                for (int dx = min; dx < FETCH_RADIUS; dx++)
+                    for (int dy = min; dy < FETCH_RADIUS; dy++) {
+                        Vector2i chunkPos = centerChunk.offset(dx, dy);
+                        if (getReferences(chunkPos) == null)
+                            chunks.add(chunkPos);
+                    }
+
+                if (!chunks.isEmpty())
+                    network.sendToServer(new GetStructuresMessage(true, chunks));
             }
+        }
+
+        private void requestMissingStructures(Vector2i[] references) {
+            ArrayList<Vector2i> chunks = new ArrayList<>();
+
+            for (var reference : references)
+                if (getStructures(reference) == null)
+                    chunks.add(reference);
+
+            if (!chunks.isEmpty())
+                network.sendToServer(new GetStructuresMessage(false, chunks));
         }
     }
 }

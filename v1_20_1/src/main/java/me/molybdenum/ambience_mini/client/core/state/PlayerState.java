@@ -1,6 +1,5 @@
 package me.molybdenum.ambience_mini.client.core.state;
 
-import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -21,15 +20,12 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class PlayerState implements BasePlayerState<BlockPos, Vec3>
-{
+public class PlayerState extends BasePlayerState<BlockPos, Vec3, LocalPlayer> {
     private final Minecraft mc = Minecraft.getInstance();
-    private LocalPlayer player = null;
 
     private static final Method getPlayerInfoMethod = ObfuscationReflectionHelper.findMethod(AbstractClientPlayer.class, "m_108558_");
     private static final String OBF_SOUND_ENGINE = "f_120349_";
@@ -45,53 +41,44 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
 
     @Override
-    public boolean isNull() {
-        return player == null;
+    protected LocalPlayer getCurrentPlayer() {
+        return mc.player;
     }
 
     @Override
-    public boolean notNull() {
-        return player != null;
+    protected String getPlayerString(LocalPlayer player) {
+        return player == null ? "null" : player.getId() + "/" + System.identityHashCode(player);
     }
 
+    @Override
+    protected String getName(LocalPlayer player) {
+        return player.getGameProfile().getName();
+    }
 
     @Override
-    public void prepare(@Nullable ArrayList<String> messages) {   // TODO: Generalize TLocalPlayer
-        LocalPlayer newPlayer = mc.player;
-        if (EssentialCompat.isLoaded && EssentialCompat.tryCaptureFakes(newPlayer, (player) -> player.getGameProfile().getName(), LocalPlayer::level) && messages != null)
-            messages.add("Captured fake player and world from essential mod!");
-
-        if (player != newPlayer && EssentialCompat.isNotFakePlayer(newPlayer)) {
-            if (messages != null)
-                messages.add("Player instance changed from '" + getPlayerString(player) + "' to '" + getPlayerString(newPlayer) + "' since last update.");
-            player = newPlayer;
-        }
+    protected Object getLevel(LocalPlayer player) {
+        return player.level();
     }
 
 
     @Override
     public String getUUID() {
-        return player == null ? null : player.getStringUUID();
+        return cachedPlayer == null ? null : cachedPlayer.getStringUUID();
     }
-
-    private String getPlayerString(LocalPlayer pl) {
-        return pl == null ? "null" : pl.getId() + "/" + System.identityHashCode(pl);
-    }
-
 
     @Override
     public Boolean isSurvivalOrAdventureMode() {
-        return player == null ? null : Objects.requireNonNull(getGameMode()).isSurvival();
+        return cachedPlayer == null ? null : Objects.requireNonNull(getGameMode()).isSurvival();
     }
 
     @Override
     public String getGameModeName() {
-        return player == null ? null : Objects.requireNonNull(getGameMode()).getName();
+        return cachedPlayer == null ? null : Objects.requireNonNull(getGameMode()).getName();
     }
 
     private GameType getGameMode() {
         try {
-            return player == null ? null : ((PlayerInfo)getPlayerInfoMethod.invoke(player)).getGameMode();
+            return cachedPlayer == null ? null : ((PlayerInfo)getPlayerInfoMethod.invoke(cachedPlayer)).getGameMode();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -100,7 +87,7 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
     @Override
     public Boolean canHearJukeboxMusic() {
-        if (player == null)
+        if (cachedPlayer == null)
             return null;
 
         SoundEngine soundEngine = ObfuscationReflectionHelper.getPrivateValue(SoundManager.class, mc.getSoundManager(), OBF_SOUND_ENGINE);
@@ -109,77 +96,77 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
         assert instanceToChannel != null;
         return jukeboxHelper.canHearJukebox(
                 instanceToChannel,
-                (x, y, z) -> Math.sqrt(player.getEyePosition().distanceToSqr(x, y, z))
+                (x, y, z) -> Math.sqrt(cachedPlayer.getEyePosition().distanceToSqr(x, y, z))
         );
     }
 
 
     @Override
     public Double vectorX() {
-        return player == null ? null : player.getX();
+        return cachedPlayer == null ? null : cachedPlayer.getX();
     }
 
     @Override
     public Double vectorY() {
-        return player == null ? null : player.getY();
+        return cachedPlayer == null ? null : cachedPlayer.getY();
     }
 
     @Override
     public Double vectorZ() {
-        return player == null ? null : player.getZ();
+        return cachedPlayer == null ? null : cachedPlayer.getZ();
     }
 
     @Override
     public Vec3 position() {
-        return player == null ? null : player.position();
+        return cachedPlayer == null ? null : cachedPlayer.position();
     }
 
     @Override
     public Vec3 eyePosition() {
-        return player == null ? null : player.getEyePosition();
+        return cachedPlayer == null ? null : cachedPlayer.getEyePosition();
     }
 
 
     @Override
     public Integer blockX() {
-        return player == null ? null : player.getBlockX();
+        return cachedPlayer == null ? null : cachedPlayer.getBlockX();
     }
 
     @Override
     public Integer blockY() {
-        return player == null ? null : player.getBlockY();
+        return cachedPlayer == null ? null : cachedPlayer.getBlockY();
     }
 
     @Override
     public Integer blockZ() {
-        return player == null ? null : player.getBlockY();
+        return cachedPlayer == null ? null : cachedPlayer.getBlockY();
     }
 
     @Override
     public BlockPos blockPos() {
-        return player == null ? null : player.blockPosition();
+        return cachedPlayer == null ? null : cachedPlayer.blockPosition();
     }
 
     @Override
     public BlockPos eyeBlockPos() {
-        return player == null ? null : BlockPos.containing(player.getEyePosition());
+        return cachedPlayer == null ? null : BlockPos.containing(cachedPlayer.getEyePosition());
     }
 
 
     @Override
     public Float health() {
-        return player == null ? null : player.getHealth();
+        return cachedPlayer == null ? null : cachedPlayer.getHealth();
     }
 
     @Override
     public Float maxHealth() {
-        return player == null ? null : player.getMaxHealth();
+        return cachedPlayer == null ? null : cachedPlayer.getMaxHealth();
     }
 
     @Override
     public List<String> getActiveEffectIds() {
-        return player == null ? null
-                : player.getActiveEffectsMap().keySet().stream()
+        return cachedPlayer == null ? null
+                : cachedPlayer.getActiveEffectsMap().keySet().stream()
                 .map(ForgeRegistries.MOB_EFFECTS::getKey)
                 .filter(Objects::nonNull)
                 .map(Object::toString)
@@ -189,73 +176,73 @@ public class PlayerState implements BasePlayerState<BlockPos, Vec3>
 
     @Override
     public Boolean isSleeping() {
-        return player == null ? null : player.isSleeping();
+        return cachedPlayer == null ? null : cachedPlayer.isSleeping();
     }
 
     @Override
     public Boolean isUnderwater() {
-        return player == null ? null : player.isUnderWater();
+        return cachedPlayer == null ? null : cachedPlayer.isUnderWater();
     }
 
     @Override
     public Boolean isInLava() {
-        return player == null ? null : player.isInLava();
+        return cachedPlayer == null ? null : cachedPlayer.isInLava();
     }
 
     @Override
     public Boolean isDrowning() {
-        return player == null ? null : player.getAirSupply() <= 0;
+        return cachedPlayer == null ? null : cachedPlayer.getAirSupply() <= 0;
     }
 
 
     @Override
     public String vehicleId() {
-        if (player == null)
+        if (cachedPlayer == null)
             return null;
 
-        var vec = player.getVehicle();
+        var vec = cachedPlayer.getVehicle();
         return vec != null ? vec.getEncodeId() : null;
     }
 
     @Override
     public Boolean inMinecart() {
-        return player == null ? null : player.getVehicle() instanceof Minecart;
+        return cachedPlayer == null ? null : cachedPlayer.getVehicle() instanceof Minecart;
     }
 
     @Override
     public Boolean inBoat() {
-        return player == null ? null : player.getVehicle() instanceof Boat;
+        return cachedPlayer == null ? null : cachedPlayer.getVehicle() instanceof Boat;
     }
 
     @Override
     public Boolean onHorse() {
-        return player == null ? null : player.getVehicle() instanceof Horse;
+        return cachedPlayer == null ? null : cachedPlayer.getVehicle() instanceof Horse;
     }
 
     @Override
     public Boolean onDonkey() {
-        return player == null ? null : player.getVehicle() instanceof Donkey;
+        return cachedPlayer == null ? null : cachedPlayer.getVehicle() instanceof Donkey;
     }
 
     @Override
     public Boolean onPig() {
-        return player == null ? null : player.getVehicle() instanceof Pig;
+        return cachedPlayer == null ? null : cachedPlayer.getVehicle() instanceof Pig;
     }
 
     @Override
     public Boolean elytraFlying() {
-        return player == null ? null : player.isFallFlying();
+        return cachedPlayer == null ? null : cachedPlayer.isFallFlying();
     }
 
 
     @Override
     public Boolean fishingHookInWater() {
-        return player == null ? null : player.fishing != null && player.fishing.isInWater();
+        return cachedPlayer == null ? null : cachedPlayer.fishing != null && cachedPlayer.fishing.isInWater();
     }
 
 
     @Override
     public Double distanceTo(Vec3 position) {
-        return player == null ? null : player.position().distanceTo(position);
+        return cachedPlayer == null ? null : cachedPlayer.position().distanceTo(position);
     }
 }

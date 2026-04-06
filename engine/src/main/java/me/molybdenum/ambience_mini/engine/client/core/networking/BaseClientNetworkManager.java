@@ -63,7 +63,7 @@ public abstract class BaseClientNetworkManager
         else if (message instanceof DeleteAreaMessage msg)
             handleDeleteAreaMessage(msg);
 
-        else if (message instanceof PutChunkReferenceMessage msg)
+        else if (message instanceof PutChunkReferencesMessage msg)
             handlePutChunkReferenceMessage(msg);
         else if (message instanceof PutChunkStructuresMessage msg)
             handlePutChunkStructuresMessage(msg);
@@ -114,11 +114,10 @@ public abstract class BaseClientNetworkManager
 
 
     // Structures
-    private void handlePutChunkReferenceMessage(PutChunkReferenceMessage msg) {
+    private void handlePutChunkReferenceMessage(PutChunkReferencesMessage msg) {
         core.structureCache.setReferences(
                 msg.dimension,
-                msg.chunkPos,
-                msg.startChunks
+                msg.chunkToReferences
         );
     }
 

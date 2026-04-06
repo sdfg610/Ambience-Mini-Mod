@@ -84,30 +84,24 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
 
         int lineHeight = baseDrawer.getLineHeight();
 
-        // Area name
-        areaNameString = notification.translateFromKey(AmLang.STRING_AREA_NAME);
-        areaNameLabelWidth = baseDrawer.getTextWidth(areaNameString);
-
-        int areaNameInputWidth = MENU_MIN_WIDTH - 2*MENU_INNER_MARGIN - areaNameLabelWidth - MENU_WIDGET_BASE_SEPARATION;
-        areaNameInputHeight = lineHeight + 4;
-        txtAreaName = makeTextBox(new Vector2i(areaNameInputWidth, areaNameInputHeight), this.area.name);
-
         // Ownership
+        boolean hasServerSupport = areaHelper.hasServerSupport();
+        boolean isNew = area.isNew();
         ownershipString = notification.translateFromKey(AmLang.STRING_OWNERSHIP_AND_SHARING);
 
         String privateString = notification.translateFromKey(AmLang.STRING_PRIVATE);
         privateStringWidth = baseDrawer.getTextWidth(privateString);
-        cbxPrivate = makeCheckBox(area.owner.isPrivate(), privateString);
+        cbxPrivate = makeCheckBox((isNew || area.owner.isPrivate()) && hasServerSupport, privateString);
 
         String sharedString = notification.translateFromKey(AmLang.STRING_SHARED);
         sharedStringWidth = baseDrawer.getTextWidth(sharedString);
-        cbxShared = makeCheckBox(area.owner.isShared(), sharedString);
+        cbxShared = makeCheckBox(area.owner.isShared() && hasServerSupport, sharedString);
 
         String publicString = notification.translateFromKey(AmLang.STRING_PUBLIC);
         publicStringWidth = baseDrawer.getTextWidth(sharedString);
-        cbxPublic = makeCheckBox(area.owner.isPublic(), publicString);
+        cbxPublic = makeCheckBox(area.owner.isPublic() && hasServerSupport, publicString);
 
-        cbxLocal = makeCheckBox(area.owner.isLocal(), notification.translateFromKey(AmLang.STRING_LOCAL));
+        cbxLocal = makeCheckBox(area.owner.isLocal() || !hasServerSupport, notification.translateFromKey(AmLang.STRING_LOCAL));
 
         // Buttons
         buttonHeight = lineHeight + 10;
@@ -132,14 +126,24 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
             allowInput = false;
             notification.printLiteralToChat("Cannot edit another player's area! How did you even get this window to open!?");
         }
+
+        // Menu size (+ Area name)
+        areaNameInputHeight = lineHeight + 4;
+        menuHeight = MENU_INNER_MARGIN*2 + areaNameInputHeight + baseDrawer.getLineHeight() + CHECKBOX_SIDE_LENGTH + buttonHeight + MENU_WIDGET_BASE_SEPARATION*8;
+        menuWidth = Math.max(MENU_INNER_MARGIN*2 + btnSaveWidth + btnCancelWidth + btnEditBoundsWidth + btnDeleteWidth + MENU_WIDGET_BASE_SEPARATION*3, MENU_MIN_WIDTH);
+
+        // Area name
+        areaNameString = notification.translateFromKey(AmLang.STRING_AREA_NAME);
+        areaNameLabelWidth = baseDrawer.getTextWidth(areaNameString);
+
+        int areaNameInputWidth = menuWidth - 2*MENU_INNER_MARGIN - areaNameLabelWidth - MENU_WIDGET_BASE_SEPARATION;
+        txtAreaName = makeTextBox(new Vector2i(areaNameInputWidth, areaNameInputHeight), this.area.name);
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
     // Setup, rendering, and ticking
     public void init(IAreaScreenAccessor<TEditBox, TCheckBox, TButton> areaScreen) {
-        menuHeight = MENU_INNER_MARGIN*2 + areaNameInputHeight + baseDrawer.getLineHeight() + CHECKBOX_SIDE_LENGTH + buttonHeight + MENU_WIDGET_BASE_SEPARATION*8;
-        menuWidth = Math.max(MENU_INNER_MARGIN*2 + btnSaveWidth + btnCancelWidth + btnEditBoundsWidth + btnDeleteWidth + MENU_WIDGET_BASE_SEPARATION*3, MENU_MIN_WIDTH);
         Vector2i borderPos = new Vector2i((areaScreen.screenWidth() - menuWidth)/2, (areaScreen.screenHeight() - menuHeight)/2);
 
         // Area name label
@@ -154,22 +158,28 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
 
         // Ownership checkboxes
         int checkboxY = ownershipLabelPos.y() + baseDrawer.getLineHeight() + MENU_WIDGET_BASE_SEPARATION;
+        int firstCheckboxX = borderPos.x() + MENU_INNER_MARGIN;
+        if (areaHelper.hasServerSupport()) {
+            int sharedX = firstCheckboxX + privateStringWidth + CHECKBOX_SIDE_LENGTH + 10;
+            int publicX = sharedX + sharedStringWidth + CHECKBOX_SIDE_LENGTH + 10;
+            int localX = publicX + publicStringWidth + CHECKBOX_SIDE_LENGTH + 10;
 
-        int privateX = borderPos.x() + MENU_INNER_MARGIN;
-        setCheckBoxPos(cbxPrivate, privateX, checkboxY);
-        areaScreen.addCheckBox(cbxPrivate);
+            setCheckBoxPos(cbxPrivate, firstCheckboxX, checkboxY);
+            areaScreen.addCheckBox(cbxPrivate);
 
-        int sharedX = privateX + privateStringWidth + CHECKBOX_SIDE_LENGTH + 10;
-        setCheckBoxPos(cbxShared, sharedX, checkboxY);
-        areaScreen.addCheckBox(cbxShared);
+            setCheckBoxPos(cbxShared, sharedX, checkboxY);
+            areaScreen.addCheckBox(cbxShared);
 
-        int publicX = sharedX + sharedStringWidth + CHECKBOX_SIDE_LENGTH + 10;
-        setCheckBoxPos(cbxPublic, publicX, checkboxY);
-        areaScreen.addCheckBox(cbxPublic);
+            setCheckBoxPos(cbxPublic, publicX, checkboxY);
+            areaScreen.addCheckBox(cbxPublic);
 
-        int localX = publicX + publicStringWidth + CHECKBOX_SIDE_LENGTH + 10;
-        setCheckBoxPos(cbxLocal, localX, checkboxY);
-        areaScreen.addCheckBox(cbxLocal);
+            setCheckBoxPos(cbxLocal, localX, checkboxY);
+            areaScreen.addCheckBox(cbxLocal);
+        }
+        else {
+            setCheckBoxPos(cbxLocal, firstCheckboxX, checkboxY);
+            areaScreen.addCheckBox(cbxLocal);
+        }
 
         // Buttons
         int buttonY = checkboxY + CHECKBOX_SIDE_LENGTH + MENU_WIDGET_BASE_SEPARATION*4;

@@ -29,8 +29,14 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TCl
 
     // -----------------------------------------------------------------------------------------------------------------
     // Execution
-    public abstract boolean isNull();
-    public abstract boolean notNull();
+    public boolean isNull() {
+        return cachedLevel == null;
+    }
+
+    public boolean notNull() {
+        return cachedLevel != null;
+    }
+
 
     public void prepare(@Nullable ArrayList<String> messages) {
         TClientLevel newLevel = getCurrentLevel();

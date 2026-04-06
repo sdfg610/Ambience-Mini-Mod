@@ -13,7 +13,7 @@ public abstract class BaseCombatState<TEntity, TVec3>
 {
     private final ConcurrentHashMap<Integer, Combatant> combatants = new ConcurrentHashMap<>();
 
-    private BasePlayerState<?, TVec3> _playerState;
+    private BasePlayerState<?, TVec3, ?> _playerState;
     private BaseLevelState<?, TVec3, ?, TEntity, ?> _levelState;
     private ServerSetup _serverSetup;
 
@@ -28,7 +28,7 @@ public abstract class BaseCombatState<TEntity, TVec3>
     @SuppressWarnings("rawtypes")
     public void init(
             BaseClientCore core,
-            BasePlayerState<?, TVec3> playerState,
+            BasePlayerState<?, TVec3, ?> playerState,
             BaseLevelState<?, TVec3, ?, TEntity, ?> levelState
     ) {
         if (_playerState != null)

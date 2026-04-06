@@ -1,11 +1,14 @@
 package me.molybdenum.ambience_mini.engine.shared.utils.vectors;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Direction;
+import me.molybdenum.ambience_mini.engine.shared.areas.Owner;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 
 public record Vector3i(int x, int y, int z) {
     public static final Vector3i ZERO = new Vector3i(0,0,0);
@@ -82,9 +85,24 @@ public record Vector3i(int x, int y, int z) {
     }
 
 
+    public int volume() {
+        return x * y * z;
+    }
+
+    public static int volume(Vector3i fromBlock, Vector3i toBlock) {
+        return sizeOf(fromBlock, toBlock).volume();
+    }
+
+
     public static Pair<Vector3i, Vector3i> minAndSizeOf(Vector3i from, Vector3i to) {
         return minAndMaxOf(from, to).destruct(
                 (min, max) -> new Pair<>(min, max.offset(1,1,1).subtract(min))
+        );
+    }
+
+    public static Vector3i sizeOf(Vector3i from, Vector3i to) {
+        return minAndMaxOf(from, to).destruct(
+                (min, max) -> max.offset(1,1,1).subtract(min)
         );
     }
 
@@ -105,16 +123,26 @@ public record Vector3i(int x, int y, int z) {
     }
 
 
+    public static boolean validateJson(JsonElement elem) {
+        if (!Utils.isJsonObjectWith(elem, "x", "y", "z"))
+            return false;
+
+        JsonObject obj = elem.getAsJsonObject();
+        return Utils.isJsonNumber(obj.get("x"))
+                && Utils.isJsonNumber(obj.get("y"))
+                && Utils.isJsonNumber(obj.get("z"));
+    }
+
+    public static Vector3i fromJson(JsonObject obj) {
+        return new Vector3i(obj.get("x").getAsInt(), obj.get("y").getAsInt(), obj.get("z").getAsInt());
+    }
+
     public JsonObject toJson() {
         JsonObject obj = new JsonObject();
         obj.add("x", new JsonPrimitive(x));
         obj.add("y", new JsonPrimitive(y));
         obj.add("z", new JsonPrimitive(z));
         return obj;
-    }
-
-    public static Vector3i fromJson(JsonObject obj) {
-        return new Vector3i(obj.get("x").getAsInt(), obj.get("y").getAsInt(), obj.get("z").getAsInt());
     }
 
 

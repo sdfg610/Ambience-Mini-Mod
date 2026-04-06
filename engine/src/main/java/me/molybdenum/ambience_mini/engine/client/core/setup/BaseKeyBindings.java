@@ -63,7 +63,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
             core.tryReloadMusicEngine();
         }
 
-        if (isClicked(playPauseKey)) {
+        if (isClicked(playPauseKey) && playerIsRunning()) {
             var musicThread = core.getMusicThread();
             if (musicThread != null) {
                 if (musicThread.isPaused()) {
@@ -76,7 +76,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
             }
         }
 
-        if (isClicked(nextMusicKey)) {
+        if (isClicked(nextMusicKey) && playerIsRunning()) {
             core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
 
             var musicThread = core.getMusicThread();
@@ -86,11 +86,12 @@ public abstract class BaseKeyBindings<TKeyBinding>
             }
         }
 
-        if (isClicked(printAll) && core.levelState.notNull() && core.playerState.notNull()) {
+        if (isClicked(printAll)) {
             BaseGameStateProvider provider = core.getGameStateProvider();
             if (provider != null) {
                 core.notification.showToast(AmLang.MSG_PRINTING_ALL);
 
+                provider.prepare(null);
                 long timeStart = System.currentTimeMillis();
                 String allState = provider.readAll();
                 long elapsedTime = System.currentTimeMillis() - timeStart;
@@ -111,5 +112,12 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
         if (isClicked(areaCancel))
             core.areaRenderer.registerCancel();
+    }
+
+    private boolean playerIsRunning() {
+        if (core.isMusicThreadRunning())
+            return true;
+        core.notification.showToast(AmLang.MSG_NOT_RUNNING);
+        return false;
     }
 }

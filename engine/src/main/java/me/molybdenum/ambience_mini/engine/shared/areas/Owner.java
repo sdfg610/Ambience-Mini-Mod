@@ -1,10 +1,13 @@
 package me.molybdenum.ambience_mini.engine.shared.areas;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmSerializable;
 import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
+import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 
 import java.util.function.Function;
 
@@ -62,19 +65,30 @@ public class Owner implements AmSerializable
     }
 
 
-    public JsonObject toJson() {
-        JsonObject obj = new JsonObject();
-        obj.add("isOwned", new JsonPrimitive(ownership instanceof Owned));
-        obj.add("ownership", ownership.toJson());
-        return obj;
+    public static boolean validateJson(JsonElement elem) {
+        if (!Utils.isJsonObjectWith(elem, "isOwned", "ownership"))
+            return false;
+
+        JsonObject obj = elem.getAsJsonObject();
+        return Utils.isJsonBoolean(obj.get("isOwned"))
+                && (
+                        Owned.validateJson(obj.get("ownership")) || Ownerless.validateJson(obj.get("ownership"))
+                );
     }
 
     public static Owner fromJson(JsonObject obj) {
         return new Owner(
                 obj.get("isOwned").getAsBoolean()
-                    ? Owned.fromJson(obj.getAsJsonObject("ownership"))
-                    : Ownerless.fromJson(obj.getAsJsonObject("ownership"))
+                        ? Owned.fromJson(obj.getAsJsonObject("ownership"))
+                        : Ownerless.fromJson(obj.getAsJsonObject("ownership"))
         );
+    }
+
+    public JsonObject toJson() {
+        JsonObject obj = new JsonObject();
+        obj.add("isOwned", new JsonPrimitive(ownership instanceof Owned));
+        obj.add("ownership", ownership.toJson());
+        return obj;
     }
 
 
@@ -115,11 +129,13 @@ public class Owner implements AmSerializable
         }
 
 
-        public JsonObject toJson() {
-            JsonObject obj = new JsonObject();
-            obj.add("playerUUID", new JsonPrimitive(playerUUID));
-            obj.add("isShared", new JsonPrimitive(isShared));
-            return obj;
+        public static boolean validateJson(JsonElement elem) {
+            if (!Utils.isJsonObjectWith(elem, "playerUUID", "isShared"))
+                return false;
+
+            JsonObject obj = elem.getAsJsonObject();
+            return Utils.isJsonString(obj.get("playerUUID"))
+                    && Utils.isJsonBoolean(obj.get("isShared"));
         }
 
         public static Owned fromJson(JsonObject obj) {
@@ -127,6 +143,13 @@ public class Owner implements AmSerializable
                     obj.get("playerUUID").getAsString(),
                     obj.get("isShared").getAsBoolean()
             );
+        }
+
+        public JsonObject toJson() {
+            JsonObject obj = new JsonObject();
+            obj.add("playerUUID", new JsonPrimitive(playerUUID));
+            obj.add("isShared", new JsonPrimitive(isShared));
+            return obj;
         }
 
 
@@ -157,10 +180,12 @@ public class Owner implements AmSerializable
         }
 
 
-        public JsonObject toJson() {
-            JsonObject obj = new JsonObject();
-            obj.add("isLocal", new JsonPrimitive(isLocal));
-            return obj;
+        public static boolean validateJson(JsonElement elem) {
+            if (!Utils.isJsonObjectWith(elem, "isLocal"))
+                return false;
+
+            JsonObject obj = elem.getAsJsonObject();
+            return Utils.isJsonBoolean(obj.get("isLocal"));
         }
 
         public static Ownerless fromJson(JsonObject obj) {
@@ -168,6 +193,13 @@ public class Owner implements AmSerializable
                     obj.get("isLocal").getAsBoolean()
             );
         }
+
+        public JsonObject toJson() {
+            JsonObject obj = new JsonObject();
+            obj.add("isLocal", new JsonPrimitive(isLocal));
+            return obj;
+        }
+
 
 
         @Override

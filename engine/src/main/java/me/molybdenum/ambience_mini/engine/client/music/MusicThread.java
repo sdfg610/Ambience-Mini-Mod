@@ -42,7 +42,7 @@ public class MusicThread extends Thread
     private final Random _rand = new Random(System.nanoTime());
     private final Interpreter _playlistSelector;
     private final MusicProvider _musicProvider;
-    private final BasePlayerState<?, ?> _player;
+    private final BasePlayerState<?, ?, ?> _player;
     private final BaseLevelState<?, ?, ?, ?, ?> _level;
     private final BaseNotification<?> _notification;
     private final BaseKeyBindings<?> _keyBindings;

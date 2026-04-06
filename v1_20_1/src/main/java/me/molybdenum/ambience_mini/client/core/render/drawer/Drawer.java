@@ -76,7 +76,7 @@ public class Drawer extends BaseDrawer
         RenderSystem.disableDepthTest();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();   // TODO: Use cull to avoid overlapping faces being drawn? Cannot fix when separate areas overlap....
+        RenderSystem.disableCull();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
         builder = Tesselator.getInstance().getBuilder();

@@ -1,8 +1,10 @@
 package me.molybdenum.ambience_mini.engine.shared.utils;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class Utils {
     public static String padToLength(String str, int length) {
@@ -42,5 +44,27 @@ public class Utils {
             return filename.substring(dotIndex + 1);
         }
         return "";
+    }
+
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean isJsonObjectWith(JsonElement elem, String... fields) {
+        if (!elem.isJsonObject())
+            return false;
+
+        JsonObject obj = elem.getAsJsonObject();
+        return Arrays.stream(fields).allMatch(obj::has);
+    }
+
+    public static boolean isJsonBoolean(JsonElement elem) {
+        return elem.isJsonPrimitive() && elem.getAsJsonPrimitive().isBoolean();
+    }
+
+    public static boolean isJsonNumber(JsonElement elem) {
+        return elem.isJsonPrimitive() && elem.getAsJsonPrimitive().isNumber();
+    }
+
+    public static boolean isJsonString(JsonElement elem) {
+        return elem.isJsonPrimitive() && elem.getAsJsonPrimitive().isString();
     }
 }

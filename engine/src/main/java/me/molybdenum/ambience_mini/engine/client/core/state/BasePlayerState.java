@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
+import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
 import me.molybdenum.ambience_mini.engine.shared.utils.TriFunction;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,62 +9,85 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public interface BasePlayerState<TBlockPos, TVec3>
+public abstract class BasePlayerState<TBlockPos, TVec3, TLocalPlayer>
 {
+    protected TLocalPlayer cachedPlayer = null;
+
     // -----------------------------------------------------------------------------------------------------------------
     // Execution
-    boolean isNull();
-    boolean notNull();
+    public boolean isNull() {
+        return cachedPlayer == null;
+    }
 
-    void prepare(@Nullable ArrayList<String> messages);
+    public boolean notNull() {
+        return cachedPlayer != null;
+    }
+
+
+    public void prepare(@Nullable ArrayList<String> messages) {
+        TLocalPlayer newPlayer = getCurrentPlayer();
+        if (EssentialCompat.isLoaded && EssentialCompat.tryCaptureFakes(newPlayer, this::getName, this::getLevel) && messages != null)
+            messages.add("Captured fake player and world from essential mod!");
+
+        if (cachedPlayer != newPlayer && EssentialCompat.isNotFakePlayer(newPlayer)) {
+            if (messages != null)
+                messages.add("Player instance changed from '" + getPlayerString(cachedPlayer) + "' to '" + getPlayerString(newPlayer) + "' since last update.");
+            cachedPlayer = newPlayer;
+        }
+    }
+
+    protected abstract TLocalPlayer getCurrentPlayer();
+    protected abstract String getPlayerString(TLocalPlayer player);
+    protected abstract String getName(TLocalPlayer player);
+    protected abstract Object getLevel(TLocalPlayer player);
 
 
     // -----------------------------------------------------------------------------------------------------------------
     // Player state
-    String getUUID();
-    Boolean isSurvivalOrAdventureMode();
-    String getGameModeName();
+    public abstract String getUUID();
+    public abstract Boolean isSurvivalOrAdventureMode();
+    public abstract String getGameModeName();
 
-    Boolean canHearJukeboxMusic();
+    public abstract Boolean canHearJukeboxMusic();
 
-    Double vectorX();
-    Double vectorY();
-    Double vectorZ();
-    TVec3 position();
-    TVec3 eyePosition();
+    public abstract Double vectorX();
+    public abstract Double vectorY();
+    public abstract Double vectorZ();
+    public abstract TVec3 position();
+    public abstract TVec3 eyePosition();
 
-    Integer blockX();
-    Integer blockY();
-    Integer blockZ();
-    TBlockPos blockPos();
-    TBlockPos eyeBlockPos();
+    public abstract Integer blockX();
+    public abstract Integer blockY();
+    public abstract Integer blockZ();
+    public abstract TBlockPos blockPos();
+    public abstract TBlockPos eyeBlockPos();
 
-    Float health();
-    Float maxHealth();
-    List<String> getActiveEffectIds();
+    public abstract Float health();
+    public abstract Float maxHealth();
+    public abstract List<String> getActiveEffectIds();
 
-    Boolean isSleeping();
-    Boolean isUnderwater();
-    Boolean isInLava();
-    Boolean isDrowning();
+    public abstract Boolean isSleeping();
+    public abstract Boolean isUnderwater();
+    public abstract Boolean isInLava();
+    public abstract Boolean isDrowning();
 
-    String vehicleId();
-    Boolean inMinecart();
-    Boolean inBoat();
-    Boolean onHorse();
-    Boolean onDonkey();
-    Boolean onPig();
-    Boolean elytraFlying();
+    public abstract String vehicleId();
+    public abstract Boolean inMinecart();
+    public abstract Boolean inBoat();
+    public abstract Boolean onHorse();
+    public abstract Boolean onDonkey();
+    public abstract Boolean onPig();
+    public abstract Boolean elytraFlying();
 
-    Boolean fishingHookInWater();
+    public abstract Boolean fishingHookInWater();
 
 
     // -----------------------------------------------------------------------------------------------------------------
     // Utils
-    Double distanceTo(TVec3 position);
+    public abstract Double distanceTo(TVec3 position);
 
 
-    class JukeboxHelper<TSoundInstance, TChannelHandle> {
+    public static class JukeboxHelper<TSoundInstance, TChannelHandle> {
         private final Function<TChannelHandle, Boolean> isStopped;
 
         private final Function<TSoundInstance, Boolean> isRecordSource;

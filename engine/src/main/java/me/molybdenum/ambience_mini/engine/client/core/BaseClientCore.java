@@ -21,12 +21,12 @@ import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
-import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseCombatState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
 import me.molybdenum.ambience_mini.engine.client.music.MusicThread;
+import me.molybdenum.ambience_mini.engine.shared.areas.AreaStorage;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.ClientInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
 import org.slf4j.Logger;
@@ -42,7 +42,7 @@ public abstract class BaseClientCore<
         TAreaRenderer extends BaseAreaRenderer<TVec3, TBlockPos, ?>, // Last type, namely TScreen, is never exposed to a public interface.
         TClientConfig extends BaseClientConfig,
         TKeyBindings extends BaseKeyBindings<TKeyBinding>,
-        TPlayerState extends BasePlayerState<TBlockPos, TVec3>,
+        TPlayerState extends BasePlayerState<TBlockPos, TVec3, ?>,
         TLevelState extends BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, ?>, // Last type, namely TClientLevel, is never exposed to a public interface.
         TScreenState extends BaseScreenState,
         TCombatState extends BaseCombatState<TEntity, TVec3>
@@ -125,7 +125,10 @@ public abstract class BaseClientCore<
     // -----------------------------------------------------------------------------------------------------------------
     // Abstract API
     public abstract boolean isFocused();
+
     protected abstract void disableNativeMusicManager();
+
+    protected abstract String getWorldNameForLocalStorage();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -183,6 +186,10 @@ public abstract class BaseClientCore<
         }
     }
 
+    public boolean isMusicThreadRunning() {
+        return musicThread != null && musicThread.isAlive();
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
     // Common Handlers
@@ -194,25 +201,23 @@ public abstract class BaseClientCore<
         nameCache.clear();
         nameCache.setCurrentPlayer(playerUUID, playerName);
 
-        if (serverVersion != null && serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
+        if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
             networkManager.sendToServer(new ClientInfoMessage(
                     BuildConfig.APP_VERSION.toString(),
                     playerUUID,
                     playerName
             ));
 
-        areaManager.loadAreas();
         areaRenderer.clear();
+        areaManager.loadAreas(new AreaStorage(logger, Path.of(Common.AM_LOCAL_STORAGE_DIRECTORY, getWorldNameForLocalStorage())));
 
         if (clientConfig.notifyServerSupport.get() && !isOnLocalServer) {
-            if (serverVersion == null)
-                notification.printTranslatableToChat(AmLang.MSG_NO_SERVER_SUPPORT);
-            else if (serverVersion.isGreaterThanOrEqual(BuildConfig.APP_VERSION))
+            if (serverVersion.isGreaterThanOrEqual(BuildConfig.APP_VERSION))
                 notification.printTranslatableToChat(AmLang.MSG_FULL_SERVER_SUPPORT);
             else if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
                 notification.printTranslatableToChat(AmLang.MSG_PARTIAL_SERVER_SUPPORT);
             else
-                notification.printTranslatableToChat(AmLang.MSG_OUTDATED_VERSION_ON_SERVER);
+                notification.printTranslatableToChat(AmLang.MSG_NO_SERVER_SUPPORT);
         }
     }
 

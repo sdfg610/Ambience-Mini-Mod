@@ -42,7 +42,7 @@ public class MessageRegistry {
 
         // Structures
         registerMessage(50, GetStructuresMessage::new, GetStructuresMessage.class);
-        registerMessage(51, PutChunkReferenceMessage::new, PutChunkReferenceMessage.class);
+        registerMessage(51, PutChunkReferencesMessage::new, PutChunkReferencesMessage.class);
         registerMessage(52, PutChunkStructuresMessage::new, PutChunkStructuresMessage.class);
     }
 

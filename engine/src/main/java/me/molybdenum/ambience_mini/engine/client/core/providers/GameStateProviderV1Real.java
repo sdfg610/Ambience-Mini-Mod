@@ -8,16 +8,18 @@ import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
 import me.molybdenum.ambience_mini.engine.client.core.state.*;
 import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.areas.Area;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> extends GameStateProviderV1Template
 {
     // State
-    private final BasePlayerState<TBlockPos, TVec3> _player;
+    private final BasePlayerState<TBlockPos, TVec3, ?> _player;
     private final BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, ?> _level;
     private final BaseCombatState<TEntity, TVec3> _combat;
     private final CaveDetector<TBlockPos, TVec3, TBlockState> _caveDetector;
@@ -57,7 +59,7 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
     @SuppressWarnings("rawtypes")
     public GameStateProviderV1Real(
         BaseClientCore core,
-        BasePlayerState<TBlockPos, TVec3> player,
+        BasePlayerState<TBlockPos, TVec3, ?> player,
         BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, ?> level,
         BaseCombatState<TEntity, TVec3> combatMonitor
     ) {
@@ -395,7 +397,9 @@ public class GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> ext
                 _areaManager.getIntersectingAreas(
                         _level.getDimensionID(),
                         _level.toAmVector3d(_player.eyePosition())
-                ).stream().map(AreaVal::new)
+                ).stream()
+                        .sorted(Comparator.comparingDouble(Area::volume))
+                        .map(AreaVal::new)
         );
     }
 

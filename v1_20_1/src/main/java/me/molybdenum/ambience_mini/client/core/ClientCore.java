@@ -22,6 +22,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
@@ -61,9 +62,25 @@ public class ClientCore extends BaseClientCore<
 
     @Override
     protected void disableNativeMusicManager() {
-        Minecraft mc = Minecraft.getInstance();
         ObfuscationReflectionHelper.setPrivateValue(
                 Minecraft.class, mc, new NilMusicManager(mc), OBF_MC_MUSIC_MANAGER
         );
+    }
+
+    @Override
+    protected String getWorldNameForLocalStorage() {
+        var server = mc.getSingleplayerServer();
+        var player = mc.player;
+
+        String name = null;
+        if (server != null)
+            name = server.getWorldPath(LevelResource.ROOT).normalize().getFileName().toString();
+        else if (player != null) {
+            var data = player.connection.getServerData();
+            if (data != null)
+                name = data.name;
+        }
+
+        return name == null ? null : name.replaceAll("[^a-zA-Z0-9.\\-]", "_");
     }
 }

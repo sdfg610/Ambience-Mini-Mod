@@ -91,7 +91,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         this.level.addLevelChangedListener(newDimensionId -> {
             synchronized (areaIdToCube) {
                 areaIdToCube.clear();
-                areaManager.getAreasInDimension(newDimensionId).forEach(area -> areaIdToCube.put(area.id, new Pair<>(area, new Cube(area))));
+                areaManager.getAreasInDimension(newDimensionId, false).forEach(area -> areaIdToCube.put(area.id, new Pair<>(area, new Cube(area))));
             }
         });
     }
@@ -145,6 +145,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         selectedArea = null;
         selectedCube = null;
         latestScreen = null;
+        lookingAtArea = null;
     }
 
 
