@@ -20,7 +20,7 @@ public abstract class BaseStructureReader<TServerPlayer, TLevel, TStructureStart
     protected abstract List<Vector2i> getReferencedPositionsFromChunkPos(TLevel level, Vector2i chunkPos);
     protected abstract Collection<TStructureStart> getStructuresFromChunkPos(TLevel level, Vector2i chunkPos);
 
-    protected abstract Boolean isOverworldStructure(TStructureStart structure);
+    protected abstract Boolean isSurfaceStructure(TStructureStart structure);
     protected abstract String getDimensionId(TLevel level);
     protected abstract String getStructureId(TStructureStart structure);
     protected abstract Stream<AmStructure.Piece> getPieces(TStructureStart structure);
@@ -63,7 +63,7 @@ public abstract class BaseStructureReader<TServerPlayer, TLevel, TStructureStart
     private List<AmStructure> getAndProcessPieces(TLevel level, Vector2i chunkPos) {
         return getStructuresFromChunkPos(level, chunkPos).stream()
                 .map(struct -> {
-                    boolean isSurface = isOverworldStructure(struct);
+                    boolean isSurface = isSurfaceStructure(struct);
                     var pieces = getPieces(struct)
                             .map(piece ->
                                     new AmStructure.Piece(  // Give all hitboxes a bit of padding. Overworld structures get a lot more height.

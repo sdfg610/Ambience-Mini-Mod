@@ -104,7 +104,10 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
         cbxLocal = makeCheckBox(area.owner.isLocal() || !hasServerSupport, notification.translateFromKey(AmLang.STRING_LOCAL));
 
         // Buttons
-        buttonHeight = lineHeight + 10;
+        buttonHeight = lineHeight + switch (areaHelper.mcVersion) {
+            case V1_18, V1_19 -> 11;
+            default -> 10;
+        };
 
         String confirmString = notification.translateFromKey(AmLang.STRING_SAVE);
         btnSaveWidth = baseDrawer.getTextWidth(confirmString) + 25;

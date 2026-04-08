@@ -15,6 +15,7 @@ The configuration language has also been extended a lot to make it more usable a
   * `$areas` is ordered by the volume of areas in increasing order (first area is the smallest).
 - Added `$uuid` property for getting the id of the player. (Can be used to check area ownership.)
 - Added `@warden_nearby` event which is active when a Warden is within 32 blocks (2 chunks) of the player.
+  * **Note:** This event is only available from Minecraft 1.19 and up.
 - Added `$structures` property which contains a list of the ids of all structures that the player is in.
     * **Note 1:** even if the "structure blocks" are removed, the "structure bounding box" still exists.
     * **Note 2:** it is a bit difficult to get a sensible hitbox for structures and some structures' hitboxes might be a slightly off. If so, feel free to report where this happens.

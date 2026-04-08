@@ -8,7 +8,7 @@ import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.bidirectional.*;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.PutNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.*;
-import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 
 import java.util.concurrent.ConcurrentHashMap;

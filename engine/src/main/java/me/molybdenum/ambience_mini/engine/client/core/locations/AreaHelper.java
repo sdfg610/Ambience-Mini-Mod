@@ -9,7 +9,8 @@ import me.molybdenum.ambience_mini.engine.shared.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.bidirectional.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.bidirectional.PutAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.CreateAreaMessage;
-import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 
 import java.util.function.Supplier;
 
@@ -19,6 +20,7 @@ public class AreaHelper {
     private final ServerSetup serverSetup;
     private final BaseNotification<?> notification;
 
+    public final McVersion mcVersion;
     private final Supplier<String> getPlayerUUID;
     private final Supplier<Cube> getSelectedCube;
 
@@ -30,6 +32,7 @@ public class AreaHelper {
         this.serverSetup = core.serverSetup;
         this.notification = core.notification;
 
+        this.mcVersion = core.mcVersion;
         this.getPlayerUUID = core.nameCache::getCurrentPlayerUUID;
         this.getSelectedCube = getSelectedCube;
     }

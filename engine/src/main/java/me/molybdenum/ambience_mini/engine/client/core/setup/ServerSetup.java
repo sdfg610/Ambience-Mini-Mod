@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.setup;
 
-import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 
 public class ServerSetup
 {

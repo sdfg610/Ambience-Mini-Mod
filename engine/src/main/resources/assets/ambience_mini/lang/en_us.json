@@ -1,13 +1,13 @@
 {
   "mod_name": "Ambience Mini",
 
-  "key.reload": "Reload",
-  "key.play_pause": "Pause and resume music",
-  "key.next_music": "Change music",
-  "key.print_all": "Print all readings",
-  "key.toggle_areas": "Toggle area view",
-  "key.area_confirm": "Area confirm",
-  "key.area_cancle": "Area cancel",
+  "key.reload": "Music: Reload player",
+  "key.play_pause": "Music: Pause/resume",
+  "key.next_music": "Music: Change soundtrack",
+  "key.print_all": "Debug: Print all readings",
+  "key.toggle_areas": "Area: Toggle view",
+  "key.area_confirm": "Area: Confirm",
+  "key.area_cancel": "Area: Cancel",
 
   "message.reload_description": "Trying to reload music player...",
   "message.next_music_description": "Selecting new music...",

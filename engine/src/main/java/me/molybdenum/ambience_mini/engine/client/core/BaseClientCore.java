@@ -16,7 +16,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.FileMusicProvider;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
-import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderV1Real;
+import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderReal;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
@@ -28,7 +28,8 @@ import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
 import me.molybdenum.ambience_mini.engine.client.music.MusicThread;
 import me.molybdenum.ambience_mini.engine.shared.areas.AreaStorage;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.ClientInfoMessage;
-import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 import org.slf4j.Logger;
 
 import java.io.*;
@@ -50,6 +51,7 @@ public abstract class BaseClientCore<
     private static final MusicProvider musicProvider = new FileMusicProvider(Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_DIRECTORY).toString());
 
     // Utils
+    public final McVersion mcVersion;
     public final Logger logger;
     public final ClientNameCache nameCache;
     public final StructureCache structureCache;
@@ -73,13 +75,14 @@ public abstract class BaseClientCore<
     public final TScreenState screenState;
     public final TCombatState combatState;
 
-    private GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> gameStateProvider;
+    private GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> gameStateProvider;
 
     // Music
     private MusicThread musicThread;
 
 
     public BaseClientCore(
+            McVersion mcVersion,
             Logger logger,
             ClientNameCache nameCache,
             StructureCache structureCache,
@@ -95,6 +98,7 @@ public abstract class BaseClientCore<
             TScreenState screenState,
             TCombatState combatState
     ) {
+        this.mcVersion = mcVersion;
         this.logger = logger;
 
         this.nameCache = nameCache;
@@ -133,7 +137,7 @@ public abstract class BaseClientCore<
 
     // -----------------------------------------------------------------------------------------------------------------
     // State
-    public GameStateProviderV1Real<TBlockPos, TVec3, TBlockState, TEntity> getGameStateProvider() {
+    public GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> getGameStateProvider() {
         return gameStateProvider;
     }
 
@@ -150,8 +154,8 @@ public abstract class BaseClientCore<
             musicThread.kill();
 
         combatState.clearCombatants();
-        gameStateProvider = new GameStateProviderV1Real<>(
-                this, playerState, levelState, combatState
+        gameStateProvider = new GameStateProviderReal<>(
+                mcVersion, this, playerState, levelState, combatState
         );
 
         File configFile = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_CONFIG_FILE).toFile();

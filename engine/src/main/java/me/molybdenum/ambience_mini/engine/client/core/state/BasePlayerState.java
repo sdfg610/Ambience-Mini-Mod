@@ -50,15 +50,10 @@ public abstract class BasePlayerState<TBlockPos, TVec3, TLocalPlayer>
 
     public abstract Boolean canHearJukeboxMusic();
 
-    public abstract Double vectorX();
     public abstract Double vectorY();
-    public abstract Double vectorZ();
     public abstract TVec3 position();
     public abstract TVec3 eyePosition();
 
-    public abstract Integer blockX();
-    public abstract Integer blockY();
-    public abstract Integer blockZ();
     public abstract TBlockPos blockPos();
     public abstract TBlockPos eyeBlockPos();
 

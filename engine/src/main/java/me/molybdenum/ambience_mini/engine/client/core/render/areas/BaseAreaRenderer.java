@@ -121,8 +121,8 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
 
     // -----------------------------------------------------------------------------------------------------------------
     // Public API
-    public boolean isShowingAreaView() {
-        return mode != AreaViewMode.OFF;
+    public boolean isViewHidden() {
+        return mode == AreaViewMode.OFF;
     }
 
     public AreaViewMode setOrToggleViewMode(AreaViewMode mode) {
@@ -478,6 +478,6 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
     }
 
     protected Color getAreaColor(Area area) {
-        return Color.WHITE;  // TODO: Make correct logic
+        return Color.WHITE;  // TODO: Determine later if areas should change colors depending on ownership.
     }
 }

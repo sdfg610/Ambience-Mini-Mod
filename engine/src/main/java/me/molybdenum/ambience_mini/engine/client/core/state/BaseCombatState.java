@@ -1,9 +1,8 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.shared.utils.AmVersion;
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 
 import java.util.ArrayList;
 import java.util.List;

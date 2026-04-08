@@ -36,7 +36,7 @@ import java.util.List;
 
 public class Main
 {
-    private static final GameStateProviderV1Mock provider = new GameStateProviderV1Mock();
+    private static final GameStateProviderMock provider = new GameStateProviderMock();
 
 
     @JSExport

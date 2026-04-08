@@ -46,6 +46,10 @@ public class Utils {
         return "";
     }
 
+    public static String removeIllegalCharacters(String name) {
+        return name.replaceAll("[^a-zA-Z0-9.\\-]", "_");
+    }
+
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isJsonObjectWith(JsonElement elem, String... fields) {

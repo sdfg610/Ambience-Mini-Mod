@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "me.molybdenum.ambience_mini.mixin",
+  "package": "me.molybdenum.ambience_mini.v1_19_2.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
     "SoundManagerMixin",
