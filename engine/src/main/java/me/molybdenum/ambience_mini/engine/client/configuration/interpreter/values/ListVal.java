@@ -11,11 +11,14 @@ import java.util.stream.Stream;
 public final class ListVal extends Value<ValueList> implements IndexableV
 {
     public static final ListVal UNDEFINED = new ListVal();
-    public static final ListVal EMPTY = new ListVal(new ValueList());
 
 
     public ListVal() {
         super(null);
+    }
+
+    public ListVal(List<Value<?>> values) {
+        super(new ValueList(values));
     }
 
     public ListVal(Stream<Value<?>> values) {

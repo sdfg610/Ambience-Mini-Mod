@@ -2,16 +2,14 @@ package me.molybdenum.ambience_ide;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.Loader;
 import me.molybdenum.ambience_mini.engine.client.configuration.Music;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.FloatT;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.IntT;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.ListT;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.StringT;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.ExcError;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.SemError;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.PlaylistChoice;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.BoolVal;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.FakeMusicProvider;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Event;
@@ -22,6 +20,7 @@ import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.teavm.jso.JSExport;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
+import org.teavm.jso.dom.html.HTMLInputElement;
 import org.teavm.jso.dom.xml.Node;
 
 import java.io.ByteArrayInputStream;
@@ -32,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class Main
@@ -51,148 +51,119 @@ public class Main
 
         var elemEvents = doc.getElementById("events");
         for (var ev : provider.getEvents())
-            elemEvents.appendChild(createEventControl(doc, ev));
+            elemEvents.appendChild(createEventRow(doc, ev));
 
         var elemProperties = doc.getElementById("properties");
         for (var pr : provider.getProperties())
-            elemProperties.appendChild(createPropertyControl(doc, pr));
+            elemProperties.appendChild(createPropertyRow(doc, pr));
     }
 
 
-    private static Node createEventControl(HTMLDocument doc, Event ev) {
-        String name = '@' + ev.name;
+    private static Node createEventRow(HTMLDocument doc, Event ev) {
+        String eventId = '@' + ev.name;
 
-        var radioHolder = doc.createElement("div");
-        radioHolder.getStyle().setProperty("display", "inline-block");
+        var row = doc.createElement("tr");
 
-        radioHolder.appendChild(makeRadioButton(doc, true, name));
-        radioHolder.appendChild(makeRadioButton(doc, false, name));
-        radioHolder.setAttribute("onchange", "handleEventUpdate('" + ev.name + "', document.getElementById('"+ name +"-true').checked)");
+        row.setAttribute("onchange", "handleEventUpdate('" + eventId + "')");
+        row.appendChild(makeNameColumn(doc, eventId));
+        row.appendChild(makeRadioColumn(doc, "true", false, eventId));
+        row.appendChild(makeRadioColumn(doc, "false", true, eventId));
+        var last = makeRadioColumn(doc, "undefined", false, eventId);
+        row.appendChild(last);
+        last.setClassName("absorbing-column");
 
-        var eventControl = makeControlElem(doc);
-        eventControl.appendChild(makeNameElem(doc, name, 8));
-        eventControl.appendChild(radioHolder);
-
-        return eventControl;
+        return row;
     }
 
-    private static Node createPropertyControl(HTMLDocument doc, Property pr) {
-        String name = '$' + pr.name;
+    private static Node createPropertyRow(HTMLDocument doc, Property pr) {
+        String propertyId = '$' + pr.name;
 
-        var eventControl = makeControlElem(doc);
-        eventControl.appendChild(makeNameElem(doc, name, 11f));
+        var row = doc.createElement("tr");
 
-        if (pr.type instanceof StringT)
-            eventControl.appendChild(makeStringControl(doc, pr));
-        else if (pr.type instanceof IntT)
-            eventControl.appendChild(makeIntegerControl(doc, pr));
-        else if (pr.type instanceof FloatT)
-            eventControl.appendChild(makeFloatControl(doc, pr));
-        else if (pr.type instanceof ListT listT && listT.elementType instanceof StringT)
-            eventControl.appendChild(makeStringListControl(doc, pr));
+        row.appendChild(makeNameColumn(doc, propertyId));
+        var last = makeStringColumn(doc, propertyId, pr.type instanceof ListT);
+        row.appendChild(last);
+        last.setClassName("absorbing-column");
 
-        return eventControl;
+        return row;
     }
 
 
-    private static HTMLElement makeControlElem(HTMLDocument doc) {
-        var control = doc.createElement("div");
-        control.getStyle().setProperty("padding-bottom", ".5em");
-        control.getStyle().setProperty("display", "flex");
-        return control;
-    }
-
-    private static HTMLElement makeNameElem(HTMLDocument doc, String name, float width) {
-        var nameElem = doc.createElement("div");
-        nameElem.getStyle().setProperty("width", width+"em");
+    private static HTMLElement makeNameColumn(HTMLDocument doc, String text) {
+        var nameElem = doc.createElement("td");
         nameElem.setClassName("name");
-        nameElem.setInnerText(name);
+        nameElem.setInnerText(text);
         return nameElem;
     }
 
-    private static HTMLElement makeRadioButton(HTMLDocument doc, boolean value, String name) {
+
+    private static HTMLElement makeRadioColumn(HTMLDocument doc, String text, boolean checked, String eventId) {
         var button = doc.createElement("input");
-        button.setId(name + "-" + value);
+        button.setId(eventId + "-" + text);
+        button.setAttribute("name", eventId);
         button.setAttribute("type", "radio");
-        button.setAttribute("name", name);
-        if (!value)
+        if (checked)
             button.setAttribute("checked", "");
 
         var label = doc.createElement("label");
-        label.getStyle().setProperty("padding-right", "1em");
         label.appendChild(button);
-        label.appendChild(doc.createTextNode(Boolean.toString(value)));
+        label.appendChild(doc.createTextNode(text));
 
-        return label;
-    }
+        var column = doc.createElement("td");
+        column.appendChild(label);
 
-    private static HTMLElement makeStringControl(HTMLDocument doc, Property pr) {
-        var textBox = doc.createElement("input");
-        textBox.setAttribute("type", "text");
-        textBox.setAttribute("value", provider.getPropertyValue(pr.name));
-        textBox.getStyle().setProperty("flex", "1");
-        textBox.setAttribute("onchange", "handleStringPropertyUpdate('" + pr.name + "', this.value)");
-        return textBox;
-    }
-
-    private static HTMLElement makeIntegerControl(HTMLDocument doc, Property pr) {
-        var textBox = doc.createElement("input");
-        textBox.setAttribute("type", "number");
-        textBox.setAttribute("value", Integer.toString(provider.<Integer>getPropertyValue(pr.name)));
-        textBox.getStyle().setProperty("flex", "1");
-        textBox.setAttribute("onchange", "handleIntegerPropertyUpdate('" + pr.name + "', this.value)");
-        return textBox;
-    }
-
-    private static HTMLElement makeFloatControl(HTMLDocument doc, Property pr) {
-        var textBox = doc.createElement("input");
-        textBox.setAttribute("type", "number");
-        textBox.setAttribute("value", Float.toString(provider.<Float>getPropertyValue(pr.name)));
-        textBox.getStyle().setProperty("flex", "1");
-        textBox.setAttribute("onchange", "handleFloatPropertyUpdate('" + pr.name + "', this.value)");
-        return textBox;
-    }
-
-    private static HTMLElement makeStringListControl(HTMLDocument doc, Property pr) {
-        var textBox = doc.createElement("input");
-        textBox.setAttribute("type", "text");
-        textBox.setAttribute("value", String.join(", ", provider.<List<String>>getPropertyValue(pr.name)));
-        textBox.getStyle().setProperty("flex", "1");
-        textBox.setAttribute("onchange", "handleStringListPropertyUpdate('" + pr.name + "', this.value)");
-        return textBox;
-    }
-
-
-    @JSExport
-    public static void handleEventUpdate(String event, boolean value) {
-        provider.eventValues.put(event, value);
+        return column;
     }
 
     @JSExport
-    public static void handleStringPropertyUpdate(String event, String value) {
-        provider.propertyValues.put(event, value);
+    public static void handleEventUpdate(String eventId) {
+        HTMLDocument doc = HTMLDocument.current();
+
+        if (((HTMLInputElement)doc.getElementById(eventId + "-true")).isChecked())
+            provider.setEventValue(eventId.substring(1), BoolVal.TRUE);
+        else if (((HTMLInputElement)doc.getElementById(eventId + "-false")).isChecked())
+            provider.setEventValue(eventId.substring(1), BoolVal.FALSE);
+        else if (((HTMLInputElement)doc.getElementById(eventId + "-undefined")).isChecked())
+            provider.setEventValue(eventId.substring(1), BoolVal.UNDEFINED);
+    }
+
+
+    private static HTMLElement makeStringColumn(HTMLDocument doc, String propertyId, boolean multiline) {
+        var value = provider.getPropertyValueString(propertyId.substring(1));
+        var textBox = doc.createElement(multiline ? "textarea" : "input");
+        if (!multiline) {
+            textBox.setAttribute("type", "text");
+            textBox.setAttribute("value", value);
+        }
+        else {
+            textBox.setAttribute("rows", Integer.toString(countLines(value)));
+            textBox.setInnerText(value);
+        }
+        textBox.getStyle().setProperty("width", "100%");
+        textBox.getStyle().setProperty("min-width", "15em");
+        textBox.setAttribute("onchange", "handleStringPropertyUpdate('" + propertyId + "', this.value)");
+
+        var column = doc.createElement("td");
+        column.appendChild(textBox);
+
+        return column;
     }
 
     @JSExport
-    public static void handleIntegerPropertyUpdate(String event, String value) {
-        try {
-            provider.propertyValues.put(event, Integer.parseInt(value));
-        } catch (NumberFormatException ignored) {}
+    public static void handleStringPropertyUpdate(String propertyId, String value) {
+        provider.setPropertyValueString(propertyId.substring(1), value);
     }
 
-    @JSExport
-    public static void handleFloatPropertyUpdate(String event, String value) {
-        try {
-            provider.propertyValues.put(event, Float.parseFloat(value));
-        } catch (NumberFormatException ignored) {}
-    }
+    public static int countLines(String str) {
+        if(str == null || str.isEmpty())
+            return 0;
 
-    @JSExport
-    public static void handleStringListPropertyUpdate(String event, String value) {
-        List<String> parts = Arrays.stream(value.split(",")).map(String::trim).filter(part -> !part.isEmpty()).toList();
-        provider.propertyValues.put(event, parts);
+        int lines = 1;
+        int pos = 0;
+        while ((pos = str.indexOf("\n", pos) + 1) != 0)
+            lines++;
+        return lines;
     }
-
 
 
     @JSExport
@@ -200,6 +171,14 @@ public class Main
         HTMLDocument doc = HTMLDocument.current();
         var output = doc.getElementById("output");
         output.setInnerHTML("");
+
+        var parseErrors = new ArrayList<String>();
+        provider.prepare(parseErrors);
+        if (!parseErrors.isEmpty()) {
+            String message = "Found invalid values for some properties! Treating as 'undefined'. The errors are:\n";
+            message += parseErrors.stream().map(err -> "  - " + err).collect(Collectors.joining("\n"));
+            output.appendChild(makeParagraph(doc, message));
+        }
 
         InputStream stream = new ByteArrayInputStream(musicConfig.getBytes(StandardCharsets.UTF_8));
         Loader.loadFrom(stream, new FakeMusicProvider(), provider).match(
@@ -211,7 +190,7 @@ public class Main
     private static void printResult(Interpreter interpreter) {
         HTMLDocument doc = HTMLDocument.current();
         var output = doc.getElementById("output");
-        output.appendChild(makeParagraph(doc, "Success!"));
+        output.appendChild(makeParagraph(doc, "Configuration is valid and ran to completion!"));
 
         ArrayList<Pair<String, Value<?>>> trace = new ArrayList<>();
         PlaylistChoice choice = interpreter.selectPlaylist(trace);
@@ -229,7 +208,7 @@ public class Main
     private static void printErrors(List<LoadError> errors) {
         HTMLDocument doc = HTMLDocument.current();
         var output = doc.getElementById("output");
-        output.appendChild(makeParagraph(doc, "Failure!"));
+        output.appendChild(makeParagraph(doc, "There were errors in the configuration!"));
 
         for (var error : errors) {
             String text;

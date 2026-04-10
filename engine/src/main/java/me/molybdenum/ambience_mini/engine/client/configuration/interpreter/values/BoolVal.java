@@ -7,6 +7,7 @@ import java.util.Objects;
 public final class BoolVal extends Value<Boolean>
 {
     public static final BoolVal UNDEFINED = new BoolVal();
+    public static final BoolVal TRUE = new BoolVal(true);
     public static final BoolVal FALSE = new BoolVal(false);
 
 

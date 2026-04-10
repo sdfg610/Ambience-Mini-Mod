@@ -10,6 +10,7 @@ public final class AreaT extends Type implements AccessibleT
 
     public static final Map<String, Type> FIELDS = Map.of(
             "name", StringT.INSTANCE,
+            "dimension", StringT.INSTANCE,
             "owner", StringT.INSTANCE,
             "isShared", BoolT.INSTANCE,
             "isLocal", BoolT.INSTANCE

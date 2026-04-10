@@ -26,6 +26,32 @@ input[type="radio"] {
     display: inline-block;
 }
 
+input {
+    font-size: 14px;
+}
+
+textarea {
+    resize: vertical;
+    font-size: 14px;
+}
+
+
+table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table .absorbing-column {
+    width: 100%;
+}
+
+td {
+    white-space: nowrap;
+    padding-right: 1em;
+    padding-bottom: .5em;
+}
+
 
 hr {
   display: block;
@@ -80,24 +106,24 @@ td {
 }
 
 .left {
-    flex: 55%;
+    flex: 50%;
     height: 100%;
     padding-right: 1em;
 }
 
 .right {
-    flex: 45%;
+    flex: 50%;
     height: 100%;
 }
 
 .left2 {
-    flex: 45%;
+    flex: 30%;
     height: 100%;
     padding-right: .5em;
 }
 
 .right2 {
-    flex: 55%;
+    flex: 70%;
     height: 100%;
     padding-left: .5em;
 }

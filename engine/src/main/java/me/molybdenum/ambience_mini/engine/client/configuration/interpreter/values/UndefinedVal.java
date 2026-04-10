@@ -17,6 +17,6 @@ public final class UndefinedVal extends Value<Object> {
 
     @Override
     public boolean equals(Value<?> other) {
-        return other.isUndefined();
+        return other.value == null;
     }
 }

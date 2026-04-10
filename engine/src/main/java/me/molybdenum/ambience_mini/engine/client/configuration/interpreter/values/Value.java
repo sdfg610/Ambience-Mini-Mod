@@ -26,26 +26,9 @@ public sealed abstract class Value<T> permits AreaVal, BoolVal, FloatVal, IntVal
 
     // -----------------------------------------------------------------------------------------------------------------
     // Public API
-    public boolean isUndefined() {
-        return value == null;
-    }
-
-    public Optional<T> getValue() {
-        return Optional.ofNullable(value);
-    }
-
     public <V> V map(Function<T, V> body) {
         return value == null ? null : body.apply(value);
     }
-
-    public <V> V match(Function<T, V> ifDefined, Supplier<V> ifUndefined) {
-        return value == null ? ifUndefined.get() : ifDefined.apply(value);
-    }
-
-    public Value<?> mapOrUndefined(Function<T, Value<?>> body) {
-        return value == null ? new UndefinedVal() : body.apply(value);
-    }
-
 
     @Override
     public String toString() {
