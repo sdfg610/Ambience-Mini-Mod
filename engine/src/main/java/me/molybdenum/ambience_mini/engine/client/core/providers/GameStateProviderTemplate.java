@@ -32,7 +32,6 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     // Location events
     public static final EventTemplateV1 E_VILLAGE = new EventTemplateV1("village", instance -> instance::inVillage);
     public static final EventTemplateV1 E_RANCH = new EventTemplateV1("ranch", instance -> instance::inRanch);
-    public static final EventTemplateV1 E_WARDEN_NEARBY = new EventTemplateV1("warden_nearby", instance -> instance::wardenNearby, McVersion.V1_19);
 
     // Player state events
     public static final EventTemplateV1 E_DEAD = new EventTemplateV1("dead", instance -> instance::isDead);
@@ -51,6 +50,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     public static final EventTemplateV1 E_ELYTRA = new EventTemplateV1("elytra", instance -> instance::flyingElytra);
 
     // Combat events
+    public static final EventTemplateV1 E_WARDEN_NEARBY = new EventTemplateV1("warden_nearby", instance -> instance::wardenNearby, McVersion.V1_19);
     public static final EventTemplateV1 E_IN_COMBAT = new EventTemplateV1("in_combat", instance -> instance::inCombat);
     public static final EventTemplateV1 E_BOSS_FIGHT = new EventTemplateV1("boss_fight", instance -> instance::inBossFight);
 

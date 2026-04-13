@@ -3,7 +3,7 @@
 
 This is the biggest update to Ambience Mini yet which introduces a system for configuring named areas (or regions) which can be used for music selection. Staying true to the philosophy of "no server-support required to run", the area system works regardless of whether the server has the mod installed or not. If no server-support, the server-dependent features are simply disabled.
 
-The configuration language has also been extended a lot to make it more usable and flexible, but while retaining the original simplicity. Finally new events and properties have been added as described below.
+The configuration language has also been extended a lot to make it more usable and flexible, but while retaining the original simplicity. **Beware of breaking changes to the configuration language syntax as described below**. Finally new events and properties have been added as described below.
 
 **Area system:**
 - Added a client-side-based system for configuring areas.

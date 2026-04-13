@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type;
 
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.kinds.AccessibleT;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;

@@ -213,7 +213,8 @@ public abstract class BaseClientCore<
             ));
 
         areaRenderer.clear();
-        areaManager.loadAreas(new AreaStorage(logger, Path.of(Common.AM_LOCAL_STORAGE_DIRECTORY, getWorldNameForLocalStorage())));
+        String subFolder = serverSetup.isOnLocalServer ? "sp" : "mp";
+        areaManager.loadAreas(new AreaStorage(logger, Path.of(Common.AM_LOCAL_STORAGE_DIRECTORY, subFolder, getWorldNameForLocalStorage())));
 
         if (clientConfig.notifyServerSupport.get() && !isOnLocalServer) {
             if (serverVersion.isGreaterThanOrEqual(BuildConfig.APP_VERSION))

@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type;
 
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.kinds.IndexableT;
 import org.jetbrains.annotations.NotNull;
 
 public final class MapT extends Type implements IndexableT {

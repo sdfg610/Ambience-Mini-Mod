@@ -7,6 +7,8 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.e
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.kinds.AccessibleT;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.kinds.IndexableT;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.SemError;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.AnyT;
