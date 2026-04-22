@@ -43,6 +43,7 @@ public abstract class AmDecoder {
         if (isInitialized.compareAndSet(false, true)) {
             FILETYPE_TO_DECODER.put("mp3", MP3Decoder::new);
             FILETYPE_TO_DECODER.put("flac", FlacDecoder::new);
+            FILETYPE_TO_DECODER.put("ogg", OggDecoder::new);
         }
     }
 }

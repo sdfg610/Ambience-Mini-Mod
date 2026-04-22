@@ -1,4 +1,16 @@
 
+### Version 2.5.1:
+
+- Ambience Mini now uses Minecraft's built-in audio system to play music which should hopefully give a more Linux-friendly experience.
+  * Removed the forge config for "Ignore master volume" due to the more direct integration with Minecraft's audio system.
+  * The gain for soundtracks (i.e. `<+5.0>` in `"music.mp3" <+5.0>`) is now measured in "percentage" and _not_ "decibels".
+- Lots of improvements to the music playing logic in preparation for upcoming features.
+- Added support for `.ogg` music files.
+
+
+**FIX GAIN!**
+
+
 ### Version 2.5.0:
 
 This is the biggest update to Ambience Mini yet which introduces a system for configuring named areas (or regions) which can be used for music selection. Staying true to the philosophy of "no server-support required to run", the area system works regardless of whether the server has the mod installed or not. If no server-support, the server-dependent features are simply disabled.

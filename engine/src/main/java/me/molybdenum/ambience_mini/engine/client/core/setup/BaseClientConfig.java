@@ -22,7 +22,6 @@ public abstract class BaseClientConfig {
     // Volume control
     public final Supplier<Boolean> fadeOnJukeBox;
     public final Supplier<Boolean> lostFocusEnabled;
-    public final Supplier<Boolean> ignoreMasterVolume;
 
     // Village detection
     public final Supplier<Integer> villageScanHorizontalRadius;
@@ -92,11 +91,6 @@ public abstract class BaseClientConfig {
         lostFocusEnabled = registerBoolOption(
                 "Fade out Ambience Mini's music when the game window is unfocused. [Default: true]",
                 "Lost_Focus_FadeOut",
-                true
-        );
-        ignoreMasterVolume = registerBoolOption(
-                "If 'true', music volume is not affected by 'Master Volume' to make it easier to balance music volume with everything else. [Default: true]",
-                "Ignore_Master_Volume",
                 true
         );
 

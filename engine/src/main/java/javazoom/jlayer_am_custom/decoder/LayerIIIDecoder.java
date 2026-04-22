@@ -86,7 +86,7 @@ final class LayerIIIDecoder implements FrameDecoder
                             Obuffer buffer0, int which_ch0)
 	{
         huffcodetab.inithuff();
-		is_1d = new int[SBLIMIT*SSLIMIT+4+1]; // Molybdenum042: Got index out of bounds error and can see that the original developers printed debug text for that exact error. An additional +1 is my best bet...
+		is_1d = new int[SBLIMIT*SSLIMIT+4+100]; // Molybdenum042: Got index out of bounds error and can see that the original developers printed debug text for that exact error. + 100 is my best best of a fix
 		ro = new float[2][SBLIMIT][SSLIMIT];
 		lr = new float[2][SBLIMIT][SSLIMIT];
 		out_1d = new float[SBLIMIT*SSLIMIT];
@@ -776,10 +776,11 @@ final class LayerIIIDecoder implements FrameDecoder
 	    buf = si.ch[ch].gr[gr].region0_count + 1;
 	    buf1 = buf + si.ch[ch].gr[gr].region1_count + 1;
 
-	    if(buf1 > sfBandIndex[sfreq].l.length - 1) buf1 = sfBandIndex[sfreq].l.length - 1;
+	    if(buf1 > sfBandIndex[sfreq].l.length - 1)
+			buf1 = sfBandIndex[sfreq].l.length - 1;
 
-			region1Start = sfBandIndex[sfreq].l[buf];
-			region2Start = sfBandIndex[sfreq].l[buf1]; /* MI */
+		region1Start = sfBandIndex[sfreq].l[buf];
+		region2Start = sfBandIndex[sfreq].l[buf1]; /* MI */
 	   }
 
 	   index = 0;
@@ -838,7 +839,7 @@ final class LayerIIIDecoder implements FrameDecoder
 	   if (index < 0) index = 0;
 
 	   // may not be necessary
-	   for (; index<576; index++)
+	   for (; index < is_1d.length; index++)
    		is_1d[index] = 0;
 	}
 

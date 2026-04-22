@@ -21,16 +21,11 @@ public record Music(String musicPath, float volumeAdjustment)
     }
 
 
-    public boolean isMP3() {
-        return "mp3".equals(Utils.getFileExtension(musicPath));
-    } // TODO: Remove
-
-    public boolean isFLAC() {
-        return "flac".equals(Utils.getFileExtension(musicPath));
-    } // TODO: Remove
-
-
     public String getExtension() {
         return Utils.getFileExtension(musicPath);
+    }
+
+    public float getFractionalAdjustment() {
+        return volumeAdjustment / 100f;
     }
 }

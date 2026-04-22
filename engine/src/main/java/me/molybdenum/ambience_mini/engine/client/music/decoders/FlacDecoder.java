@@ -104,8 +104,8 @@ public class FlacDecoder extends AmDecoder
     public void close() {
         try {
             stream.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ignored) {
+            // ignored
         }
     }
 }
