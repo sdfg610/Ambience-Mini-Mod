@@ -1,13 +1,14 @@
 package me.molybdenum.ambience_mini.engine.client.configuration;
 
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public record Music(String musicPath, float gain)
+public record Music(String musicPath, float volumeAdjustment)
 {
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         return musicPath;
     }
 
@@ -16,15 +17,20 @@ public record Music(String musicPath, float gain)
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Music music = (Music) o;
-        return Float.compare(gain, music.gain) == 0 && Objects.equals(musicPath, music.musicPath);
+        return Float.compare(volumeAdjustment, music.volumeAdjustment) == 0 && Objects.equals(musicPath, music.musicPath);
     }
 
 
     public boolean isMP3() {
         return "mp3".equals(Utils.getFileExtension(musicPath));
-    }
+    } // TODO: Remove
 
     public boolean isFLAC() {
         return "flac".equals(Utils.getFileExtension(musicPath));
+    } // TODO: Remove
+
+
+    public String getExtension() {
+        return Utils.getFileExtension(musicPath);
     }
 }

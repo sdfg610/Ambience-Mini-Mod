@@ -25,7 +25,7 @@ import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseCombatState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
-import me.molybdenum.ambience_mini.engine.client.music.MusicThread;
+import me.molybdenum.ambience_mini.engine.client.music.Monitor;
 import me.molybdenum.ambience_mini.engine.shared.areas.AreaStorage;
 import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.ClientInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
@@ -78,7 +78,7 @@ public abstract class BaseClientCore<
     private GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> gameStateProvider;
 
     // Music
-    private MusicThread musicThread;
+    private Monitor monitor;
 
 
     public BaseClientCore(
@@ -141,8 +141,8 @@ public abstract class BaseClientCore<
         return gameStateProvider;
     }
 
-    public MusicThread getMusicThread() {
-        return musicThread;
+    public Monitor getMusicThread() {
+        return monitor;
     }
 
 
@@ -150,8 +150,8 @@ public abstract class BaseClientCore<
     // Music engine
     public void tryReloadMusicEngine()
     {
-        if (musicThread != null)
-            musicThread.kill();
+        if (monitor != null)
+            monitor.stop();
 
         combatState.clearCombatants();
         gameStateProvider = new GameStateProviderReal<>(
@@ -169,7 +169,7 @@ public abstract class BaseClientCore<
 
     private void initMusicThread(Interpreter interpreter) {
         disableNativeMusicManager();
-        musicThread = new MusicThread(this, interpreter, musicProvider, logger);
+        monitor = new Monitor(this, interpreter, musicProvider, logger);
 
         if (clientConfig.verboseMode.get())
             logger.info("Successfully loaded Ambience Mini with configuration:\n{}", clientConfig.getConfigsString());
@@ -191,7 +191,7 @@ public abstract class BaseClientCore<
     }
 
     public boolean isMusicThreadRunning() {
-        return musicThread != null && musicThread.isAlive();
+        return monitor != null && monitor.isRunning();
     }
 
 

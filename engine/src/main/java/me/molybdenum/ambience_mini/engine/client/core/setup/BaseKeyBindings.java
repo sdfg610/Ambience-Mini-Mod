@@ -68,7 +68,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
             if (musicThread != null) {
                 if (musicThread.isPaused()) {
                     core.notification.showToast(AmLang.MSG_RESUMING_MUSIC);
-                    musicThread.play();
+                    musicThread.resume();
                 } else {
                     core.notification.showToast(AmLang.MSG_PAUSING_MUSIC);
                     musicThread.pause();
@@ -82,7 +82,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
             var musicThread = core.getMusicThread();
             if (musicThread != null) {
                 musicThread.forceSelectNewMusic();
-                musicThread.play();
+                musicThread.resume();
             }
         }
 

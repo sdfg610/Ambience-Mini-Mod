@@ -17,77 +17,72 @@ import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.slf4j.Logger;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class MusicThread extends Thread
+public class Monitor
 {
-    private static final int AVERAGE_OVER = 10;
+    public static final int BUFFER_UPDATE_INTERVAL_MS = 500;
+    private static final int NUM_MEASUREMENTS = 10;
 
-    private final Logger _logger;
-    private final Supplier<Boolean> _isFocused;
-
-
-    private final boolean _doFadeOnJukeBox;
-    private final boolean _lostFocusEnabled;
-    private final long _updateIntervalMilliseconds;
-    private final long _nextMusicDelayMilliseconds;
-
-    private final boolean _verboseMode;
-    private List<Music> _currentPlaylist = null;
-    private long _tick = 0L;
-
-
+    // Utils
     private final Random _rand = new Random(System.nanoTime());
-    private final Interpreter _playlistSelector;
-    private final MusicProvider _musicProvider;
+    private final Logger _logger;
+
+    // Core components
     private final BasePlayerState<?, ?, ?> _player;
     private final BaseLevelState<?, ?, ?, ?, ?> _level;
     private final BaseNotification<?> _notification;
     private final BaseKeyBindings<?> _keyBindings;
+
+    // Playlist/music selection
+    private final Interpreter _playlistSelector;
+    private long _chooseNextMusicTime = 0L;
 
     private final boolean _meticulousPlaylistSelector;
     private final int _numLatestChoices = 3; // Code below is only designed to handle the value 3 here.
     private int _nextChoiceIndex = 0;
     private final PlaylistChoice[] _latestChoices = new PlaylistChoice[_numLatestChoices];
 
-    private MusicPlayer _mainPlayer = null;
-    private MusicPlayer _interruptPlayer = null;
+    // Music player
+    private final MusicPlayer _musicPlayer;
+    private boolean _isPaused = false; // By player/user
+    private boolean _isHalted = false; // By game state or configuration
 
-    private boolean _isHalted = false;
-    private long _chooseNextMusicTime = 0L;
+    private final Supplier<Boolean> _isFocused;
+    private final boolean _lostFocusEnabled;
+    private final boolean _doFadeOnJukebox;
 
-    private boolean _isPaused = false;
-
-
+    // Volume
     private boolean _volumeZero = false;
-    private final Consumer<Float> _volumeChangedHandler = volume -> {
-        handleVolumeZero(volume);
+    private final Consumer<Float> _volumeChangedHandler;
 
-        if (_mainPlayer != null)
-            _mainPlayer.setVolume(volume);
-
-        if (_interruptPlayer != null)
-            _interruptPlayer.setVolume(volume);
-    };
-
+    // Debugging
+    private final boolean _verboseMode;
+    private List<Music> _currentPlaylist = null;
+    private long _tick = 0L;
     private long _benchmarkTime = 0;
     private int _benchmarkIndex = 0;
-    private final long[] _benchmarks = new long[AVERAGE_OVER];
+    private final long[] _benchmarks = new long[NUM_MEASUREMENTS];
 
-    private boolean _kill = false;
+    // Tasks
+    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private final ScheduledFuture<?> cycleFuture;
+    private final ScheduledFuture<?> bufferFuture;
 
 
     @SuppressWarnings("rawtypes")
-    public MusicThread(
+    public Monitor(
             BaseClientCore clientCore, // Raw use of BaseCore since we do not need to know the types used in implementation.
             Interpreter playlistSelector,
             MusicProvider musicProvider,
             Logger logger
     ) {
         _playlistSelector = playlistSelector;
-        _musicProvider = musicProvider;
         _logger = logger;
         _isFocused = clientCore::isFocused;
 
@@ -96,73 +91,81 @@ public class MusicThread extends Thread
         _notification = clientCore.notification;
         _keyBindings = clientCore.keyBindings;
 
-        _doFadeOnJukeBox = clientCore.clientConfig.fadeOnJukeBox.get();
+        _doFadeOnJukebox = clientCore.clientConfig.fadeOnJukeBox.get();
         _lostFocusEnabled = clientCore.clientConfig.lostFocusEnabled.get();
-        _updateIntervalMilliseconds = clientCore.clientConfig.updateInterval.get();
-        _nextMusicDelayMilliseconds = clientCore.clientConfig.nextMusicDelay.get();
         _meticulousPlaylistSelector = clientCore.clientConfig.meticulousPlaylistSelector.get();
 
         _verboseMode = clientCore.clientConfig.verboseMode.get();
 
-        setDaemon(true);
-        setName("Ambience Mini - Music Monitor Thread");
-        start();
+        // Setup music player and volume
+        long nextMusicDelay = clientCore.clientConfig.nextMusicDelay.get();
+        _musicPlayer = new MusicPlayer(
+                musicProvider,
+                () -> _chooseNextMusicTime = System.currentTimeMillis() + nextMusicDelay
+        );
+        _musicPlayer.setVolume(VolumeState.getMusicVolume());
+
+        _volumeChangedHandler = volume -> {
+            handleVolumeZero(volume);
+            _musicPlayer.setVolume(volume);
+        };
+        VolumeState.registerMusicVolumeListener(_volumeChangedHandler);
+
+        // Setup scheduled tasks
+        handleVolumeZero(VolumeState.getMusicVolume());
+        cycleFuture = executor.scheduleAtFixedRate(
+                () -> guarded(this::handleMusicCycle),
+                0,
+                clientCore.clientConfig.updateInterval.get(),
+                TimeUnit.MILLISECONDS
+        );
+        bufferFuture = executor.scheduleAtFixedRate(
+                () -> guarded(_musicPlayer::updateBuffers),
+                0,
+                BUFFER_UPDATE_INTERVAL_MS,
+                TimeUnit.MILLISECONDS
+        );
     }
 
 
     // ----------------------------------------------------------------------------------------------------------------
     // Thread control
-    @Override
-    public void run()
-    {
+    public void guarded(Runnable runnable) {
         try {
-            VolumeState.registerVolumeHandler(_volumeChangedHandler);
-            handleVolumeZero(VolumeState.getTrueMusicVolume());
-
-            long nextUpdate = System.currentTimeMillis();
-            while (!_kill)
-            {
-                // Update at most every "UPDATE_INTERVAL_MILLISECONDS".
-                TimeUnit.MILLISECONDS.sleep(nextUpdate - System.currentTimeMillis());
-                nextUpdate = System.currentTimeMillis() + _updateIntervalMilliseconds;
-
-                handleMusicCycle();
-            }
-        }
-        catch (Exception ex) {
-            if (!(ex instanceof InterruptedException)) {
-                _notification.printTranslatableToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
-                _logger.error("Error in AmbienceThread.run()", ex);
-            }
-            stopMainMusic(false);
-            stopInterruptMusic(false);
-        }
-        finally {
-            VolumeState.unregisterVolumeHandler(_volumeChangedHandler);
+            runnable.run();
+        } catch (Exception ex) {
+            _notification.printTranslatableToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
+            _logger.error("Error in monitor!", ex);
+            stop();
         }
     }
 
-    public void kill()
-    {
-        if (isAlive()) {
-            _kill = true;
-            stopMainMusic(false);
-            stopInterruptMusic(false);
-            VolumeState.unregisterVolumeHandler(_volumeChangedHandler);
+    public void stop() {
+        synchronized (executor) {
+            if (!executor.isShutdown()) {
+                _musicPlayer.stopAll();
 
-            try {
-                interrupt();
-            } catch (Throwable ex) {
-                _logger.error("Error in MusicPlayerThread.kill()", ex);
+                cycleFuture.cancel(true);
+                bufferFuture.cancel(true);
+                executor.shutdown();
+
+                VolumeState.unregisterVolumeListener(_volumeChangedHandler);
             }
         }
     }
 
+    public boolean isRunning() {
+        return !executor.isShutdown();
+    }
+
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Manual pausing
     public void pause() {
         _isPaused = true;
     }
 
-    public void play() {
+    public void resume() {
         _isPaused = false;
     }
 
@@ -173,8 +176,7 @@ public class MusicThread extends Thread
 
     // ----------------------------------------------------------------------------------------------------------------
     // Music and volume
-    private void handleMusicCycle()
-    {
+    private void handleMusicCycle() {
         if (_volumeZero || handlePaused() || handleUnfocused())
             return;
 
@@ -184,7 +186,6 @@ public class MusicThread extends Thread
             trace = new ArrayList<>();
             messages = new ArrayList<>();
             _tick++;
-
             _benchmarkTime = System.currentTimeMillis();
         }
 
@@ -199,21 +200,22 @@ public class MusicThread extends Thread
             return;
 
         List<Music> nextPlaylist = nextChoice.playlist();
-        boolean nextIsInterrupt = nextChoice.isInterrupt();
+        int nextPriority = nextChoice.isInterrupt() ? 1 : 0;
         boolean doFade = !nextChoice.isInstant();
 
         if (_verboseMode) {
             long selectTime = System.currentTimeMillis() - _benchmarkTime;
             _benchmarks[_benchmarkIndex] = selectTime;
-            _benchmarkIndex = (_benchmarkIndex + 1) % AVERAGE_OVER;
+            _benchmarkIndex = (_benchmarkIndex + 1) % NUM_MEASUREMENTS;
 
             if (_currentPlaylist != nextPlaylist) {
                 _currentPlaylist = nextPlaylist;
 
-                if (nextIsInterrupt)
-                    _logger.info("At tick '{}'. Selected new interrupt playlist: [{}]", _tick, String.join(", ", nextPlaylist.stream().map(Music::musicPath).toList()));
+                var playlist = String.join(", ", nextPlaylist.stream().map(m -> '"' + m.musicPath() + '"').toList());
+                if (nextPriority == 1)  // TODO: Better logging when priority system is done
+                    _logger.info("At tick '{}'. Selected new interrupt playlist: [ {} ]", _tick, playlist);
                 else
-                    _logger.info("At tick '{}'. Selected new playlist: [{}]", _tick, String.join(", ", nextPlaylist.stream().map(Music::musicPath).toList()));
+                    _logger.info("At tick '{}'. Selected new playlist: [ {} ]", _tick, playlist);
                 _logger.info("Values computed during selection:\n{}", Utils.getKeyValuePairString(trace));
                 _logger.info("Playlist selection took {}ms. The average time is currently {}ms.", selectTime, Arrays.stream(_benchmarks).average().orElse(Double.MIN_VALUE));
             }
@@ -222,52 +224,41 @@ public class MusicThread extends Thread
                 _logger.info("At tick '{}'. {}", _tick, msg);
         }
 
-        MusicPlayer activePlayer = nextIsInterrupt ? _interruptPlayer : _mainPlayer;
-        Music currentMusic = activePlayer == null ? null : activePlayer.music;
-
-        boolean musicStillValid = nextPlaylist.stream().anyMatch(music -> music.equals(currentMusic));
+        Music currentMusic = _musicPlayer.getMusicByPriority(nextPriority);
+        boolean musicStillValid = currentMusic != null && nextPlaylist.stream().anyMatch(currentMusic::equals);
 
         if (_isHalted) {
             if (_verboseMode)
                 _logger.info("Resuming music!");
             _isHalted = false;
 
-            if (!nextIsInterrupt)
-                stopInterruptMusic(false);
-
-            if (musicStillValid && resumeMusic())
+            if (musicStillValid) {
+                _musicPlayer.stopAllAbove(nextPriority, false);
+                _musicPlayer.resume(true);
                 return;
-            else {
-                stopInterruptMusic(false);
-                stopMainMusic(false);
             }
         }
 
-        if (nextIsInterrupt && _mainPlayer != null && _mainPlayer.isPlaying())
-            _mainPlayer.pause(doFade);
-        else if (!nextIsInterrupt && _interruptPlayer != null) {
-            stopInterruptMusic(true);
-            if (!musicStillValid)
-                stopMainMusic(false);
-        }
+        var topPriority = _musicPlayer.getTopPriority();
+        boolean presentAndPlaying = topPriority.isPresent() && _musicPlayer.isPlaying();
+        if (presentAndPlaying && nextPriority > topPriority.get())
+            _musicPlayer.pause(doFade);
 
-        else if (nextPlaylist.isEmpty())
-            if (nextIsInterrupt) stopInterruptMusic(true);
-            else stopMainMusic(true);
+        else if (presentAndPlaying && nextPriority < topPriority.get())
+            _musicPlayer.pause(doFade);
 
-        else if (!musicStillValid || System.currentTimeMillis() > _chooseNextMusicTime) {
-            Music nextMusic = selectMusic(nextPlaylist, currentMusic);
-            if (nextIsInterrupt) {
-                stopInterruptMusic(doFade);
-                _interruptPlayer = playMusic(nextMusic, _musicProvider, doFade);
-            } else {
-                stopMainMusic(doFade);
-                _mainPlayer = playMusic(nextMusic, _musicProvider, doFade);
+        else if (nextPlaylist.isEmpty()) {
+            if (_musicPlayer.isPlaying()) {
+                _musicPlayer.stopAllAbove(nextPriority - 1, doFade);
+                _musicPlayer.pause(doFade);
             }
         }
 
-        else if (!activePlayer.isPlaying())
-            activePlayer.playOrResume(doFade);
+        else if (!musicStillValid || System.currentTimeMillis() > _chooseNextMusicTime)
+            playMusic(nextPriority, selectMusic(nextPlaylist, currentMusic), doFade);
+
+        else if (!_musicPlayer.isPlaying())
+                _musicPlayer.resume(nextPriority, doFade);
     }
 
     private PlaylistChoice selectPlaylistMeticulously(ArrayList<Pair<String, Value<?>>> trace) {
@@ -302,10 +293,8 @@ public class MusicThread extends Thread
     // Music player controls
     private void handleVolumeZero(float volume) {
         _volumeZero = volume < .01f;
-        if (_volumeZero) {
-            stopMainMusic(false);
-            stopInterruptMusic(false);
-        }
+        if (_volumeZero)
+            _musicPlayer.stopAll();
     }
 
     private boolean handleUnfocused() {
@@ -319,11 +308,11 @@ public class MusicThread extends Thread
     }
 
     private boolean handleJukebox() {
-        if (_doFadeOnJukeBox && _player.notNull() && _level.notNull()) {
-            boolean isPlaying = _player.canHearJukeboxMusic() && !_level.isWorldTickingPaused();
-            if (isPlaying && !_isHalted)
+        if (_doFadeOnJukebox && _player.notNull() && _level.notNull()) {
+            boolean isJukeboxPlaying = _player.canHearJukeboxMusic() && !_level.isWorldTickingPaused();
+            if (isJukeboxPlaying && !_isHalted)
                 haltMusic();
-            return isPlaying;
+            return isJukeboxPlaying;
         }
         return false;
     }
@@ -335,58 +324,17 @@ public class MusicThread extends Thread
     }
 
 
-    private MusicPlayer playMusic(Music nextMusic, MusicProvider musicProvider, boolean fade) {
-        MusicPlayer musicPlayer = new MusicPlayer(
-            nextMusic,
-            VolumeState.getTrueMusicVolume(),
-            musicProvider,
-            () -> _chooseNextMusicTime = System.currentTimeMillis() + _nextMusicDelayMilliseconds,
-            _logger
-        );
-        musicPlayer.playOrResume(fade);
+    private void playMusic(int priority, Music nextMusic, boolean doFade) {
+        _musicPlayer.play(priority, nextMusic, doFade);
         _chooseNextMusicTime = Long.MAX_VALUE;
-
-        return musicPlayer;
     }
 
-    private void haltMusic()
-    {
+    private void haltMusic() {
         if (!_isHalted && _verboseMode)
             _logger.info("Halting music!");
 
         _isHalted = true;
-        if(_interruptPlayer != null)
-            _interruptPlayer.pause(true);
-        if(_mainPlayer != null)
-            _mainPlayer.pause(true);
-    }
-
-    private boolean resumeMusic()
-    {
-        if (_interruptPlayer != null)
-            _interruptPlayer.playOrResume(true);
-        else if (_mainPlayer != null)
-            _mainPlayer.playOrResume(true);
-        else
-            return false;
-        return true;
-    }
-
-
-    private void stopMainMusic(boolean fadeOut) {
-        if (_mainPlayer != null) {
-            try { _mainPlayer.stop(fadeOut); }
-            catch (Exception ignored) { }
-            _mainPlayer = null;
-        }
-    }
-
-    private void stopInterruptMusic(boolean fadeOut) {
-        if (_interruptPlayer != null) {
-            try { _interruptPlayer.stop(fadeOut); }
-            catch (Exception ignored) { }
-            _interruptPlayer = null;
-        }
+        _musicPlayer.pause(true);
     }
 
 
@@ -394,7 +342,7 @@ public class MusicThread extends Thread
     // Utilities
 
     // The most random number generator I could think of.
-    // "_rand.nextInt" alone just didn't... feel random...;
+    // "_rand.nextInt" alone just didn't... feel random...
     private int getRandom(int max) {
         int iterations = _rand.nextInt(10,50);
         int acc = 0;

@@ -11,12 +11,10 @@ public class VolumeState {
     private static float _musicVolume;
     private static float _recordVolume;
 
-    private static Supplier<Boolean> _ignoreMasterVolume = () -> true;
-    private static final HashSet<Consumer<Float>> musicVolumeChangedHandlers = new HashSet<>();
+    private static final HashSet<Consumer<Float>> musicVolumeChangedListeners = new HashSet<>();
 
 
     public static void init(BaseClientConfig config, float master, float music, float record) {
-        _ignoreMasterVolume = config.ignoreMasterVolume;
         _masterVolume = master;
         _musicVolume = music;
         _recordVolume = record;
@@ -29,7 +27,6 @@ public class VolumeState {
 
     public static void setMasterVolume(float volume) {
         _masterVolume = volume;
-        handleMusicVolumeChanged();
     }
 
 
@@ -39,12 +36,12 @@ public class VolumeState {
 
     public static void setMusicVolume(float volume) {
         _musicVolume = volume;
-        handleMusicVolumeChanged();
+        fireMusicVolumeChanged();
     }
 
 
-    public static float getRecordVolume() {
-        return _recordVolume;
+    public static float getTrueRecordVolume() {
+        return _masterVolume * _recordVolume;
     }
 
     public static void setRecordVolume(float volume) {
@@ -52,24 +49,15 @@ public class VolumeState {
     }
 
 
-    public static float getTrueMusicVolume() {
-        return _musicVolume * (_ignoreMasterVolume.get() ? 1f : getMasterVolume());
+    public static void registerMusicVolumeListener(Consumer<Float> consumer) {
+        musicVolumeChangedListeners.add(consumer);
     }
 
-    public static float getTrueRecordVolume() {
-        return _recordVolume * getMasterVolume();
+    public static void unregisterVolumeListener(Consumer<Float> consumer) {
+        musicVolumeChangedListeners.remove(consumer);
     }
 
-
-    public static void registerVolumeHandler(Consumer<Float> consumer) {
-        musicVolumeChangedHandlers.add(consumer);
-    }
-
-    public static void unregisterVolumeHandler(Consumer<Float> consumer) {
-        musicVolumeChangedHandlers.remove(consumer);
-    }
-
-    private static void handleMusicVolumeChanged() {
-        musicVolumeChangedHandlers.forEach(handler -> handler.accept(getTrueMusicVolume()));
+    private static void fireMusicVolumeChanged() {
+        musicVolumeChangedListeners.forEach(handler -> handler.accept(_musicVolume));
     }
 }

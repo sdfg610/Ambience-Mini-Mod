@@ -15,6 +15,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.t
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.client.configuration.pretty_printer.PrettyPrinter;
 import me.molybdenum.ambience_mini.engine.client.music.MusicPlayer;
+import me.molybdenum.ambience_mini.engine.client.music.decoders.AmDecoder;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStateProvider;
@@ -73,8 +74,8 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
                 String musicPath = musicPathRes.value;
                 if (!musicProvider.exists(musicPath))
                     errors.add(new SemError(load.line(), "Cannot find music file with name: '" + musicPath + "'"));
-                if (!MusicPlayer.SUPPORTED_FILE_TYPES.contains(Utils.getFileExtension(musicPath)))
-                    errors.add(new SemError(load.line(), "The file type of '" + musicPath + "' is unsupported. Ambience Mini currently only supports file types: " + String.join(", ", MusicPlayer.SUPPORTED_FILE_TYPES)));
+                if (!AmDecoder.getSupportedFileTypes().contains(Utils.getFileExtension(musicPath)))
+                    errors.add(new SemError(load.line(), "The file type of '" + musicPath + "' is unsupported. Ambience Mini currently only supports file types: " + String.join(", ", AmDecoder.getSupportedFileTypes())));
             }
         }
         else if (play instanceof Nil || play == null) {
