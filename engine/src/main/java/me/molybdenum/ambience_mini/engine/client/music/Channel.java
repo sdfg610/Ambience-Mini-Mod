@@ -81,7 +81,7 @@ public class Channel {
 
     public void setVolume(float volume) {
         if (!isClosed.get()) {
-            playingVolume = volume + music.getFractionalAdjustment();
+            playingVolume = volume + music.getCorrectedAdjustment();
             ALUtils.setMaxVolume(source, playingVolume);
             if (isPlaying())
                 ALUtils.setVolume(source, playingVolume);

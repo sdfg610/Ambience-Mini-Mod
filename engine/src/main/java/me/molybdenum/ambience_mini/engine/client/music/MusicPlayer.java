@@ -27,9 +27,9 @@ public class MusicPlayer {
 
     public void updateBuffers() {
         synchronized (stack) {
-            if (!stack.empty()) {
-                var channel = stack.peek().right();
-                channel.updateBuffers(); // Only top channel can play and needs update.
+            for (var pair : stack) {
+                var channel = pair.right();
+                channel.updateBuffers();
                 if (channel.isStopped()) {
                     channel.stopAndClose(false);
                     onRanToEnd.run();

@@ -28,11 +28,13 @@ import me.molybdenum.ambience_mini.v1_19_2.server.core.ServerCore;
 import me.molybdenum.ambience_mini.v1_19_2.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_19_2.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
@@ -42,6 +44,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
 
 
@@ -49,6 +52,8 @@ import org.slf4j.Logger;
 @Mod(Common.MOD_ID)
 public class AmbienceMini extends BaseAmbienceMini
 {
+    private static final String OBF_SOUND_ENGINE_LOADED = "f_120219_";
+
     // Common
     public static final Logger LOGGER = LogUtils.getLogger();
 
@@ -75,6 +80,7 @@ public class AmbienceMini extends BaseAmbienceMini
             clientConfig = new ClientConfig(context);
             modBus.addListener(AmbienceMini::registerGuiOverlays);
             modBus.addListener(AmbienceMini::registerKeybindings);
+            modBus.addListener(AmbienceMini::onSoundEngineLoaded);
         }
     }
 
@@ -105,7 +111,6 @@ public class AmbienceMini extends BaseAmbienceMini
                     new ServerSetup(), clientConfig, keyBindings,
                     new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );
-            clientCore.tryReloadMusicEngine();
 
             fireClientCoreInit();
         }
@@ -120,6 +125,11 @@ public class AmbienceMini extends BaseAmbienceMini
 
     private static void registerKeybindings(final RegisterKeyMappingsEvent event) {
         keyBindings = new KeyBindings(event);
+    }
+
+    private static void onSoundEngineLoaded(final SoundEngineLoadEvent event) {
+        if (clientCore != null && !clientCore.isMusicThreadRunning() && Boolean.TRUE.equals(ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class, event.getEngine(), OBF_SOUND_ENGINE_LOADED)))
+            clientCore.tryReloadMusicEngine();
     }
 
 

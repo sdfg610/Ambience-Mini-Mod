@@ -16,7 +16,7 @@ import java.util.Arrays;
 
 public class FlacDecoder extends AmDecoder
 {
-    private static final int BUFFER_SIZE = 100_000;
+    private static final int BUFFER_SIZE = 400_000;
 
     private final int maxFrameSize;
     private final byte[] buffer;
@@ -44,7 +44,7 @@ public class FlacDecoder extends AmDecoder
         if (md instanceof StreamInfo streamInfo) {
             format = streamInfo.getAudioFormat();
             maxFrameSize = streamInfo.getMaxFrameSize() * streamInfo.getBitsPerSample();
-            buffer = new byte[BUFFER_SIZE + maxFrameSize]; // Allow latest frame to overflow the buffer. Handled later
+            buffer = new byte[BUFFER_SIZE + maxFrameSize]; // Part after plus allows the latest frame to overflow the buffer. Handled later
         }
         else
             throw new RuntimeException("There is no stream-info at the beginning of music file!");
@@ -88,6 +88,9 @@ public class FlacDecoder extends AmDecoder
      * @return true if there are more frames to decode, false otherwise.
      */
     private boolean readFrameToBuffer() throws IOException {
+        if (decoder.isEOF())
+            return false;
+
         Frame frame = decoder.readNextFrame();
         if (frame == null)
             return false;

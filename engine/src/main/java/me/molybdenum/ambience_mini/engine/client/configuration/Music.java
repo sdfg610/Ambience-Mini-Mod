@@ -25,7 +25,7 @@ public record Music(String musicPath, float volumeAdjustment)
         return Utils.getFileExtension(musicPath);
     }
 
-    public float getFractionalAdjustment() {
-        return volumeAdjustment / 100f;
+    public float getCorrectedAdjustment() {
+        return (volumeAdjustment * 2f) / 100f;
     }
 }

@@ -86,7 +86,7 @@ final class LayerIIIDecoder implements FrameDecoder
                             Obuffer buffer0, int which_ch0)
 	{
         huffcodetab.inithuff();
-		is_1d = new int[SBLIMIT*SSLIMIT+4+100]; // Molybdenum042: Got index out of bounds error and can see that the original developers printed debug text for that exact error. + 100 is my best best of a fix
+		is_1d = new int[SBLIMIT*SSLIMIT+4];
 		ro = new float[2][SBLIMIT][SSLIMIT];
 		lr = new float[2][SBLIMIT][SSLIMIT];
 		out_1d = new float[SBLIMIT*SSLIMIT];
@@ -827,14 +827,11 @@ final class LayerIIIDecoder implements FrameDecoder
 
 		// Dismiss stuffing bits
 		if (num_bits < part2_3_end)
-	   	br.hgetbits(part2_3_end - num_bits);
+	   		br.hgetbits(part2_3_end - num_bits);
 
 		// Zero out rest
 
-	   if (index < 576)
-		   nonzero[ch] = index;
-	   else
-	   	nonzero[ch] = 576;
+        nonzero[ch] = Math.min(index, 576);
 
 	   if (index < 0) index = 0;
 

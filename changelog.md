@@ -3,12 +3,9 @@
 
 - Ambience Mini now uses Minecraft's built-in audio system to play music which should hopefully give a more Linux-friendly experience.
   * Removed the forge config for "Ignore master volume" due to the more direct integration with Minecraft's audio system.
-  * The gain for soundtracks (i.e. `<+5.0>` in `"music.mp3" <+5.0>`) is now measured in "percentage" and _not_ "decibels".
-- Lots of improvements to the music playing logic in preparation for upcoming features.
+  * To the best of my ability, I've tweaked soundtrack-gains (i.e. `<+5.0>` in `"music.mp3" <+5.0>`) to increase/decrease volume in a similar way to before, but the new volume system makes this a bit challenging.
+- Lots of improvements to the music playing logic in connection with the new audio system and in preparation for upcoming features.
 - Added support for `.ogg` music files.
-
-
-**FIX GAIN!**
 
 
 ### Version 2.5.0:

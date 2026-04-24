@@ -28,6 +28,7 @@ import me.molybdenum.ambience_mini.v1_18_2.server.core.ServerCore;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
@@ -104,10 +105,19 @@ public class AmbienceMini extends BaseAmbienceMini
                     new ServerSetup(), clientConfig, new KeyBindings(),
                     new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );
-            clientCore.tryReloadMusicEngine();
 
             fireClientCoreInit();
         }
+    }
+
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Common
+    /// Called from a Mixin instead of through the event bus since a bug in MC 1.18.2 causes the "MinecraftForge.EVENT_BUS" to shut down somehow...
+    public static void onSoundEngineLoaded() {
+        if (clientCore != null && !clientCore.isMusicThreadRunning())
+            clientCore.tryReloadMusicEngine();
     }
 
 

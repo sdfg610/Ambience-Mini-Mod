@@ -9,13 +9,14 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 public class MP3Decoder extends AmDecoder {
-    private static final int BUFFER_SIZE = 50_000; // 100_000 bytes since using "short"
+    private static final int BUFFER_SIZE = 200_000; // Double the number measured in bytes since using "short"
 
-    private final short[] buffer = new short[BUFFER_SIZE + Obuffer.OBUFFERSIZE]; // Allow latest frame to overflow the buffer. Handled later
+    private final short[] buffer = new short[BUFFER_SIZE + Obuffer.OBUFFERSIZE]; // Part after plus allows the latest frame to overflow the buffer. Handled later
     private int currentLength = 0;
 
     private final Decoder decoder = new Decoder();
     private final Bitstream bitstream;
+    private boolean hitLast = false;
 
 
 
@@ -46,7 +47,7 @@ public class MP3Decoder extends AmDecoder {
             while (currentLength < BUFFER_SIZE && readFrameToBuffer()) {
                 // Just read until buffer is full or no more data.
             }
-            if (currentLength == 0)
+            if (currentLength <= 0)
                 return null;
 
             // Create new buffer to return
@@ -70,11 +71,15 @@ public class MP3Decoder extends AmDecoder {
      * Decodes a single frame.
      * @return true if there are more frames to decode, false otherwise.
      */
-    private boolean readFrameToBuffer() throws JavaLayerException
-    {
-        Header h = bitstream.readFrame();
-        if (h == null)
+    private boolean readFrameToBuffer() throws JavaLayerException {
+        if (hitLast)
             return false;
+
+        Header h = bitstream.readFrame();
+        if (h == null) {
+            hitLast = true;
+            return false;
+        }
 
         SampleBuffer data = (SampleBuffer) decoder.decodeFrame(h, bitstream);
         int size = data.getBufferLength();

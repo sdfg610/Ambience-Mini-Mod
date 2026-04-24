@@ -13,10 +13,10 @@ import java.nio.ByteBuffer;
 
 public class OggDecoder extends AmDecoder
 {
-    private static final int BUFFER_SIZE = 100_000;
+    private static final int BUFFER_SIZE = 400_000;
 
     private final byte[] miniBuffer = new byte[VorbisFile.CHUNKSIZE];
-    private final byte[] buffer = new byte[BUFFER_SIZE + VorbisFile.CHUNKSIZE];
+    private final byte[] buffer = new byte[BUFFER_SIZE + VorbisFile.CHUNKSIZE]; // Part after plus allows the latest frame to overflow the buffer. Handled later
     private int currentLength = 0;
 
     private final VorbisFile file;

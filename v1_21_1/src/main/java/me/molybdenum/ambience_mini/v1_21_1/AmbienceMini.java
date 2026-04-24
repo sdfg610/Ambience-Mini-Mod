@@ -28,14 +28,17 @@ import me.molybdenum.ambience_mini.v1_21_1.server.core.ServerCore;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.sound.SoundEngineLoadEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
@@ -82,6 +85,7 @@ public class AmbienceMini extends BaseAmbienceMini
             clientConfig = new ClientConfig(modContainer);
             modEventBus.addListener(AmbienceMini::registerGuiOverlays);
             modEventBus.addListener(AmbienceMini::registerKeybindings);
+            modEventBus.addListener(AmbienceMini::onSoundEngineLoaded);
 
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }
@@ -122,7 +126,6 @@ public class AmbienceMini extends BaseAmbienceMini
                     new ServerSetup(), clientConfig, keyBindings,
                     new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );
-            clientCore.tryReloadMusicEngine();
 
             fireClientCoreInit();
         }
@@ -137,6 +140,11 @@ public class AmbienceMini extends BaseAmbienceMini
 
     private static void registerKeybindings(final RegisterKeyMappingsEvent event) {
         keyBindings = new KeyBindings(event);
+    }
+
+    private static void onSoundEngineLoaded(final SoundEngineLoadEvent event) {
+        if (clientCore != null && !clientCore.isMusicThreadRunning() && Boolean.TRUE.equals(ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class, event.getEngine(), "loaded")))
+            clientCore.tryReloadMusicEngine();
     }
 
 
