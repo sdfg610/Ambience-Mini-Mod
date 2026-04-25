@@ -1,4 +1,12 @@
 
+### Version 2.6.0:
+
+- You can now set priorities of selected playlists by writing `play PLAYLIST priority PRIORITY` where `PRIORITY` must be a non-negative, whole number given as a constant/literal.
+  * When a playlist is selected using `play`, all music with a lower priority is paused, and when the high-priority music stops, the paused low-priority music resumes if conditions still allow playing this music at this point.
+  - Interrupts now only affect `play` keywords *without* a manually specified priority and sets the priority to "the number of nested interrupts". Thus, "`interrupt play LIST`" will give `play LIST` a priority of `1` and "`interrupt interrupt play LIST`" gives a priority of `2`.
+  - When no manual priorities are given in your music configuration, interrupts will work exactly as before, but without any nesting limitations.
+
+
 ### Version 2.5.1:
 
 - Ambience Mini now uses Minecraft's built-in audio system to play music which should hopefully give a more Linux-friendly experience.

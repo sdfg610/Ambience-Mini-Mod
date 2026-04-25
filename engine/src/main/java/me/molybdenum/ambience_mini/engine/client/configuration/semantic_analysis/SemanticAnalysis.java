@@ -88,6 +88,8 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
     private void Shed(Schedule schedule, TypeEnv env, ArrayList<LoadError> errors) {
         if (schedule instanceof Play play) {
             PL(play.playlist(), env, errors);
+            if (play.getPriorityOrElse(0) < 0)
+                errors.add(new SemError(play.priority().line(), "The priority must be non-negative (>= 0)."));
         }
         else if (schedule instanceof Block block) {
             for (var child : block.body())
@@ -97,8 +99,6 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             Type type = Expr(when.condition(), env, errors);
             if (!(type instanceof BoolT) && type != null)
                 errors.add(new SemError(when.line(), "The condition inside a 'when' must result in a boolean value. Got '" + PrettyPrinter.getTypeString(type) + "'"));
-            if (when.body() instanceof Interrupt interrupt)
-                errors.add(new SemError(interrupt.line(), "An interrupt can only be a child of a block (begin/end). Not a 'when'."));
 
             env.openScope();
             Shed(when.body(), env, errors);
@@ -116,15 +116,7 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             env.closeScope();
         }
         else if (schedule instanceof Interrupt interrupt) {
-            if (env.inInterrupt())
-                errors.add(new SemError(interrupt.line(), "An 'interrupt' may not occur inside the body of another 'interrupt'."));
-
-            env.enterInterrupt();
-            if (interrupt.body() instanceof When when)
-                Shed(when, env, errors);
-            else
-                errors.add(new SemError(interrupt.line(), "The 'interrupt' keyword may only be followed by a 'when' clause."));
-            env.exitInterrupt();
+            Shed(interrupt.body(), env, errors);
         }
         else if (schedule == null) {
             return;

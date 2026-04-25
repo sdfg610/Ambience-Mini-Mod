@@ -33,6 +33,7 @@ public class Interpreter
     private final VariableEnv rootEnv = VariableEnv.empty();
 
     private int uniqueId = 0;
+    private int nestedInterrupts = 0;
 
 
 
@@ -72,22 +73,25 @@ public class Interpreter
         else if (config instanceof ScheduleDecl decl)
             return initSchedule(decl.schedule());
         else
-            throw new RuntimeException("Unhandled Conf-type: " + config.getClass().getCanonicalName());
+            throw new RuntimeException("Unhandled Conf-type '" + config.getClass().getCanonicalName() + "' in initialization. Please report this error to the developer");
     }
 
     private Schedule initSchedule(Schedule schedule) {
         if (schedule instanceof Play play){
-            if (play.playlist() instanceof IdentP)
-                return schedule; // Already on simplest form, just return this identifier.
-            else {
+            var playlist = play.playlist();
+            if (!(playlist instanceof IdentP)) {
                 // Pre-compute playlist so we don't need to later.
                 String name = '\'' + (uniqueId++) + "-playlist";
                 rootEnv.bind(name, evalPlaylist(play.playlist(), rootEnv));
-                return new Play(new IdentP(name, -1), play.isInstant());
+                playlist = new IdentP(name, -1);
             }
+            return new Play(playlist, play.isInstant(), play.computePriorityIfAbsent(nestedInterrupts));
         }
         else if (schedule instanceof Interrupt interrupt) {
-            return new Interrupt(initSchedule(interrupt.body()), interrupt.line());
+            ++nestedInterrupts;
+            var body = initSchedule(interrupt.body());
+            --nestedInterrupts;
+            return body;
         }
         else if (schedule instanceof Let let) {
             return new Let(let.type(), let.ident(), let.value(), initSchedule(let.body()), let.line());
@@ -102,7 +106,7 @@ public class Interpreter
         else if (schedule instanceof When when)
             return new When(when.condition(), initSchedule(when.body()), when.line());
         else
-            throw new RuntimeException("Unhandled Schedule-type in initialization: " + schedule.getClass().getCanonicalName());
+            throw new RuntimeException("Unhandled Schedule-type '" + schedule.getClass().getCanonicalName() + "'. Please report this error to the developer");
     }
 
 
@@ -110,13 +114,7 @@ public class Interpreter
     // Playlist selection
     private PlaylistChoice evalSchedule(Schedule schedule, VariableEnv env) {
         if (schedule instanceof Play play) {
-            return new PlaylistChoice(evalPlaylist(play.playlist(), env), false, play.isInstant());
-        }
-        else if (schedule instanceof Interrupt interrupt) {
-            PlaylistChoice result = evalSchedule(interrupt.body(), env);
-            if (result != null)
-                result = result.asInterrupt();
-            return result;
+            return new PlaylistChoice(evalPlaylist(play.playlist(), env), play.isInstant(), play.getPriority());
         }
         else if (schedule instanceof Block block) {
             return block.body().stream()
@@ -135,8 +133,11 @@ public class Interpreter
                     env.enterScope().bind(let.ident().value(), evalExpr(let.value(), env))
             );
         }
+        else if (schedule instanceof Interrupt) {
+            throw new RuntimeException("Interrupts should not show up explicitly in the initialized schedule. Please report this error to the developer");
+        }
         else
-            throw new RuntimeException("Unhandled Schedule-type in evaluator: " + schedule.getClass().getCanonicalName());
+            throw new RuntimeException("Unhandled Schedule-type '" + schedule.getClass().getCanonicalName() + "' in evaluator. Please report this error to the developer");
     }
 
     private List<Music> evalPlaylist(Playlist play, VariableEnv env) {
@@ -155,7 +156,7 @@ public class Interpreter
         else if (play instanceof Nil)
             return List.of();
         else
-            throw new RuntimeException("Unhandled Playlist-type in evaluator: " + play.getClass().getCanonicalName());
+            throw new RuntimeException("Unhandled Playlist-type '" + play.getClass().getCanonicalName() + "' in evaluator. Please report this error to the developer");
     }
 
     private Value<?> evalExpr(Expr expr, VariableEnv env) {
@@ -184,7 +185,7 @@ public class Interpreter
         else if (expr instanceof QuantifierOp quanOp)
             return evalQuantifierOp(quanOp, env);
 
-        throw new RuntimeException("Unhandled Expr-type in evaluator: " + expr.getClass().getCanonicalName());
+        throw new RuntimeException("Unhandled Expr-type '" + expr.getClass().getCanonicalName() + "' in evaluator. Please report this error to the developer");
     }
 
 

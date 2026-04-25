@@ -89,11 +89,12 @@ PlayTerm<out Playlist play>               (. play = new Nil(); FloatLit gain = n
 
 /*------------------------------------------------------------------------*/
 Shed<out Schedule schedule>                  (. schedule = null; boolean instant = false; .)
-    = "play" ["instant"                      (. instant = true; .)
-      ] Play<out Playlist pl> ';'            (. schedule = new Play(pl, instant); .)
-//    | "print" Expr<out Expr expr>            (. ArrayList<Shed> exprs = new ArrayList<>(); exprs.add(expr); .)
-//      { ',' Expr<out expr>                   (. exprs.add(expr); .)
-//      } ';'                                  (. shed = new Print(exprs); .)
+    = "play"
+      ["instant"                      (. instant = true; .)
+      ] Play<out Playlist pl>         (. IntLit priority = null; .)
+      [ "priority" INT                (. priority = new IntLit(Integer.parseInt(t.val), t.line); .)
+      ]
+      ';'                             (. schedule = new Play(pl, instant, priority); .)
     | "begin"                                (. ArrayList<Schedule> items = new ArrayList<>();  .)
       { Shed<out Schedule schedule2>         (. items.add(schedule2); .)
       }
@@ -106,8 +107,7 @@ Shed<out Schedule schedule>                  (. schedule = null; boolean instant
       [ ':' Type<out type> ]
       '=' Expr<out Expr expr>
       "in" Shed<out Schedule shed>        (. schedule = new Let(type, ident, expr, shed, line); .)
-    | "default"                      (. int line = t.line; .)
-      Shed<out Schedule schedule2>   (. schedule = new When(new BoolLit(true), schedule2, line); .)
+    | "default" Shed<out schedule>
     | "interrupt"                       (. int line = t.line; .)
       Shed<out Schedule schedule2>      (. schedule = new Interrupt(schedule2, line); .)
 .
@@ -164,7 +164,7 @@ ExprSuf<out Expr expr>
 
 ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY; .)
     = IDENT             (. expr = new IdentE(t.val, t.line);                      .)
-    | INT               (. expr = new IntLit(Integer.parseInt(t.val));      .)
+    | INT               (. expr = new IntLit(Integer.parseInt(t.val), t.line);      .)
     | FLOAT             (. expr = new FloatLit(Float.parseFloat(t.val));    .)
     | STRING            (. expr = new StringLit(removeFirstAndLast(t.val)); .)
     | "true"            (. expr = new BoolLit(true);                        .)

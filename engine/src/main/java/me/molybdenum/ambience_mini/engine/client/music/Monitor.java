@@ -200,8 +200,8 @@ public class Monitor
             return;
 
         List<Music> nextPlaylist = nextChoice.playlist();
-        int nextPriority = nextChoice.isInterrupt() ? 1 : 0;
         boolean doFade = !nextChoice.isInstant();
+        int nextPriority = nextChoice.priority();
 
         if (_verboseMode) {
             long selectTime = System.currentTimeMillis() - _benchmarkTime;
@@ -212,10 +212,7 @@ public class Monitor
                 _currentPlaylist = nextPlaylist;
 
                 var playlist = String.join(", ", nextPlaylist.stream().map(m -> '"' + m.musicPath() + '"').toList());
-                if (nextPriority == 1)  // TODO: Better logging when priority system is done
-                    _logger.info("At tick '{}'. Selected new interrupt playlist: [ {} ]", _tick, playlist);
-                else
-                    _logger.info("At tick '{}'. Selected new playlist: [ {} ]", _tick, playlist);
+                _logger.info("At tick '{}'. Selected new playlist at priority '{}': [ {} ]", _tick, nextPriority, playlist);
                 _logger.info("Values computed during selection:\n{}", Utils.getKeyValuePairString(trace));
                 _logger.info("Playlist selection took {}ms. The average time is currently {}ms.", selectTime, Arrays.stream(_benchmarks).average().orElse(Double.MIN_VALUE));
             }
@@ -239,15 +236,15 @@ public class Monitor
             }
         }
 
-        var topPriority = _musicPlayer.getTopPriority();
+        Optional<Integer> topPriority = _musicPlayer.getTopPriority();
         boolean presentAndPlaying = topPriority.isPresent() && _musicPlayer.isPlaying();
-        if (presentAndPlaying && nextPriority > topPriority.get())
+        if (presentAndPlaying && nextPriority != topPriority.get()) {
             _musicPlayer.pause(doFade);
+            if (doFade) // If faded (which takes some time), start over and recheck if current we still need to change music.
+                return; // If not, we can just go directly to the new music selection.
+        }
 
-        else if (presentAndPlaying && nextPriority < topPriority.get())
-            _musicPlayer.pause(doFade);
-
-        else if (nextPlaylist.isEmpty()) {
+        if (nextPlaylist.isEmpty()) {
             if (_musicPlayer.isPlaying()) {
                 _musicPlayer.stopAllAbove(nextPriority - 1, doFade);
                 _musicPlayer.pause(doFade);
