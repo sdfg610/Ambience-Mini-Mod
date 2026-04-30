@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.core.util;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.GetNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.GetNameCacheMessage;
 
 import java.util.HashMap;
 

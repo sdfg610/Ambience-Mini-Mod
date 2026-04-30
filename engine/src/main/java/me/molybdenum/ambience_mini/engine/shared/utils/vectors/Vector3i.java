@@ -4,9 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Direction;
-import me.molybdenum.ambience_mini.engine.shared.areas.Owner;
-import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
-import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmReader;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmWriter;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 

@@ -8,7 +8,7 @@ import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRende
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaScreenSymbiote;
 import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.Common;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;

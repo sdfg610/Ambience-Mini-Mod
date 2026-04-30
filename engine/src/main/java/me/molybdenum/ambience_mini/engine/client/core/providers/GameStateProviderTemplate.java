@@ -93,12 +93,14 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     public static final PropertyTemplateV1 P_BOSSES = new PropertyTemplateV1("bosses", new ListT(new StringT()), instance -> instance::getBosses);
 
     // Flag properties
+    public static final PropertyTemplateV1 P_FLAGS = new PropertyTemplateV1("flags", new MapT(new StringT(), new StringT()), instance -> instance::getFlags);
 
     public static final PropertyTemplateV1[] PROPERTIES = new PropertyTemplateV1[] {
             P_DIFFICULTY, P_DIMENSION, P_BIOME, P_BIOME_TAGS, P_TIME, P_CAVE_SCORE, P_SKYLIGHT_SCORE,
             P_AREAS, P_STRUCTURES,
             P_UUID, P_GAME_MODE, P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
-            P_COMBATANT_COUNT, P_BOSS, P_BOSSES
+            P_COMBATANT_COUNT, P_BOSS, P_BOSSES,
+            P_FLAGS
     };
 
 
@@ -207,6 +209,11 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     public abstract IntVal countCombatants();
     public abstract StringVal getBoss();
     public abstract ListVal getBosses();
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Flag properties
+    public abstract MapVal getFlags();
 
 
     public record EventTemplateV1(

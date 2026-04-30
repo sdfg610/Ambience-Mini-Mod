@@ -5,9 +5,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-public sealed abstract class Value<T> permits AreaVal, BoolVal, FloatVal, IntVal, ListVal, StringVal, UndefinedVal
+public sealed abstract class Value<T> permits AreaVal, BoolVal, FloatVal, IntVal, ListVal, MapVal, StringVal, UndefinedVal
 {
     protected final T value;
 
@@ -23,9 +22,18 @@ public sealed abstract class Value<T> permits AreaVal, BoolVal, FloatVal, IntVal
 
     public abstract boolean equals(Value<?> other);
 
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
     // Public API
+    public boolean isUndefined() {
+        return value == null;
+    }
+
     public <V> V map(Function<T, V> body) {
         return value == null ? null : body.apply(value);
     }

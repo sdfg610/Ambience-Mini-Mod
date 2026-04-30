@@ -3,12 +3,12 @@ package me.molybdenum.ambience_mini.engine.client.core.locations;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.GetStructuresMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.GetStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
-import me.molybdenum.ambience_mini.engine.shared.structures.AmStructure;
+import me.molybdenum.ambience_mini.engine.shared.core.structures.AmStructure;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

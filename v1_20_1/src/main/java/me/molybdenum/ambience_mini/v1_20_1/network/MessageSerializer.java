@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_20_1.network;
 
 import io.netty.buffer.ByteBuf;
-import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmSerializer;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmSerializer;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

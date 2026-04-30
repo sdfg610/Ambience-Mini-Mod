@@ -10,8 +10,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = Common.MOD_ID)
 public class SavingHandler {
         @SubscribeEvent()
-        public static void onTargetChanged(final LevelEvent.Save event)
-        {
+        public static void onTargetChanged(final LevelEvent.Save event) {
             if (event.getLevel() instanceof ServerLevel level)
                 AmbienceMini.serverCore.areaManager.saveAreasForDimensionIfLoaded(level.dimension().location().toString());
         }

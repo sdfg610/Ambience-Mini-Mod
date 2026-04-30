@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import org.jetbrains.annotations.Nullable;
 

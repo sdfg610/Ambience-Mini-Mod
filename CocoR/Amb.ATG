@@ -190,7 +190,7 @@ Type<out Type type>  (. type = null; .)
     | "area"         (. type = AreaT.INSTANCE; .)
     | "playlist"     (. type = PlaylistT.INSTANCE; .)
     | "list" '<' Type<out Type elemType> '>' (. type = new ListT(elemType); .)
-//    | "map" '<' Type<out Type keyType> ',' Type<out Type valueType> '>' (. type = new ListT(elemType); .)
+    | "map" '<' Type<out Type elemType1> ',' Type<out Type elemType2> '>' (. type = new MapT(elemType1, elemType2); .)
 .
 
 END File. // Must refer to the same non-terminal as "COMPILER" at the top.

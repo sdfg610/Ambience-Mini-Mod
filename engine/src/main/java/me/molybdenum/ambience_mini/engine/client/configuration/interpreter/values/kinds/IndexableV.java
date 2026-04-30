@@ -3,5 +3,5 @@ package me.molybdenum.ambience_mini.engine.client.configuration.interpreter.valu
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.Value;
 
 public interface IndexableV {
-    Value<?> getIndex(Value<?> index);
+    Value<?> getIndex(Value<?> indexer);
 }

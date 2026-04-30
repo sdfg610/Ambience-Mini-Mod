@@ -1,9 +1,9 @@
 package me.molybdenum.ambience_mini.engine.server.core.locations;
 
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
-import me.molybdenum.ambience_mini.engine.shared.areas.AreaOperation;
-import me.molybdenum.ambience_mini.engine.shared.areas.AreaStorage;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaOperation;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaStorage;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -17,6 +17,7 @@ public class ServerAreaManager
     private boolean isLoaded = false;
     private final Map<Integer, Area> areas = new ConcurrentHashMap<>();
     private final Set<String> dimensions = new HashSet<>();
+    private final Set<String> dirtyDimensions = new HashSet<>();
 
     private Logger logger;
 
@@ -64,9 +65,10 @@ public class ServerAreaManager
         synchronized (areas) {
             areas.put(area.id, area);
             dimensions.add(area.dimension);
+            dirtyDimensions.add(area.dimension);
+            updateListeners.forEach(listener -> listener.accept(area, AreaOperation.PUT));
         }
 
-        updateListeners.forEach(listener -> listener.accept(area, AreaOperation.PUT));
         return Optional.empty();
     }
 
@@ -74,9 +76,11 @@ public class ServerAreaManager
         Area oldArea;
         synchronized (areas) {
             oldArea = areas.remove(id);
+            if (oldArea != null) {
+                updateListeners.forEach(listener -> listener.accept(oldArea, AreaOperation.DELETE));
+                dirtyDimensions.add(oldArea.dimension);
+            }
         }
-        if (oldArea != null)
-            updateListeners.forEach(listener -> listener.accept(oldArea, AreaOperation.DELETE));
     }
 
 
@@ -88,6 +92,7 @@ public class ServerAreaManager
         if (result.isPresent()) {
             result.get().forEach(area -> areas.put(area.id, area));
             isLoaded = true;
+            dirtyDimensions.clear();
         }
         else
             logger.error("Could not load areas! See logs for more.");
@@ -100,14 +105,15 @@ public class ServerAreaManager
     }
 
     public void saveAreasForDimensionIfLoaded(String dimensionID) {
-        if (isLoaded) {
+        if (isLoaded && dirtyDimensions.contains(dimensionID)) {
             List<Area> areasInDimension;
             synchronized (areas) {
                 areasInDimension = areas.values().stream()
                         .filter(area -> area.dimension.equals(dimensionID))
                         .toList();
+                areaStorage.saveAreas(areasInDimension, dimensionID);
+                dirtyDimensions.remove(dimensionID);
             }
-            areaStorage.saveAreas(areasInDimension, dimensionID);
         }
     }
 

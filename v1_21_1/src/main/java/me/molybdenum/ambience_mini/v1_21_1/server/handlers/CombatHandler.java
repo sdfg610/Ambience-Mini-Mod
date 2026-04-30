@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_21_1.server.handlers;
 
 import me.molybdenum.ambience_mini.engine.shared.Common;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.MobTargetMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.v1_21_1.AmbienceMini;
 import net.minecraft.server.level.ServerPlayer;

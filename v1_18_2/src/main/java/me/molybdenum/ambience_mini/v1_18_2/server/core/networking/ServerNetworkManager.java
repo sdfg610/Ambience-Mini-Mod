@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_18_2.server.core.networking;
 
 import me.molybdenum.ambience_mini.engine.server.core.networking.BaseServerNetworkManager;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.v1_18_2.network.Networking;
 import net.minecraft.server.level.ServerPlayer;
 

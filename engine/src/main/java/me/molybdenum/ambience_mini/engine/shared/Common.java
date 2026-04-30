@@ -20,6 +20,10 @@ public class Common
     public static final float AREA_LINE_WIDTH = 2f;
     public static final int MAX_AREA_NAME_LENGTH = 50;
 
+    // Flags
+    public static final int MAX_FLAG_ID_LENGTH = 50;
+    public static final int MAX_FLAG_VALUE_LENGTH = 100;
+
     // Warden
     public static final int WARDEN_SEARCH_RADIUS = 32; // 2 chunks
 

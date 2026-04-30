@@ -6,7 +6,7 @@ import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRende
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaScreenSymbiote;
 import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.Common;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.drawer.Drawer;
 import net.minecraft.client.Minecraft;

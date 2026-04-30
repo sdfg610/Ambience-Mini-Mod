@@ -1,8 +1,8 @@
 package me.molybdenum.ambience_mini.engine.shared.utils.vectors;
 
-import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmReader;
-import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmSerializable;
-import me.molybdenum.ambience_mini.engine.shared.networking.serialization.AmWriter;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmReader;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmSerializable;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmWriter;
 
 public record Vector3d(double x, double y, double z) implements AmSerializable
 {

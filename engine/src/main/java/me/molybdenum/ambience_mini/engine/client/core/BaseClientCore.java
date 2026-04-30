@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core;
 
+import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
@@ -26,8 +27,8 @@ import me.molybdenum.ambience_mini.engine.client.core.state.BaseCombatState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
 import me.molybdenum.ambience_mini.engine.client.music.Monitor;
-import me.molybdenum.ambience_mini.engine.shared.areas.AreaStorage;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.ClientInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaStorage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 import org.slf4j.Logger;
@@ -64,6 +65,9 @@ public abstract class BaseClientCore<
     public final ClientAreaManager areaManager;
     public final TAreaRenderer areaRenderer;
 
+    // Flags
+    public final FlagCache flagCache;
+
     // Setup
     public final ServerSetup serverSetup;
     public final TClientConfig clientConfig;
@@ -90,6 +94,7 @@ public abstract class BaseClientCore<
             TNetworkManager networkManager,
             ClientAreaManager areaManager,
             TAreaRenderer areaRenderer,
+            FlagCache flagCache,
             ServerSetup serverSetup,
             TClientConfig clientConfig,
             TKeyBindings keyBindings,
@@ -107,6 +112,7 @@ public abstract class BaseClientCore<
         this.networkManager = networkManager;
         this.areaManager = areaManager;
         this.areaRenderer = areaRenderer;
+        this.flagCache = flagCache;
         this.serverSetup = serverSetup;
         this.clientConfig = clientConfig;
         this.keyBindings = keyBindings;
@@ -120,6 +126,7 @@ public abstract class BaseClientCore<
         this.networkManager.init(this);
         this.areaManager.init(this);
         this.areaRenderer.init(this, levelState);
+        this.flagCache.init(this);
         this.keyBindings.init(this);
         this.combatState.init(this, playerState, levelState);
     }
@@ -216,6 +223,9 @@ public abstract class BaseClientCore<
         String subFolder = serverSetup.isOnLocalServer ? "sp" : "mp";
         areaManager.loadAreas(new AreaStorage(logger, Path.of(Common.AM_LOCAL_STORAGE_DIRECTORY, subFolder, getWorldNameForLocalStorage())));
 
+        flagCache.clear();
+        flagCache.loadFlags();
+
         if (clientConfig.notifyServerSupport.get() && !isOnLocalServer) {
             if (serverVersion.isGreaterThanOrEqual(BuildConfig.APP_VERSION))
                 notification.printTranslatableToChat(AmLang.MSG_FULL_SERVER_SUPPORT);
@@ -229,6 +239,8 @@ public abstract class BaseClientCore<
     public void onLoggedOut() {
         structureCache.clear();
         nameCache.clear();
+        areaRenderer.clear();
+        flagCache.clear();
 
         serverSetup.reset();
         combatState.clearCombatants();

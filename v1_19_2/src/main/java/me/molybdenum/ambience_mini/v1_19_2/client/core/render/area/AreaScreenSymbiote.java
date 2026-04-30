@@ -6,7 +6,7 @@ import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRende
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaScreenSymbiote;
 import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.Common;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.v1_19_2.client.core.render.drawer.Drawer;
 import net.minecraft.client.Minecraft;
@@ -14,8 +14,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
-
-import java.awt.*;
 
 public class AreaScreenSymbiote extends BaseAreaScreenSymbiote<EditBox, Checkbox, Button>
 {

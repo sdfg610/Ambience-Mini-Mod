@@ -1,6 +1,9 @@
 package me.molybdenum.ambience_mini.engine.client.core.util;
 
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
+import me.molybdenum.ambience_mini.engine.shared.utils.Text;
+
+import java.util.Arrays;
 
 public abstract class BaseNotification<TComponent>
 {
@@ -8,8 +11,12 @@ public abstract class BaseNotification<TComponent>
         addOrUpdateToast(makeTranslatable(key.key, arguments));
     }
 
-    public void showToast(String text) {
-        addOrUpdateToast(makeLiteral(text));
+
+    public void printToChat(Text text) {
+        if (text.isLiteral)
+            printLiteralToChat(text.base);
+        else
+            printTranslatableToChat(text.base, Arrays.stream(text.args).toArray());
     }
 
 
@@ -17,9 +24,10 @@ public abstract class BaseNotification<TComponent>
         printTranslatableToChat(key.key, arguments);
     }
 
-    public void printTranslatableToChat(String key, Object... arguments) {
-        printToChat(makeTranslatable(key, arguments));
+    private void printTranslatableToChat(String key, Object... arguments) {
+        makeTranslatable(key, arguments);
     }
+
 
     public void printLiteralToChat(String text) {
         printToChat(makeLiteral(text));

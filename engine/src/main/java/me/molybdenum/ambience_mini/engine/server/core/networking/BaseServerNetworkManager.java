@@ -1,13 +1,22 @@
 package me.molybdenum.ambience_mini.engine.server.core.networking;
 
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
+import me.molybdenum.ambience_mini.engine.server.core.flags.FlagOperation;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
-import me.molybdenum.ambience_mini.engine.shared.areas.AreaOperation;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.bidirectional.*;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.PutNameCacheMessage;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.*;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaOperation;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.CreateAreaMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.GetAreasMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.GetFlagsMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.GetNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.GetStructuresMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 
@@ -29,6 +38,7 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         this.core = core;
 
         this.core.areaManager.addUpdateListener(this::notifyAreaUpdate);
+        this.core.flagManager.addUpdateListener(this::notifyFlagUpdate);
     }
 
 
@@ -60,13 +70,16 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
             else if (message instanceof DeleteAreaMessage msg)
                 response = handleDeleteAreaMessage(msg, sender);
             else if (message instanceof GetAreasMessage msg)
-                response = handleRequestAreasMessage(msg, sender);
+                response = handleGetAreasMessage(msg, sender);
 
             else if (message instanceof GetStructuresMessage msg)
                 response = handleGetStructuresMessage(msg, sender);
 
             else if (message instanceof GetNameCacheMessage msg)
                 response = handleGetNameCacheMessage(msg, sender);
+
+            else if (message instanceof GetFlagsMessage msg)
+                response = handleGetFlagMessage(msg, sender);
 
             else {
                 core.logger.error("Server could not handle message of type '{}'", message.getClass().getName());
@@ -137,7 +150,7 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         return msg.success();
     }
 
-    private AmMessage handleRequestAreasMessage(GetAreasMessage msg, TServerPlayer sender) {
+    private AmMessage handleGetAreasMessage(GetAreasMessage msg, TServerPlayer sender) {
         core.areaManager.getAreasVisibleTo(getServerPlayerUUID(sender)).forEach(
                 area -> sendToPlayer(new PutAreaMessage(area, false), sender)
         );
@@ -167,6 +180,14 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     }
 
 
+    // Flags
+    private AmMessage handleGetFlagMessage(GetFlagsMessage msg, TServerPlayer sender) {
+        for (var elem : core.flagManager.getFlags())
+            sendToPlayer(new PutFlagMessage(elem.getKey(), elem.getValue().asString().orElse(null), false), sender);
+        return msg.success();
+    }
+
+
 
     // -----------------------------------------------------------------------------------------------------------------
     // Notification to players
@@ -182,6 +203,18 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
                     }
                     case DELETE -> sendToPlayer(new DeleteAreaMessage(area.id), player);
                 }
+            }
+        });
+    }
+    public void notifyFlagUpdate(FlagOperation op) {
+        playerToVersion.forEach((player, version) -> {
+            if (version.isGreaterThanOrEqual(AmVersion.V_2_6_0)) {
+                if (op instanceof FlagOperation.Put put)
+                    sendToPlayer(new PutFlagMessage(put.id(), put.value(), true), player);
+                else if (op instanceof FlagOperation.Delete delete)
+                    sendToPlayer(new DeleteFlagMessage(delete.id()), player);
+                else
+                    throw new RuntimeException("Could not handle unknown flag operation: " + op.getClass().getName());
             }
         });
     }

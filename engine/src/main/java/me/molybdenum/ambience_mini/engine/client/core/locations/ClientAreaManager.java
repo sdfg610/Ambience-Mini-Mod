@@ -3,11 +3,11 @@ package me.molybdenum.ambience_mini.engine.client.core.locations;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
-import me.molybdenum.ambience_mini.engine.shared.areas.AreaStorage;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaStorage;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
-import me.molybdenum.ambience_mini.engine.shared.areas.AreaOperation;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_server.GetAreasMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaOperation;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.GetAreasMessage;
 
 import java.util.ArrayList;
 import java.util.List;

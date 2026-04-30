@@ -3,8 +3,12 @@
 
 - You can now set priorities of selected playlists by writing `play PLAYLIST priority PRIORITY` where `PRIORITY` must be a non-negative, whole number given as a constant/literal.
   * When a playlist is selected using `play`, all music with a lower priority is paused, and when the high-priority music stops, the paused low-priority music resumes if conditions still allow playing this music at this point.
-  - Interrupts now only affect `play` keywords *without* a manually specified priority and sets the priority to "the number of nested interrupts". Thus, "`interrupt play LIST`" will give `play LIST` a priority of `1` and "`interrupt interrupt play LIST`" gives a priority of `2`.
-  - When no manual priorities are given in your music configuration, interrupts will work exactly as before, but without any nesting limitations.
+  * Interrupts now only affect `play` keywords *without* a manually specified priority and sets the priority to "the number of nested interrupts". Thus, "`interrupt play LIST`" will give `play LIST` a priority of `1` and "`interrupt interrupt play LIST`" gives a priority of `2`.
+  * When no manual priorities are given in your music configuration, interrupts will work exactly as before, but without any nesting limitations.
+- Added a [flag system](https://github.com/sdfg610/Ambience-Mini-Mod/wiki/Flags) where named variables can be set to string values.
+  * Use `/ambience_mini flag create/update [name] [value]` to create/update flags.
+  * Use `/ambience_mini flag delete [name]` to remove flags.
+  * The `$flags` property is a map from flag-names to flag-values. If you have created a flag named `test_flag` with the value `test value`, then `$flags["test_flag"] == "test value"` will evaluate to `true`.
 
 
 ### Version 2.5.1:

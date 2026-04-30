@@ -1,8 +1,8 @@
 package me.molybdenum.ambience_mini.engine.server.core.locations;
 
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.PutChunkReferencesMessage;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.PutChunkStructuresMessage;
-import me.molybdenum.ambience_mini.engine.shared.structures.AmStructure;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkReferencesMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkStructuresMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.structures.AmStructure;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 

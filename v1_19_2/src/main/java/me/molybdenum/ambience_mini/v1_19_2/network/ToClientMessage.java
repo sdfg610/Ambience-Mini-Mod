@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.v1_19_2.network;
 
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 import me.molybdenum.ambience_mini.v1_19_2.AmbienceMini;
 import net.minecraft.network.FriendlyByteBuf;

@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_21_1.network;
 
 import me.molybdenum.ambience_mini.engine.shared.Common;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.v1_21_1.network.configuration.ServerAmVersionPacket;
 import me.molybdenum.ambience_mini.v1_21_1.network.configuration.ServerSupportConfigurationTask;
 import me.molybdenum.ambience_mini.v1_21_1.network.configuration.VersionAckPacket;

@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.configuration.interpreter.valu
 
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.AreaT;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.kinds.AccessibleV;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;

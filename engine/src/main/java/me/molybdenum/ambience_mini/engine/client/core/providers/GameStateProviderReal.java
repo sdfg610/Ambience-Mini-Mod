@@ -1,13 +1,15 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueMap;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
 import me.molybdenum.ambience_mini.engine.client.core.state.*;
 import me.molybdenum.ambience_mini.engine.shared.Common;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +29,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private final BaseScreenState _screen;
     private final ClientAreaManager _areaManager;
     private final StructureCache _structureCache;
+    private final FlagCache _flagCache;
 
     // Config
     private final int _villageScanHorizontalRadius;
@@ -74,6 +77,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         _screen = core.screenState;
         _areaManager = core.areaManager;
         _structureCache = core.structureCache;
+        _flagCache = core.flagCache;
 
         var config = core.clientConfig;
         _villageScanHorizontalRadius = config.villageScanHorizontalRadius.get();
@@ -471,5 +475,13 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     @Override
     public ListVal getBosses() {
         return ListVal.ofStringList(_combat.getBosses());
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Flag properties
+    @Override
+    public MapVal getFlags() {
+        return new MapVal(_flagCache.getFlags());
     }
 }

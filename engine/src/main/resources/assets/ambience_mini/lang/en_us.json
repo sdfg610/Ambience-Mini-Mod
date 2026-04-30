@@ -9,6 +9,7 @@
   "key.area_confirm": "Area: Confirm",
   "key.area_cancel": "Area: Cancel",
 
+  "message.player_crashed": "Music player crashed! Press '%s' to reload Ambience Mini. See logs for details.",
   "message.reload_description": "Trying to reload music player...",
   "message.next_music_description": "Selecting new music...",
   "message.printing_all": "Printing all events and properties to the Minecraft log...",
@@ -27,9 +28,18 @@
   "message.area_invalid_location": "Cannot extend or contract the area to this location.",
   "message.area_look_at_destination": "Please look at the point you would like to extend or constrict the area to.",
   "message.area_cannot_edit": "You cannot edit areas owned by other players.",
-  "message.area_name_cannot_blank": "The area name must contain non-blank symbols.",
+  "message.area_name_requirements": "The area name must contain non-blank symbols and be no more than %s characters.",
 
-  "message.player_crashed": "Music player crashed! Press '%s' to reload Ambience Mini. See logs for details.",
+  "message.flag_already_exists": "There is already a flag with id '%s'.",
+  "message.flag_not_exists": "There is no such flag with id '%s'.",
+  "message.flag_created": "Successfully created flag '%s' with value '%s'.",
+  "message.flag_updated": "Successfully update flag '%s' to '%s'.",
+  "message.flag_deleted": "Successfully deleted flag '%s'.",
+  "message.flag_id_invalid": "Invalid flag id '%s'. Flag ids must be non-empty, have at most %s characters, and may not contain whitespaces.",
+  "message.flag_value_invalid": "Invalid flag value '%s'. Flag values must be at most %s characters.",
+  "message.flag_name_requirements": "The flag id must contain non-blank symbols, may not contain whitespaces, and must be no more than %s characters.",
+  "message.flag_value_requirements": "The area value must contain non-blank symbols and be no more than %s characters.",
+
   "message.unhandled_message": "Received an unknown type of message from server! This should not happen, see server logs.",
   "message.unhandled_client_message": "The server could not handle a message from the client! This should not happen, see server logs.",
   "message.message_caused_server_error": "A message from this client caused an error on the server! This should not happen, see server logs.",

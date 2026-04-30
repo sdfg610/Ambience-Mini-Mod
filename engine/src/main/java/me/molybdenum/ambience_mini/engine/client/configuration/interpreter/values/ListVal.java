@@ -60,8 +60,8 @@ public final class ListVal extends Value<ValueList> implements IndexableV
 
 
     @Override
-    public Value<?> getIndex(Value<?> index) {
-        var idx = index.asInt();
+    public Value<?> getIndex(Value<?> indexer) {
+        var idx = indexer.asInt();
         return value != null && idx.isPresent()
                 ? value.stream().skip(idx.get()).findFirst().orElse(UndefinedVal.INSTANCE)
                 : UndefinedVal.INSTANCE;

@@ -1,6 +1,10 @@
 package me.molybdenum.ambience_mini.v1_20_1;
 
+import com.mojang.brigadier.Command;
 import com.mojang.logging.LogUtils;
+import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
+import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
+import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.ClientCore;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.render.drawer.Drawer;
@@ -25,10 +29,13 @@ import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
 import me.molybdenum.ambience_mini.v1_20_1.network.Networking;
 import me.molybdenum.ambience_mini.v1_20_1.server.core.ServerCore;
+import me.molybdenum.ambience_mini.v1_20_1.server.core.command.CommandNodeFactory;
 import me.molybdenum.ambience_mini.v1_20_1.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_20_1.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.SoundEngine;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
@@ -36,6 +43,7 @@ import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.sound.SoundEngineLoadEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.*;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
@@ -69,6 +77,7 @@ public class AmbienceMini extends BaseAmbienceMini
     {
         Networking.initialize();
 
+        MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onRegisterCommands);
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStarting);
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStopping);
 
@@ -107,6 +116,7 @@ public class AmbienceMini extends BaseAmbienceMini
                     LOGGER, new ClientNameCache(), new StructureCache(),
                     notification, new ClientNetworkManager(),
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
+                    new FlagCache(),
                     new ServerSetup(), clientConfig, keyBindings,
                     new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );
@@ -134,6 +144,12 @@ public class AmbienceMini extends BaseAmbienceMini
 
     // -----------------------------------------------------------------------------------------------------------------
     // Server
+    private static void onRegisterCommands(final RegisterCommandsEvent event) {
+        event.getDispatcher().register(
+                CommandRegistry.build(new CommandNodeFactory(() -> serverCore))
+        );
+    }
+
     private static void onServerStarting(final ServerStartingEvent event) {
         serverCore = new ServerCore(
                 event.getServer(),
@@ -141,6 +157,7 @@ public class AmbienceMini extends BaseAmbienceMini
                 new ServerNameCache(),
                 new ServerAreaManager(),
                 new StructureReader(event.getServer()),
+                new FlagManager(),
                 new ServerNetworkManager()
         );
         serverCore.init();

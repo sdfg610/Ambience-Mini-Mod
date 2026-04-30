@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_21_1.network;
 
 import io.netty.buffer.ByteBuf;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 import me.molybdenum.ambience_mini.v1_21_1.AmbienceMini;
 import net.minecraft.network.codec.StreamCodec;

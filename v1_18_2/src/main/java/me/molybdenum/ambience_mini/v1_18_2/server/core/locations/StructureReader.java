@@ -1,12 +1,11 @@
 package me.molybdenum.ambience_mini.v1_18_2.server.core.locations;
 
 import me.molybdenum.ambience_mini.engine.server.core.locations.BaseStructureReader;
-import me.molybdenum.ambience_mini.engine.shared.structures.AmStructure;
+import me.molybdenum.ambience_mini.engine.shared.core.structures.AmStructure;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import net.minecraft.core.Registry;
-import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;

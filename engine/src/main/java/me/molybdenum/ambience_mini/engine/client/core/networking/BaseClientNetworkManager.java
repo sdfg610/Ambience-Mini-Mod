@@ -2,9 +2,17 @@ package me.molybdenum.ambience_mini.engine.client.core.networking;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.AmMessage;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.bidirectional.*;
-import me.molybdenum.ambience_mini.engine.shared.networking.messages.to_client.*;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.FailureMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.SuccessMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkReferencesMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkStructuresMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 
@@ -71,6 +79,11 @@ public abstract class BaseClientNetworkManager
         else if (message instanceof PutNameCacheMessage msg)
             handlePutNameCacheMessage(msg);
 
+        else if (message instanceof PutFlagMessage msg)
+            handleUpdateFlagMessage(msg);
+        else if (message instanceof DeleteFlagMessage msg)
+            handleDeleteFlagMessage(msg);
+
         else {
             core.notification.printTranslatableToChat(AmLang.MSG_UNHANDLED_MESSAGE);
             core.logger.error("Client network handler could not handle message of type: {}", message.getClass().getName());
@@ -80,7 +93,7 @@ public abstract class BaseClientNetworkManager
 
     // Success and failure responses
     private void handleFailureMessage(FailureMessage msg) {
-        core.notification.printTranslatableToChat(msg.translationKey, msg.arguments);
+        core.notification.printToChat(msg.message);
         var handler = handlers.remove(msg.handlerID);
         if (handler != null)
             handler.right().run();
@@ -134,5 +147,15 @@ public abstract class BaseClientNetworkManager
     // Name caching
     private void handlePutNameCacheMessage(PutNameCacheMessage msg) {
         core.nameCache.putPlayerName(msg.playerUuid, msg.playerName);
+    }
+
+
+    // Flags
+    private void handleUpdateFlagMessage(PutFlagMessage msg) {
+        core.flagCache.putFlag(msg.id, msg.value);
+    }
+
+    private void handleDeleteFlagMessage(DeleteFlagMessage msg) {
+        core.flagCache.deleteFlag(msg.id);
     }
 }

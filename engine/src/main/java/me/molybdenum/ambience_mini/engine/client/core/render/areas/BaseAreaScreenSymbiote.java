@@ -2,12 +2,13 @@ package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.locations.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
+import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
-import me.molybdenum.ambience_mini.engine.shared.areas.Area;
-import me.molybdenum.ambience_mini.engine.shared.areas.Owner;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.core.areas.Owner;
 
 
 // Java does not have multiple inheritance, but I needed the Area screen to extend Minecraft's Screen class
@@ -287,8 +288,9 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
         if (!allowInput)
             return;
 
-        if (getValue(txtAreaName).isBlank()) {
-            notification.printTranslatableToChat(AmLang.MSG_AREA_NAME_CANNOT_BLANK);
+        var name = getValue(txtAreaName);
+        if (name.isBlank() || name.length() > Common.MAX_AREA_NAME_LENGTH) {
+            notification.printTranslatableToChat(AmLang.MSG_AREA_NAME_REQUIREMENTS, Common.MAX_AREA_NAME_LENGTH);
             return;
         }
 
