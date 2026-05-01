@@ -1,6 +1,5 @@
 package me.molybdenum.ambience_mini.v1_20_1;
 
-import com.mojang.brigadier.Command;
 import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
@@ -34,8 +33,6 @@ import me.molybdenum.ambience_mini.v1_20_1.server.core.locations.StructureReader
 import me.molybdenum.ambience_mini.v1_20_1.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.SoundEngine;
-import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
@@ -77,7 +74,7 @@ public class AmbienceMini extends BaseAmbienceMini
     {
         Networking.initialize();
 
-        MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onRegisterCommands);
+        MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onRegisterServerCommands);
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStarting);
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStopping);
 
@@ -111,10 +108,9 @@ public class AmbienceMini extends BaseAmbienceMini
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS)
             );
 
-            Notification notification = new Notification();
             clientCore = new ClientCore(
                     LOGGER, new ClientNameCache(), new StructureCache(),
-                    notification, new ClientNetworkManager(),
+                    new Notification(), new ClientNetworkManager(),
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
                     new FlagCache(),
                     new ServerSetup(), clientConfig, keyBindings,
@@ -144,7 +140,7 @@ public class AmbienceMini extends BaseAmbienceMini
 
     // -----------------------------------------------------------------------------------------------------------------
     // Server
-    private static void onRegisterCommands(final RegisterCommandsEvent event) {
+    private static void onRegisterServerCommands(final RegisterCommandsEvent event) {
         event.getDispatcher().register(
                 CommandRegistry.build(new CommandNodeFactory(() -> serverCore))
         );

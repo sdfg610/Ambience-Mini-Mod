@@ -196,10 +196,8 @@ public class Main
         PlaylistChoice choice = interpreter.selectPlaylist(trace);
         if (choice == null)
             output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));
-        else if (choice.isInterrupt())
-            output.appendChild(makeParagraph(doc, String.format("Selected new interrupt playlist: [ %s ]", String.join(", ", choice.playlist().stream().map(Music::musicPath).toList()))));
         else
-            output.appendChild(makeParagraph(doc, String.format("Selected new playlist: [ %s ]", String.join(", ", choice.playlist().stream().map(Music::musicPath).toList()))));
+            output.appendChild(makeParagraph(doc, String.format("Selected new playlist at priority %d: [ %s ]", choice.priority(), String.join(", ", choice.playlist().stream().map(Music::musicPath).toList()))));
 
         if (!trace.isEmpty())
             output.appendChild(makeParagraph(doc, String.format("Values computed during selection:\n%s", Utils.getKeyValuePairString(trace))));

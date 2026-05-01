@@ -1,9 +1,12 @@
 package me.molybdenum.ambience_mini.v1_21_1;
 
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
+import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
+import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
@@ -25,6 +28,7 @@ import me.molybdenum.ambience_mini.v1_21_1.client.core.state.ScreenState;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.state.LevelState;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.state.PlayerState;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.ServerCore;
+import me.molybdenum.ambience_mini.v1_21_1.server.core.command.CommandNodeFactory;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
@@ -42,6 +46,7 @@ import net.neoforged.neoforge.client.event.sound.SoundEngineLoadEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.network.event.RegisterConfigurationTasksEvent;
@@ -76,6 +81,7 @@ public class AmbienceMini extends BaseAmbienceMini
         modEventBus.addListener(AmbienceMini::registerConfigurationTasks);
         modEventBus.addListener(AmbienceMini::registerPayloads);
 
+        NeoForge.EVENT_BUS.addListener(AmbienceMini::onRegisterServerCommands);
         NeoForge.EVENT_BUS.addListener(AmbienceMini::onServerStarting);
         NeoForge.EVENT_BUS.addListener(AmbienceMini::onServerStopping);
 
@@ -118,11 +124,11 @@ public class AmbienceMini extends BaseAmbienceMini
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS)
             );
 
-            Notification notification = new Notification();
             clientCore = new ClientCore(
                     LOGGER, new ClientNameCache(), new StructureCache(),
-                    notification, new ClientNetworkManager(),
+                    new Notification(), new ClientNetworkManager(),
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
+                    new FlagCache(),
                     new ServerSetup(), clientConfig, keyBindings,
                     new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );
@@ -150,6 +156,12 @@ public class AmbienceMini extends BaseAmbienceMini
 
     // -----------------------------------------------------------------------------------------------------------------
     // Server
+    private static void onRegisterServerCommands(final RegisterCommandsEvent event) {
+        event.getDispatcher().register(
+                CommandRegistry.build(new CommandNodeFactory(() -> serverCore))
+        );
+    }
+
     private static void onServerStarting(final ServerStartingEvent event) {
         serverCore = new ServerCore(
                 event.getServer(),
@@ -157,6 +169,7 @@ public class AmbienceMini extends BaseAmbienceMini
                 new ServerNameCache(),
                 new ServerAreaManager(),
                 new StructureReader(event.getServer()),
+                new FlagManager(),
                 new ServerNetworkManager()
         );
         serverCore.init();

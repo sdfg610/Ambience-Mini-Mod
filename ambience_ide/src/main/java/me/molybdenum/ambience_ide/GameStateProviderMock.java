@@ -3,8 +3,10 @@ package me.molybdenum.ambience_ide;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueList;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueMap;
 import me.molybdenum.ambience_mini.engine.client.configuration.pretty_printer.PrettyPrinter;
 import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderTemplate;
+import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,6 +41,8 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         put(P_COMBATANT_COUNT.name(), "0");
         put(P_BOSS.name(), "entity.minecraft.ender_dragon");
         put(P_BOSSES.name(), "entity.minecraft.ender_dragon, entity.minecraft.wither");
+
+        put(P_FLAGS.name(), "{ \"flag_1\": \"value 1\", \"flag_2\": \"value 2\" }");
     }};
 
 
@@ -70,7 +74,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         assert messages != null;
         for (var property : PROPERTIES)
             if (!isValidPropertyValue(property))
-                messages.add("Value given for property '$" + property.name() + "' is not a valid '" + PrettyPrinter.getTypeString(property.type()) + "'!");
+                messages.add("Value given for property '$" + property.name() + "' is not a valid value of type '" + PrettyPrinter.getTypeString(property.type()) + "'!");
     }
 
     private boolean isValidPropertyValue(PropertyTemplateV1 property) {
@@ -86,6 +90,10 @@ public class GameStateProviderMock extends GameStateProviderTemplate
                 return true;
             else if (lst.elementType instanceof AreaT)
                 return isValidAreaListVal(value);
+        }
+        else if (property.type() instanceof MapT map) {
+            if (map.keyType instanceof StringT && map.valueType instanceof StringT)
+                return isValidStringStringMapVal(value);
         }
 
         throw new RuntimeException("Unhandled type in check for valid values! Type: '" + PrettyPrinter.getTypeString(property.type()) + "'");
@@ -133,7 +141,6 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     }
 
     // Area List
-
     private static final Pattern fieldPattern = Pattern.compile(
             "([_a-zA-Z][_a-zA-Z0-9]*)\\s*=\\s*((?i)\"[^\\n\\r\"]*\"|[0-9]+|[0-9]+\\.[0-9]+|true|false|undefined)"
     );
@@ -141,7 +148,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
             "\\{\\s*(" + fieldPattern.pattern() + ")?(?:\\s*,\\s*(" + fieldPattern.pattern() + "))*\\s*}"
     );
     private static final Pattern areaListPattern = Pattern.compile(
-            areaPattern.pattern() + "\\s*(?:\\s*,\\s*" + areaPattern.pattern() + ")*"
+            "(" + areaPattern.pattern() + "\\s*(?:\\s*,\\s*" + areaPattern.pattern() + ")*)?"
     );
 
     private boolean isValidAreaListVal(String value) {
@@ -156,9 +163,6 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     }
 
     private ListVal getAsAreaListVal(String value) {
-        if (!areaListPattern.matcher(value.trim()).matches())
-            return ListVal.UNDEFINED;
-
         var values = new ValueList();
         var areaMatcher = areaPattern.matcher(value);
         while (areaMatcher.find()) {
@@ -203,6 +207,40 @@ public class GameStateProviderMock extends GameStateProviderTemplate
             default -> null;
         };
     }
+
+    // String String Map
+    private static final Pattern elementPattern = Pattern.compile(
+            "\"([^\"\\n\\r]*)\"\\s*:\\s*\"([^\"\\n\\r]*)\""
+    );
+
+    private static final Pattern strStrMapPattern = Pattern.compile(
+            "(\\{\\s*(" + elementPattern + "\\s*(,\\s*" + elementPattern + "\\s*)*)?})?"
+    );
+
+    private boolean isValidStringStringMapVal(String value) {
+        var trim = value.trim();
+        if (!strStrMapPattern.matcher(trim).matches())
+            return false;
+
+        var elementMatcher = elementPattern.matcher(value);
+        while (elementMatcher.find())
+            if (!FlagManager.validateId(elementMatcher.group(1)) || !FlagManager.validateValue(elementMatcher.group(2)))
+                return false;
+
+        return true;
+    }
+
+    private MapVal getAsStringStringMapVal(PropertyTemplateV1 property) {
+        var map = new ValueMap();
+        var elementMatcher = elementPattern.matcher(propertyValues.get(property.name()));
+        while (elementMatcher.find()) {
+            String key = elementMatcher.group(1);
+            String val = elementMatcher.group(2);
+            map.put(new StringVal(key), new StringVal(val));
+        }
+        return new MapVal(map);
+    }
+
 
 
     // ------------------------------------------------------------------------------------------------
@@ -486,5 +524,10 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     @Override
     public ListVal getBosses() {
         return getAsStringListVal(P_BOSSES);
+    }
+
+    @Override
+    public MapVal getFlags() {
+        return getAsStringStringMapVal(P_FLAGS);
     }
 }

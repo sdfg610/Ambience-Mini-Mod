@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.v1_18_2.server.core;
 
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
+import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.locations.StructureReader;
@@ -27,9 +28,10 @@ public class ServerCore extends BaseServerCore<
             ServerNameCache nameCache,
             ServerAreaManager areaManager,
             StructureReader structureReader,
+            FlagManager flagManager,
             ServerNetworkManager networkManager
     ) {
-        super(logger, nameCache, areaManager, structureReader, networkManager);
+        super(logger, nameCache, areaManager, structureReader, flagManager, networkManager);
 
         this.server = server;
     }
