@@ -1,20 +1,22 @@
 package me.molybdenum.ambience_mini.engine.client.core.flags;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.StringVal;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueMap;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
+import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.GetFlagsMessage;
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 
 import java.util.HashMap;
 
 public class FlagCache
 {
     private BaseClientNetworkManager network;
+    private ServerSetup serverSetup;
 
     private final HashMap<String, String> flags = new HashMap<>();
-    private ValueMap map = new ValueMap();
+    private ValueMap map = null;
 
 
     @SuppressWarnings("rawtypes")
@@ -25,6 +27,7 @@ public class FlagCache
             throw new RuntimeException("Multiple calls to 'ClientNameCache.init'!");
 
         network = core.networkManager;
+        serverSetup = core.serverSetup;
     }
 
 
@@ -57,10 +60,12 @@ public class FlagCache
 
     public void clear() {
         flags.clear();
+        map = null;
     }
 
-    public void loadFlags() {
+    public void clearAndLoadFlags() {
         clear();
-        network.sendToServer(new GetFlagsMessage());
+        if (serverSetup.serverVersion.isGreaterThanOrEqual(AmVersion.V_2_6_0))
+            network.sendToServer(new GetFlagsMessage());
     }
 }

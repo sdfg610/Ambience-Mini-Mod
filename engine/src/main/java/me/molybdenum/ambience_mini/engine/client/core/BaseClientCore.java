@@ -223,8 +223,7 @@ public abstract class BaseClientCore<
         String subFolder = serverSetup.isOnLocalServer ? "sp" : "mp";
         areaManager.loadAreas(new AreaStorage(logger, Path.of(Common.AM_LOCAL_STORAGE_DIRECTORY, subFolder, getWorldNameForLocalStorage())));
 
-        flagCache.clear();
-        flagCache.loadFlags();
+        flagCache.clearAndLoadFlags();
 
         if (clientConfig.notifyServerSupport.get() && !isOnLocalServer) {
             if (serverVersion.isGreaterThanOrEqual(BuildConfig.APP_VERSION))
