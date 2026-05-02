@@ -1,4 +1,9 @@
 
+### Version 2.6.1:
+
+- Fixed a bug where reading the `$elevation` property before the player has been loaded would cause the music player to crash.
+
+
 ### Version 2.6.0:
 
 - You can now set priorities of selected playlists by writing `play PLAYLIST priority PRIORITY` where `PRIORITY` must be a non-negative, whole number given as a constant/literal.
@@ -9,6 +14,8 @@
   * Use `/ambience_mini flag create/update [name] [value]` to create/update flags.
   * Use `/ambience_mini flag delete [name]` to remove flags.
   * The `$flags` property is a map from flag-names to flag-values. If you have created a flag named `test_flag` with the value `test value`, then `$flags["test_flag"] == "test value"` will evaluate to `true`.
+
+****
 
 
 ### Version 2.5.1:

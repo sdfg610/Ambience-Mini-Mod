@@ -138,7 +138,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
 
     @Override
     public BoolVal inGame() {
-        return new BoolVal(_level.notNull());
+        return new BoolVal(_level.notNull() && _player.notNull());
     }
 
 
@@ -444,7 +444,8 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
 
     @Override
     public FloatVal getPlayerElevation() {
-        return new FloatVal(_player.vectorY().floatValue());
+        Double elevation = _player.vectorY();
+        return elevation == null ? FloatVal.UNDEFINED : new FloatVal(elevation.floatValue());
     }
 
     @Override
@@ -468,7 +469,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     @Override
     public StringVal getBoss() {
         return (StringVal)bossesProp.getValue().mapList(
-                lst -> lst.stream().findFirst().orElse(new StringVal())
+                lst -> lst.stream().findFirst().orElse(StringVal.UNDEFINED)
         );
     }
 
