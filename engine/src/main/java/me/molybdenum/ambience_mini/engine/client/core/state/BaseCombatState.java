@@ -46,6 +46,7 @@ public abstract class BaseCombatState<TEntity, TVec3>
     // Abstract API
     public abstract boolean isEntityDead(TEntity entity);
     public abstract int getEntityId(TEntity entity);
+    public abstract String getEntityResourceLocation(TEntity entity);
 
     public abstract boolean inBossFight();
     public abstract List<String> getBosses();
@@ -60,6 +61,12 @@ public abstract class BaseCombatState<TEntity, TVec3>
         if (hasActiveCombatants())
             return combatants.size(); // If in creative, there is no combat
         return 0;
+    }
+
+    public List<String> getCombatantResourceLocations() {
+        if (hasActiveCombatants())
+            return combatants.values().stream().map(c -> getEntityResourceLocation(c.entity)).toList();
+        return List.of();
     }
 
     public boolean hasActiveCombatants() {

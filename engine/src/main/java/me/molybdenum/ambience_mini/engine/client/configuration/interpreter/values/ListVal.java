@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 public final class ListVal extends Value<ValueList> implements IndexableV
 {
     public static final ListVal UNDEFINED = new ListVal();
+    public static final ListVal EMPTY = new ListVal(List.of());
 
 
     public ListVal() {

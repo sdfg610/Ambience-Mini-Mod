@@ -10,6 +10,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,12 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
     @Override
     public int getEntityId(Entity entity) {
         return 0;
+    }
+
+    @Override
+    public String getEntityResourceLocation(Entity entity) {
+        var key = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+        return key == null ? null : key.toString();
     }
 
 

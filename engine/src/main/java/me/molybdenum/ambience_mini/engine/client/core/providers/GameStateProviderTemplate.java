@@ -89,6 +89,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
 
     // Combat properties
     public static final PropertyTemplateV1 P_COMBATANT_COUNT = new PropertyTemplateV1("combatant_count", new IntT(), instance -> instance::countCombatants);
+    public static final PropertyTemplateV1 P_COMBATANT_IDS = new PropertyTemplateV1("combatant_ids", new ListT(new StringT()), instance -> instance::getCombatantIDs);
     public static final PropertyTemplateV1 P_BOSS = new PropertyTemplateV1("boss", new StringT(), instance -> instance::getBoss);
     public static final PropertyTemplateV1 P_BOSSES = new PropertyTemplateV1("bosses", new ListT(new StringT()), instance -> instance::getBosses);
 
@@ -99,7 +100,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
             P_DIFFICULTY, P_DIMENSION, P_BIOME, P_BIOME_TAGS, P_TIME, P_CAVE_SCORE, P_SKYLIGHT_SCORE,
             P_AREAS, P_STRUCTURES,
             P_UUID, P_GAME_MODE, P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
-            P_COMBATANT_COUNT, P_BOSS, P_BOSSES,
+            P_COMBATANT_COUNT, P_COMBATANT_IDS, P_BOSS, P_BOSSES,
             P_FLAGS
     };
 
@@ -207,6 +208,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     // ------------------------------------------------------------------------------------------------
     // Combat properties
     public abstract IntVal countCombatants();
+    public abstract ListVal getCombatantIDs();
     public abstract StringVal getBoss();
     public abstract ListVal getBosses();
 

@@ -4,12 +4,16 @@ import me.molybdenum.ambience_mini.engine.client.core.state.BaseCombatState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.LerpingBossEvent;
+import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +32,14 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
     @Override
     public int getEntityId(Entity entity) {
         return 0;
+    }
+
+    @Override
+    public String getEntityResourceLocation(Entity entity) {
+        @SuppressWarnings("unchecked")
+        MappedRegistry<EntityType<?>> registry = (MappedRegistry<EntityType<?>>)BuiltInRegistries.ENTITY_TYPE;
+        var key = registry.getKey(entity.getType());
+        return key == null ? null : key.toString();
     }
 
 

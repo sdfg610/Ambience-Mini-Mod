@@ -1,4 +1,9 @@
 
+### Version 2.?.?:
+
+- Added a `$combatant_ids` property which is a list of ids (e.g. `"minecraft:skeleton"`) of fought mobs.
+
+
 ### Version 2.6.1:
 
 - Fixed a bug where reading the `$elevation` property before the player has been loaded would cause the music player to crash.

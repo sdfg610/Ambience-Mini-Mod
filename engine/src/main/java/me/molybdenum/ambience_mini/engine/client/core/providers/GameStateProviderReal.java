@@ -467,6 +467,11 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     }
 
     @Override
+    public ListVal getCombatantIDs() {
+        return _level.isNull() ? ListVal.EMPTY : ListVal.ofStringList(_combat.getCombatantResourceLocations());
+    }
+
+    @Override
     public StringVal getBoss() {
         return (StringVal)bossesProp.getValue().mapList(
                 lst -> lst.stream().findFirst().orElse(StringVal.UNDEFINED)
