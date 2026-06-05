@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.music;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.music.decoders.AmDecoder;
+import me.molybdenum.ambience_mini.engine.client.music.misc.ALUtils;
 import org.lwjgl.openal.AL10;
 
 import java.nio.ByteBuffer;

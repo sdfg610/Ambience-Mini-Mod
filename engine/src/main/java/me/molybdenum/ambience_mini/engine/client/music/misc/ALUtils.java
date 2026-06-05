@@ -1,4 +1,4 @@
-package me.molybdenum.ambience_mini.engine.client.music;
+package me.molybdenum.ambience_mini.engine.client.music.misc;
 
 import org.lwjgl.openal.AL10;
 

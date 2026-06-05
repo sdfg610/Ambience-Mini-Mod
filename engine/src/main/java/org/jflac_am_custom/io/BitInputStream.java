@@ -60,6 +60,16 @@ public class BitInputStream {
     private short readCRC16 = 0;
     
     private InputStream inStream;
+
+    // Save state
+    private byte[] saved_buffer = new byte[BUFFER_CHUNK_SIZE];
+    private int saved_putByte = 0;
+    private int saved_getByte = 0;
+    private int saved_getBit = 0;
+    private int saved_availBits = 0;
+    private int saved_totalBitsRead = 0;
+    private short saved_readCRC16 = 0;
+
     
     /**
      * The constructor.
@@ -122,6 +132,32 @@ public class BitInputStream {
         availBits = 0;
         totalBitsRead = 0;
     }
+
+
+    public void saveState() {
+        System.arraycopy(buffer, 0, saved_buffer, 0, BUFFER_CHUNK_SIZE);
+        saved_getByte = getByte;
+        saved_getBit = getBit;
+        saved_putByte = putByte;
+        saved_availBits = availBits;
+        saved_totalBitsRead = totalBitsRead;
+        saved_readCRC16 = readCRC16;
+
+        inStream.mark(Integer.MAX_VALUE);
+    }
+
+    public void restoreState() throws IOException {
+        System.arraycopy(saved_buffer, 0, buffer, 0, BUFFER_CHUNK_SIZE);
+        getByte = saved_getByte;
+        getBit = saved_getBit;
+        putByte = saved_putByte;
+        availBits = saved_availBits;
+        totalBitsRead = saved_totalBitsRead;
+        readCRC16 = saved_readCRC16;
+
+        inStream.reset();
+    }
+
     
     /**
      * Reset the read CRC-16 value.

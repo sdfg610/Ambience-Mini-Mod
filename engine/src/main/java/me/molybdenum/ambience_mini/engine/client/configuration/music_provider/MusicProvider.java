@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.configuration.music_provider;
 
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
@@ -12,7 +13,7 @@ import java.util.regex.Pattern;
 public interface MusicProvider
 {
     boolean exists(String musicPath);
-    InputStream getMusicStream(String musicPath) throws FileNotFoundException;
+    BufferedInputStream getMusicStream(String musicPath) throws FileNotFoundException;
 
 
     static Result<String> validatePath(String filePath) {

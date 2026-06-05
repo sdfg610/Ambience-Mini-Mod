@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
 import javax.sound.sampled.AudioFormat;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -23,7 +24,7 @@ public class OggDecoder extends AmDecoder
     private final AudioFormat format;
 
 
-    public OggDecoder(InputStream stream) {
+    public OggDecoder(BufferedInputStream stream) {
         try {
             // Thanks to: https://github.com/tulskiy/musique/blob/master/musique-core/src/main/java/com/tulskiy/musique/audio/formats/ogg/VorbisDecoder.java
             file = new VorbisFile(stream, null, 0);

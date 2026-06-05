@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.music_provider;
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -21,7 +22,7 @@ public class FileMusicProvider implements MusicProvider
         return Files.exists(Path.of(musicBasePath, musicPath));
     }
 
-    public InputStream getMusicStream(String musicPath) throws FileNotFoundException {
-        return new FileInputStream(Path.of(musicBasePath, musicPath).toFile());
+    public BufferedInputStream getMusicStream(String musicPath) throws FileNotFoundException {
+        return new BufferedInputStream(new FileInputStream(Path.of(musicBasePath, musicPath).toFile()));
     }
 }

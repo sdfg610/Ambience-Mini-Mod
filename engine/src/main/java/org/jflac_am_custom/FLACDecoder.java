@@ -76,6 +76,9 @@ public class FLACDecoder {
     private final FrameListeners frameListeners = new FrameListeners();
     private final PCMProcessors pcmProcessors = new PCMProcessors();
 
+    // Saved state
+    private long saved_samplesDecoded = 0;
+
     
     /**
      * The constructor.
@@ -149,6 +152,18 @@ public class FLACDecoder {
     	ByteData bd = decodeFrame(frame, null);
         pcmProcessors.processPCM(bd);
     }
+
+
+    public void saveState() {
+        saved_samplesDecoded = samplesDecoded;
+        bitStream.saveState();
+    }
+
+    public void restoreState() throws IOException {
+        samplesDecoded = saved_samplesDecoded;
+        bitStream.restoreState();
+    }
+
     
     /**
      * Fill the given ByteData object with PCM data from the frame.

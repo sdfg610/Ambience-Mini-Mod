@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
 import javax.sound.sampled.AudioFormat;
+import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
@@ -20,7 +21,7 @@ public class MP3Decoder extends AmDecoder {
 
 
 
-    public MP3Decoder(InputStream stream) {
+    public MP3Decoder(BufferedInputStream stream) {
         try {
             bitstream = new Bitstream(stream);
             readFrameToBuffer();
