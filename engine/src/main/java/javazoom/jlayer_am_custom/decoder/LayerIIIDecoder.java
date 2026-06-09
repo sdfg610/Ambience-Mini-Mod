@@ -76,6 +76,11 @@ final class LayerIIIDecoder implements FrameDecoder
     private int					sfreq;
 
 
+	// Saved state
+	private int					saved_frame_start;
+
+
+
 	/**
 	 * Constructor.
 	 */
@@ -201,6 +206,24 @@ final class LayerIIIDecoder implements FrameDecoder
 	  br = new BitReserve();
   	  si = new III_side_info_t();
 	}
+
+
+
+	public void saveState() {
+		br.saveState();
+		filter1.saveState();
+		filter2.saveState();
+		saved_frame_start = frame_start;
+	}
+
+	public void restoreState() {
+		br.restoreState();
+		filter1.restoreState();
+		filter2.restoreState();
+		frame_start = saved_frame_start;
+	}
+
+
 
    /**
     * Notify decoder that a seek is being made.

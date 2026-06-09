@@ -35,11 +35,15 @@
 
 package javazoom.jlayer_am_custom.decoder;
 
-import java.io.BufferedInputStream;
+import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PushbackInputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -56,13 +60,13 @@ public final class Bitstream implements BitstreamErrors
 	 * Synchronization control constant for the initial
 	 * synchronization to the start of a frame.
 	 */
-	static byte		INITIAL_SYNC = 0;
+	static final byte		INITIAL_SYNC = 0;
 
 	/**
 	 * Synchronization control constant for non-initial frame
 	 * synchronizations.
 	 */
-	static byte		STRICT_SYNC = 1;
+	static final byte		STRICT_SYNC = 1;
 
 	// max. 1730 bytes per frame: 144 * 384kbit/s / 32000 Hz + 2 Bytes CRC
 	/**
@@ -83,7 +87,7 @@ public final class Bitstream implements BitstreamErrors
 	/**
 	 * The bytes read from the stream.
 	 */
-	private byte[]			frame_bytes = new byte[BUFFER_INT_SIZE*4];
+	private final byte[]	frame_bytes = new byte[BUFFER_INT_SIZE*4];
 
 	/**
 	 * Index into <code>framebuffer</code> where the next bits are
@@ -113,24 +117,38 @@ public final class Bitstream implements BitstreamErrors
   //private int 			current_frame_number;
   //private int				last_frame_number;
 
-	private final int		bitmask[] = {0,	// dummy
+	private final int[] bitmask = {0,	// dummy
 	 0x00000001, 0x00000003, 0x00000007, 0x0000000F,
 	 0x0000001F, 0x0000003F, 0x0000007F, 0x000000FF,
 	 0x000001FF, 0x000003FF, 0x000007FF, 0x00000FFF,
 	 0x00001FFF, 0x00003FFF, 0x00007FFF, 0x0000FFFF,
      0x0001FFFF };
 
-	private final PushbackInputStream	source;
+	private final UnreadBufferedInputStream source;
 
 	private final Header			header = new Header();
 
-	private final byte				syncbuf[] = new byte[4];
+	private final byte[] 			syncbuf = new byte[4];
 
-	private Crc16[]					crc = new Crc16[1];
+	private final Crc16[]			crc = new Crc16[1];
 
 	private byte[]					rawid3v2 = null;
 
 	private boolean					firstframe = true;
+
+
+	// Save state
+	private final int[]		saved_framebuffer = new int[BUFFER_INT_SIZE];
+	private int				saved_frameSize;
+	private final byte[]	saved_frame_bytes = new byte[BUFFER_INT_SIZE*4];
+	private int				saved_wordPointer;
+	private int				saved_bitIndex;
+	private int				saved_syncword;
+	private boolean         saved_single_ch_mode;
+
+	private final byte[] 	saved_syncbuf = new byte[4];
+	private final Crc16[]	saved_crc = new Crc16[1];
+	private boolean         saved_firstFrame;
 
 
 	/**
@@ -142,16 +160,45 @@ public final class Bitstream implements BitstreamErrors
 	public Bitstream(InputStream in)
 	{
 		if (in==null) throw new NullPointerException("in");
-		in = new BufferedInputStream(in);		
-		loadID3v2(in);
+		source = new UnreadBufferedInputStream(in, BUFFER_INT_SIZE*4);
+		loadID3v2(source);
 		firstframe = true;
-		//source = new PushbackInputStream(in, 1024);
-		source = new PushbackInputStream(in, BUFFER_INT_SIZE*4);
-		
 		closeFrame();
-		//current_frame_number = -1;
-		//last_frame_number = -1;
 	}
+
+
+	public void saveState() {
+		System.arraycopy(framebuffer, 0, saved_framebuffer, 0, BUFFER_INT_SIZE);
+		saved_frameSize = framesize;
+		System.arraycopy(frame_bytes, 0, saved_frame_bytes, 0, BUFFER_INT_SIZE*4);
+		saved_wordPointer = wordpointer;
+		saved_bitIndex = bitindex;
+		saved_syncword = syncword;
+		saved_single_ch_mode = single_ch_mode;
+
+		System.arraycopy(syncbuf, 0, saved_syncbuf, 0, 4);
+		saved_crc[0] = crc[0] == null ? null : crc[0].copy();
+		saved_firstFrame = firstframe;
+
+		source.mark(Integer.MAX_VALUE);
+	}
+
+	public void restoreState() throws IOException {
+		System.arraycopy(saved_framebuffer, 0, framebuffer, 0, BUFFER_INT_SIZE);
+		framesize = saved_frameSize;
+		System.arraycopy(saved_frame_bytes, 0, frame_bytes, 0, BUFFER_INT_SIZE*4);
+		wordpointer = saved_wordPointer;
+		bitindex = saved_bitIndex;
+		syncword = saved_syncword;
+		single_ch_mode = saved_single_ch_mode;
+
+		System.arraycopy(saved_syncbuf, 0, syncbuf, 0, 4);
+		crc[0] = saved_crc[0] == null ? null : saved_crc[0].copy();
+		firstframe = saved_firstFrame;
+
+		source.reset();
+	}
+
 
 	/**
 	 * Return position of the first audio header.
@@ -167,39 +214,27 @@ public final class Bitstream implements BitstreamErrors
 	 * @param in MP3 InputStream.
 	 * @author JavaZOOM
 	 */
-	private void loadID3v2(InputStream in)
+	private void loadID3v2(UnreadBufferedInputStream in)
 	{		
 		int size = -1;
-		try
-		{
+		try {
 			// Read ID3v2 header (10 bytes).
-			in.mark(10);			
 			size = readID3v2Header(in);
-			header_pos = size;			
+			header_pos = size;
 		}
-		catch (IOException e)
-		{}
-		finally
-		{
-			try
-			{
-				// Unread ID3v2 header (10 bytes).
-				in.reset();
-			}
-			catch (IOException e)
-			{}
-		}
-		// Load ID3v2 tags.
-		try
-		{
-			if (size > 0)
-			{
+		catch (IOException ignored) {}
+
+		// Unread ID3v2 header (10 bytes).
+		in.unread(10);
+
+		// Read ID3v2 bytes.
+		try {
+			if (size > 0) {
 				rawid3v2 = new byte[size];
 				in.read(rawid3v2,0,rawid3v2.length);
 			}			
 		}
-		catch (IOException e)
-		{}
+		catch (IOException ignored) {}
 	}
 	
 	/**
@@ -230,15 +265,112 @@ public final class Bitstream implements BitstreamErrors
 	 * Return raw ID3v2 frames + header.
 	 * @return ID3v2 InputStream or null if ID3v2 frames are not available.
 	 */
-	public InputStream getRawID3v2()
-	{
-		if (rawid3v2 == null) return null;
-		else
-		{
-			ByteArrayInputStream bain = new ByteArrayInputStream(rawid3v2);		
-			return bain;
-		}
+	public InputStream getRawID3v2() {
+		return rawid3v2 == null ? null : new ByteArrayInputStream(rawid3v2);
 	}
+
+	public HashMap<String, String> getID3v2Tags() {
+		var stream = getRawID3v2();
+		if (stream == null)
+			throw new RuntimeException("Could not read ID3v2.3.0 metadata from MP3 file");
+
+		var map = new HashMap<String, String>();
+		Pair<String, String> tag;
+		try {
+			//noinspection ResultOfMethodCallIgnored
+			stream.skip(10); // Skip header
+			while ((tag = findNextTag(stream)) != null)
+				map.put(tag.left(), tag.right());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		return map;
+	}
+
+	private Pair<String, String> findNextTag(InputStream stream) throws IOException {
+		if (stream.available() == 0)
+			return null;
+
+		// Frame ID
+		String frameId = new String(stream.readNBytes(4));
+
+		// Frame size
+		ByteBuffer buf = ByteBuffer.wrap(stream.readNBytes(4));
+		int length = buf.getInt() - 1; // First byte is encoding byte
+
+		// Skip flag bytes
+		//noinspection ResultOfMethodCallIgnored
+		stream.skip(2);
+
+		// Read text
+		int encoding = stream.read();
+		byte[] data = stream.readNBytes(length);
+
+		String[] values;
+		if (encoding == 0) // ISO-8859-1 encoding
+			values = readAsciiArray(data);
+		else if (encoding == 1) // UTF16LE BOM encoding
+			values = readUtfArray(data);
+		else
+			throw new RuntimeException("Unsupported ID3v2.3.0 encoding value: " + encoding);
+
+		if (frameId.equals("TXXX"))
+			return new Pair<>(values[0], values[1]); // User-defined tag
+		else
+			return new Pair<>(frameId, values[0]); // Builtin tag
+	}
+
+	private String[] readAsciiArray(byte[] data) {
+		var values = new ArrayList<String>();
+
+		byte[] str = new byte[data.length];
+		int index = 0;
+		for (var b : data) {
+			if (b == 0) {
+				values.add(new String(str, 0, index, StandardCharsets.ISO_8859_1));
+				index = 0;
+			}
+			else
+				str[index++] = b;
+		}
+		if (index > 0)
+			values.add(new String(str, 0, index, StandardCharsets.ISO_8859_1));
+
+		String[] vals = new String[values.size()];
+		values.toArray(vals);
+		return vals;
+	}
+
+	private String[] readUtfArray(byte[] data) {
+		var values = new ArrayList<String>();
+
+		byte[] str = new byte[data.length];
+		int index = 0;
+		boolean alreadyHitZero = false;
+		for (var b : data) {
+			if (b == 0) {
+				if (alreadyHitZero) { // UTF16 uses two zero bytes for null terminator
+					values.add(new String(str, 0, index-1, StandardCharsets.UTF_16LE)); // -1 to discard previous zero
+					index = 0;
+					alreadyHitZero = false;
+				}
+				else
+					alreadyHitZero = true;
+			}
+			else {
+				str[index++] = b;
+				alreadyHitZero = false;
+			}
+		}
+		if (index > 0)
+			values.add(new String(str, 0, index, StandardCharsets.UTF_16LE));
+
+		String[] vals = new String[values.size()];
+		values.toArray(vals);
+		return vals;
+	}
+
 
 	/**
 	 * Close the Bitstream.
@@ -246,12 +378,10 @@ public final class Bitstream implements BitstreamErrors
 	 */
 	public void close() throws BitstreamException
 	{
-		try
-		{
+		try {
 			source.close();
 		}
-		catch (IOException ex)
-		{
+		catch (IOException ex) {
 			throw newBitstreamException(STREAM_ERROR, ex);
 		}
 	}
@@ -310,8 +440,7 @@ public final class Bitstream implements BitstreamErrors
 	 */
 	private Header readNextFrame() throws BitstreamException
 	{
-		if (framesize == -1)
-		{
+		if (framesize == -1) {
 			nextFrame();
 		}
 		return header;
@@ -336,16 +465,7 @@ public final class Bitstream implements BitstreamErrors
 	public void unreadFrame() throws BitstreamException
 	{
 		if (wordpointer==-1 && bitindex==-1 && (framesize>0))
-		{
-			try
-			{
-				source.unread(frame_bytes, 0, framesize);
-			}
-			catch (IOException ex)
-			{
-				throw newBitstreamException(STREAM_ERROR);
-			}
-		}
+			source.unread(framesize);
 	}
 
 	/**
@@ -367,13 +487,7 @@ public final class Bitstream implements BitstreamErrors
 		int read = readBytes(syncbuf, 0, 4);
 		int headerstring = ((syncbuf[0] << 24) & 0xFF000000) | ((syncbuf[1] << 16) & 0x00FF0000) | ((syncbuf[2] << 8) & 0x0000FF00) | ((syncbuf[3] << 0) & 0x000000FF);
 
-		try
-		{
-			source.unread(syncbuf, 0, read);
-		}
-		catch (IOException ex)
-		{
-		}
+		source.unread(read);
 
 		boolean sync = false;
 		switch (read)

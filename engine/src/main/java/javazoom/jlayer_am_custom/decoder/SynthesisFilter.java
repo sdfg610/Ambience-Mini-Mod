@@ -47,7 +47,15 @@ final class SynthesisFilter
   private int				 channel;
   private float 			 scalefactor;
   private float[]			 eq;
-	
+
+	private float[]			 saved_actual_v;
+	private int 			 saved_actual_write_pos;
+	private final float[]	 saved_samples = new float[32];
+	private float[]			 saved_eq;
+
+
+
+
 	/**
 	 * Quality value for controlling CPU usage/quality tradeoff. 
 	 */
@@ -86,6 +94,26 @@ final class SynthesisFilter
 	 
      reset();
   }
+
+
+
+	public void saveState() {
+		saved_actual_v = actual_v;
+		saved_actual_write_pos = actual_write_pos;
+		System.arraycopy(samples, 0, saved_samples, 0, 32);
+		saved_eq = new float[eq.length];
+		System.arraycopy(eq, 0, saved_eq, 0, eq.length);
+	}
+
+	public void restoreState() {
+		actual_v = saved_actual_v;
+		actual_write_pos = saved_actual_write_pos;
+		System.arraycopy(saved_samples, 0, samples, 0, 32);
+		eq = new float[saved_eq.length];
+		System.arraycopy(saved_eq, 0, eq, 0, saved_eq.length);
+	}
+
+
   
   public void setEQ(float[] eq0)
   {

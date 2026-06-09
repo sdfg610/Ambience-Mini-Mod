@@ -23,6 +23,7 @@ public class FlacDecoder extends AmDecoder
 
     private final int sampleByteSize;
 
+    private final int maxFrameSize;
     private final int maxFrameByteSize;
     private final byte[] buffer;
     private int currentLength = 0;
@@ -49,10 +50,11 @@ public class FlacDecoder extends AmDecoder
         StreamInfo streamInfo = getStreamInfo(metadata);
         format = streamInfo.getAudioFormat();
         sampleByteSize = (streamInfo.getBitsPerSample() / 8) * streamInfo.getChannels();
-        maxFrameByteSize = streamInfo.getMaxFrameSize() * sampleByteSize;
+        maxFrameSize = streamInfo.getMaxFrameSize();
+        maxFrameByteSize = maxFrameSize * sampleByteSize;
         buffer = new byte[BUFFER_SIZE + 2*maxFrameByteSize]; // Part after plus allows the two latest frames to overflow the buffer. Handled later
 
-        if (true) {
+        if (true) { // TODO: loopArg
             var startAndEnd = new FlacTagReader(getTags(metadata)).getLoopStartAndEnd();
             loopStart = startAndEnd.left();
             loopEnd = startAndEnd.right();
@@ -120,7 +122,7 @@ public class FlacDecoder extends AmDecoder
         if (decoder.isEOF())
             return false;
 
-        if (loopStart != Long.MAX_VALUE && decoder.getSamplesDecoded() <= loopStart) {
+        if (loopStart != Long.MAX_VALUE && decoder.getSamplesDecoded() >= loopStart-maxFrameSize && decoder.getSamplesDecoded() <= loopStart) {
             decoder.saveState();
         }
 

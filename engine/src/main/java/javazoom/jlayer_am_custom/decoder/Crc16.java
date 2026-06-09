@@ -29,8 +29,8 @@ package javazoom.jlayer_am_custom.decoder;
  */
 public final class Crc16
 {
-  private static	short polynomial=(short)0x8005;
-  private			short crc;
+  private static final short polynomial=(short)0x8005;
+  private			   short crc;
 
   /**
    * Dummy Constructor
@@ -66,5 +66,12 @@ public final class Crc16
     short sum = crc;
     crc = (short) 0xFFFF;
     return sum;
+  }
+
+
+  public Crc16 copy() {
+      var c16 = new Crc16();
+      c16.crc = this.crc;
+      return c16;
   }
 }

@@ -57,15 +57,33 @@ final class BitReserve
 	
 	private int 					offset, totbit, buf_byte_idx;
 	private final int[] 			buf = new int[BUFSIZE];
-	private int 					buf_bit_idx;
-	
-   BitReserve()
-   {
-	  
-	  offset = 0;
-      totbit = 0;
-      buf_byte_idx = 0;	  
-   }
+
+
+	// Saved state
+	private int 					saved_offset, saved_totbit, saved_buf_byte_idx;
+	private final int[] 			saved_buf = new int[BUFSIZE];
+
+
+	BitReserve() {
+		offset = 0;
+		totbit = 0;
+		buf_byte_idx = 0;
+	}
+
+
+	public void saveState() {
+		saved_offset = offset;
+		saved_totbit = totbit;
+		saved_buf_byte_idx = buf_byte_idx;
+		System.arraycopy(buf, 0, saved_buf, 0, BUFSIZE);
+	}
+
+	public void restoreState() {
+		offset = saved_offset;
+		totbit = saved_totbit;
+		buf_byte_idx = saved_buf_byte_idx;
+		System.arraycopy(saved_buf, 0, buf, 0, BUFSIZE);
+	}
       
    
    /**

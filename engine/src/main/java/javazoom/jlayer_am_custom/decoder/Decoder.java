@@ -80,6 +80,18 @@ public class Decoder implements DecoderErrors
 		this(null);
 	}
 
+
+	public void saveState() {
+		if (l3decoder != null)
+			l3decoder.saveState();
+	}
+
+	public void restoreState() {
+		if (l3decoder != null)
+			l3decoder.restoreState();
+	}
+
+
 	/**
 	 * Creates a new <code>Decoder</code> instance with default 
 	 * parameters.
@@ -133,8 +145,7 @@ public class Decoder implements DecoderErrors
 	public Obuffer decodeFrame(Header header, Bitstream stream)
 		throws DecoderException
 	{
-		if (!initialized)
-		{
+		if (!initialized) {
 			initialize(header);
 		}
 		
@@ -263,7 +274,7 @@ public class Decoder implements DecoderErrors
 		return decoder;
 	}
 	
-	private void initialize(Header header)
+	public void initialize(Header header)
 		throws DecoderException
 	{
 		
