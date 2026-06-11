@@ -27,14 +27,15 @@
 
 package com.jcraft_am_custom.jorbis;
 
-import com.jcraft_am_custom.jogg.*;
 import com.jcraft_am_custom.jogg.Packet;
 import com.jcraft_am_custom.jogg.Page;
 import com.jcraft_am_custom.jogg.StreamState;
 import com.jcraft_am_custom.jogg.SyncState;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 public class VorbisFile{
   public static final int CHUNKSIZE=8500;
@@ -93,9 +94,8 @@ public class VorbisFile{
 
   public VorbisFile(String file) throws JOrbisException{
     super();
-    InputStream is=null;
     try{
-      is=new SeekableInputStream(file);
+      InputStream is = new SeekableInputStream(file);
       int ret=open(is, null, 0);
       if(ret==-1){
         throw new JOrbisException("VorbisFile: open return -1");
@@ -103,16 +103,6 @@ public class VorbisFile{
     }
     catch(Exception e){
       throw new JOrbisException("VorbisFile: "+e.toString());
-    }
-    finally{
-      if(is!=null){
-        try{
-          is.close();
-        }
-        catch(IOException e){
-          e.printStackTrace();
-        }
-      }
     }
   }
 
@@ -429,6 +419,7 @@ public class VorbisFile{
       }
     }
     prefetch_all_headers(initial_i, initial_c, dataoffset);
+    fseek(datasource, 0, SEEK_SET);
     return 0;
   }
 
@@ -1422,28 +1413,29 @@ public class VorbisFile{
     datasource.close();
   }
 
-  class SeekableInputStream extends InputStream{
-    java.io.RandomAccessFile raf=null;
-    final String mode="r";
+  static class SeekableInputStream extends InputStream {
+    private final RandomAccessFile raf;
+
 
     SeekableInputStream(String file) throws IOException{
-      raf=new java.io.RandomAccessFile(file, mode);
+      raf = new RandomAccessFile(file, "r");
     }
+
 
     public int read() throws IOException{
       return raf.read();
     }
 
-    public int read(byte[] buf) throws IOException{
+    public int read(byte @NotNull [] buf) throws IOException{
       return raf.read(buf);
     }
 
-    public int read(byte[] buf, int s, int len) throws IOException{
+    public int read(byte @NotNull [] buf, int s, int len) throws IOException{
       return raf.read(buf, s, len);
     }
 
     public long skip(long n) throws IOException{
-      return (long)(raf.skipBytes((int)n));
+      return raf.skipBytes((int)n);
     }
 
     public long getLength() throws IOException{
@@ -1455,21 +1447,11 @@ public class VorbisFile{
     }
 
     public int available() throws IOException{
-      return (raf.length()==raf.getFilePointer()) ? 0 : 1;
+      return (raf.length() == raf.getFilePointer()) ? 0 : 1;
     }
 
     public void close() throws IOException{
       raf.close();
-    }
-
-    public synchronized void mark(int m){
-    }
-
-    public synchronized void reset() throws IOException{
-    }
-
-    public boolean markSupported(){
-      return false;
     }
 
     public void seek(long pos) throws IOException{

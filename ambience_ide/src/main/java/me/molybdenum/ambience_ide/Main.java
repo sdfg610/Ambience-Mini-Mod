@@ -29,7 +29,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -197,7 +196,7 @@ public class Main
         if (choice == null)
             output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));
         else
-            output.appendChild(makeParagraph(doc, String.format("Selected new playlist at priority %d: [ %s ]", choice.priority(), String.join(", ", choice.playlist().stream().map(Music::musicPath).toList()))));
+            output.appendChild(makeParagraph(doc, String.format("Selected new playlist at priority %d: [ %s ]", choice.priority(), String.join(", ", choice.playlist().stream().map(Music::path).toList()))));
 
         if (!trace.isEmpty())
             output.appendChild(makeParagraph(doc, String.format("Values computed during selection:\n%s", Utils.getKeyValuePairString(trace))));

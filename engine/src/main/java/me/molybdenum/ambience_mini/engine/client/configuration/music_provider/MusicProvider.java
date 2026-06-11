@@ -14,6 +14,7 @@ public interface MusicProvider
 {
     boolean exists(String musicPath);
     BufferedInputStream getMusicStream(String musicPath) throws FileNotFoundException;
+    Path getFullPath(String musicPath);
 
 
     static Result<String> validatePath(String filePath) {

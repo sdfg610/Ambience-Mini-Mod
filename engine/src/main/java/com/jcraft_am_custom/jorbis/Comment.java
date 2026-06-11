@@ -233,6 +233,15 @@ public class Comment{
     return new String(user_comments[i], 0, user_comments[i].length-1);
   }
 
+  public String getComment(String key) {
+    for (int i = 0; i < comments; ++i){
+      String[] parts = getComment(i).split("=", 2);
+      if (parts.length == 2 && parts[0].toLowerCase().equals(key))
+        return parts[1];
+    }
+    return null;
+  }
+
   public String toString(){
     String foo="Vendor: "+new String(vendor, 0, vendor.length-1);
     for(int i=0; i<comments; i++){

@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
+import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
 import org.jetbrains.annotations.Nullable;
 import org.jflac_am_custom.FLACDecoder;
@@ -11,7 +12,6 @@ import org.jflac_am_custom.util.ByteData;
 import org.lwjgl.BufferUtils;
 
 import javax.sound.sampled.AudioFormat;
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -36,8 +36,8 @@ public class FlacDecoder extends AmDecoder
     private final long loopEnd;
 
 
-    public FlacDecoder(BufferedInputStream stream) {
-        this.stream = stream;
+    public FlacDecoder(MusicInstance mInst) {
+        this.stream = mInst.createStream();
         this.decoder = new FLACDecoder(stream);
 
         Metadata[] metadata;

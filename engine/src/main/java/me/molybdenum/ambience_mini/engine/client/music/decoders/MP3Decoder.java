@@ -1,12 +1,12 @@
 package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
 import javazoom.jlayer_am_custom.decoder.*;
+import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
 import javax.sound.sampled.AudioFormat;
-import java.io.BufferedInputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
@@ -32,9 +32,9 @@ public class MP3Decoder extends AmDecoder {
 
 
 
-    public MP3Decoder(BufferedInputStream stream) {
+    public MP3Decoder(MusicInstance mInst) {
         try {
-            bitstream = new Bitstream(stream);
+            bitstream = new Bitstream(mInst.createStream());
             decoder.initialize(bitstream.readFrame()); // Load metadata
             bitstream.unreadFrame();
 

@@ -1,5 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
+import me.molybdenum.ambience_mini.engine.client.configuration.Music;
+import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sound.sampled.AudioFormat;
@@ -14,7 +16,7 @@ import java.util.function.Function;
 
 public abstract class AmDecoder {
     private static final AtomicBoolean isInitialized = new AtomicBoolean(false);
-    protected static final HashMap<String, Function<BufferedInputStream, AmDecoder>> FILETYPE_TO_DECODER = new HashMap<>();
+    protected static final HashMap<String, Function<MusicInstance, AmDecoder>> FILETYPE_TO_DECODER = new HashMap<>();
 
 
     public abstract AudioFormat getFormat();
@@ -25,13 +27,13 @@ public abstract class AmDecoder {
     public abstract void close();
 
 
-    public static AmDecoder of(String format, BufferedInputStream stream) {
+    public static AmDecoder of(MusicInstance mInst) {
         init();
-        var constructor = FILETYPE_TO_DECODER.get(format);
+        var constructor = FILETYPE_TO_DECODER.get(mInst.music().getExtension());
         if (constructor != null)
-            return constructor.apply(stream);
+            return constructor.apply(mInst);
 
-        throw new RuntimeException("Unsupported file format '" + format + "'! How did this get through the semantic analysis? Or is there another bug?");
+        throw new RuntimeException("Unsupported file format '" + mInst.music().getExtension() + "'! How did this get through the semantic analysis? Or is there another bug?");
     }
 
     public static Set<String> getSupportedFileTypes() {

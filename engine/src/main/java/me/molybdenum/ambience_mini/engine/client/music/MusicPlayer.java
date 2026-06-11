@@ -75,7 +75,7 @@ public class MusicPlayer {
                 channel.setVolume(currentMusicVolume);
                 channel.resume(doFade);
             } catch (FileNotFoundException e) {
-                throw new RuntimeException("File '" + music.musicPath() +  "' not found. Fix your Ambience config!", e);
+                throw new RuntimeException("File '" + music.path() +  "' not found. Fix your Ambience config!", e);
             }
         }
     }
@@ -95,11 +95,11 @@ public class MusicPlayer {
         try {
             return new Channel(
                     music,
-                    AmDecoder.of(music.getExtension(), musicProvider.getMusicStream(music.musicPath()))
+                    AmDecoder.of(new MusicInstance(musicProvider, music))
             );
         }
         catch (Exception ex) {
-            throw new RuntimeException("Could not create audio channel for music-file '" + music.musicPath() + "'", ex);
+            throw new RuntimeException("Could not create audio channel for music-file '" + music.path() + "'", ex);
         }
     }
 

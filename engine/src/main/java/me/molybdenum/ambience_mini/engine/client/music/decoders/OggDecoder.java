@@ -1,15 +1,16 @@
 package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
+import com.jcraft_am_custom.jorbis.Comment;
 import com.jcraft_am_custom.jorbis.Info;
 import com.jcraft_am_custom.jorbis.JOrbisException;
 import com.jcraft_am_custom.jorbis.VorbisFile;
+import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
+import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
 import javax.sound.sampled.AudioFormat;
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 public class OggDecoder extends AmDecoder
@@ -23,13 +24,26 @@ public class OggDecoder extends AmDecoder
     private final VorbisFile file;
     private final AudioFormat format;
 
+    private final long loopStart;
+    private final long loopEnd;
+    private final int sampleByteSize;
 
-    public OggDecoder(BufferedInputStream stream) {
+
+    public OggDecoder(MusicInstance mInst) {
         try {
             // Thanks to: https://github.com/tulskiy/musique/blob/master/musique-core/src/main/java/com/tulskiy/musique/audio/formats/ogg/VorbisDecoder.java
-            file = new VorbisFile(stream, null, 0);
+            file = new VorbisFile(mInst.getMusicPath().toString());
             Info info = file.getInfo()[0];
             format = new AudioFormat(info.rate, 16, info.channels, true, false);
+            sampleByteSize = 2 * info.channels;
+
+            if (true) { // TODO: loopArg
+                var startAndEnd = new OggTagReader(file.getComment()).getLoopStartAndEnd();
+                loopStart = startAndEnd.left();
+                loopEnd = startAndEnd.right();
+            }
+            else
+                loopStart = loopEnd = Long.MAX_VALUE;
         } catch (JOrbisException e) {
             throw new RuntimeException(e);
         }
@@ -44,10 +58,13 @@ public class OggDecoder extends AmDecoder
 
     @Override
     public @Nullable ByteBuffer getFrame() {
-        int len;
-        while (currentLength < BUFFER_SIZE && (len = file.read(miniBuffer, VorbisFile.CHUNKSIZE)) > 0) {
-            System.arraycopy(miniBuffer, 0, buffer, currentLength, len);
-            currentLength += len;
+        while (currentLength < BUFFER_SIZE && loadFrameToBuffer()) {
+            long samples = file.pcm_tell();
+            if (samples >= loopEnd) {
+                currentLength -= (int)(samples - loopEnd)*sampleByteSize;
+                file.pcm_seek(loopStart);
+                loadFrameToBuffer();
+            }
         }
         if (currentLength <= 0)
             return null;
@@ -63,6 +80,13 @@ public class OggDecoder extends AmDecoder
         return buf;
     }
 
+    private boolean loadFrameToBuffer() {
+        int len = file.read(miniBuffer, VorbisFile.CHUNKSIZE);
+        System.arraycopy(miniBuffer, 0, buffer, currentLength, len);
+        currentLength += len;
+        return len != 0;
+    }
+
 
     @Override
     public void close() {
@@ -70,6 +94,44 @@ public class OggDecoder extends AmDecoder
             file.close();
         } catch (IOException ignored) {
             // ignored
+        }
+    }
+
+
+    private static class OggTagReader extends TagReader {
+        private final Comment[] comment;
+
+
+        private OggTagReader(Comment[] comment) {
+            if (comment.length == 0)
+                throw new RuntimeException("Ogg file has no comment, but comments are needed to get looping info!");
+            this.comment = comment;
+        }
+
+
+        @Override
+        public String getLoopStartStr() {
+            return getByKey("loopstart");
+        }
+
+        @Override
+        public String getLoopEndStr() {
+            return getByKey("loopend");
+        }
+
+        @Override
+        public String getLoopLengthStr() {
+            return getByKey("looplength");
+        }
+
+
+        private String getByKey(String key) {
+            for (var com : comment) {
+                String value = com.getComment(key);
+                if (value != null)
+                    return value;
+            }
+            return null;
         }
     }
 }

@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.music_provider;
 
 import java.io.BufferedInputStream;
+import java.nio.file.Path;
 
 public class FakeMusicProvider implements MusicProvider {
     @Override
@@ -10,6 +11,11 @@ public class FakeMusicProvider implements MusicProvider {
 
     @Override
     public BufferedInputStream getMusicStream(String musicPath) {
-        throw new RuntimeException("The fake music provider cannot get music streams!");
+        throw new RuntimeException("The fake music provider cannot get a music stream!");
+    }
+
+    @Override
+    public Path getFullPath(String musicPath) {
+        throw new RuntimeException("The fake music provider cannot provide a path!");
     }
 }

@@ -5,11 +5,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public record Music(String musicPath, float volumeAdjustment)
+public record Music(String path, float volumeAdjustment)
 {
     @Override
     public @NotNull String toString() {
-        return musicPath;
+        return path;
     }
 
     @Override
@@ -17,12 +17,12 @@ public record Music(String musicPath, float volumeAdjustment)
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Music music = (Music) o;
-        return Float.compare(volumeAdjustment, music.volumeAdjustment) == 0 && Objects.equals(musicPath, music.musicPath);
+        return Float.compare(volumeAdjustment, music.volumeAdjustment) == 0 && Objects.equals(path, music.path);
     }
 
 
     public String getExtension() {
-        return Utils.getFileExtension(musicPath);
+        return Utils.getFileExtension(path);
     }
 
     public float getCorrectedAdjustment() {

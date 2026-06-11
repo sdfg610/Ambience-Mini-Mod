@@ -23,6 +23,11 @@ public class FileMusicProvider implements MusicProvider
     }
 
     public BufferedInputStream getMusicStream(String musicPath) throws FileNotFoundException {
-        return new BufferedInputStream(new FileInputStream(Path.of(musicBasePath, musicPath).toFile()));
+        return new BufferedInputStream(new FileInputStream(getFullPath(musicPath).toFile()));
+    }
+
+    @Override
+    public Path getFullPath(String musicPath) {
+        return Path.of(musicBasePath, musicPath);
     }
 }
