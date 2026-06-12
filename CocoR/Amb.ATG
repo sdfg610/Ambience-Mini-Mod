@@ -16,6 +16,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.c
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.misc.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
 
@@ -72,7 +73,7 @@ Play<out Playlist play>
          }
 .
 
-PlayTerm<out Playlist play>               (. play = new Nil(); FloatLit gain = null; .)
+PlayTerm<out Playlist play>               (. play = new Nil(); .)
     = '['
         [ PlayTerm<out Playlist load>     (. play = load;      .)
           { ',' PlayTerm<out load>        (. play = new Concat(play, load); .)
@@ -81,10 +82,25 @@ PlayTerm<out Playlist play>               (. play = new Nil(); FloatLit gain = n
       ']'
     | IDENT                         (. play = new IdentP(t.val, t.line); .)
     | "NIL"
-    | STRING                    (. StringLit file = new StringLit(removeFirstAndLast(t.val)); int line = t.line; .)
-            [ '<' (FLOAT|INT)   (. gain = new FloatLit(Float.parseFloat(t.val));            .)
-              '>'
-            ]                   (. play = new Load(file, gain, line);                           .)
+    | STRING                 (. StringLit file = new StringLit(removeFirstAndLast(t.val)); int line = t.line; var args = new ArgList(); .)
+      [ '<'
+        MusicArgs<out args>
+        '>'
+      ]                      (. play = new Load(file, args, line); .)
+.
+
+MusicArgs<out ArgList args>  (. args = new ArgList(); .)
+    = MusicArg<out Arg arg1>   (. if (arg1 != null) args.add(arg1); .)
+      { ','
+        MusicArg<out Arg arg2>   (. if (arg2 != null) args.add(arg2); .)
+      }
+.
+
+MusicArg<out Arg arg>    (. arg = null; .)
+    = (FLOAT|INT)        (. arg = new Arg(new IdentP("gain", t.line), new FloatLit(Float.parseFloat(t.val))); .)
+    | IDENT              (. IdentP ident = new IdentP(t.val, t.line); Expr value = new BoolLit(true); .)
+      [ '=' Const<out value>
+      ]                  (. arg = new Arg(ident, value); .)
 .
 
 /*------------------------------------------------------------------------*/
@@ -164,9 +180,7 @@ ExprSuf<out Expr expr>
 
 ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY; .)
     = IDENT             (. expr = new IdentE(t.val, t.line);                      .)
-    | INT               (. expr = new IntLit(Integer.parseInt(t.val), t.line);      .)
-    | FLOAT             (. expr = new FloatLit(Float.parseFloat(t.val));    .)
-    | STRING            (. expr = new StringLit(removeFirstAndLast(t.val)); .)
+    | Const<out expr>
     | "true"            (. expr = new BoolLit(true);                        .)
     | "false"           (. expr = new BoolLit(false);                       .)
     | "undefined"       (. expr = new UndefinedLit(); .)
@@ -179,6 +193,12 @@ ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY
       Expr<out Expr cond> "end"
                         (. expr = new QuantifierOp(quantifier, new IdentE(identifier, line), list, cond, inLine, whereLine); .)
     | '(' Expr<out expr> ')'
+.
+
+Const<out Expr expr>    (. expr = null; .)
+    = INT               (. expr = new IntLit(Integer.parseInt(t.val), t.line);      .)
+    | FLOAT             (. expr = new FloatLit(Float.parseFloat(t.val));    .)
+    | STRING            (. expr = new StringLit(removeFirstAndLast(t.val)); .)
 .
 
 

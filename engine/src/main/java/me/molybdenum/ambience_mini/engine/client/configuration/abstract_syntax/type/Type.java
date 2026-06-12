@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type;
 
+import me.molybdenum.ambience_mini.engine.client.configuration.pretty_printer.PrettyPrinter;
 import org.jetbrains.annotations.NotNull;
 
 public sealed abstract class Type permits AnyT, AreaT, BoolT, FloatT, IntT, ListT, MapT, PlaylistT, StringT
@@ -35,5 +36,11 @@ public sealed abstract class Type permits AnyT, AreaT, BoolT, FloatT, IntT, List
 
     public boolean isList() {
         return this instanceof ListT || this instanceof AnyT;
+    }
+
+
+    @Override
+    public String toString() {
+        return PrettyPrinter.getTypeString(this);
     }
 }

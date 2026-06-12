@@ -37,7 +37,7 @@ public class OggDecoder extends AmDecoder
             format = new AudioFormat(info.rate, 16, info.channels, true, false);
             sampleByteSize = 2 * info.channels;
 
-            if (true) { // TODO: loopArg
+            if (mInst.music().loop()) {
                 var startAndEnd = new OggTagReader(file.getComment()).getLoopStartAndEnd();
                 loopStart = startAndEnd.left();
                 loopEnd = startAndEnd.right();

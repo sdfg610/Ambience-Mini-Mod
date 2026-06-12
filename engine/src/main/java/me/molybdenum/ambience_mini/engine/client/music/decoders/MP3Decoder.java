@@ -42,7 +42,7 @@ public class MP3Decoder extends AmDecoder {
             sampleByteSize = sampleShortSize * 2;
             bufferMaxSamples = Obuffer.OBUFFERSIZE / sampleShortSize;
 
-            if (true) { // TODO: loopArg
+            if (mInst.music().loop()) {
                 var startAndEnd = new MP3TagReader(bitstream.getID3v2Tags()).getLoopStartAndEnd();
                 loopStart = startAndEnd.left();
                 loopEnd = startAndEnd.right();

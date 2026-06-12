@@ -150,8 +150,10 @@ public class Interpreter
             ).toList();
         else if (play instanceof Load load) {
             String musicPath = MusicProvider.validatePath(load.file().value()).getValue();
-            float baseGain = load.gain() != null ? load.gain().value() : 0f;
-            return List.of(new Music(musicPath, baseGain));
+            float gain = load.getFloatArg(Load.ARG_GAIN, 0f);
+            boolean doLoop = load.getBoolArg(Load.ARG_LOOP, false);
+
+            return List.of(new Music(musicPath, gain, doLoop));
         }
         else if (play instanceof Nil)
             return List.of();

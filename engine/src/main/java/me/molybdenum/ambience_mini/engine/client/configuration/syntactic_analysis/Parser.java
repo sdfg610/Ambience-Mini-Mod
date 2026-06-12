@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.c
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.misc.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
 import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
 
@@ -20,7 +21,7 @@ public class Parser {
 	public static final int _INT = 2;
 	public static final int _FLOAT = 3;
 	public static final int _STRING = 4;
-	public static final int maxT = 53;
+	public static final int maxT = 54;
 
 	static final boolean _T = true;
 	static final boolean _x = false;
@@ -112,7 +113,7 @@ public class Parser {
 		} else if (StartOf(1)) {
 			Schedule schedule = Shed();
 			conf = new ScheduleDecl(schedule); 
-		} else SynErr(54);
+		} else SynErr(55);
 		return conf;
 	}
 
@@ -197,14 +198,14 @@ public class Parser {
 			schedule = new Interrupt(schedule2, line); 
 			break;
 		}
-		default: SynErr(55); break;
+		default: SynErr(56); break;
 		}
 		return schedule;
 	}
 
 	Playlist  PlayTerm() {
 		Playlist  play;
-		play = new Nil(); FloatLit gain = null; 
+		play = new Nil(); 
 		if (la.kind == 9) {
 			Get();
 			if (StartOf(2)) {
@@ -224,20 +225,66 @@ public class Parser {
 			Get();
 		} else if (la.kind == 4) {
 			Get();
-			StringLit file = new StringLit(removeFirstAndLast(t.val)); int line = t.line; 
+			StringLit file = new StringLit(removeFirstAndLast(t.val)); int line = t.line; var args = new ArgList(); 
 			if (la.kind == 13) {
 				Get();
-				if (la.kind == 3) {
-					Get();
-				} else if (la.kind == 2) {
-					Get();
-				} else SynErr(56);
-				gain = new FloatLit(Float.parseFloat(t.val));            
+				args = MusicArgs();
 				Expect(14);
 			}
-			play = new Load(file, gain, line);                           
+			play = new Load(file, args, line); 
 		} else SynErr(57);
 		return play;
+	}
+
+	ArgList  MusicArgs() {
+		ArgList  args;
+		args = new ArgList(); 
+		Arg arg1 = MusicArg();
+		if (arg1 != null) args.add(arg1); 
+		while (la.kind == 10) {
+			Get();
+			Arg arg2 = MusicArg();
+			if (arg2 != null) args.add(arg2); 
+		}
+		return args;
+	}
+
+	Arg  MusicArg() {
+		Arg  arg;
+		arg = null; 
+		if (la.kind == 2 || la.kind == 3) {
+			if (la.kind == 3) {
+				Get();
+			} else {
+				Get();
+			}
+			arg = new Arg(new IdentP("gain", t.line), new FloatLit(Float.parseFloat(t.val))); 
+		} else if (la.kind == 1) {
+			Get();
+			IdentP ident = new IdentP(t.val, t.line); Expr value = new BoolLit(true); 
+			if (la.kind == 6) {
+				Get();
+				value = Const();
+			}
+			arg = new Arg(ident, value); 
+		} else SynErr(58);
+		return arg;
+	}
+
+	Expr  Const() {
+		Expr  expr;
+		expr = null; 
+		if (la.kind == 2) {
+			Get();
+			expr = new IntLit(Integer.parseInt(t.val), t.line);      
+		} else if (la.kind == 3) {
+			Get();
+			expr = new FloatLit(Float.parseFloat(t.val));    
+		} else if (la.kind == 4) {
+			Get();
+			expr = new StringLit(removeFirstAndLast(t.val)); 
+		} else SynErr(59);
+		return expr;
 	}
 
 	Expr  Expr() {
@@ -300,7 +347,17 @@ public class Parser {
 			type = new ListT(elemType); 
 			break;
 		}
-		default: SynErr(58); break;
+		case 53: {
+			Get();
+			Expect(13);
+			Type elemType1 = Type();
+			Expect(10);
+			Type elemType2 = Type();
+			Expect(14);
+			type = new MapT(elemType1, elemType2); 
+			break;
+		}
+		default: SynErr(60); break;
 		}
 		return type;
 	}
@@ -379,7 +436,7 @@ public class Parser {
 			expr = new UnaryOp(op, expr, line); 
 		} else if (StartOf(5)) {
 			expr = ExprSuf();
-		} else SynErr(59);
+		} else SynErr(61);
 		return expr;
 	}
 
@@ -412,19 +469,8 @@ public class Parser {
 			expr = new IdentE(t.val, t.line);                      
 			break;
 		}
-		case 2: {
-			Get();
-			expr = new IntLit(Integer.parseInt(t.val), t.line);      
-			break;
-		}
-		case 3: {
-			Get();
-			expr = new FloatLit(Float.parseFloat(t.val));    
-			break;
-		}
-		case 4: {
-			Get();
-			expr = new StringLit(removeFirstAndLast(t.val)); 
+		case 2: case 3: case 4: {
+			expr = Const();
 			break;
 		}
 		case 39: {
@@ -479,7 +525,7 @@ public class Parser {
 			Expect(22);
 			break;
 		}
-		default: SynErr(60); break;
+		default: SynErr(62); break;
 		}
 		return expr;
 	}
@@ -501,12 +547,12 @@ public class Parser {
 	}
 
 	private static final boolean[][] set = {
-		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_T,_x, _T,_x,_x,_T, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x},
-		{_x,_T,_x,_x, _T,_x,_x,_x, _x,_T,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x},
-		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x}
+		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_T,_x, _T,_x,_x,_T, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_x,_x, _T,_x,_x,_x, _x,_T,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x}
 
 	};
 } // end Parser
@@ -574,14 +620,16 @@ class Errors {
 			case 50: s = "\"string\" expected"; break;
 			case 51: s = "\"area\" expected"; break;
 			case 52: s = "\"list\" expected"; break;
-			case 53: s = "??? expected"; break;
-			case 54: s = "invalid Conf"; break;
-			case 55: s = "invalid Shed"; break;
-			case 56: s = "invalid PlayTerm"; break;
+			case 53: s = "\"map\" expected"; break;
+			case 54: s = "??? expected"; break;
+			case 55: s = "invalid Conf"; break;
+			case 56: s = "invalid Shed"; break;
 			case 57: s = "invalid PlayTerm"; break;
-			case 58: s = "invalid Type"; break;
-			case 59: s = "invalid ExprPre"; break;
-			case 60: s = "invalid ExprTerm"; break;
+			case 58: s = "invalid MusicArg"; break;
+			case 59: s = "invalid Const"; break;
+			case 60: s = "invalid Type"; break;
+			case 61: s = "invalid ExprPre"; break;
+			case 62: s = "invalid ExprTerm"; break;
             default: s = "error " + n; break;
         }
         errors.add(new SynError(line, col, s));

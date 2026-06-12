@@ -4,6 +4,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.c
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.config.PlaylistDecl;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.config.ScheduleDecl;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.expression.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.misc.ArgList;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
@@ -39,7 +40,7 @@ public class PrettyPrinter {
         List<String> loads = list.stream()
                 .filter(pl -> pl instanceof Load)
                 .map(pl -> (Load)pl)
-                .map(load -> '"' + load.file().value() + '"' + (load.gain() == null ? "" : " <" + load.gain().value() + ">"))
+                .map(load -> '"' + load.file().value() + '"' + getArgsString(load.args()))
                 .toList();
 
         String varString = String.join(" ++ ", vars);
@@ -67,6 +68,12 @@ public class PrettyPrinter {
                 : Stream.of(play);
     }
 
+    private static String getArgsString(ArgList args) {
+        return args.isEmpty()
+                ? ""
+                : "<" + String.join(", ", args.stream().map(arg -> arg.ident().value() + "=" + printExpr(arg.expr())).toList()) + ">";
+    }
+
 
     public static String printSchedule(Schedule schedule) {
         return printSchedule(schedule, 0);
@@ -85,6 +92,9 @@ public class PrettyPrinter {
         else if (schedule instanceof When when)
             return indent(depth) + "when (" + printExpr(when.condition()) + ") " +
                     printSchedule(when.body(), when.body() instanceof Block ? depth : 0);
+        else if (schedule instanceof Let let)
+            return indent(depth) + "let " + let.ident().value() + (let.type() == null ? "" : ": " + let.type()) + " = " + printExpr(let.value()) + " in\n" +
+                    printSchedule(let.body(), let.body() instanceof Block ? depth : 0);
 
         throw new RuntimeException("Unhandled Shed-type: " + schedule.getClass().getCanonicalName());
     }

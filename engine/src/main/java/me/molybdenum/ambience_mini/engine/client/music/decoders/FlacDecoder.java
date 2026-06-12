@@ -54,7 +54,7 @@ public class FlacDecoder extends AmDecoder
         maxFrameByteSize = maxFrameSize * sampleByteSize;
         buffer = new byte[BUFFER_SIZE + 2*maxFrameByteSize]; // Part after plus allows the two latest frames to overflow the buffer. Handled later
 
-        if (true) { // TODO: loopArg
+        if (mInst.music().loop()) {
             var startAndEnd = new FlacTagReader(getTags(metadata)).getLoopStartAndEnd();
             loopStart = startAndEnd.left();
             loopEnd = startAndEnd.right();

@@ -76,6 +76,20 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
                     errors.add(new SemError(load.line(), "Cannot find music file with name: '" + musicPath + "'"));
                 if (!AmDecoder.getSupportedFileTypes().contains(Utils.getFileExtension(musicPath)))
                     errors.add(new SemError(load.line(), "The file type of '" + musicPath + "' is unsupported. Ambience Mini currently only supports file types: " + String.join(", ", AmDecoder.getSupportedFileTypes())));
+                for (var arg : load.args()) {
+                    Type typ = Expr(arg.expr(), null, errors);
+                    switch (arg.ident().value()) {
+                        case Load.ARG_GAIN -> {
+                            if (!typ.isFloat() && !typ.isInt())
+                                errors.add(new SemError(arg.ident().line(), "The music argument '" + Load.ARG_GAIN + "' expected a numerical value, but got a value of type '" + typ + "'"));
+                        }
+                        case Load.ARG_LOOP -> {
+                            if (!typ.isBool())
+                                errors.add(new SemError(arg.ident().line(), "The music argument '" + Load.ARG_LOOP + "' expected a boolean value, but got a value of type '" + typ + "'"));
+                        }
+                        default -> errors.add(new SemError(arg.ident().line(), "The music argument '" + arg.ident().value() + "' is invalid"));
+                    }
+                }
             }
         }
         else if (play instanceof Nil || play == null) {

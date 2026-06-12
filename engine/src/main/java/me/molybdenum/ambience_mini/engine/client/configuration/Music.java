@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public record Music(String path, float volumeAdjustment)
+public record Music(String path, float volumeAdjustment, boolean loop)
 {
     @Override
     public @NotNull String toString() {
