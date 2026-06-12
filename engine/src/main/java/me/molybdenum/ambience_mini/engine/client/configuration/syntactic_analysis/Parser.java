@@ -6,8 +6,8 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.s
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.misc.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.Message;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.SynError;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -532,7 +532,7 @@ public class Parser {
 
 
 
-	public Config Parse(InputStream inputStream, ArrayList<LoadError> errors) {
+	public Config Parse(InputStream inputStream, ArrayList<Message> errors) {
 		this.scanner = new Scanner(inputStream);
 		this.errors = new Errors(errors);
 
@@ -558,9 +558,9 @@ public class Parser {
 } // end Parser
 
 class Errors {
-	ArrayList<LoadError> errors;
+	ArrayList<Message> errors;
 
-    public Errors(ArrayList<LoadError> errors) {
+    public Errors(ArrayList<Message> errors) {
         this.errors = errors;
     }
 

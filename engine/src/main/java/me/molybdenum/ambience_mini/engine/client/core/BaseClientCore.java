@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core;
 
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.*;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
@@ -10,10 +11,6 @@ import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.BuildConfig;
 import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.engine.client.configuration.Loader;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.ExcError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.SemError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.FileMusicProvider;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
@@ -49,7 +46,8 @@ public abstract class BaseClientCore<
         TScreenState extends BaseScreenState,
         TCombatState extends BaseCombatState<TEntity, TVec3>
 > {
-    private static final MusicProvider musicProvider = new FileMusicProvider(Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_DIRECTORY).toString());
+    public static final Path musicDirPath = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_DIRECTORY);
+    private static final MusicProvider musicProvider = new FileMusicProvider(musicDirPath.toString());
 
     // Utils
     public final McVersion mcVersion;
@@ -169,14 +167,16 @@ public abstract class BaseClientCore<
         try (InputStream configStream = new FileInputStream(configFile)) {
             Loader.loadFrom(configStream, musicProvider, gameStateProvider).match(
                     this::initMusicThread,
-                    this::printErrors
+                    this::printMessages
             );
         } catch (IOException ignored) { }
     }
 
-    private void initMusicThread(Interpreter interpreter) {
+    private void initMusicThread(Interpreter interpreter, List<Message> warnings) {
         disableNativeMusicManager();
         monitor = new Monitor(this, interpreter, musicProvider, logger);
+
+        printMessages(warnings);
 
         if (clientConfig.verboseMode.get())
             logger.info("Successfully loaded Ambience Mini with configuration:\n{}", clientConfig.getConfigsString());
@@ -184,12 +184,14 @@ public abstract class BaseClientCore<
             logger.info("Successfully loaded Ambience Mini");
     }
 
-    private void printErrors(List<LoadError> errors) {
-        for (var error : errors) {
+    private void printMessages(List<Message> messages) {
+        for (var error : messages) {
             if (error instanceof SynError err)
                 logger.error("Syntactic error [line {}, column {}]: {}", err.line(), err.column(), err.message());
             else if (error instanceof SemError err)
                 logger.error("Semantic error [line {}]: {}", err.line(), err.message());
+            else if (error instanceof SemWarning wrn)
+                logger.error("Semantic warning [line {}]: {}", wrn.line(), wrn.message());
             else if (error instanceof ExcError err)
                 logger.error("An exception occurred while loading the music configuration:\n", err.exception());
             else

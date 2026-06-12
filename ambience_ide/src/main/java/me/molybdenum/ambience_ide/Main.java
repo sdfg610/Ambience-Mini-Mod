@@ -3,10 +3,10 @@ package me.molybdenum.ambience_ide;
 import me.molybdenum.ambience_mini.engine.client.configuration.Loader;
 import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.ExcError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.SemError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.ExcError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.Message;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.SemError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.SynError;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.PlaylistChoice;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.BoolVal;
@@ -202,7 +202,7 @@ public class Main
             output.appendChild(makeParagraph(doc, String.format("Values computed during selection:\n%s", Utils.getKeyValuePairString(trace))));
     }
 
-    private static void printErrors(List<LoadError> errors) {
+    private static void printErrors(List<Message> errors) {
         HTMLDocument doc = HTMLDocument.current();
         var output = doc.getElementById("output");
         output.appendChild(makeParagraph(doc, "There were errors in the configuration!"));

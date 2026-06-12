@@ -1,11 +1,10 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.music_provider;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public class FileMusicProvider implements MusicProvider
 {
@@ -29,5 +28,14 @@ public class FileMusicProvider implements MusicProvider
     @Override
     public Path getFullPath(String musicPath) {
         return Path.of(musicBasePath, musicPath);
+    }
+
+    @Override
+    public List<Path> listAllMusicFiles() {
+        try (var files = Files.walk(Path.of(musicBasePath))) {
+            return files.toList();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

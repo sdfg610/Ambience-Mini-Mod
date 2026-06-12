@@ -1,12 +1,9 @@
 package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sound.sampled.AudioFormat;
-import java.io.BufferedInputStream;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Set;
@@ -39,6 +36,10 @@ public abstract class AmDecoder {
     public static Set<String> getSupportedFileTypes() {
         init();
         return FILETYPE_TO_DECODER.keySet();
+    }
+
+    public static boolean isSupportedFileType(String fileType) {
+        return getSupportedFileTypes().contains(fileType);
     }
 
 

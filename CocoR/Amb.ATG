@@ -17,8 +17,8 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.s
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.misc.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.SynError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.Message;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.SynError;
 
 import java.io.InputStream;
 import java.util.ArrayList;

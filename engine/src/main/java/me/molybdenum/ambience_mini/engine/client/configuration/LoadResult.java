@@ -1,38 +1,39 @@
 package me.molybdenum.ambience_mini.engine.client.configuration;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.Message;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class LoadResult {
     private final boolean isSuccess;
 
     public final Interpreter interpreter;
-    public final List<LoadError> errors;
+    public final List<Message> messages;
 
 
-    private LoadResult(boolean isSuccess, Interpreter interpreter, List<LoadError> errors) {
+    private LoadResult(boolean isSuccess, Interpreter interpreter, List<Message> messages) {
         this.isSuccess = isSuccess;
         this.interpreter = interpreter;
-        this.errors = errors;
+        this.messages = messages;
     }
 
 
-    public void match(Consumer<Interpreter> onSuccess, Consumer<List<LoadError>> onFailure) {
+    public void match(BiConsumer<Interpreter, List<Message>> onSuccess, Consumer<List<Message>> onFailure) {
         if (isSuccess)
-            onSuccess.accept(interpreter);
+            onSuccess.accept(interpreter, messages);
         else
-            onFailure.accept(errors);
+            onFailure.accept(messages);
     }
 
 
-    public static <T> LoadResult of(Interpreter interpreter) {
-        return new LoadResult(true, interpreter, null);
+    public static <T> LoadResult of(Interpreter interpreter, List<Message> warnings) {
+        return new LoadResult(true, interpreter, warnings);
     }
 
-    public static <T> LoadResult fail(List<LoadError> message) {
-        return new LoadResult(false, null, message);
+    public static <T> LoadResult fail(List<Message> messages) {
+        return new LoadResult(false, null, messages);
     }
 }

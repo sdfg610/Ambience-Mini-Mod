@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public interface MusicProvider
@@ -15,6 +16,7 @@ public interface MusicProvider
     boolean exists(String musicPath);
     BufferedInputStream getMusicStream(String musicPath) throws FileNotFoundException;
     Path getFullPath(String musicPath);
+    List<Path> listAllMusicFiles();
 
 
     static Result<String> validatePath(String filePath) {

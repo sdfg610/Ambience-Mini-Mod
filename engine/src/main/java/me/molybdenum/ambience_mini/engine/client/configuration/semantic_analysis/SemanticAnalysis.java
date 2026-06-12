@@ -9,12 +9,13 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.s
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.kinds.AccessibleT;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.kinds.IndexableT;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.SemError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.Message;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.SemError;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.AnyT;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.SemWarning;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.client.configuration.pretty_printer.PrettyPrinter;
-import me.molybdenum.ambience_mini.engine.client.music.MusicPlayer;
+import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.music.decoders.AmDecoder;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
@@ -22,26 +23,40 @@ import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStatePro
 import me.molybdenum.ambience_mini.engine.client.core.providers.Property;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvider gameStateProvider)
 {
-    public void validate(Config config, ArrayList<LoadError> errors) {
-        Conf(config, new TypeEnv(), errors);
+    private static final ArrayList<String> usedMusicFiles = new ArrayList<>();
+
+    public void validate(Config config, ArrayList<Message> messages) {
+        usedMusicFiles.clear();
+
+        Conf(config, new TypeEnv(), messages);
+
+        int skipLen = BaseClientCore.musicDirPath.toString().length() + 1;  // +1 for '/' after
+        List<String> unusedFiles = musicProvider.listAllMusicFiles()
+                .stream()
+                .filter(path -> AmDecoder.isSupportedFileType(Utils.getFileExtension(path.toString())) && usedMusicFiles.stream().noneMatch(path::endsWith))
+                .map(path -> "-- " + path.toString().substring(skipLen))
+                .toList();
+        if (!unusedFiles.isEmpty())
+            messages.add(new SemWarning(-1, "There are unused files in the music directory:\n" + String.join("\n", unusedFiles)));
     }
 
 
-    private void Conf(Config config, TypeEnv env, ArrayList<LoadError> errors) {
+    private void Conf(Config config, TypeEnv env, ArrayList<Message> messages) {
         if (config instanceof PlaylistDecl playlistDecl) {
             String name = playlistDecl.ident().value();
             if (!env.bind(name, new PlaylistT()))
-                errors.add(new SemError(playlistDecl.ident().line(), "Multiple definition of playlist: " + name));
+                messages.add(new SemError(playlistDecl.ident().line(), "Multiple definition of playlist: " + name));
 
-            PL(playlistDecl.playlist(), env, errors);
-            Conf(playlistDecl.config(), env, errors);
+            PL(playlistDecl.playlist(), env, messages);
+            Conf(playlistDecl.config(), env, messages);
         }
         else if (config instanceof ScheduleDecl scheduleDecl) {
-            Shed(scheduleDecl.schedule(), env, errors);
+            Shed(scheduleDecl.schedule(), env, messages);
         }
         else if (config == null) {
             return;
@@ -50,44 +65,48 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             throw new RuntimeException("Unhandled Conf-type: " + config.getClass().getCanonicalName());
     }
 
-    private void PL(Playlist play, TypeEnv env, ArrayList<LoadError> errors) {
+    private void PL(Playlist play, TypeEnv env, ArrayList<Message> messages) {
         if (play instanceof IdentP ident) {
             String name = ident.value();
             var binding = env.lookup(name);
             if (binding.isEmpty())
-                errors.add(new SemError(ident.line(), "Use of undefined playlist: " + name));
+                messages.add(new SemError(ident.line(), "Use of undefined playlist: " + name));
             else {
                 var type = binding.get();
                 if (!(type instanceof PlaylistT))
-                    errors.add(new SemError(ident.line(), "The ident '" + name + "' was expected to be a playlist but has type '" + PrettyPrinter.getTypeString(type) + "'"));
+                    messages.add(new SemError(ident.line(), "The ident '" + name + "' was expected to be a playlist but has type '" + PrettyPrinter.getTypeString(type) + "'"));
             }
         }
         else if (play instanceof Concat concat) {
-            PL(concat.left(), env, errors);
-            PL(concat.right(), env, errors);
+            PL(concat.left(), env, messages);
+            PL(concat.right(), env, messages);
         }
         else if (play instanceof Load load) {
             Result<String> musicPathRes = MusicProvider.validatePath(load.file().value());
             if (!musicPathRes.isSuccess())
-                errors.add(new SemError(load.line(), musicPathRes.error));
+                messages.add(new SemError(load.line(), musicPathRes.error));
             else {
                 String musicPath = musicPathRes.value;
                 if (!musicProvider.exists(musicPath))
-                    errors.add(new SemError(load.line(), "Cannot find music file with name: '" + musicPath + "'"));
-                if (!AmDecoder.getSupportedFileTypes().contains(Utils.getFileExtension(musicPath)))
-                    errors.add(new SemError(load.line(), "The file type of '" + musicPath + "' is unsupported. Ambience Mini currently only supports file types: " + String.join(", ", AmDecoder.getSupportedFileTypes())));
+                    messages.add(new SemError(load.line(), "Cannot find music file with name: '" + musicPath + "'"));
+                else
+                    usedMusicFiles.add(musicPath);
+
+                if (!AmDecoder.isSupportedFileType(Utils.getFileExtension(musicPath)))
+                    messages.add(new SemError(load.line(), "The file type of '" + musicPath + "' is unsupported. Ambience Mini currently only supports file types: " + String.join(", ", AmDecoder.getSupportedFileTypes())));
+
                 for (var arg : load.args()) {
-                    Type typ = Expr(arg.expr(), null, errors);
+                    Type typ = Expr(arg.expr(), null, messages);
                     switch (arg.ident().value()) {
                         case Load.ARG_GAIN -> {
                             if (!typ.isFloat() && !typ.isInt())
-                                errors.add(new SemError(arg.ident().line(), "The music argument '" + Load.ARG_GAIN + "' expected a numerical value, but got a value of type '" + typ + "'"));
+                                messages.add(new SemError(arg.ident().line(), "The music argument '" + Load.ARG_GAIN + "' expected a numerical value, but got a value of type '" + typ + "'"));
                         }
                         case Load.ARG_LOOP -> {
                             if (!typ.isBool())
-                                errors.add(new SemError(arg.ident().line(), "The music argument '" + Load.ARG_LOOP + "' expected a boolean value, but got a value of type '" + typ + "'"));
+                                messages.add(new SemError(arg.ident().line(), "The music argument '" + Load.ARG_LOOP + "' expected a boolean value, but got a value of type '" + typ + "'"));
                         }
-                        default -> errors.add(new SemError(arg.ident().line(), "The music argument '" + arg.ident().value() + "' is invalid"));
+                        default -> messages.add(new SemError(arg.ident().line(), "The music argument '" + arg.ident().value() + "' is invalid"));
                     }
                 }
             }
@@ -99,38 +118,38 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             throw new RuntimeException("Unhandled PL-type: " + play.getClass().getCanonicalName());
     }
 
-    private void Shed(Schedule schedule, TypeEnv env, ArrayList<LoadError> errors) {
+    private void Shed(Schedule schedule, TypeEnv env, ArrayList<Message> messages) {
         if (schedule instanceof Play play) {
-            PL(play.playlist(), env, errors);
+            PL(play.playlist(), env, messages);
             if (play.getPriorityOrElse(0) < 0)
-                errors.add(new SemError(play.priority().line(), "The priority must be non-negative (>= 0)."));
+                messages.add(new SemError(play.priority().line(), "The priority must be non-negative (>= 0)."));
         }
         else if (schedule instanceof Block block) {
             for (var child : block.body())
-                Shed(child, env, errors);
+                Shed(child, env, messages);
         }
         else if (schedule instanceof When when) {
-            Type type = Expr(when.condition(), env, errors);
+            Type type = Expr(when.condition(), env, messages);
             if (!(type instanceof BoolT) && type != null)
-                errors.add(new SemError(when.line(), "The condition inside a 'when' must result in a boolean value. Got '" + PrettyPrinter.getTypeString(type) + "'"));
+                messages.add(new SemError(when.line(), "The condition inside a 'when' must result in a boolean value. Got '" + PrettyPrinter.getTypeString(type) + "'"));
 
             env.openScope();
-            Shed(when.body(), env, errors);
+            Shed(when.body(), env, messages);
             env.closeScope();
         }
         else if (schedule instanceof Let let) {
             Type expectedType = let.type();
-            Type actualType = Expr(let.value(), env, errors);
+            Type actualType = Expr(let.value(), env, messages);
             if (expectedType != null && !expectedType.equalTo(actualType))
-                errors.add(new SemError(let.line(), "A 'let' command expected a value of type '" + PrettyPrinter.getTypeString(expectedType) + "' but got '" + PrettyPrinter.getTypeString(actualType) + "'"));
+                messages.add(new SemError(let.line(), "A 'let' command expected a value of type '" + PrettyPrinter.getTypeString(expectedType) + "' but got '" + PrettyPrinter.getTypeString(actualType) + "'"));
 
             env.openScope();
             env.bind(let.ident().value(), expectedType == null ? actualType : expectedType);
-            Shed(let.body(), env, errors);
+            Shed(let.body(), env, messages);
             env.closeScope();
         }
         else if (schedule instanceof Interrupt interrupt) {
-            Shed(interrupt.body(), env, errors);
+            Shed(interrupt.body(), env, messages);
         }
         else if (schedule == null) {
             return;
@@ -139,11 +158,11 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             throw new RuntimeException("Unhandled Shed-type: " + schedule.getClass().getCanonicalName());
     }
 
-    private Type Expr(Expr expr, TypeEnv env, ArrayList<LoadError> errors) {
+    private Type Expr(Expr expr, TypeEnv env, ArrayList<Message> messages) {
         if (expr instanceof IdentE ident) {
             Optional<Type> type = env.lookup(ident.value());
             if (type.isEmpty()) {
-                errors.add(new SemError(ident.line(), "Use of unbound ident '" + ident.value() + "'"));
+                messages.add(new SemError(ident.line(), "Use of unbound ident '" + ident.value() + "'"));
                 return null;
             }
             return type.get();
@@ -160,114 +179,114 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
             return new StringT();
         else if (expr instanceof GetEvent getEvent) {
             if (gameStateProvider.tryGetEvent(getEvent.eventName().value()).isEmpty())
-                errors.add(new SemError(getEvent.eventName().line(), "Use of unknown event: @" + getEvent.eventName().value()));
+                messages.add(new SemError(getEvent.eventName().line(), "Use of unknown event: @" + getEvent.eventName().value()));
             return new BoolT();
         }
         else if (expr instanceof GetProperty property) {
             Optional<Property> prop = gameStateProvider.tryGetProperty(property.propertyName().value());
             if (prop.isEmpty()) {
-                errors.add(new SemError(property.propertyName().line(), "Use of unknown property: $" + property.propertyName().value()));
+                messages.add(new SemError(property.propertyName().line(), "Use of unknown property: $" + property.propertyName().value()));
                 return null;
             }
             return prop.get().type;
         }
         else if (expr instanceof UnaryOp unOp) {
-            Type type = Expr(unOp.expr(), env, errors);
+            Type type = Expr(unOp.expr(), env, messages);
             return switch (unOp.op()) {
                 case NOT -> {
                     if (type != null && !(type instanceof BoolT))
-                        errors.add(new SemError(unOp.opLine(), "Argument of '!' must be of type bool. Got '" + PrettyPrinter.getTypeString(type) + "'"));
+                        messages.add(new SemError(unOp.opLine(), "Argument of '!' must be of type bool. Got '" + PrettyPrinter.getTypeString(type) + "'"));
                     yield new BoolT();
                 }
                 case NEG -> {
                     if (isNumber(type))
                         yield type;
                     else if (isNotNumber(type))
-                        errors.add(new SemError(unOp.opLine(), "Argument of unary '-' must be a number type. Got '" + PrettyPrinter.getTypeString(type) + "'"));
+                        messages.add(new SemError(unOp.opLine(), "Argument of unary '-' must be a number type. Got '" + PrettyPrinter.getTypeString(type) + "'"));
                     yield null;
                 }
             };
         }
         else if (expr instanceof BinaryOp binOp) {
-            Type typeLeft = Expr(binOp.left(), env, errors);
-            Type typeRight = Expr(binOp.right(), env, errors);
+            Type typeLeft = Expr(binOp.left(), env, messages);
+            Type typeRight = Expr(binOp.right(), env, messages);
 
             return switch (binOp.op()) {
                 case EQ -> {
                     if (isNotEqual(typeLeft, typeRight))
-                        errors.add(new SemError(binOp.line(), "Arguments of '==' must be of same type. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                        messages.add(new SemError(binOp.line(), "Arguments of '==' must be of same type. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
                     yield new BoolT();
                 }
                 case APP_EQ -> {
                     if (isNotString(typeLeft) || isNotString(typeRight))
-                        errors.add(new SemError(binOp.line(), "Arguments of '~~' must both be of type string. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                        messages.add(new SemError(binOp.line(), "Arguments of '~~' must both be of type string. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
                     yield new BoolT();
                 }
                 case MATCH -> {
                     if (isNotString(typeLeft) || isNotString(typeRight))
-                        errors.add(new SemError(binOp.line(), "Arguments of '*~' must both be of type string. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                        messages.add(new SemError(binOp.line(), "Arguments of '*~' must both be of type string. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
                     yield new BoolT();
                 }
                 case AND -> {
                     if (isNotBool(typeLeft) || isNotBool(typeRight))
-                        errors.add(new SemError(binOp.line(), "Arguments of '&&' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                        messages.add(new SemError(binOp.line(), "Arguments of '&&' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
                     yield new BoolT();
                 }
                 case OR -> {
                     if (isNotBool(typeLeft) || isNotBool(typeRight))
-                        errors.add(new SemError(binOp.line(), "Arguments of '||' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                        messages.add(new SemError(binOp.line(), "Arguments of '||' must both be of type bool. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
                     yield new BoolT();
                 }
                 case LT -> {
                     if (isNotNumber(typeLeft) || isNotNumber(typeRight))
-                        errors.add(new SemError(binOp.line(), "Arguments of '<' and '>' must both be numbers. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                        messages.add(new SemError(binOp.line(), "Arguments of '<' and '>' must both be numbers. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
                     yield new BoolT();
                 }
                 case LE -> {
                     if (isNotNumber(typeLeft) || isNotNumber(typeRight))
-                        errors.add(new SemError(binOp.line(), "Arguments of '<=' and '>=' must both be numbers. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                        messages.add(new SemError(binOp.line(), "Arguments of '<=' and '>=' must both be numbers. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
                     yield new BoolT();
                 }
                 case INDEXER -> {
                     if (typeLeft instanceof IndexableT indexer) {
                         if (isNotEqual(typeRight, indexer.indexerType()))
-                            errors.add(new SemError(binOp.line(), "A value of type '" + PrettyPrinter.getTypeString(typeLeft) + "' requires an indexer of type '" + PrettyPrinter.getTypeString(indexer.indexerType()) + "'. Got '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                            messages.add(new SemError(binOp.line(), "A value of type '" + PrettyPrinter.getTypeString(typeLeft) + "' requires an indexer of type '" + PrettyPrinter.getTypeString(indexer.indexerType()) + "'. Got '" + PrettyPrinter.getTypeString(typeRight) + "'"));
                         yield indexer.outputType();
                     }
                     else if (typeLeft != null)
-                        errors.add(new SemError(binOp.line(), "A value of type '" + PrettyPrinter.getTypeString(typeLeft) + "' cannot be indexed using '[]'."));
+                        messages.add(new SemError(binOp.line(), "A value of type '" + PrettyPrinter.getTypeString(typeLeft) + "' cannot be indexed using '[]'."));
                     yield null;
                 }
             };
         }
         else if (expr instanceof QuantifierOp quanOp) {
-            Type typeList = Expr(quanOp.list(), env, errors);
+            Type typeList = Expr(quanOp.list(), env, messages);
             if (isNotList(typeList))
-                errors.add(new SemError(quanOp.inLine(), "The expression after 'in' in a list quantifier must be a list, but got '" + PrettyPrinter.getTypeString(typeList) + "'"));
+                messages.add(new SemError(quanOp.inLine(), "The expression after 'in' in a list quantifier must be a list, but got '" + PrettyPrinter.getTypeString(typeList) + "'"));
 
             env.openScope();
             if (!env.bind(quanOp.identifier().value(), tryGetListElementType(typeList)))
-                errors.add(new SemError(quanOp.identifier().line(), "Multiple definitions of the ident '" + quanOp.identifier() + "'"));
+                messages.add(new SemError(quanOp.identifier().line(), "Multiple definitions of the ident '" + quanOp.identifier() + "'"));
 
-            Type typeCondition = Expr(quanOp.condition(), env, errors);
+            Type typeCondition = Expr(quanOp.condition(), env, messages);
             if (!(typeCondition instanceof BoolT))
-                errors.add(new SemError(quanOp.whereLine(), "The expression after 'where' in a list quantifier must be a boolean, but got '" + PrettyPrinter.getTypeString(typeCondition) + "'"));
+                messages.add(new SemError(quanOp.whereLine(), "The expression after 'where' in a list quantifier must be a boolean, but got '" + PrettyPrinter.getTypeString(typeCondition) + "'"));
             env.closeScope();
 
             return new BoolT();
         }
         else if (expr instanceof Accessor accessor) {
-            Type type = Expr(accessor.base(), env, errors);
+            Type type = Expr(accessor.base(), env, messages);
             IdentE field = accessor.field();
 
             if (type instanceof AccessibleT acc) {
                 Type fieldT = acc.getField(field.value());
                 if (fieldT != null)
                     return fieldT;
-                errors.add(new SemError(field.line(), "A value of type '" + PrettyPrinter.getTypeString(type) + "' does not contain the field '" + field.value() + "'."));
+                messages.add(new SemError(field.line(), "A value of type '" + PrettyPrinter.getTypeString(type) + "' does not contain the field '" + field.value() + "'."));
             }
             else if (type != null)
-                errors.add(new SemError(accessor.line(), "A value of type '" + PrettyPrinter.getTypeString(type) + "' does not have any fields to access."));
+                messages.add(new SemError(accessor.line(), "A value of type '" + PrettyPrinter.getTypeString(type) + "' does not have any fields to access."));
             return null;
         }
         else if (expr == null) {

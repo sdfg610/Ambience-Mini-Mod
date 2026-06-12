@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.configuration;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.ExcError;
-import me.molybdenum.ambience_mini.engine.client.configuration.errors.LoadError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.ExcError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.Message;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.config.Config;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
@@ -18,20 +18,19 @@ public class Loader {
             MusicProvider musicProvider,
             BaseGameStateProvider gameStateProvider
     ) {
-        ArrayList<LoadError> errors = new ArrayList<>();
+        ArrayList<Message> messages = new ArrayList<>();
 
         try {
-            Config config = new Parser().Parse(configStream, errors);
-            var sem = new SemanticAnalysis(musicProvider, gameStateProvider);
-            sem.validate(config, errors);
+            Config config = new Parser().Parse(configStream, messages);
+            new SemanticAnalysis(musicProvider, gameStateProvider).validate(config, messages);
 
-            if (errors.isEmpty())
-                return LoadResult.of(new Interpreter(config, gameStateProvider));
+            if (messages.stream().noneMatch(Message::isError))
+                return LoadResult.of(new Interpreter(config, gameStateProvider), messages);
         }
         catch (Exception ex) {
-            errors.add(new ExcError(ex));
+            messages.add(new ExcError(ex));
         }
 
-        return LoadResult.fail(errors);
+        return LoadResult.fail(messages);
     }
 }
