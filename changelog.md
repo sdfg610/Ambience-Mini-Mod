@@ -1,7 +1,11 @@
 
-### Version 2.?.?:
+### Version 2.7.0:
 
-- Added a `$combatant_ids` property which is a list of ids (e.g. `"minecraft:skeleton"`) of fought mobs.
+- Added support for `loopstart` and `looplength/loopend` metadata tags for all supported music files.
+  * This will cause the music to start out as normal, but continue looping some part after reaching the end of the loop interval.
+  * `loopstart` and `looplength/loopend` are all measured in samples (the smallest piece of audio data).
+- Mod now prints a warning to the logs when music directory contains unused music files.
+- Mod now prints warnings about unused identifiers (e.g., playlists) in the music config.
 
 
 ### Version 2.6.2:

@@ -49,7 +49,7 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
     private void Conf(Config config, TypeEnv env, ArrayList<Message> messages) {
         if (config instanceof PlaylistDecl playlistDecl) {
             String name = playlistDecl.ident().value();
-            if (!env.bind(name, new PlaylistT()))
+            if (!env.bind(name, new PlaylistT(), playlistDecl.ident().line()))
                 messages.add(new SemError(playlistDecl.ident().line(), "Multiple definition of playlist: " + name));
 
             PL(playlistDecl.playlist(), env, messages);
@@ -57,6 +57,7 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
         }
         else if (config instanceof ScheduleDecl scheduleDecl) {
             Shed(scheduleDecl.schedule(), env, messages);
+            makeUnusedVariableWarnings(env, messages);
         }
         else if (config == null) {
             return;
@@ -68,11 +69,13 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
     private void PL(Playlist play, TypeEnv env, ArrayList<Message> messages) {
         if (play instanceof IdentP ident) {
             String name = ident.value();
-            var binding = env.lookup(name);
-            if (binding.isEmpty())
+            var optBinding = env.lookup(name);
+            if (optBinding.isEmpty())
                 messages.add(new SemError(ident.line(), "Use of undefined playlist: " + name));
             else {
-                var type = binding.get();
+                var binding = optBinding.get();
+                binding.markIsUsed();
+                var type = binding.type;
                 if (!(type instanceof PlaylistT))
                     messages.add(new SemError(ident.line(), "The ident '" + name + "' was expected to be a playlist but has type '" + PrettyPrinter.getTypeString(type) + "'"));
             }
@@ -144,8 +147,9 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
                 messages.add(new SemError(let.line(), "A 'let' command expected a value of type '" + PrettyPrinter.getTypeString(expectedType) + "' but got '" + PrettyPrinter.getTypeString(actualType) + "'"));
 
             env.openScope();
-            env.bind(let.ident().value(), expectedType == null ? actualType : expectedType);
+            env.bind(let.ident().value(), expectedType == null ? actualType : expectedType, let.ident().line());
             Shed(let.body(), env, messages);
+            makeUnusedVariableWarnings(env, messages);
             env.closeScope();
         }
         else if (schedule instanceof Interrupt interrupt) {
@@ -160,12 +164,14 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
 
     private Type Expr(Expr expr, TypeEnv env, ArrayList<Message> messages) {
         if (expr instanceof IdentE ident) {
-            Optional<Type> type = env.lookup(ident.value());
-            if (type.isEmpty()) {
+            Optional<TypeBinding> optBinding = env.lookup(ident.value());
+            if (optBinding.isEmpty()) {
                 messages.add(new SemError(ident.line(), "Use of unbound ident '" + ident.value() + "'"));
                 return null;
             }
-            return type.get();
+            var binding = optBinding.get();
+            binding.markIsUsed();
+            return binding.type;
         }
         else if (expr instanceof UndefinedLit)
             return new AnyT();
@@ -265,12 +271,14 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
                 messages.add(new SemError(quanOp.inLine(), "The expression after 'in' in a list quantifier must be a list, but got '" + PrettyPrinter.getTypeString(typeList) + "'"));
 
             env.openScope();
-            if (!env.bind(quanOp.identifier().value(), tryGetListElementType(typeList)))
+            if (!env.bind(quanOp.identifier().value(), tryGetListElementType(typeList), quanOp.identifier().line()))
                 messages.add(new SemError(quanOp.identifier().line(), "Multiple definitions of the ident '" + quanOp.identifier() + "'"));
 
             Type typeCondition = Expr(quanOp.condition(), env, messages);
             if (!(typeCondition instanceof BoolT))
                 messages.add(new SemError(quanOp.whereLine(), "The expression after 'where' in a list quantifier must be a boolean, but got '" + PrettyPrinter.getTypeString(typeCondition) + "'"));
+
+            makeUnusedVariableWarnings(env, messages);
             env.closeScope();
 
             return new BoolT();
@@ -327,5 +335,10 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
         if (type instanceof ListT list)
             return list.elementType;
         return null;
+    }
+
+    private void makeUnusedVariableWarnings(TypeEnv env, ArrayList<Message> messages) {
+        for (var pair : env.getTopScopeUnused())
+            messages.add(new SemWarning(pair.right(), "Unused variable '" + pair.left() + "'"));
     }
 }

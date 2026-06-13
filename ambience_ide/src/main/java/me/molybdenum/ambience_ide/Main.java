@@ -3,10 +3,7 @@ package me.molybdenum.ambience_ide;
 import me.molybdenum.ambience_mini.engine.client.configuration.Loader;
 import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.messages.ExcError;
-import me.molybdenum.ambience_mini.engine.client.configuration.messages.Message;
-import me.molybdenum.ambience_mini.engine.client.configuration.messages.SemError;
-import me.molybdenum.ambience_mini.engine.client.configuration.messages.SynError;
+import me.molybdenum.ambience_mini.engine.client.configuration.messages.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.PlaylistChoice;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.BoolVal;
@@ -186,15 +183,17 @@ public class Main
         );
     }
 
-    private static void printResult(Interpreter interpreter) {
+    private static void printResult(Interpreter interpreter, List<Message> warnings) {
         HTMLDocument doc = HTMLDocument.current();
         var output = doc.getElementById("output");
         output.appendChild(makeParagraph(doc, "Configuration is valid and ran to completion!"));
 
+        printMessages(warnings, output, doc);
+
         ArrayList<Pair<String, Value<?>>> trace = new ArrayList<>();
         PlaylistChoice choice = interpreter.selectPlaylist(trace);
         if (choice == null)
-            output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));
+            output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music (if any) will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));
         else
             output.appendChild(makeParagraph(doc, String.format("Selected new playlist at priority %d: [ %s ]", choice.priority(), String.join(", ", choice.playlist().stream().map(Music::path).toList()))));
 
@@ -207,6 +206,10 @@ public class Main
         var output = doc.getElementById("output");
         output.appendChild(makeParagraph(doc, "There were errors in the configuration!"));
 
+        printMessages(errors, output, doc);
+    }
+
+    private static void printMessages(List<Message> errors, HTMLElement output, HTMLDocument doc) {
         for (var error : errors) {
             String text;
 
@@ -214,6 +217,8 @@ public class Main
                 text = String.format("Syntactic error [line %d, column %d]: %s", err.line(), err.column(), err.message());
             else if (error instanceof SemError err)
                 text = String.format("Semantic error [line %d]: %s", err.line(), err.message());
+            else if (error instanceof SemWarning wrn)
+                text = String.format("Warning [line %d]: %s", wrn.line(), wrn.message());
             else if (error instanceof ExcError err) {
                 StringWriter sw = new StringWriter();
                 err.exception().printStackTrace(new PrintWriter(sw));

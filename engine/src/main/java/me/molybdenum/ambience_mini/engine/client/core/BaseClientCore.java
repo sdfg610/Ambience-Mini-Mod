@@ -191,7 +191,7 @@ public abstract class BaseClientCore<
             else if (error instanceof SemError err)
                 logger.error("Semantic error [line {}]: {}", err.line(), err.message());
             else if (error instanceof SemWarning wrn)
-                logger.error("Semantic warning [line {}]: {}", wrn.line(), wrn.message());
+                logger.error("Warning [line {}]: {}", wrn.line(), wrn.message());
             else if (error instanceof ExcError err)
                 logger.error("An exception occurred while loading the music configuration:\n", err.exception());
             else
