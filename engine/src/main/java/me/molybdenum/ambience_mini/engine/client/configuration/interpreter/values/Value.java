@@ -39,6 +39,11 @@ public sealed abstract class Value<T> permits AreaVal, BoolVal, FloatVal, IntVal
     }
 
     @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Value<?> val && equals(val);
+    }
+
+    @Override
     public String toString() {
         return value == null ? "undefined" : toStringInner(value);
     }
