@@ -213,7 +213,7 @@ public class Monitor
 
                 var playlist = String.join(", ", nextPlaylist.stream().map(m -> '"' + m.path() + '"').toList());
                 _logger.info("At tick '{}'. Selected new playlist at priority '{}': [ {} ]", _tick, nextPriority, playlist);
-                _logger.info("Values computed during selection:\n{}", Utils.getKeyValuePairString(trace));
+                _logger.info("Events and properties computed during selection:\n{}", Utils.getKeyValuePairString(trace));
                 _logger.info("Playlist selection took {}ms. The average time is currently {}ms.", selectTime, Arrays.stream(_benchmarks).average().orElse(Double.MIN_VALUE));
             }
 

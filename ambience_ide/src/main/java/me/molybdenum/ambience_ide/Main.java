@@ -198,7 +198,7 @@ public class Main
             output.appendChild(makeParagraph(doc, String.format("Selected new playlist at priority %d: [ %s ]", choice.priority(), String.join(", ", choice.playlist().stream().map(Music::path).toList()))));
 
         if (!trace.isEmpty())
-            output.appendChild(makeParagraph(doc, String.format("Values computed during selection:\n%s", Utils.getKeyValuePairString(trace))));
+            output.appendChild(makeParagraph(doc, String.format("Events and properties computed during selection:\n%s", Utils.getKeyValuePairString(trace))));
     }
 
     private static void printErrors(List<Message> errors) {

@@ -1,6 +1,7 @@
 
 ### Version 2.7.0:
 
+- Added `length` field to lists. `list.length` will get the length of a list.
 - Added support for `loopstart` and `looplength/loopend` metadata tags for all supported music files.
   * This will cause the music to start out as normal, but continue looping some part after reaching the end of the loop interval.
   * `loopstart` and `looplength/loopend` are all measured in samples (the smallest piece of audio data).

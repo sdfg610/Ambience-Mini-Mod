@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueList;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.kinds.AccessibleV;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.kinds.IndexableV;
 import org.jetbrains.annotations.NotNull;
 
@@ -8,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
-public final class ListVal extends Value<ValueList> implements IndexableV
+public final class ListVal extends Value<ValueList> implements IndexableV, AccessibleV
 {
     public static final ListVal UNDEFINED = new ListVal();
     public static final ListVal EMPTY = new ListVal(List.of());
@@ -66,5 +67,10 @@ public final class ListVal extends Value<ValueList> implements IndexableV
         return value != null && idx.isPresent()
                 ? value.stream().skip(idx.get()).findFirst().orElse(UndefinedVal.INSTANCE)
                 : UndefinedVal.INSTANCE;
+    }
+
+    @Override
+    public Value<?> getField(String field) {
+        return "length".equals(field) ? new IntVal(value.size()) : UndefinedVal.INSTANCE;
     }
 }

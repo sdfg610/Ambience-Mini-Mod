@@ -1,9 +1,17 @@
 package me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type;
 
+import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.kinds.AccessibleT;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.kinds.IndexableT;
 import org.jetbrains.annotations.NotNull;
 
-public final class ListT extends Type implements IndexableT {
+import java.util.Map;
+
+public final class ListT extends Type implements IndexableT, AccessibleT
+{
+    public static final Map<String, Type> FIELDS = Map.of(
+            "length", IntT.INSTANCE
+    );
+
     public final Type elementType;
 
 
@@ -27,5 +35,11 @@ public final class ListT extends Type implements IndexableT {
     @Override
     public Type outputType() {
         return elementType;
+    }
+
+
+    @Override
+    public Map<String, Type> fieldTypes() {
+        return FIELDS;
     }
 }
