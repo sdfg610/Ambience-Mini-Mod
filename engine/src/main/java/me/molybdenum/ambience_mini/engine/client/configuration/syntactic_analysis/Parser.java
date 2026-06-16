@@ -21,7 +21,7 @@ public class Parser {
 	public static final int _INT = 2;
 	public static final int _FLOAT = 3;
 	public static final int _STRING = 4;
-	public static final int maxT = 54;
+	public static final int maxT = 58;
 
 	static final boolean _T = true;
 	static final boolean _x = false;
@@ -113,7 +113,7 @@ public class Parser {
 		} else if (StartOf(1)) {
 			Schedule schedule = Shed();
 			conf = new ScheduleDecl(schedule); 
-		} else SynErr(55);
+		} else SynErr(59);
 		return conf;
 	}
 
@@ -198,7 +198,7 @@ public class Parser {
 			schedule = new Interrupt(schedule2, line); 
 			break;
 		}
-		default: SynErr(56); break;
+		default: SynErr(60); break;
 		}
 		return schedule;
 	}
@@ -232,7 +232,7 @@ public class Parser {
 				Expect(14);
 			}
 			play = new Load(file, args, line); 
-		} else SynErr(57);
+		} else SynErr(61);
 		return play;
 	}
 
@@ -267,7 +267,7 @@ public class Parser {
 				value = Const();
 			}
 			arg = new Arg(ident, value); 
-		} else SynErr(58);
+		} else SynErr(62);
 		return arg;
 	}
 
@@ -283,7 +283,7 @@ public class Parser {
 		} else if (la.kind == 4) {
 			Get();
 			expr = new StringLit(removeFirstAndLast(t.val)); 
-		} else SynErr(59);
+		} else SynErr(63);
 		return expr;
 	}
 
@@ -309,29 +309,34 @@ public class Parser {
 		Type  type;
 		type = null; 
 		switch (la.kind) {
-		case 47: {
+		case 50: {
 			Get();
 			type = BoolT.INSTANCE; 
 			break;
 		}
-		case 48: {
+		case 51: {
 			Get();
 			type = IntT.INSTANCE; 
 			break;
 		}
-		case 49: {
+		case 52: {
 			Get();
 			type = FloatT.INSTANCE; 
 			break;
 		}
-		case 50: {
+		case 53: {
 			Get();
 			type = StringT.INSTANCE; 
 			break;
 		}
-		case 51: {
+		case 54: {
 			Get();
 			type = AreaT.INSTANCE; 
+			break;
+		}
+		case 55: {
+			Get();
+			type = CombatantT.INSTANCE; 
 			break;
 		}
 		case 5: {
@@ -339,7 +344,7 @@ public class Parser {
 			type = PlaylistT.INSTANCE; 
 			break;
 		}
-		case 52: {
+		case 56: {
 			Get();
 			Expect(13);
 			Type elemType = Type();
@@ -347,7 +352,7 @@ public class Parser {
 			type = new ListT(elemType); 
 			break;
 		}
-		case 53: {
+		case 57: {
 			Get();
 			Expect(13);
 			Type elemType1 = Type();
@@ -357,7 +362,7 @@ public class Parser {
 			type = new MapT(elemType1, elemType2); 
 			break;
 		}
-		default: SynErr(60); break;
+		default: SynErr(64); break;
 		}
 		return type;
 	}
@@ -392,30 +397,66 @@ public class Parser {
 
 	Expr  ExprRel() {
 		Expr  expr;
-		BinaryOperators op; int line = -1; 
-		expr = ExprPre();
+		int line = -1; 
+		expr = ExprAdd();
 		while (StartOf(4)) {
 			if (la.kind == 13) {
 				Get();
 				line = t.line; 
-				Expr expr2 = ExprPre();
+				Expr expr2 = ExprAdd();
 				expr = new BinaryOp(BinaryOperators.LT, expr, expr2, line); 
 			} else if (la.kind == 14) {
 				Get();
 				line = t.line; 
-				Expr expr2 = ExprPre();
+				Expr expr2 = ExprAdd();
 				expr = new BinaryOp(BinaryOperators.LT, expr2, expr, line); 
 			} else if (la.kind == 34) {
 				Get();
 				line = t.line; 
-				Expr expr2 = ExprPre();
+				Expr expr2 = ExprAdd();
 				expr = new BinaryOp(BinaryOperators.LE, expr, expr2, line); 
 			} else {
 				Get();
 				line = t.line; 
-				Expr expr2 = ExprPre();
+				Expr expr2 = ExprAdd();
 				expr = new BinaryOp(BinaryOperators.LE, expr2, expr, line); 
 			}
+		}
+		return expr;
+	}
+
+	Expr  ExprAdd() {
+		Expr  expr;
+		BinaryOperators op; int line = -1; 
+		expr = ExprMul();
+		while (la.kind == 36 || la.kind == 37) {
+			if (la.kind == 36) {
+				Get();
+				op = BinaryOperators.MUL; line = t.line; 
+			} else {
+				Get();
+				op = BinaryOperators.DIV; line = t.line; 
+			}
+			Expr expr2 = ExprMul();
+			expr = new BinaryOp(op, expr, expr2, line); 
+		}
+		return expr;
+	}
+
+	Expr  ExprMul() {
+		Expr  expr;
+		BinaryOperators op; int line = -1; 
+		expr = ExprPre();
+		while (la.kind == 38 || la.kind == 39) {
+			if (la.kind == 38) {
+				Get();
+				op = BinaryOperators.ADD; line = t.line; 
+			} else {
+				Get();
+				op = BinaryOperators.SUB; line = t.line; 
+			}
+			Expr expr2 = ExprPre();
+			expr = new BinaryOp(op, expr, expr2, line); 
 		}
 		return expr;
 	}
@@ -423,8 +464,8 @@ public class Parser {
 	Expr  ExprPre() {
 		Expr  expr;
 		expr = null; UnaryOperators op; int line; 
-		if (la.kind == 36 || la.kind == 37) {
-			if (la.kind == 36) {
+		if (la.kind == 39 || la.kind == 40) {
+			if (la.kind == 40) {
 				Get();
 				op = UnaryOperators.NOT; 
 			} else {
@@ -436,14 +477,14 @@ public class Parser {
 			expr = new UnaryOp(op, expr, line); 
 		} else if (StartOf(5)) {
 			expr = ExprSuf();
-		} else SynErr(61);
+		} else SynErr(65);
 		return expr;
 	}
 
 	Expr  ExprSuf() {
 		Expr  expr;
 		expr = ExprTerm();
-		while (la.kind == 9 || la.kind == 38) {
+		while (la.kind == 9 || la.kind == 41) {
 			if (la.kind == 9) {
 				Get();
 				int line = t.line; 
@@ -473,35 +514,35 @@ public class Parser {
 			expr = Const();
 			break;
 		}
-		case 39: {
+		case 42: {
 			Get();
 			expr = new BoolLit(true);                        
 			break;
 		}
-		case 40: {
+		case 43: {
 			Get();
 			expr = new BoolLit(false);                       
 			break;
 		}
-		case 41: {
+		case 44: {
 			Get();
 			expr = new UndefinedLit(); 
 			break;
 		}
-		case 42: {
+		case 45: {
 			Get();
 			Expect(1);
 			expr = new GetEvent(new IdentE(t.val, t.line));    
 			break;
 		}
-		case 43: {
+		case 46: {
 			Get();
 			Expect(1);
 			expr = new GetProperty(new IdentE(t.val, t.line)); 
 			break;
 		}
-		case 44: case 45: {
-			if (la.kind == 44) {
+		case 47: case 48: {
+			if (la.kind == 47) {
 				Get();
 			} else {
 				Get();
@@ -512,7 +553,7 @@ public class Parser {
 			Expect(25);
 			int inLine = t.line; 
 			Expr list = Expr();
-			Expect(46);
+			Expect(49);
 			int whereLine = t.line; 
 			Expr cond = Expr();
 			Expect(19);
@@ -525,7 +566,7 @@ public class Parser {
 			Expect(22);
 			break;
 		}
-		default: SynErr(62); break;
+		default: SynErr(66); break;
 		}
 		return expr;
 	}
@@ -547,12 +588,12 @@ public class Parser {
 	}
 
 	private static final boolean[][] set = {
-		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_T,_x, _T,_x,_x,_T, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_x,_x, _T,_x,_x,_x, _x,_T,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x}
+		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _x,_x,_T,_x, _T,_x,_x,_T, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_x,_x, _T,_x,_x,_x, _x,_T,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x}
 
 	};
 } // end Parser
@@ -603,33 +644,37 @@ class Errors {
 			case 33: s = "\"!=\" expected"; break;
 			case 34: s = "\"<=\" expected"; break;
 			case 35: s = "\">=\" expected"; break;
-			case 36: s = "\"!\" expected"; break;
-			case 37: s = "\"-\" expected"; break;
-			case 38: s = "\".\" expected"; break;
-			case 39: s = "\"true\" expected"; break;
-			case 40: s = "\"false\" expected"; break;
-			case 41: s = "\"undefined\" expected"; break;
-			case 42: s = "\"@\" expected"; break;
-			case 43: s = "\"$\" expected"; break;
-			case 44: s = "\"any\" expected"; break;
-			case 45: s = "\"all\" expected"; break;
-			case 46: s = "\"has\" expected"; break;
-			case 47: s = "\"bool\" expected"; break;
-			case 48: s = "\"int\" expected"; break;
-			case 49: s = "\"float\" expected"; break;
-			case 50: s = "\"string\" expected"; break;
-			case 51: s = "\"area\" expected"; break;
-			case 52: s = "\"list\" expected"; break;
-			case 53: s = "\"map\" expected"; break;
-			case 54: s = "??? expected"; break;
-			case 55: s = "invalid Conf"; break;
-			case 56: s = "invalid Shed"; break;
-			case 57: s = "invalid PlayTerm"; break;
-			case 58: s = "invalid MusicArg"; break;
-			case 59: s = "invalid Const"; break;
-			case 60: s = "invalid Type"; break;
-			case 61: s = "invalid ExprPre"; break;
-			case 62: s = "invalid ExprTerm"; break;
+			case 36: s = "\"*\" expected"; break;
+			case 37: s = "\"/\" expected"; break;
+			case 38: s = "\"+\" expected"; break;
+			case 39: s = "\"-\" expected"; break;
+			case 40: s = "\"!\" expected"; break;
+			case 41: s = "\".\" expected"; break;
+			case 42: s = "\"true\" expected"; break;
+			case 43: s = "\"false\" expected"; break;
+			case 44: s = "\"undefined\" expected"; break;
+			case 45: s = "\"@\" expected"; break;
+			case 46: s = "\"$\" expected"; break;
+			case 47: s = "\"any\" expected"; break;
+			case 48: s = "\"all\" expected"; break;
+			case 49: s = "\"has\" expected"; break;
+			case 50: s = "\"bool\" expected"; break;
+			case 51: s = "\"int\" expected"; break;
+			case 52: s = "\"float\" expected"; break;
+			case 53: s = "\"string\" expected"; break;
+			case 54: s = "\"area\" expected"; break;
+			case 55: s = "\"combatant\" expected"; break;
+			case 56: s = "\"list\" expected"; break;
+			case 57: s = "\"map\" expected"; break;
+			case 58: s = "??? expected"; break;
+			case 59: s = "invalid Conf"; break;
+			case 60: s = "invalid Shed"; break;
+			case 61: s = "invalid PlayTerm"; break;
+			case 62: s = "invalid MusicArg"; break;
+			case 63: s = "invalid Const"; break;
+			case 64: s = "invalid Type"; break;
+			case 65: s = "invalid ExprPre"; break;
+			case 66: s = "invalid ExprTerm"; break;
             default: s = "error " + n; break;
         }
         errors.add(new SynError(line, col, s));

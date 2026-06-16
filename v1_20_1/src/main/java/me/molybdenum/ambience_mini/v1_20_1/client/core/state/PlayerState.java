@@ -165,6 +165,16 @@ public class PlayerState extends BasePlayerState<BlockPos, Vec3, LocalPlayer> {
     }
 
     @Override
+    public Boolean isOnFire() {
+        return cachedPlayer == null ? null : cachedPlayer.isOnFire();
+    }
+
+    @Override
+    public Boolean isInPowderSnow() {
+        return cachedPlayer == null ? null : cachedPlayer.isInPowderSnow;
+    }
+
+    @Override
     public Boolean isDrowning() {
         return cachedPlayer == null ? null : cachedPlayer.getAirSupply() <= 0;
     }

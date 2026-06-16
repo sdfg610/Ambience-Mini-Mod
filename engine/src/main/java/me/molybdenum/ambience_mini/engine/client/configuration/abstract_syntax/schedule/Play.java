@@ -3,6 +3,8 @@ package me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.expression.IntLit;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.Playlist;
 
+import java.util.Optional;
+
 public record Play(Playlist playlist, boolean isInstant, IntLit priority) implements Schedule {
     public int getPriorityOrElse(int defaultPriority) {
         return priority == null ? defaultPriority : priority.value();
@@ -10,6 +12,10 @@ public record Play(Playlist playlist, boolean isInstant, IntLit priority) implem
 
     public int getPriority() {
         return priority.value();
+    }
+
+    public Optional<Integer> getPriorityOpt() {
+        return Optional.ofNullable(priority == null ? null : priority.value());
     }
 
     public int getPriorityLine() {

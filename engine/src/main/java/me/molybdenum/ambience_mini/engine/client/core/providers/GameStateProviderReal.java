@@ -273,6 +273,16 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     }
 
     @Override
+    public BoolVal onFire() {
+        return new BoolVal(_player.isOnFire());
+    }
+
+    @Override
+    public BoolVal inPowderSnow() {
+        return new BoolVal(_player.isInPowderSnow());
+    }
+
+    @Override
     public BoolVal isDrowning() {
         return _player.isNull()
                 ? BoolVal.UNDEFINED
@@ -467,8 +477,8 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     }
 
     @Override
-    public ListVal getCombatantIDs() {
-        return _level.isNull() ? ListVal.EMPTY : ListVal.ofStringList(_combat.getCombatantResourceLocations());
+    public ListVal getCombatants() {
+        return _level.isNull() ? ListVal.UNDEFINED : _combat.getCombatants();
     }
 
     @Override

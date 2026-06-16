@@ -11,6 +11,7 @@ import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.util.ObfuscationReflectionHelper;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
@@ -40,6 +41,16 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
         MappedRegistry<EntityType<?>> registry = (MappedRegistry<EntityType<?>>)BuiltInRegistries.ENTITY_TYPE;
         var key = registry.getKey(entity.getType());
         return key == null ? null : key.toString();
+    }
+
+    @Override
+    public Float getEntityHealth(Entity entity) {
+        return (entity instanceof LivingEntity liv) ? liv.getHealth() : null;
+    }
+
+    @Override
+    public Float getEntityMaxHealth(Entity entity) {
+        return (entity instanceof LivingEntity liv) ? liv.getMaxHealth() : null;
     }
 
 

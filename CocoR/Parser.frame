@@ -94,7 +94,7 @@ public class Parser {
 
 -->productions
 
-	public Config Parse(InputStream inputStream, ArrayList<LoadError> errors) {
+	public Config Parse(InputStream inputStream, ArrayList<Message> errors) {
 		this.scanner = new Scanner(inputStream);
 		this.errors = new Errors(errors);
 
@@ -112,9 +112,9 @@ public class Parser {
 } // end Parser
 
 class Errors {
-	ArrayList<LoadError> errors;
+	ArrayList<Message> errors;
 
-    public Errors(ArrayList<LoadError> errors) {
+    public Errors(ArrayList<Message> errors) {
         this.errors = errors;
     }
 

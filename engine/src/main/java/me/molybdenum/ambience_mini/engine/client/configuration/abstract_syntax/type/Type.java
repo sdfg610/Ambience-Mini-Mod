@@ -3,7 +3,7 @@ package me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.
 import me.molybdenum.ambience_mini.engine.client.configuration.pretty_printer.PrettyPrinter;
 import org.jetbrains.annotations.NotNull;
 
-public sealed abstract class Type permits AnyT, AreaT, BoolT, FloatT, IntT, ListT, MapT, PlaylistT, StringT
+public sealed abstract class Type permits AnyT, AreaT, BoolT, CombatantT, FloatT, IntT, ListT, MapT, PlaylistT, StringT
 {
     public boolean equalTo(Type other) {
         return this instanceof AnyT

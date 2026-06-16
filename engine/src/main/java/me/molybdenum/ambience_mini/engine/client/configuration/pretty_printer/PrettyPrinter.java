@@ -81,7 +81,7 @@ public class PrettyPrinter {
 
     private static String printSchedule(Schedule schedule, int depth) {
         if (schedule instanceof Play play)
-            return indent(depth) + "play " + printPlaylist(play.playlist()) + ";\n";
+            return indent(depth) + "play " + printPlaylist(play.playlist()) + (play.getPriorityOpt().map(p -> " priority " + p)) + ";\n";
         else if (schedule instanceof Interrupt interrupt)
             return indent(depth) + "interrupt " +
                     printSchedule(interrupt.body(), interrupt.body() instanceof Block ? depth : 0);
@@ -146,14 +146,26 @@ public class PrettyPrinter {
         String l = surround(left);
         String r = surround(right);
         return switch (op) {
-            case EQ -> l + " == " + r;
-            case APP_EQ -> l + " ~~ " + r;
-            case MATCH -> l + " *~ " + r;
-            case AND -> l + " && " + r;
-            case OR -> l + " || " + r;
-            case LT -> l + " < " + r;
-            case LE -> l + " <= " + r;
             case INDEXER -> l + "[" + r + "]";
+            case EQ, APP_EQ, MATCH, AND, OR, LT, LE, ADD, SUB, MUL, DIV
+                    -> l + " " + getBinaryOpInfix(op) + " " + r;
+        };
+    }
+
+    public static String getBinaryOpInfix(BinaryOperators op) {
+        return switch (op) {
+            case EQ -> "==";
+            case APP_EQ -> "~~";
+            case MATCH -> "*~";
+            case AND -> "&&";
+            case OR -> "||";
+            case LT -> "<";
+            case LE -> "<=";
+            case INDEXER -> "[]";
+            case ADD -> "+";
+            case SUB -> "-";
+            case MUL -> "*";
+            case DIV -> "/";
         };
     }
 
@@ -175,10 +187,12 @@ public class PrettyPrinter {
             return "float";
         else if (type instanceof StringT)
             return "string";
-        else if (type instanceof PlaylistT)
-            return "playlist";
         else if (type instanceof AreaT)
             return "area";
+        else if (type instanceof CombatantT)
+            return "combatant";
+        else if (type instanceof PlaylistT)
+            return "playlist";
         else if (type instanceof ListT listT)
             return "list<" + getTypeString(listT.elementType) + ">";
         else if (type instanceof MapT mapT)

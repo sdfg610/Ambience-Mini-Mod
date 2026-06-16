@@ -263,6 +263,11 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
                         messages.add(new SemError(binOp.line(), "A value of type '" + PrettyPrinter.getTypeString(typeLeft) + "' cannot be indexed using '[]'."));
                     yield null;
                 }
+                case ADD, SUB, MUL, DIV -> {
+                    if (isNotNumber(typeLeft) || isNotNumber(typeRight))
+                        messages.add(new SemError(binOp.line(), "Arguments of '" + PrettyPrinter.getBinaryOpInfix(binOp.op()) + "' must both be numbers. Got '" + PrettyPrinter.getTypeString(typeLeft) + "' and '" + PrettyPrinter.getTypeString(typeRight) + "'"));
+                    yield tryGetGetMaximalNumberType(typeLeft, typeRight);
+                }
             };
         }
         else if (expr instanceof QuantifierOp quanOp) {
@@ -340,5 +345,13 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
     private void makeUnusedVariableWarnings(TypeEnv env, ArrayList<Message> messages) {
         for (var pair : env.getTopScopeUnused())
             messages.add(new SemWarning(pair.right(), "Unused variable '" + pair.left() + "'"));
+    }
+
+    private Type tryGetGetMaximalNumberType(Type left, Type right) {
+        if (left.isFloat() || right.isFloat())
+            return FloatT.INSTANCE;
+        if (left.isInt() && right.isInt())
+            return IntT.INSTANCE;
+        return null;
     }
 }

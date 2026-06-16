@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Optional;
 import java.util.function.Function;
 
-public sealed abstract class Value<T> permits AreaVal, BoolVal, FloatVal, IntVal, ListVal, MapVal, StringVal, UndefinedVal
+public sealed abstract class Value<T> permits AreaVal, BoolVal, CombatantVal, FloatVal, IntVal, ListVal, MapVal, StringVal, UndefinedVal
 {
     protected final T value;
 

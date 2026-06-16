@@ -148,16 +148,34 @@ ExprEq<out Expr expr>            (. BinaryOperators op; int line = -1; .)
     }
 .
 
-ExprRel<out Expr expr>            (. BinaryOperators op; int line = -1; .)
-    = ExprPre<out expr>
+ExprRel<out Expr expr>            (. int line = -1; .)
+    = ExprAdd<out expr>
       { "<" (. line = t.line; .)
-        ExprPre<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LT, expr, expr2, line); .)
+        ExprAdd<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LT, expr, expr2, line); .)
       | ">" (. line = t.line; .)
-        ExprPre<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LT, expr2, expr, line); .)
+        ExprAdd<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LT, expr2, expr, line); .)
       | "<=" (. line = t.line; .)
-        ExprPre<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LE, expr, expr2, line); .)
+        ExprAdd<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LE, expr, expr2, line); .)
       | ">=" (. line = t.line; .)
-        ExprPre<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LE, expr2, expr, line); .)
+        ExprAdd<out Expr expr2> (. expr = new BinaryOp(BinaryOperators.LE, expr2, expr, line); .)
+      }
+.
+
+ExprAdd<out Expr expr>    (. BinaryOperators op; int line = -1; .)
+    = ExprMul<out expr>
+      { ( '*'               (. op = BinaryOperators.MUL; line = t.line; .)
+        | '/'               (. op = BinaryOperators.DIV; line = t.line; .)
+        )
+        ExprMul<out Expr expr2>  (. expr = new BinaryOp(op, expr, expr2, line); .)
+      }
+.
+
+ExprMul<out Expr expr>    (. BinaryOperators op; int line = -1; .)
+    = ExprPre<out expr>
+      { ( '+'               (. op = BinaryOperators.ADD; line = t.line; .)
+        | '-'               (. op = BinaryOperators.SUB; line = t.line; .)
+        )
+        ExprPre<out Expr expr2>  (. expr = new BinaryOp(op, expr, expr2, line); .)
       }
 .
 
@@ -208,6 +226,7 @@ Type<out Type type>  (. type = null; .)
     | "float"        (. type = FloatT.INSTANCE; .)
     | "string"       (. type = StringT.INSTANCE; .)
     | "area"         (. type = AreaT.INSTANCE; .)
+    | "combatant"    (. type = CombatantT.INSTANCE; .)
     | "playlist"     (. type = PlaylistT.INSTANCE; .)
     | "list" '<' Type<out Type elemType> '>' (. type = new ListT(elemType); .)
     | "map" '<' Type<out Type elemType1> ',' Type<out Type elemType2> '>' (. type = new MapT(elemType1, elemType2); .)

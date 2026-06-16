@@ -219,14 +219,18 @@ public class Interpreter
         Supplier<Value<?>> right = () -> evalExpr(binOp.right(), env);
 
         return switch (binOp.op()) {
-            case EQ     -> new BoolVal( left.equals(right.get()) );
-            case APP_EQ -> opAppEq(left, right.get());
-            case MATCH  -> opMatch(left, right.get());
-            case AND    -> opAnd(left, right);
-            case OR     -> opOr(left, right);
-            case LT     -> opLt(left, right.get());
-            case LE     -> opLe(left, right.get());
+            case EQ      -> new BoolVal( left.equals(right.get()) );
+            case APP_EQ  -> opAppEq(left, right.get());
+            case MATCH   -> opMatch(left, right.get());
+            case AND     -> opAnd(left, right);
+            case OR      -> opOr(left, right);
+            case LT      -> opLt(left, right.get());
+            case LE      -> opLe(left, right.get());
             case INDEXER -> opIndex(left, right.get());
+            case ADD     -> opAdd(left, right.get());
+            case SUB     -> opSub(left, right.get());
+            case MUL     -> opMul(left, right.get());
+            case DIV     -> opDiv(left, right.get());
         };
     }
 
@@ -280,6 +284,50 @@ public class Interpreter
         return base instanceof IndexableV indexable
                 ? indexable.getIndex(index)
                 : UNDEFINED;
+    }
+
+    private Value<?> opAdd(Value<?> left, Value<?> right) {
+        try {
+            return left instanceof FloatVal || right instanceof FloatVal
+                    ? left.mapFloat(f1 -> right.mapFloat(f2 -> new FloatVal(f1 + f2)))
+                    : left.mapInt(i1 -> right.mapInt(i2 -> new IntVal(i1 + i2)));
+        }
+        catch (Exception ignored) {
+            return UndefinedVal.INSTANCE;
+        }
+    }
+
+    private Value<?> opSub(Value<?> left, Value<?> right) {
+        try {
+            return left instanceof FloatVal || right instanceof FloatVal
+                    ? left.mapFloat(f1 -> right.mapFloat(f2 -> new FloatVal(f1 - f2)))
+                    : left.mapInt(i1 -> right.mapInt(i2 -> new IntVal(i1 - i2)));
+        }
+        catch (Exception ignored) {
+            return UndefinedVal.INSTANCE;
+        }
+    }
+
+    private Value<?> opMul(Value<?> left, Value<?> right) {
+        try {
+            return left instanceof FloatVal || right instanceof FloatVal
+                    ? left.mapFloat(f1 -> right.mapFloat(f2 -> new FloatVal(f1 * f2)))
+                    : left.mapInt(i1 -> right.mapInt(i2 -> new IntVal(i1 * i2)));
+        }
+        catch (Exception ignored) {
+            return UndefinedVal.INSTANCE;
+        }
+    }
+
+    private Value<?> opDiv(Value<?> left, Value<?> right) {
+        try {
+            return left instanceof FloatVal || right instanceof FloatVal
+                    ? left.mapFloat(f1 -> right.mapFloat(f2 -> new FloatVal(f1 / f2)))
+                    : left.mapInt(i1 -> right.mapInt(i2 -> new IntVal(i1 / i2)));
+        }
+        catch (Exception ignored) {
+            return UndefinedVal.INSTANCE;
+        }
     }
 
 

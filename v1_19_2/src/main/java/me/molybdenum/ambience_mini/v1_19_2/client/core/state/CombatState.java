@@ -8,6 +8,7 @@ import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -37,6 +38,16 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
     public String getEntityResourceLocation(Entity entity) {
         var key = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
         return key == null ? null : key.toString();
+    }
+
+    @Override
+    public Float getEntityHealth(Entity entity) {
+        return (entity instanceof LivingEntity liv) ? liv.getHealth() : null;
+    }
+
+    @Override
+    public Float getEntityMaxHealth(Entity entity) {
+        return (entity instanceof LivingEntity liv) ? liv.getMaxHealth() : null;
     }
 
 

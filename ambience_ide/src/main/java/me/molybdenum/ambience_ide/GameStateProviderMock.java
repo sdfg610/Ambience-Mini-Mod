@@ -517,7 +517,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     }
 
     @Override
-    public ListVal getCombatantIDs() {
+    public ListVal getCombatants() {
         throw new RuntimeException();
     }
 

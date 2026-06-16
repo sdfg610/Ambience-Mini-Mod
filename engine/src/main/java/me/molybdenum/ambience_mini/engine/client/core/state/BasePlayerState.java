@@ -64,6 +64,8 @@ public abstract class BasePlayerState<TBlockPos, TVec3, TLocalPlayer>
     public abstract Boolean isSleeping();
     public abstract Boolean isUnderwater();
     public abstract Boolean isInLava();
+    public abstract Boolean isOnFire();
+    public abstract Boolean isInPowderSnow();
     public abstract Boolean isDrowning();
 
     public abstract String vehicleId();

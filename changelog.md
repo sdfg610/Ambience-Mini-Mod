@@ -1,12 +1,20 @@
 
 ### Version 2.7.0:
 
+- Added a `$combatants` property of type `list<combatant>` using the new `combatant` type.
+  * `combatant` has four fields (accessed using `combatant.field`): `type_id`, `health`, `maxHealth`, and `health_percent`.
+  * This can be used to select music based on the type and state of fought mobs.
+- Added fields `int.floatVal` and `float.intVal` for converting between whole and decimal numbers.
+- Added arithmetic operators `+`, `-`, `*`, and `/` to the configuration language. 
+- Added player events `@on_fire` and `@in_powder_snow`.
 - Added `length` field to lists. `list.length` will get the length of a list.
 - Added support for `loopstart` and `looplength/loopend` metadata tags for all supported music files.
   * This will cause the music to start out as normal, but continue looping some part after reaching the end of the loop interval.
   * `loopstart` and `looplength/loopend` are all measured in samples (the smallest piece of audio data).
 - Mod now prints a warning to the logs when music directory contains unused music files.
 - Mod now prints warnings about unused identifiers (e.g., playlists) in the music config.
+
+****
 
 
 ### Version 2.6.2:
