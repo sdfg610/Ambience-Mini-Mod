@@ -5,7 +5,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.messages.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.PlaylistChoice;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.PlaylistSelection;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.BoolVal;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.FakeMusicProvider;
@@ -191,7 +191,7 @@ public class Main
         printMessages(warnings, output, doc);
 
         ArrayList<Pair<String, Value<?>>> trace = new ArrayList<>();
-        PlaylistChoice choice = interpreter.selectPlaylist(trace);
+        PlaylistSelection choice = interpreter.selectPlaylist(trace);
         if (choice == null)
             output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music (if any) will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));
         else

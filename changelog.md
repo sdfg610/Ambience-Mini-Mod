@@ -1,6 +1,7 @@
 
 ### Version 2.7.0:
 
+- 
 - Added a `$combatants` property of type `list<combatant>` using the new `combatant` type.
   * `combatant` has four fields (accessed using `combatant.field`): `type_id`, `health`, `maxHealth`, and `health_percent`.
   * This can be used to select music based on the type and state of fought mobs.

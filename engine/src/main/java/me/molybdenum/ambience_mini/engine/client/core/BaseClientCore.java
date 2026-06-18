@@ -135,8 +135,6 @@ public abstract class BaseClientCore<
     // Abstract API
     public abstract boolean isFocused();
 
-    protected abstract void disableNativeMusicManager();
-
     protected abstract String getWorldNameForLocalStorage();
 
 
@@ -146,7 +144,7 @@ public abstract class BaseClientCore<
         return gameStateProvider;
     }
 
-    public Monitor getMusicThread() {
+    public Monitor getMonitor() {
         return monitor;
     }
 
@@ -173,7 +171,6 @@ public abstract class BaseClientCore<
     }
 
     private void initMusicThread(Interpreter interpreter, List<Message> warnings) {
-        disableNativeMusicManager();
         monitor = new Monitor(this, interpreter, musicProvider, logger);
 
         printMessages(warnings);

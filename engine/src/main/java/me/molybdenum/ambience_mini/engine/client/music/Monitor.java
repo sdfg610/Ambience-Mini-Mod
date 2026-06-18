@@ -1,9 +1,11 @@
 package me.molybdenum.ambience_mini.engine.client.music;
 
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.Selection;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.VanillaSelection;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.PlaylistChoice;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.PlaylistSelection;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
@@ -46,7 +48,7 @@ public class Monitor
     private final boolean _meticulousPlaylistSelector;
     private final int _numLatestChoices = 3; // Code below is only designed to handle the value 3 here.
     private int _nextChoiceIndex = 0;
-    private final PlaylistChoice[] _latestChoices = new PlaylistChoice[_numLatestChoices];
+    private final Selection[] _latestChoices = new Selection[_numLatestChoices];
 
     // Music player
     private final MusicPlayer _musicPlayer;
@@ -56,6 +58,8 @@ public class Monitor
     private final Supplier<Boolean> _isFocused;
     private final boolean _lostFocusEnabled;
     private final boolean _doFadeOnJukebox;
+
+    private boolean vanillaPlayerSelected = false;
 
     // Volume
     private boolean _volumeZero = false;
@@ -128,6 +132,11 @@ public class Monitor
     }
 
 
+    public boolean isVanillaPlayerSelected() {
+        return vanillaPlayerSelected;
+    }
+
+
     // ----------------------------------------------------------------------------------------------------------------
     // Thread control
     public void guarded(Runnable runnable) {
@@ -177,7 +186,7 @@ public class Monitor
     // ----------------------------------------------------------------------------------------------------------------
     // Music and volume
     private void handleMusicCycle() {
-        if (_volumeZero || handlePaused() || handleUnfocused())
+        if (_volumeZero || handleUnfocused())
             return;
 
         ArrayList<Pair<String, Value<?>>> trace = null;
@@ -193,11 +202,26 @@ public class Monitor
         if (handleJukebox())
             return;
 
-        PlaylistChoice nextChoice = _meticulousPlaylistSelector
+        Selection selection = _meticulousPlaylistSelector
                 ? selectPlaylistMeticulously(trace)
                 : _playlistSelector.selectPlaylist(trace);
-        if (nextChoice == null)
+        if (selection == null)
             return;
+
+        boolean oldVanillaPlayerSelected = vanillaPlayerSelected;
+        vanillaPlayerSelected = selection instanceof VanillaSelection;
+        if (_verboseMode && !oldVanillaPlayerSelected && vanillaPlayerSelected)
+            _logger.info("At tick '{}'. Enabled the vanilla music player", _tick);
+        if (vanillaPlayerSelected) {
+            _musicPlayer.pause(true);
+            return;
+        }
+
+        if (handlePaused()) // Placed here since pause does not affect vanilla player
+            return;         // so vanilla player should be able to activate even when AM is paused.
+
+        @SuppressWarnings("DataFlowIssue")
+        PlaylistSelection nextChoice = (PlaylistSelection)selection;
 
         List<Music> nextPlaylist = nextChoice.playlist();
         boolean doFade = !nextChoice.isInstant();
@@ -258,7 +282,7 @@ public class Monitor
                 _musicPlayer.resume(nextPriority, doFade);
     }
 
-    private PlaylistChoice selectPlaylistMeticulously(ArrayList<Pair<String, Value<?>>> trace) {
+    private Selection selectPlaylistMeticulously(ArrayList<Pair<String, Value<?>>> trace) {
         _latestChoices[_nextChoiceIndex] = _playlistSelector.selectPlaylist(trace);
         _nextChoiceIndex = (_nextChoiceIndex + 1) % _numLatestChoices;
 

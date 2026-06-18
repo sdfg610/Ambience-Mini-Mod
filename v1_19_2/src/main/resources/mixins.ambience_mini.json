@@ -4,8 +4,9 @@
   "package": "me.molybdenum.ambience_mini.v1_19_2.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "SoundManagerMixin",
-    "ClassInstanceMultiMapMixin"
+    "ClassInstanceMultiMapMixin",
+    "MusicManagerMixin",
+    "SoundManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

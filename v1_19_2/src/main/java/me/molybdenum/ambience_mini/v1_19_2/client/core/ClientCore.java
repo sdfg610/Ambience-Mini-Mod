@@ -8,7 +8,6 @@ import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
-import me.molybdenum.ambience_mini.v1_19_2.client.NilMusicManager;
 import me.molybdenum.ambience_mini.v1_19_2.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_19_2.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.v1_19_2.client.core.setup.ClientConfig;
@@ -62,13 +61,6 @@ public class ClientCore extends BaseClientCore<
     @Override
     public boolean isFocused() {
         return mc.isWindowActive();
-    }
-
-    @Override
-    protected void disableNativeMusicManager() {
-        ObfuscationReflectionHelper.setPrivateValue(
-                Minecraft.class, mc, new NilMusicManager(mc), OBF_MC_MUSIC_MANAGER
-        );
     }
 
     @Override

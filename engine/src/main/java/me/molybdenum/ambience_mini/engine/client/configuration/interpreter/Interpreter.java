@@ -7,6 +7,9 @@ import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.c
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.expression.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.schedule.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.PlaylistSelection;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.Selection;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.VanillaSelection;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.kinds.AccessibleV;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.kinds.IndexableV;
@@ -50,12 +53,12 @@ public class Interpreter
         gameStateProvider.prepare(messages);
     }
 
-    public PlaylistChoice selectPlaylist(@Nullable ArrayList<Pair<String, Value<?>>> trace) {
+    public Selection selectPlaylist(@Nullable ArrayList<Pair<String, Value<?>>> trace) {
         @SuppressWarnings("DataFlowIssue")
         BiConsumer<String, Value<?>> tracer = (name, val) -> trace.add(new Pair<>(name, val));
 
         if (trace != null) gameStateProvider.registerOnFiredListener(tracer);
-        PlaylistChoice choice = evalSchedule(schedule, rootEnv.enterScope());
+        Selection choice = evalSchedule(schedule, rootEnv.enterScope());
         if (trace != null) gameStateProvider.unregisterOnFiredListener(tracer);
 
         return choice;
@@ -87,6 +90,10 @@ public class Interpreter
             }
             return new Play(playlist, play.isInstant(), play.computePriorityIfAbsent(nestedInterrupts));
         }
+        else if (schedule instanceof Vanilla)
+        {
+            return schedule;
+        }
         else if (schedule instanceof Interrupt interrupt) {
             ++nestedInterrupts;
             var body = initSchedule(interrupt.body());
@@ -112,9 +119,12 @@ public class Interpreter
 
     // -----------------------------------------------------------------------------------------------------------------
     // Playlist selection
-    private PlaylistChoice evalSchedule(Schedule schedule, VariableEnv env) {
+    private Selection evalSchedule(Schedule schedule, VariableEnv env) {
         if (schedule instanceof Play play) {
-            return new PlaylistChoice(evalPlaylist(play.playlist(), env), play.isInstant(), play.getPriority());
+            return new PlaylistSelection(evalPlaylist(play.playlist(), env), play.isInstant(), play.getPriority());
+        }
+        else if (schedule instanceof Vanilla) {
+            return new VanillaSelection();
         }
         else if (schedule instanceof Block block) {
             return block.body().stream()

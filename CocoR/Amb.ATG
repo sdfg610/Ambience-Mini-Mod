@@ -111,6 +111,7 @@ Shed<out Schedule schedule>                  (. schedule = null; boolean instant
       [ "priority" INT                (. priority = new IntLit(Integer.parseInt(t.val), t.line); .)
       ]
       ';'                             (. schedule = new Play(pl, instant, priority); .)
+    | "use_vanilla_player" ';'        (. schedule = new Vanilla(); .)
     | "begin"                                (. ArrayList<Schedule> items = new ArrayList<>();  .)
       { Shed<out Schedule schedule2>         (. items.add(schedule2); .)
       }

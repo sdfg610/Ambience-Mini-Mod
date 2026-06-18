@@ -2,7 +2,6 @@ package me.molybdenum.ambience_mini.v1_20_1.client.core;
 
 
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
-import me.molybdenum.ambience_mini.v1_20_1.client.NilMusicManager;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.setup.ClientConfig;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.setup.KeyBindings;
@@ -62,13 +61,6 @@ public class ClientCore extends BaseClientCore<
     @Override
     public boolean isFocused() {
         return mc.isWindowActive();
-    }
-
-    @Override
-    protected void disableNativeMusicManager() {
-        ObfuscationReflectionHelper.setPrivateValue(
-                Minecraft.class, mc, new NilMusicManager(mc), OBF_MC_MUSIC_MANAGER
-        );
     }
 
     @Override

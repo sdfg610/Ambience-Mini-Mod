@@ -155,7 +155,7 @@ public record SemanticAnalysis(MusicProvider musicProvider, BaseGameStateProvide
         else if (schedule instanceof Interrupt interrupt) {
             Shed(interrupt.body(), env, messages);
         }
-        else if (schedule == null) {
+        else if (schedule instanceof Vanilla || schedule == null) {
             return;
         }
         else

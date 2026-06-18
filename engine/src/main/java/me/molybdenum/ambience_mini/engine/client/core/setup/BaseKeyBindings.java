@@ -64,14 +64,14 @@ public abstract class BaseKeyBindings<TKeyBinding>
         }
 
         if (isClicked(playPauseKey) && playerIsRunning()) {
-            var musicThread = core.getMusicThread();
-            if (musicThread != null) {
-                if (musicThread.isPaused()) {
+            var monitor = core.getMonitor();
+            if (monitor != null) {
+                if (monitor.isPaused()) {
                     core.notification.showToast(AmLang.MSG_RESUMING_MUSIC);
-                    musicThread.resume();
+                    monitor.resume();
                 } else {
                     core.notification.showToast(AmLang.MSG_PAUSING_MUSIC);
-                    musicThread.pause();
+                    monitor.pause();
                 }
             }
         }
@@ -79,10 +79,10 @@ public abstract class BaseKeyBindings<TKeyBinding>
         if (isClicked(nextMusicKey) && playerIsRunning()) {
             core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
 
-            var musicThread = core.getMusicThread();
-            if (musicThread != null) {
-                musicThread.forceSelectNewMusic();
-                musicThread.resume();
+            var monitor = core.getMonitor();
+            if (monitor != null) {
+                monitor.forceSelectNewMusic();
+                monitor.resume();
             }
         }
 
