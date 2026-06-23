@@ -1,7 +1,8 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.locations.*;
+import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
+import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Owner;

@@ -27,13 +27,6 @@ public record Vector2i(int x, int y) implements AmSerializable
         return new Vector2i(x / 16, y / 16);
     }
 
-    public Vector2i toRegionPos() {
-        return new Vector2i(x / 32, y / 32);
-    }
-
-    public Vector2i toRegionChunkPos() {
-        return new Vector2i(Math.abs(x % 32), Math.abs(y % 32));
-    }
 
 
     public double distanceTo(Vector2i other) {

@@ -3,15 +3,19 @@ package me.molybdenum.ambience_mini.engine.shared.utils.vectors;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import me.molybdenum.ambience_mini.engine.client.core.locations.structures.ChunkPos;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Direction;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmWriter;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
+import org.jetbrains.annotations.NotNull;
 
 public record Vector3i(int x, int y, int z) {
     public static final Vector3i ZERO = new Vector3i(0,0,0);
     public static final Vector3i ONE = new Vector3i(1,1,1);
+    public static final Vector3i MIN = new Vector3i(Integer.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE);
+    public static final Vector3i MAX = new Vector3i(Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE);
 
 
     public Vector3i(AmReader reader) {
@@ -79,8 +83,8 @@ public record Vector3i(int x, int y, int z) {
         return new Vector3d(x, y, z);
     }
 
-    public Vector2i toChunkPos() {
-        return new Vector2i(x / 16, z / 16);
+    public ChunkPos toChunkPos() {
+        return new ChunkPos(x / 16, z / 16);
     }
 
 
@@ -93,32 +97,36 @@ public record Vector3i(int x, int y, int z) {
     }
 
 
-    public static Pair<Vector3i, Vector3i> minAndSizeOf(Vector3i from, Vector3i to) {
+    public static @NotNull Pair<Vector3i, Vector3i> minAndSizeOf(Vector3i from, Vector3i to) {
         return minAndMaxOf(from, to).destruct(
                 (min, max) -> new Pair<>(min, max.offset(1,1,1).subtract(min))
         );
     }
 
-    public static Vector3i sizeOf(Vector3i from, Vector3i to) {
+    public static @NotNull Vector3i sizeOf(Vector3i from, Vector3i to) {
         return minAndMaxOf(from, to).destruct(
                 (min, max) -> max.offset(1,1,1).subtract(min)
         );
     }
 
-    public static Pair<Vector3i, Vector3i> minAndMaxOf(Vector3i from, Vector3i to) {
-        Vector3i min = new Vector3i(
-                Math.min(from.x(), to.x()),
-                Math.min(from.y(), to.y()),
-                Math.min(from.z(), to.z())
-        );
+    public static @NotNull Pair<Vector3i, Vector3i> minAndMaxOf(Vector3i from, Vector3i to) {
+        return new Pair<>(minOf(from, to), maxOf(from, to));
+    }
 
-        Vector3i max = new Vector3i(
-                Math.max(from.x(), to.x()),
-                Math.max(from.y(), to.y()),
-                Math.max(from.z(), to.z())
+    public static @NotNull Vector3i maxOf(Vector3i v1, Vector3i v2) {
+        return new Vector3i(
+                Math.max(v1.x(), v2.x()),
+                Math.max(v1.y(), v2.y()),
+                Math.max(v1.z(), v2.z())
         );
+    }
 
-        return new Pair<>(min, max);
+    public static @NotNull Vector3i minOf(Vector3i v1, Vector3i v2) {
+        return new Vector3i(
+                Math.min(v1.x(), v2.x()),
+                Math.min(v1.y(), v2.y()),
+                Math.min(v1.z(), v2.z())
+        );
     }
 
 

@@ -1,7 +1,9 @@
 
 ### Version 2.7.0:
 
-- 
+- Improved structure caching and intersection checking.
+- Added the ability to re-enable the vanilla music player in the music config.
+  * Use the `use_vanilla_player` command (instead of a `play` command) to enable the vanilla player.
 - Added a `$combatants` property of type `list<combatant>` using the new `combatant` type.
   * `combatant` has four fields (accessed using `combatant.field`): `type_id`, `health`, `maxHealth`, and `health_percent`.
   * This can be used to select music based on the type and state of fought mobs.

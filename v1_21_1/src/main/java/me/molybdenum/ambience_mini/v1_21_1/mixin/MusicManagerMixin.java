@@ -4,6 +4,7 @@ import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.MusicManager;
+import net.minecraft.sounds.Music;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,5 +37,11 @@ public abstract class MusicManagerMixin {
             net.neoforged.neoforge.client.ClientHooks.selectMusic(minecraft.getSituationalMusic(), this.currentMusic);
             ci.cancel();
         }
+    }
+
+    @Inject(at = @At("HEAD"), method = "startPlaying", cancellable = true)
+    public void startPlaying(Music p_120185_, CallbackInfo ci) {
+        if (!BaseAmbienceMini.isVanillaPlayerEnabled())
+            ci.cancel();
     }
 }

@@ -1,4 +1,4 @@
-package me.molybdenum.ambience_mini.engine.client.core.locations;
+package me.molybdenum.ambience_mini.engine.client.core.locations.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;

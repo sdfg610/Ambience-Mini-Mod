@@ -2,8 +2,8 @@ package me.molybdenum.ambience_mini.engine.client.core;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.messages.*;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
-import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
-import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
+import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
 import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;

@@ -66,12 +66,12 @@ public abstract class BaseStructureReader<TServerPlayer, TLevel, TStructureStart
                     boolean isSurface = isSurfaceStructure(struct);
                     var pieces = getPieces(struct)
                             .map(piece ->
-                                    new AmStructure.Piece(  // Give all hitboxes a bit of padding. Overworld structures get a lot more height.
-                                            piece.min().offset(-2,-2, -2),
+                                    new AmStructure.Piece(  // Give all hitboxes a bit of padding. Surface structures get a lot more height.
+                                            piece.min().offset(-3,-3, -3),
                                             piece.max().offset(
-                                                    2,
-                                                    isSurface ? 10 : 2,
-                                                    2
+                                                    3,
+                                                    isSurface ? 10 : 3,
+                                                    3
                                             )
                                     )
                             ).toList();

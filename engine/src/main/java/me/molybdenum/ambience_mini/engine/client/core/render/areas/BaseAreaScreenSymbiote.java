@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
-import me.molybdenum.ambience_mini.engine.client.core.locations.AreaHelper;
+import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
 import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;

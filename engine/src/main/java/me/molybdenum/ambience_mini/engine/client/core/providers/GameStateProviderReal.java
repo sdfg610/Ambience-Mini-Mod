@@ -1,11 +1,10 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueMap;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
-import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
-import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
+import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
 import me.molybdenum.ambience_mini.engine.client.core.state.*;
 import me.molybdenum.ambience_mini.engine.shared.Common;

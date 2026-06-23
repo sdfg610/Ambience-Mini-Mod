@@ -12,8 +12,8 @@ import me.molybdenum.ambience_mini.v1_20_1.client.core.state.ScreenState;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.util.Notification;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.locations.ClientAreaManager;
-import me.molybdenum.ambience_mini.engine.client.core.locations.StructureCache;
+import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
+import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
@@ -26,7 +26,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
 
 public class ClientCore extends BaseClientCore<
