@@ -41,7 +41,7 @@ public final class CombatantVal extends Value<CombatantVal.CombatantDescriptor> 
             case FIELD_HEALTH -> new FloatVal(value.health);
             case FIELD_MAX_HEALTH -> new FloatVal(value.maxHealth);
             case FIELD_HEALTH_PERCENT -> new FloatVal(
-                    value.health == null ? null : value.health / value.maxHealth  // Either both are null or both are non-null
+                    value.health == null || value.maxHealth == null ? null : (value.health / value.maxHealth) * 100
             );
             default -> UndefinedVal.INSTANCE;
         };

@@ -3,6 +3,8 @@ package me.molybdenum.ambience_ide;
 import me.molybdenum.ambience_mini.engine.client.configuration.Loader;
 import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.Selection;
+import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.VanillaSelection;
 import me.molybdenum.ambience_mini.engine.client.configuration.messages.*;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.PlaylistSelection;
@@ -191,11 +193,17 @@ public class Main
         printMessages(warnings, output, doc);
 
         ArrayList<Pair<String, Value<?>>> trace = new ArrayList<>();
-        PlaylistSelection choice = interpreter.selectPlaylist(trace);
+        Selection choice = interpreter.selectPlaylist(trace);
         if (choice == null)
             output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music (if any) will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));
+        else if (choice instanceof PlaylistSelection plSelection) {
+            output.appendChild(makeParagraph(doc, String.format("Selected new playlist at priority %d: [ %s ]", plSelection.priority(), String.join(", ", plSelection.playlist().stream().map(Music::path).toList()))));
+        }
+        else if (choice instanceof VanillaSelection)
+            output.appendChild(makeParagraph(doc, "Enabled the vanilla music player."));
         else
-            output.appendChild(makeParagraph(doc, String.format("Selected new playlist at priority %d: [ %s ]", choice.priority(), String.join(", ", choice.playlist().stream().map(Music::path).toList()))));
+            output.appendChild(makeParagraph(doc, "The music selector returned an unexpected result!"));
+
 
         if (!trace.isEmpty())
             output.appendChild(makeParagraph(doc, String.format("Events and properties computed during selection:\n%s", Utils.getKeyValuePairString(trace))));

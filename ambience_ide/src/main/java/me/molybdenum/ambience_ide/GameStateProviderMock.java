@@ -39,6 +39,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         put(P_EFFECTS.name(), "minecraft:absorption, minecraft:regeneration");
 
         put(P_COMBATANT_COUNT.name(), "0");
+        put(P_COMBATANTS.name(), "{ type_id=\"minecraft:skeleton\", health=10.0, max_health=20.0 }");
         put(P_BOSS.name(), "entity.minecraft.ender_dragon");
         put(P_BOSSES.name(), "entity.minecraft.ender_dragon, entity.minecraft.wither");
 
@@ -90,6 +91,8 @@ public class GameStateProviderMock extends GameStateProviderTemplate
                 return true;
             else if (lst.elementType instanceof AreaT)
                 return isValidAreaListVal(value);
+            else if (lst.elementType instanceof CombatantT)
+                return isValidCombatantListVal(value);
         }
         else if (property.type() instanceof MapT map) {
             if (map.keyType instanceof StringT && map.valueType instanceof StringT)
@@ -144,17 +147,16 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     private static final Pattern fieldPattern = Pattern.compile(
             "([_a-zA-Z][_a-zA-Z0-9]*)\\s*=\\s*((?i)\"[^\\n\\r\"]*\"|[0-9]+|[0-9]+\\.[0-9]+|true|false|undefined)"
     );
-    private static final Pattern areaPattern = Pattern.compile(
+    private static final Pattern recordPattern = Pattern.compile(
             "\\{\\s*(" + fieldPattern.pattern() + ")?(?:\\s*,\\s*(" + fieldPattern.pattern() + "))*\\s*}"
     );
-    private static final Pattern areaListPattern = Pattern.compile(
-            "(" + areaPattern.pattern() + "\\s*(?:\\s*,\\s*" + areaPattern.pattern() + ")*)?"
+    private static final Pattern recordListPattern = Pattern.compile(
+            "(" + recordPattern.pattern() + "\\s*(?:\\s*,\\s*" + recordPattern.pattern() + ")*)?"
     );
 
     private boolean isValidAreaListVal(String value) {
         var trim = value.trim();
-        return
-                areaListPattern.matcher(trim).matches()
+        return recordListPattern.matcher(trim).matches()
                 && getAsAreaListVal(trim) != null;
     }
 
@@ -164,7 +166,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
 
     private ListVal getAsAreaListVal(String value) {
         var values = new ValueList();
-        var areaMatcher = areaPattern.matcher(value);
+        var areaMatcher = recordPattern.matcher(value);
         while (areaMatcher.find()) {
             var fieldMatcher = fieldPattern.matcher(areaMatcher.group());
 
@@ -198,6 +200,14 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         if (val.startsWith("\""))
             return val.substring(1, val.length()-1);
         return null;
+    }
+
+    private Float fieldAsFloat(String val) {
+        try {
+            return Float.parseFloat(val);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     private Boolean fieldAsBoolean(String val) {
@@ -239,6 +249,47 @@ public class GameStateProviderMock extends GameStateProviderTemplate
             map.put(new StringVal(key), new StringVal(val));
         }
         return new MapVal(map);
+    }
+
+
+    // Combatant List
+    private boolean isValidCombatantListVal(String value) {
+        var trim = value.trim();
+        return
+                recordListPattern.matcher(trim).matches()
+                        && getAsCombatantListVal(trim) != null;
+    }
+
+    private ListVal getAsCombatantListVal(PropertyTemplateV1 property) {
+        return getAsCombatantListVal(propertyValues.get(property.name()));
+    }
+
+    private ListVal getAsCombatantListVal(String value) {
+        var values = new ValueList();
+        var areaMatcher = recordPattern.matcher(value);
+        while (areaMatcher.find()) {
+            var fieldMatcher = fieldPattern.matcher(areaMatcher.group());
+
+            String type_id = null;
+            Float health = null;
+            Float max_health = null;
+
+            while (fieldMatcher.find()) {
+                var nameAndValue = fieldMatcher.group().split("=");
+                switch (nameAndValue[0]) {
+                    case CombatantT.FIELD_TYPE_ID -> type_id = fieldAsString(nameAndValue[1]);
+                    case CombatantT.FIELD_HEALTH -> health = fieldAsFloat(nameAndValue[1]);
+                    case CombatantT.FIELD_MAX_HEALTH -> max_health = fieldAsFloat(nameAndValue[1]);
+                    default -> {
+                        return null;
+                    }
+                }
+            }
+
+            values.add(new CombatantVal(new CombatantVal.CombatantDescriptor(type_id, health, max_health)));
+        }
+
+        return new ListVal(values);
     }
 
 
@@ -365,6 +416,16 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     @Override
     public BoolVal inLava() {
         return eventValues.get(E_IN_LAVA.name());
+    }
+
+    @Override
+    public BoolVal onFire()  {
+        return eventValues.get(E_ON_FIRE.name());
+    }
+
+    @Override
+    public BoolVal inPowderSnow()  {
+        return eventValues.get(E_IN_POWDER_SNOW.name());
     }
 
     @Override
@@ -518,7 +579,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
 
     @Override
     public ListVal getCombatants() {
-        throw new RuntimeException();
+        return getAsCombatantListVal(P_COMBATANTS);
     }
 
     @Override
