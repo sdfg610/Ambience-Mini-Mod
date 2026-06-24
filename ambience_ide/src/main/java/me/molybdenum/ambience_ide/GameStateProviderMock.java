@@ -39,7 +39,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         put(P_EFFECTS.name(), "minecraft:absorption, minecraft:regeneration");
 
         put(P_COMBATANT_COUNT.name(), "0");
-        put(P_COMBATANTS.name(), "{ type_id=\"minecraft:skeleton\", health=10.0, max_health=20.0 }");
+        put(P_COMBATANTS.name(), "{ type_id=\"minecraft:skeleton\", health=10.0, max_health=20.0 } ,\n { type_id=\"minecraft:creeper\", health=7.0, max_health=10.0 }");
         put(P_BOSS.name(), "entity.minecraft.ender_dragon");
         put(P_BOSSES.name(), "entity.minecraft.ender_dragon, entity.minecraft.wither");
 
