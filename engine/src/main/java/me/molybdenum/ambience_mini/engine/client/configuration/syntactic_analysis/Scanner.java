@@ -312,12 +312,12 @@ public class Scanner {
 		literals.put("in", 26);
 		literals.put("default", 27);
 		literals.put("interrupt", 28);
-		literals.put("true", 43);
-		literals.put("false", 44);
-		literals.put("undefined", 45);
-		literals.put("any", 48);
-		literals.put("all", 49);
-		literals.put("has", 50);
+		literals.put("any", 45);
+		literals.put("all", 46);
+		literals.put("has", 47);
+		literals.put("undefined", 48);
+		literals.put("true", 49);
+		literals.put("false", 50);
 		literals.put("bool", 51);
 		literals.put("int", 52);
 		literals.put("float", 53);
@@ -530,9 +530,9 @@ public class Scanner {
 				case 27:
 					{t.kind = 42; break loop;}
 				case 28:
-					{t.kind = 46; break loop;}
+					{t.kind = 43; break loop;}
 				case 29:
-					{t.kind = 47; break loop;}
+					{t.kind = 44; break loop;}
 				case 30:
 					recEnd = pos; recKind = 40;
 					if (ch >= '0' && ch <= '9') {AddCh(); state = 6; break;}

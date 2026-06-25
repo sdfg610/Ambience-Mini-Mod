@@ -200,9 +200,6 @@ ExprSuf<out Expr expr>
 ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY; .)
     = IDENT             (. expr = new IdentE(t.val, t.line);                      .)
     | Const<out expr>
-    | "true"            (. expr = new BoolLit(true);                        .)
-    | "false"           (. expr = new BoolLit(false);                       .)
-    | "undefined"       (. expr = new UndefinedLit(); .)
     | '@' IDENT         (. expr = new GetEvent(new IdentE(t.val, t.line));    .)
     | '$' IDENT         (. expr = new GetProperty(new IdentE(t.val, t.line)); .)
     | ("any" | "all"    (. quantifier = Quantifiers.ALL; .)
@@ -214,10 +211,13 @@ ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY
     | '(' Expr<out expr> ')'
 .
 
-Const<out Expr expr>    (. expr = null; .)
-    = INT               (. expr = new IntLit(Integer.parseInt(t.val), t.line);      .)
-    | FLOAT             (. expr = new FloatLit(Float.parseFloat(t.val));    .)
-    | STRING            (. expr = new StringLit(removeFirstAndLast(t.val)); .)
+Const<out Expr expr>    (. expr = null;                                        .)
+    = "undefined"       (. expr = new UndefinedLit();                          .)
+    | "true"            (. expr = new BoolLit(true);                           .)
+    | "false"           (. expr = new BoolLit(false);                          .)
+    | INT               (. expr = new IntLit(Integer.parseInt(t.val), t.line); .)
+    | FLOAT             (. expr = new FloatLit(Float.parseFloat(t.val));       .)
+    | STRING            (. expr = new StringLit(removeFirstAndLast(t.val));    .)
 .
 
 

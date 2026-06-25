@@ -279,17 +279,40 @@ public class Parser {
 
 	Expr  Const() {
 		Expr  expr;
-		expr = null; 
-		if (la.kind == 2) {
+		expr = null;                                        
+		switch (la.kind) {
+		case 48: {
 			Get();
-			expr = new IntLit(Integer.parseInt(t.val), t.line);      
-		} else if (la.kind == 3) {
+			expr = new UndefinedLit();                          
+			break;
+		}
+		case 49: {
 			Get();
-			expr = new FloatLit(Float.parseFloat(t.val));    
-		} else if (la.kind == 4) {
+			expr = new BoolLit(true);                           
+			break;
+		}
+		case 50: {
 			Get();
-			expr = new StringLit(removeFirstAndLast(t.val)); 
-		} else SynErr(64);
+			expr = new BoolLit(false);                          
+			break;
+		}
+		case 2: {
+			Get();
+			expr = new IntLit(Integer.parseInt(t.val), t.line); 
+			break;
+		}
+		case 3: {
+			Get();
+			expr = new FloatLit(Float.parseFloat(t.val));       
+			break;
+		}
+		case 4: {
+			Get();
+			expr = new StringLit(removeFirstAndLast(t.val));    
+			break;
+		}
+		default: SynErr(64); break;
+		}
 		return expr;
 	}
 
@@ -516,39 +539,24 @@ public class Parser {
 			expr = new IdentE(t.val, t.line);                      
 			break;
 		}
-		case 2: case 3: case 4: {
+		case 2: case 3: case 4: case 48: case 49: case 50: {
 			expr = Const();
 			break;
 		}
 		case 43: {
 			Get();
-			expr = new BoolLit(true);                        
-			break;
-		}
-		case 44: {
-			Get();
-			expr = new BoolLit(false);                       
-			break;
-		}
-		case 45: {
-			Get();
-			expr = new UndefinedLit(); 
-			break;
-		}
-		case 46: {
-			Get();
 			Expect(1);
 			expr = new GetEvent(new IdentE(t.val, t.line));    
 			break;
 		}
-		case 47: {
+		case 44: {
 			Get();
 			Expect(1);
 			expr = new GetProperty(new IdentE(t.val, t.line)); 
 			break;
 		}
-		case 48: case 49: {
-			if (la.kind == 48) {
+		case 45: case 46: {
+			if (la.kind == 45) {
 				Get();
 			} else {
 				Get();
@@ -559,7 +567,7 @@ public class Parser {
 			Expect(26);
 			int inLine = t.line; 
 			Expr list = Expr();
-			Expect(50);
+			Expect(47);
 			int whereLine = t.line; 
 			Expr cond = Expr();
 			Expect(20);
@@ -599,7 +607,7 @@ public class Parser {
 		{_x,_T,_x,_x, _T,_x,_x,_x, _x,_T,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
-		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x}
+		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x}
 
 	};
 } // end Parser
@@ -657,14 +665,14 @@ class Errors {
 			case 40: s = "\"-\" expected"; break;
 			case 41: s = "\"!\" expected"; break;
 			case 42: s = "\".\" expected"; break;
-			case 43: s = "\"true\" expected"; break;
-			case 44: s = "\"false\" expected"; break;
-			case 45: s = "\"undefined\" expected"; break;
-			case 46: s = "\"@\" expected"; break;
-			case 47: s = "\"$\" expected"; break;
-			case 48: s = "\"any\" expected"; break;
-			case 49: s = "\"all\" expected"; break;
-			case 50: s = "\"has\" expected"; break;
+			case 43: s = "\"@\" expected"; break;
+			case 44: s = "\"$\" expected"; break;
+			case 45: s = "\"any\" expected"; break;
+			case 46: s = "\"all\" expected"; break;
+			case 47: s = "\"has\" expected"; break;
+			case 48: s = "\"undefined\" expected"; break;
+			case 49: s = "\"true\" expected"; break;
+			case 50: s = "\"false\" expected"; break;
 			case 51: s = "\"bool\" expected"; break;
 			case 52: s = "\"int\" expected"; break;
 			case 53: s = "\"float\" expected"; break;
