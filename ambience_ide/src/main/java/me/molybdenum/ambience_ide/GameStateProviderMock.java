@@ -39,7 +39,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         put(P_EFFECTS.name(), "minecraft:absorption, minecraft:regeneration");
 
         put(P_COMBATANT_COUNT.name(), "0");
-        put(P_COMBATANTS.name(), "{ type_id=\"minecraft:skeleton\", health=10.0, max_health=20.0 } ,\n { type_id=\"minecraft:creeper\", health=7.0, max_health=10.0 }");
+        put(P_COMBATANTS.name(), "{ type_id=\"minecraft:skeleton\", health=10.0, max_health=20.0, targeting_player=true, fighting_player=true } ,\n { type_id=\"minecraft:creeper\", health=7.0, max_health=10.0, targeting_player=true, fighting_player=false }");
         put(P_BOSS.name(), "entity.minecraft.ender_dragon");
         put(P_BOSSES.name(), "entity.minecraft.ender_dragon, entity.minecraft.wither");
 
@@ -273,6 +273,8 @@ public class GameStateProviderMock extends GameStateProviderTemplate
             String type_id = null;
             Float health = null;
             Float max_health = null;
+            Boolean isTargetingPlayer = null;
+            boolean isFightingPlayer = false;
 
             while (fieldMatcher.find()) {
                 var nameAndValue = fieldMatcher.group().split("=");
@@ -280,13 +282,15 @@ public class GameStateProviderMock extends GameStateProviderTemplate
                     case CombatantT.FIELD_TYPE_ID -> type_id = fieldAsString(nameAndValue[1]);
                     case CombatantT.FIELD_HEALTH -> health = fieldAsFloat(nameAndValue[1]);
                     case CombatantT.FIELD_MAX_HEALTH -> max_health = fieldAsFloat(nameAndValue[1]);
+                    case CombatantT.FIELD_TARGETING_PLAYER -> isTargetingPlayer = fieldAsBoolean(nameAndValue[1]);
+                    case CombatantT.FIELD_FIGHTING_PLAYER -> isFightingPlayer = Boolean.TRUE.equals(fieldAsBoolean(nameAndValue[1]));
                     default -> {
                         return null;
                     }
                 }
             }
 
-            values.add(new CombatantVal(new CombatantVal.CombatantDescriptor(type_id, health, max_health)));
+            values.add(new CombatantVal(new CombatantVal.CombatantDescriptor(type_id, health, max_health, isTargetingPlayer, isFightingPlayer)));
         }
 
         return new ListVal(values);
@@ -385,11 +389,6 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         return eventValues.get(E_RANCH.name());
     }
 
-    @Override
-    public BoolVal wardenNearby() {
-        return eventValues.get(E_WARDEN_NEARBY.name());
-    }
-
 
     // ------------------------------------------------------------------------------------------------
     // Player-state events
@@ -469,6 +468,16 @@ public class GameStateProviderMock extends GameStateProviderTemplate
 
     // ------------------------------------------------------------------------------------------------
     // Combat events
+    @Override
+    public BoolVal wardenNearby() {
+        return eventValues.get(E_WARDEN_NEARBY.name());
+    }
+
+    @Override
+    public BoolVal isTargeted() {
+        return eventValues.get(E_IS_TARGETED.name());
+    }
+
     @Override
     public BoolVal inCombat() {
         return eventValues.get(E_IN_COMBAT.name());
