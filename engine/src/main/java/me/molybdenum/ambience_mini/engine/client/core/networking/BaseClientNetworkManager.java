@@ -108,10 +108,7 @@ public abstract class BaseClientNetworkManager
 
     // Combat
     private void handleMobTargetMessage(MobTargetMessage msg) {
-        if (msg.isTargetingPlayer)
-            core.combatState.tryAddCombatantById(msg.entityID, false);
-        else
-            core.combatState.removeCombatant(msg.entityID);
+        core.combatState.handleTargeting(msg.entityID, msg.isTargetingPlayer);
     }
 
 

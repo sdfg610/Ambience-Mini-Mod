@@ -27,15 +27,10 @@ public class Notification extends BaseNotification<Component>
 
 
     @Override
-    protected void addOrUpdateToast(Component message) {
-        SystemToast systemtoast = mc.getToasts().getToast(SystemToast.class, AMBIENCE_TOAST);
-        if (systemtoast == null) {
-            mc.getToasts().addToast(SystemToast.multiline(
-                    Minecraft.getInstance(), AMBIENCE_TOAST, title, message
-            ));
-        } else {
-            systemtoast.reset(title, message);
-        }
+    protected void addToast(Component message) {
+        mc.getToasts().addToast(SystemToast.multiline(
+                Minecraft.getInstance(), AMBIENCE_TOAST, title, message
+        ));
     }
 
     @Override

@@ -27,6 +27,8 @@ public enum AmLang
     MSG_PARTIAL_SERVER_SUPPORT("message.partial_server_support"),
     MSG_NO_SERVER_SUPPORT("message.no_server_support"),
 
+    MSG_BASIC_CONTROLS("message.basic_controls", 4), // Args: "reload key", "pause/play key", "next music key", "print debug info key"
+
     MSG_PAUSING_MUSIC("message.pausing_music"),
     MSG_RESUMING_MUSIC("message.resuming_music"),
 

@@ -1,4 +1,16 @@
 
+
+### Version 2.7.1:
+
+- Fixed level 100 brainfart where messages (errors, notifications, etc.) are created but not printed to the chat...
+- Hopefully fixed bug where quickly entering and leaving a boss fight causes the music player to crash.
+- Changed combat detection to distinguish between mobs "targeting the player" and "fighting the player".
+  * Added `@isTargeted` event which is `true` when a mob is targeting the player (and `undefined` when there is no server-support).
+  * Removed `Leaving_Combat_Distance` mod config option in favor of time-based combat detection (and since long-distance combat should still count as combat).
+  * You can now be in combat (fighting) when in creative mode, but not targeted. You can use `game_mode` if you do not want combat music in creative.
+- Improved error messaging in an edge case.
+- Fixed bug for Minecraft versions 1.19.2 and above that caused incorrect tracking of enemies in combat.
+
 ### Version 2.7.0:
 
 - Improved structure caching and intersection checking.

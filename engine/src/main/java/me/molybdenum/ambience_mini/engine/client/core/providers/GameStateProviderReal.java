@@ -217,15 +217,6 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         return new BoolVal(_level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold);
     }
 
-    @Override
-    public BoolVal wardenNearby() {
-        if (_player.isNull() || _level.isNull())
-            return BoolVal.UNDEFINED;
-
-        Double distance = _level.shortestDistanceToWarden(_player.eyePosition(), Common.WARDEN_SEARCH_RADIUS);
-        return distance == null ? BoolVal.FALSE : new BoolVal(distance <= Common.WARDEN_SEARCH_RADIUS);
-    }
-
 
     // ------------------------------------------------------------------------------------------------
     // Player-state events
@@ -325,11 +316,27 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     // ------------------------------------------------------------------------------------------------
     // Combat events
     @Override
+    public BoolVal wardenNearby() {
+        if (_player.isNull() || _level.isNull())
+            return BoolVal.UNDEFINED;
+
+        Double distance = _level.shortestDistanceToWarden(_player.eyePosition(), Common.WARDEN_SEARCH_RADIUS);
+        return distance == null ? BoolVal.FALSE : new BoolVal(distance <= Common.WARDEN_SEARCH_RADIUS);
+    }
+
+    @Override
+    public BoolVal isTargeted() {
+        if (_level.isNull())
+            return BoolVal.UNDEFINED;
+        return new BoolVal(_combat.isPlayerTargeted());
+    }
+
+    @Override
     public BoolVal inCombat() {
         if (_level.isNull())
             return BoolVal.UNDEFINED;
 
-        if (_combat.hasActiveCombatants()) {
+        if (_combat.isPlayerFighting()) {
             _latestCombatTime = System.currentTimeMillis();
             return new BoolVal(true);
         }

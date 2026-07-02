@@ -46,6 +46,8 @@ public abstract class BaseClientCore<
         TScreenState extends BaseScreenState,
         TCombatState extends BaseCombatState<TEntity, TVec3>
 > {
+    public static boolean hasPrintedControls = false;
+
     public static final Path musicDirPath = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_DIRECTORY);
     private static final MusicProvider musicProvider = new FileMusicProvider(musicDirPath.toString());
 
@@ -207,6 +209,7 @@ public abstract class BaseClientCore<
         serverSetup.serverVersion = serverVersion;
         serverSetup.isOnLocalServer = isOnLocalServer;
 
+        combatState.clearCombatants();
         structureCache.clear();
         nameCache.clear();
         nameCache.setCurrentPlayer(playerUUID, playerName);
@@ -231,6 +234,16 @@ public abstract class BaseClientCore<
                 notification.printTranslatableToChat(AmLang.MSG_PARTIAL_SERVER_SUPPORT);
             else
                 notification.printTranslatableToChat(AmLang.MSG_NO_SERVER_SUPPORT);
+        }
+
+        if (!hasPrintedControls && clientConfig.printBasicControls.get()) {
+            notification.printTranslatableToChat(AmLang.MSG_BASIC_CONTROLS,
+                keyBindings.getKeyString(keyBindings.reloadKey),
+                keyBindings.getKeyString(keyBindings.playPauseKey),
+                keyBindings.getKeyString(keyBindings.nextMusicKey),
+                keyBindings.getKeyString(keyBindings.printAllKey)
+            );
+            hasPrintedControls = true;
         }
     }
 

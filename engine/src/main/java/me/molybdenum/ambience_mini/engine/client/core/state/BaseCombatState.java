@@ -20,10 +20,6 @@ public abstract class BaseCombatState<TEntity, TVec3>
 
     // Fields for handling leaving combat with no server support
     private int _combatantTimeout;
-    private int _leavingCombatDistance;
-
-    private static final long RECHECK_INTERVAL = 1000L;
-    private long _latestRecheck = 0L;
 
 
     @SuppressWarnings("rawtypes")
@@ -40,7 +36,6 @@ public abstract class BaseCombatState<TEntity, TVec3>
         _serverSetup = core.serverSetup;
 
         _combatantTimeout = core.clientConfig.combatantTimeout.get();
-        _leavingCombatDistance = core.clientConfig.leavingCombatDistance.get();
     }
 
 
@@ -60,58 +55,57 @@ public abstract class BaseCombatState<TEntity, TVec3>
     // -----------------------------------------------------------------------------------------------------------------
     // Concrete API
     public int countCombatants() {
-        // If there is server support, combatants that are targeting the player, but have not interacted with the player
-        // yet, are still registered as a combatant -- albeit "inactive". If one combatant becomes active, all potential
-        // combatants are counted here so that "horde fight" music can be played as well.
-        if (hasActiveCombatants())
-            return combatants.size(); // If in creative, there is no combat
-        return 0;
+        recheckCombatants(System.currentTimeMillis());
+        return combatants.size();
     }
 
-    public boolean hasActiveCombatants() {
-        if (_playerState.notNull() && _playerState.isSurvivalOrAdventureMode()) {
-            recheckCombatants();
-            return combatants.values().stream().anyMatch(com -> com.latestInteraction != Long.MIN_VALUE);
-        }
-        return false;
+    public Boolean isPlayerTargeted() {
+        if (_serverSetup.serverVersion.isLessThan(AmVersion.V_2_5_0))
+            return null;
+
+        recheckCombatants(System.currentTimeMillis());
+        return combatants.values().stream().anyMatch(Combatant::isTargetingPlayer);
     }
 
-    private void recheckCombatants() {
+    public boolean isPlayerFighting() {
         long now = System.currentTimeMillis();
-        if (now - _latestRecheck > RECHECK_INTERVAL) {
-            // Make new array list of entries to avoid concurrent modification
-            for (var entry : new ArrayList<>(combatants.entrySet())) {
-                var combatant = entry.getValue();
-
-                var serverlessCheck = _serverSetup.serverVersion.isLessThan(AmVersion.V_2_5_0) && serverlessRemoveCheck(now, combatant);
-                if (serverlessCheck || isEntityDead(combatant.entity))
-                    combatants.remove(entry.getKey());
-            }
-            _latestRecheck = now;
-        }
+        recheckCombatants(now);
+        return combatants.values().stream().anyMatch(com -> com.isFightingPlayer(now));
     }
 
-    private boolean serverlessRemoveCheck(long now, Combatant combatant) {
-        return now - combatant.latestInteraction >= _combatantTimeout
-                || _playerState.distanceTo(_levelState.getEntityPosition(combatant.entity)) >= _leavingCombatDistance;
+    public ListVal getCombatants() {
+        long now = System.currentTimeMillis();
+        recheckCombatants(now);
+        return new ListVal(combatants.values().stream().map(com -> com.asCombatantVal(now)));
     }
 
 
-    public void tryAddCombatantByRef(TEntity entity, boolean hasInteraction) {
-        addCombatant(getEntityId(entity), entity, hasInteraction);
+    public void handleInteraction(TEntity entity) {
+        var combatant = combatants.computeIfAbsent(getEntityId(entity), ignored ->
+                new Combatant(entity)
+        );
+
+        long now = System.currentTimeMillis();
+        combatant.latestInteraction = now;
+        recheckCombatants(now);
     }
 
-    public void tryAddCombatantById(int id, boolean hasInteraction) {
-        addCombatant(id, null, hasInteraction); // Just pass "null" to avoid a lookup before we know it is necessary
+    public void handleTargeting(int id, boolean targetsPlayer) {
+        var combatant = combatants.computeIfAbsent(id, ignored ->
+                new Combatant(_levelState.getEntityById(id))
+        );
+
+        combatant.isTargetingPlayer = targetsPlayer;
+        recheckCombatants(System.currentTimeMillis());
     }
 
-    private void addCombatant(int id, TEntity entity, boolean hasInteraction) {
-        if (_playerState.notNull() && _playerState.isSurvivalOrAdventureMode()) {
-            var info = combatants.computeIfAbsent(id, ignored ->
-                    new Combatant(entity == null ? _levelState.getEntityById(id) : entity) // Lookup if necessary
-            );
-            if (hasInteraction)
-                info.latestInteraction = System.currentTimeMillis();
+
+    private void recheckCombatants(long now) {
+        // Make new list of entries to avoid concurrent modification (since we are modifying the collection we are iterating over)
+        for (var entry : new ArrayList<>(combatants.entrySet())) {
+            var combatant = entry.getValue();
+            if (combatant.isDead() || !combatant.isTargetingOrFightingPlayer(now))
+                combatants.remove(entry.getKey());
         }
     }
 
@@ -124,25 +118,41 @@ public abstract class BaseCombatState<TEntity, TVec3>
         combatants.clear();
     }
 
-    public ListVal getCombatants() {
-        return new ListVal(combatants.values().stream().map(Combatant::asCombatantVal));
-    }
-
 
     class Combatant {
-        public TEntity entity;
-        public long latestInteraction = Long.MIN_VALUE;
+        private final TEntity entity;
+        private Boolean isTargetingPlayer = null;
+        public long latestInteraction = 0;
 
         public Combatant(TEntity entity) {
             this.entity = entity;
         }
 
-        public CombatantVal asCombatantVal() {
+        public CombatantVal asCombatantVal(long now) {
             return new CombatantVal(
-                    getEntityResourceLocation(entity),
-                    getEntityHealth(entity),
-                    getEntityMaxHealth(entity)
+                    entity == null ? null : getEntityResourceLocation(entity),
+                    entity == null ? null : getEntityHealth(entity),
+                    entity == null ? null : getEntityMaxHealth(entity),
+                    isTargetingPlayer,
+                    isFightingPlayer(now)
             );
+        }
+
+
+        public Boolean isTargetingPlayer() {
+            return isTargetingPlayer != null && isTargetingPlayer;
+        }
+
+        public boolean isFightingPlayer(long now) {
+            return now - latestInteraction <= _combatantTimeout;
+        }
+
+        public boolean isTargetingOrFightingPlayer(long now) {
+            return isTargetingPlayer() || isFightingPlayer(now);
+        }
+
+        public boolean isDead() {
+            return entity == null || isEntityDead(entity);
         }
     }
 }

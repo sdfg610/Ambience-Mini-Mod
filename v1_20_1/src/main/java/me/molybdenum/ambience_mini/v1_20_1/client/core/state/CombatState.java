@@ -13,6 +13,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,7 +32,7 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
 
     @Override
     public int getEntityId(Entity entity) {
-        return 0;
+        return entity.getId();
     }
 
     @Override
@@ -63,10 +64,8 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
         Map<UUID, LerpingBossEvent> bossMap =
                 ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), OBF_MAP_BOSS_INFO);
 
-        return bossMap == null
-                ? List.of()
-                : bossMap.values()
-                .stream()
+        List<LerpingBossEvent> bosses = bossMap == null ? List.of() : new ArrayList<>(bossMap.values());
+        return bosses.stream()
                 .map(bossEvent -> extractBossKeyOrName(bossEvent.getName().getContents()))
                 .toList();
     }

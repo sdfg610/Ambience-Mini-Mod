@@ -19,6 +19,8 @@
   "message.partial_server_support": "Detected partial server support for Ambience Mini! Some server-dependent features might be enabled.",
   "message.no_server_support": "No server support for Ambience Mini detected! All server-dependent features are disabled.",
 
+  "message.basic_controls": "Ambience Mini basic controls: reload '%s', pause/play '%s', change music '%s', print events/properties to logs '%s'. You can disable this message in the mod config.",
+
   "message.pausing_music": "Pausing music...",
   "message.resuming_music": "Resuming music...",
 
@@ -58,6 +60,7 @@
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
   "ambience_mini.configuration.Notify_Server_Support": "Notify server support",
   "ambience_mini.configuration.Verbose_Mode": "Verbose mode",
+  "ambience_mini.configuration.Print_Basic_Controls": "Print basic controls",
   "ambience_mini.configuration.Update_Interval": "Update interval",
   "ambience_mini.configuration.Next_Music_Delay": "Next music delay",
   "ambience_mini.configuration.Meticulous_Playlist_Selector": "Meticulous playlist selector",
@@ -77,6 +80,5 @@
   "ambience_mini.configuration.Y_Axis_Granularity": "Y-axis granularity",
   "ambience_mini.configuration.X_Axis_Granularity": "X-axis granularity",
   "ambience_mini.configuration.Combat_Grace_Period": "Combat grace period",
-  "ambience_mini.configuration.Combatant_Timeout": "Combatant timeout",
-  "ambience_mini.configuration.Leaving_Combat_Distance": "Leaving combat distance"
+  "ambience_mini.configuration.Combatant_Timeout": "Combatant timeout"
 }

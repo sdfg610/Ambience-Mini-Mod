@@ -4,6 +4,7 @@
   "package": "me.molybdenum.ambience_mini.v1_18_2.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "BossHealthOverlayMixin",
     "ClassInstanceMultiMapMixin",
     "MusicManagerMixin",
     "SoundEngineMixin",

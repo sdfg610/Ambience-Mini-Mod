@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.v1_20_1.client.core.state.CombatState;
 import me.molybdenum.ambience_mini.engine.shared.Common;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
@@ -38,18 +39,18 @@ public class CombatClientHandler
     @SubscribeEvent
     public static void onLivingAttackEvent(final LivingAttackEvent event) {
         if (event.getEntity() instanceof Player
-                && event.getSource().getDirectEntity() instanceof Mob attacker
+                && event.getSource().getDirectEntity() instanceof LivingEntity attacker
                 && attacker.isAlive()) {
-            combat.tryAddCombatantByRef(attacker, true);
+            combat.handleInteraction(attacker);
         }
     }
 
     @SubscribeEvent
     public static void onPlayerAttackEvent(final AttackEntityEvent event) {
-        if (event.getTarget() instanceof Mob target
+        if (event.getTarget() instanceof LivingEntity target
                 && target.canAttackType(EntityType.PLAYER)
                 && target.isAlive()) {
-            combat.tryAddCombatantByRef(target, true);
+            combat.handleInteraction(target);
         }
     }
 

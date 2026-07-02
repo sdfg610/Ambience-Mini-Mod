@@ -8,7 +8,7 @@ import java.util.Arrays;
 public abstract class BaseNotification<TComponent>
 {
     public void showToast(AmLang key, Object... arguments) {
-        addOrUpdateToast(makeTranslatable(key.key, arguments));
+        addToast(makeTranslatable(key.key, arguments));
     }
 
 
@@ -25,7 +25,7 @@ public abstract class BaseNotification<TComponent>
     }
 
     private void printTranslatableToChat(String key, Object... arguments) {
-        makeTranslatable(key, arguments);
+        printToChat(makeTranslatable(key, arguments));
     }
 
 
@@ -37,7 +37,7 @@ public abstract class BaseNotification<TComponent>
     protected abstract TComponent makeTranslatable(String key, Object... arguments);
     protected abstract TComponent makeLiteral(String text);
 
-    protected abstract void addOrUpdateToast(TComponent message);
+    protected abstract void addToast(TComponent message);
     protected abstract void printToChat(TComponent message);
 
     public abstract String translateFromKey(AmLang key);

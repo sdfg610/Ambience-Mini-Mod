@@ -92,8 +92,9 @@ public class VorbisFile{
 
   //ov_callbacks callbacks;
 
-  public VorbisFile(String file) throws JOrbisException{
-    super();
+  public VorbisFile(String file)
+          throws JOrbisException
+  {
     try{
       InputStream is = new SeekableInputStream(file);
       int ret=open(is, null, 0);
@@ -102,13 +103,13 @@ public class VorbisFile{
       }
     }
     catch(Exception e){
-      throw new JOrbisException("VorbisFile: "+e.toString());
+      throw new JOrbisException("VorbisFile: " + e, e);
     }
   }
 
   public VorbisFile(InputStream is, byte[] initial, int ibytes)
-      throws JOrbisException{
-    super();
+          throws JOrbisException
+  {
     if(open(is, initial, ibytes) == -1){
       throw new JOrbisException("VorbisFile: open return -1");
     }

@@ -13,10 +13,10 @@ public abstract class BaseKeyBindings<TKeyBinding>
     public TKeyBinding reloadKey;
     public TKeyBinding playPauseKey;
     public TKeyBinding nextMusicKey;
-    public TKeyBinding printAll;
-    public TKeyBinding toggleAreas;
-    public TKeyBinding areaConfirm;
-    public TKeyBinding areaCancel;
+    public TKeyBinding printAllKey;
+    public TKeyBinding toggleAreasKey;
+    public TKeyBinding areaConfirmKey;
+    public TKeyBinding areaCancelKey;
 
 
     @SuppressWarnings("rawtypes")
@@ -31,10 +31,10 @@ public abstract class BaseKeyBindings<TKeyBinding>
         reloadKey = createAndRegister(AmLang.KEY_RELOAD, keyP());
         playPauseKey = createAndRegister(AmLang.KEY_PLAY_PAUSE, keyEnd());
         nextMusicKey = createAndRegister(AmLang.KEY_NEXT_MUSIC, keyPageUp());
-        printAll = createAndRegister(AmLang.KEY_PRINT_ALL, keyPageDown());
-        toggleAreas = createAndRegister(AmLang.KEY_TOGGLE_AREAS, keyHome());
-        areaConfirm = createAndRegister(AmLang.KEY_AREA_CONFIRM, keyInsert());
-        areaCancel = createAndRegister(AmLang.KEY_AREA_CANCEL, keyDelete());
+        printAllKey = createAndRegister(AmLang.KEY_PRINT_ALL, keyPageDown());
+        toggleAreasKey = createAndRegister(AmLang.KEY_TOGGLE_AREAS, keyHome());
+        areaConfirmKey = createAndRegister(AmLang.KEY_AREA_CONFIRM, keyInsert());
+        areaCancelKey = createAndRegister(AmLang.KEY_AREA_CANCEL, keyDelete());
     }
 
 
@@ -86,7 +86,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
             }
         }
 
-        if (isClicked(printAll)) {
+        if (isClicked(printAllKey)) {
             BaseGameStateProvider provider = core.getGameStateProvider();
             if (provider != null) {
                 core.notification.showToast(AmLang.MSG_PRINTING_ALL);
@@ -100,17 +100,17 @@ public abstract class BaseKeyBindings<TKeyBinding>
             }
         }
 
-        if (isClicked(toggleAreas))
+        if (isClicked(toggleAreasKey))
             switch (core.areaRenderer.setOrToggleViewMode(null)) {
                 case OFF -> core.notification.showToast(AmLang.MSG_AREA_VIEW_OFF);
                 case AREA_SELECTION -> core.notification.showToast(AmLang.MSG_AREA_SELECTOR_ENABLED);
                 case AREA_CONSTRUCTION -> core.notification.showToast(AmLang.MSG_AREA_CONSTRUCTOR_ENABLED);
             }
 
-        if (isClicked(areaConfirm))
+        if (isClicked(areaConfirmKey))
             core.areaRenderer.registerConfirm();
 
-        if (isClicked(areaCancel))
+        if (isClicked(areaCancelKey))
             core.areaRenderer.registerCancel();
     }
 

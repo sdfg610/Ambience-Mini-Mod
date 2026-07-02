@@ -13,6 +13,7 @@ public abstract class BaseClientConfig {
     // Misc
     public final Supplier<Boolean> notifyServerSupport;
     public final Supplier<Boolean> verboseMode;
+    public final Supplier<Boolean> printBasicControls;
 
     // Timing
     public final Supplier<Integer> updateInterval;
@@ -46,7 +47,6 @@ public abstract class BaseClientConfig {
     // Combat detection
     public final Supplier<Integer> combatGracePeriod;
     public final Supplier<Integer> combatantTimeout;
-    public final Supplier<Integer> leavingCombatDistance;
 
 
     protected BaseClientConfig() {
@@ -61,6 +61,12 @@ public abstract class BaseClientConfig {
         verboseMode = registerBoolOption(
                 "If enabled, the mod will print debugging information to the terminal whenever the current playlist changes. Used for troubleshooting. [Default: false]",
                 "Verbose_Mode",
+                false
+        );
+
+        printBasicControls = registerBoolOption(
+                "If enabled, the mod will print a message once (each time Minecraft is launched) with all the basic controls of the mod. [Default: false]",
+                "Print_Basic_Controls",
                 false
         );
 
@@ -164,20 +170,15 @@ public abstract class BaseClientConfig {
 
         // Combat detection
         combatGracePeriod = registerIntOption(
-                "After leaving combat, the 'in_combat' event will stay active for the additional time (in milliseconds) given here, allowing new enemies to join the fight without music switching between combat and non-combat music. [Default: 2500]",
+                "After leaving combat, the '@in_combat' event will stay active for the additional time (in milliseconds) given here, allowing new enemies to join the fight without music switching between combat and non-combat music. [Default: 3500]",
                 "Combat_Grace_Period",
                 3500, 1000, 10000
         );
 
         combatantTimeout = registerIntOption(
-                "Only used when no server-support is detected. If no interaction has been made between a player and a mob for the time given here (in milliseconds), these will no longer be considered 'in combat'. [Default: 5000]",
+                "If no interaction has been made between a player and a mob for the time given here (in milliseconds), these will no longer be considered 'in combat'. [Default: 5000]",
                 "Combatant_Timeout",
                 5000, 2500, 15000
-        );
-        leavingCombatDistance = registerIntOption(
-                "Only used when no server-support is detected. When the player moves the number of blocks away from a mob given here, these will no longer be considered 'in combat'. [Default: 20]",
-                "Leaving_Combat_Distance",
-                20, 10, 50
         );
 
         postSetup();
