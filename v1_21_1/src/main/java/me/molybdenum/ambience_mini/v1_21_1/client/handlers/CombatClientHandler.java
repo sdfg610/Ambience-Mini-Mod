@@ -2,8 +2,10 @@ package me.molybdenum.ambience_mini.v1_21_1.client.handlers;
 
 import me.molybdenum.ambience_mini.v1_21_1.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.v1_21_1.Utils;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.state.CombatState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -20,6 +22,7 @@ import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 @EventBusSubscriber(modid = Common.MOD_ID, value = Dist.CLIENT)
 public class CombatClientHandler
 {
+    private static final Minecraft mc = Minecraft.getInstance();
     private static CombatState combat;
 
 
@@ -38,30 +41,27 @@ public class CombatClientHandler
 
     @SubscribeEvent
     public static void onLivingIncomingDamageEvent(final LivingIncomingDamageEvent event) {
-        if (event.getEntity() instanceof Player
-                && event.getSource().getEntity() instanceof LivingEntity attacker
-                && attacker.isAlive()) {
-            combat.handleInteraction(attacker);
-        }
+        var target = event.getEntity();
+        var source = event.getSource().getEntity();
+        if (target instanceof LocalPlayer player && player == mc.player && Utils.isCombatableEntity(source))
+            combat.handleInteraction(source);
+        else if (source instanceof LocalPlayer player && player == mc.player && Utils.isCombatableEntity(target))
+            combat.handleInteraction(target);
     }
 
     @SubscribeEvent
     public static void onPlayerAttackEvent(final AttackEntityEvent event) {
-        if (event.getTarget() instanceof LivingEntity target
-                && target.canAttackType(EntityType.PLAYER)
-                && target.isAlive()) {
+        var target = event.getTarget();
+        if (Utils.isCombatableEntity(target))
             combat.handleInteraction(target);
-        }
     }
 
     @SubscribeEvent
     public static void onDeathEvent(final LivingDeathEvent event) {
         if (event.getEntity() instanceof Player) {
-            assert Minecraft.getInstance().player != null;
-            if (!Minecraft.getInstance().player.isAlive()) // If on a lan server, another player's death will get here on the host
+            assert mc.player != null;
+            if (!mc.player.isAlive()) // If on a lan server, another player's death will get here on the host
                 combat.clearCombatants();
         }
-        else
-            combat.removeCombatant(event.getEntity().getId());
     }
 }

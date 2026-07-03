@@ -479,6 +479,11 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     }
 
     @Override
+    public BoolVal isFighting() {
+        return eventValues.get(E_IS_FIGHTING.name());
+    }
+
+    @Override
     public BoolVal inCombat() {
         return eventValues.get(E_IN_COMBAT.name());
     }

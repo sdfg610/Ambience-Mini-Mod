@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.IndirectAttackOnMobMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.FailureMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.SuccessMessage;
@@ -66,6 +67,9 @@ public abstract class BaseClientNetworkManager
 
         else if (message instanceof MobTargetMessage msg)
             handleMobTargetMessage(msg);
+        else if (message instanceof IndirectAttackOnMobMessage msg)
+            handleIndirectAttackOnMobMessage(msg);
+
         else if (message instanceof PutAreaMessage msg)
             handlePutAreaMessage(msg);
         else if (message instanceof DeleteAreaMessage msg)
@@ -109,6 +113,10 @@ public abstract class BaseClientNetworkManager
     // Combat
     private void handleMobTargetMessage(MobTargetMessage msg) {
         core.combatState.handleTargeting(msg.entityID, msg.isTargetingPlayer);
+    }
+
+    private void handleIndirectAttackOnMobMessage(IndirectAttackOnMobMessage msg) {
+        core.combatState.handleInteraction(msg.entityID);
     }
 
 

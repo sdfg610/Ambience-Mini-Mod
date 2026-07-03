@@ -54,6 +54,11 @@ public abstract class BaseCombatState<TEntity, TVec3>
 
     // -----------------------------------------------------------------------------------------------------------------
     // Concrete API
+    public boolean hasCombatants() {
+        recheckCombatants(System.currentTimeMillis());
+        return !combatants.isEmpty();
+    }
+
     public int countCombatants() {
         recheckCombatants(System.currentTimeMillis());
         return combatants.size();
@@ -79,6 +84,9 @@ public abstract class BaseCombatState<TEntity, TVec3>
         return new ListVal(combatants.values().stream().map(com -> com.asCombatantVal(now)));
     }
 
+    public void handleInteraction(int id) {
+        handleInteraction(_levelState.getEntityById(id));
+    }
 
     public void handleInteraction(TEntity entity) {
         var combatant = combatants.computeIfAbsent(getEntityId(entity), ignored ->

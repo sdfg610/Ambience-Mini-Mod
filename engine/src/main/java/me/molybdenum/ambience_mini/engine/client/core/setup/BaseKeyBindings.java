@@ -91,7 +91,9 @@ public abstract class BaseKeyBindings<TKeyBinding>
             if (provider != null) {
                 core.notification.showToast(AmLang.MSG_PRINTING_ALL);
 
-                provider.prepare(null);
+                var monitor = core.getMonitor();
+                if (monitor == null || !monitor.isRunning())
+                    provider.prepare(null);
                 long timeStart = System.currentTimeMillis();
                 String allState = provider.readAll();
                 long elapsedTime = System.currentTimeMillis() - timeStart;

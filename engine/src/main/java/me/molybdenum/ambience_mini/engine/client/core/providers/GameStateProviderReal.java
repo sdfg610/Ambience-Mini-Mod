@@ -50,6 +50,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private long _latestFishingHookInWaterTime = 0L;
 
     private long _latestCombatTime = 0L;
+    private boolean _isInCombat = false;
 
     private double _latestCaveScore = 0;
 
@@ -332,15 +333,29 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     }
 
     @Override
+    public BoolVal isFighting() {
+        if (_level.isNull())
+            return BoolVal.UNDEFINED;
+        return new BoolVal(_combat.isPlayerFighting());
+    }
+
+    @Override
     public BoolVal inCombat() {
         if (_level.isNull())
             return BoolVal.UNDEFINED;
 
+        // Active fighting sets off combat
         if (_combat.isPlayerFighting()) {
+            _isInCombat = true;
             _latestCombatTime = System.currentTimeMillis();
             return new BoolVal(true);
         }
-        return new BoolVal(System.currentTimeMillis() - _latestCombatTime < _combatGracePeriod);
+
+        // As long as there are combatants (either targeting or fighting), the combat timeout is doubled
+        if (_isInCombat && System.currentTimeMillis() - _latestCombatTime > (_combatGracePeriod * (_combat.hasCombatants() ? 2L : 1L)))
+            _isInCombat = false;
+
+        return new BoolVal(_isInCombat);
     }
 
     @Override

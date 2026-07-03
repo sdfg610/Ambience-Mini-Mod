@@ -54,6 +54,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     // Combat events
     public static final EventTemplateV1 E_WARDEN_NEARBY = new EventTemplateV1("warden_nearby", instance -> instance::wardenNearby, McVersion.V1_19);
     public static final EventTemplateV1 E_IS_TARGETED = new EventTemplateV1("is_targeted", instance -> instance::isTargeted);
+    public static final EventTemplateV1 E_IS_FIGHTING = new EventTemplateV1("is_fighting", instance -> instance::isFighting);
     public static final EventTemplateV1 E_IN_COMBAT = new EventTemplateV1("in_combat", instance -> instance::inCombat);
     public static final EventTemplateV1 E_BOSS_FIGHT = new EventTemplateV1("boss_fight", instance -> instance::inBossFight);
 
@@ -64,7 +65,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
             E_VILLAGE, E_RANCH,
             E_DEAD, E_SLEEPING, E_FISHING, E_UNDER_WATER, E_IN_LAVA, E_ON_FIRE, E_IN_POWDER_SNOW, E_DROWNING,
             E_MINECART, E_BOAT, E_HORSE, E_DONKEY, E_PIG, E_ELYTRA,
-            E_WARDEN_NEARBY, E_IS_TARGETED, E_IN_COMBAT, E_BOSS_FIGHT
+            E_WARDEN_NEARBY, E_IS_TARGETED, E_IS_FIGHTING, E_IN_COMBAT, E_BOSS_FIGHT
     };
 
 
@@ -178,6 +179,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     // Combat events
     public abstract BoolVal wardenNearby();
     public abstract BoolVal isTargeted();
+    public abstract BoolVal isFighting();
     public abstract BoolVal inCombat();
     public abstract BoolVal inBossFight();
 
