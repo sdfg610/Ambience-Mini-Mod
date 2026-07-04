@@ -1,4 +1,8 @@
 
+### Version 2.7.2:
+
+- Fixed server-sided crash bug when attacking entities with projectiles.
+
 ### Version 2.7.1:
 
 - Hopefully fixed bug where quickly entering and leaving a boss fight causes the music player to crash.

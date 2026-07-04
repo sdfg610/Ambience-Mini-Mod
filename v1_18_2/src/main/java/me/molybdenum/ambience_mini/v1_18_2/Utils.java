@@ -1,15 +1,13 @@
 package me.molybdenum.ambience_mini.v1_18_2;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
 
 public class Utils {
-    private static final Minecraft mc = Minecraft.getInstance();
-
-    public static boolean isCombatableEntity(Entity entity) {
+    public static boolean isCombatableEntity(Entity entity, Player player) {
         return (entity instanceof Monster || entity instanceof NeutralMob)
-                && !(entity instanceof TamableAnimal tam && mc.player != null && mc.player.getUUID() == tam.getOwnerUUID())
+                && !(entity instanceof TamableAnimal tam && player != null && player.getUUID() == tam.getOwnerUUID())
                 && entity.isAlive();
     }
 }

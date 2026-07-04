@@ -43,16 +43,17 @@ public class CombatClientHandler
     public static void onLivingIncomingDamageEvent(final LivingIncomingDamageEvent event) {
         var target = event.getEntity();
         var source = event.getSource().getEntity();
-        if (target instanceof LocalPlayer player && player == mc.player && Utils.isCombatableEntity(source))
+        if (target instanceof LocalPlayer player && player == mc.player && Utils.isCombatableEntity(source, player))
             combat.handleInteraction(source);
-        else if (source instanceof LocalPlayer player && player == mc.player && Utils.isCombatableEntity(target))
+        else if (source instanceof LocalPlayer player && player == mc.player && Utils.isCombatableEntity(target, player))
             combat.handleInteraction(target);
     }
 
     @SubscribeEvent
     public static void onPlayerAttackEvent(final AttackEntityEvent event) {
         var target = event.getTarget();
-        if (Utils.isCombatableEntity(target))
+        var player = event.getEntity();
+        if (Utils.isCombatableEntity(target, player))
             combat.handleInteraction(target);
     }
 

@@ -40,7 +40,7 @@ public class CombatHandler
     public static void onLivingAttackEvent(final LivingAttackEvent event) {
         if (!event.isCanceled()) {
             var target = event.getEntity();
-            if (event.getSource().getEntity() instanceof ServerPlayer player && Utils.isCombatableEntity(target))
+            if (event.getSource().getEntity() instanceof ServerPlayer player && Utils.isCombatableEntity(target, player))
                 sendIndirectAttackOnMobMessage(target.getId(), player);
         }
     }
