@@ -18,7 +18,7 @@ public class OggDecoder extends AmDecoder
     private static final int BUFFER_SIZE = 400_000;
 
     private final byte[] miniBuffer = new byte[VorbisFile.CHUNKSIZE];
-    private final byte[] buffer = new byte[BUFFER_SIZE + VorbisFile.CHUNKSIZE]; // Part after plus allows the latest frame to overflow the buffer. Handled later
+    private final byte[] buffer = new byte[BUFFER_SIZE + VorbisFile.CHUNKSIZE];
     private int currentLength = 0;
 
     private final VorbisFile file;
@@ -73,9 +73,7 @@ public class OggDecoder extends AmDecoder
         buf.put(buffer, 0, currentLength);
         buf.rewind();
 
-        // Move surplus data to start of "buffer"
-        System.arraycopy(buffer, BUFFER_SIZE, buffer, 0, VorbisFile.CHUNKSIZE);
-        currentLength -= BUFFER_SIZE; // If this goes negative, we are out of audio data anyway, so no problem.
+        currentLength = 0;
 
         return buf;
     }

@@ -15,8 +15,8 @@ public class MP3Decoder extends AmDecoder {
 
     private final long bufferMaxSamples;
 
-    private final short[] buffer = new short[BUFFER_SIZE + Obuffer.OBUFFERSIZE]; // Part after plus allows the latest frame to overflow the buffer. Handled later
-    private int currentLength = 0;
+    private final short[] buffer = new short[BUFFER_SIZE + Obuffer.OBUFFERSIZE*2];
+    private int currentShortLength = 0;
 
     private final Decoder decoder = new Decoder();
     private final Bitstream bitstream;
@@ -26,7 +26,6 @@ public class MP3Decoder extends AmDecoder {
     private final long loopEnd;
 
     private final int sampleShortSize;
-    private final int sampleByteSize;
     private long samplesDecoded;
     private long savedSamplesDecoded = -1;
 
@@ -39,7 +38,6 @@ public class MP3Decoder extends AmDecoder {
             bitstream.unreadFrame();
 
             sampleShortSize = decoder.getOutputChannels(); // JLayer always produces samples of 2 bytes or 1 short.
-            sampleByteSize = sampleShortSize * 2;
             bufferMaxSamples = Obuffer.OBUFFERSIZE / sampleShortSize;
 
             if (mInst.music().loop()) {
@@ -57,8 +55,7 @@ public class MP3Decoder extends AmDecoder {
 
     @Override
     public AudioFormat getFormat() {
-        // It appears that JLayer sums the frequency across all channels, but open AL does not expect that. Thus, I divide by the number of channels.
-        return new AudioFormat((float)decoder.getOutputFrequency() / decoder.getOutputChannels(),
+        return new AudioFormat((float)decoder.getOutputFrequency(),
                 16,
                 decoder.getOutputChannels(),
                 true,
@@ -68,28 +65,25 @@ public class MP3Decoder extends AmDecoder {
     @Override
     public @Nullable ByteBuffer getFrame() {
         try {
-            while (currentLength < BUFFER_SIZE && readFrameToBuffer(0)) {
+            while (currentShortLength < BUFFER_SIZE && readFrameToBuffer(0)) {
                 if (samplesDecoded >= loopEnd) {
-                    currentLength -= (int)(samplesDecoded - loopEnd)*sampleByteSize; // Find overflow in bytes (not short)
+                    currentShortLength -= (int)(samplesDecoded - loopEnd)*sampleShortSize; // Find overflow in bytes (not short)
                     bitstream.restoreState();
                     decoder.restoreState();
                     samplesDecoded = savedSamplesDecoded;
                     readFrameToBuffer((int)(loopStart-samplesDecoded));
                 }
             }
-            if (currentLength <= 0)
+            if (currentShortLength <= 0)
                 return null;
 
             // Create new buffer to return
-            int len = Math.min(BUFFER_SIZE, currentLength);
-            ByteBuffer buf = BufferUtils.createByteBuffer(len);
-            for (int i = 0; i < len; ++i)
-                buf.putShort(buffer[i++]);
+            ByteBuffer buf = BufferUtils.createByteBuffer(currentShortLength*2);
+            for (int i = 0; i < currentShortLength; ++i)
+                buf.putShort(buffer[i]);
             buf.rewind();
 
-            // Move surplus data to start of "buffer"
-            System.arraycopy(buffer, BUFFER_SIZE, buffer, 0, Obuffer.OBUFFERSIZE);
-            currentLength -= BUFFER_SIZE; // If this goes negative, we are out of audio data anyway, so no problem.
+            currentShortLength = 0;
 
             return buf;
         } catch (Exception e) {
@@ -121,8 +115,8 @@ public class MP3Decoder extends AmDecoder {
 
         int trueSkip = skipSamples * sampleShortSize;
         int size = data.getBufferLength() - trueSkip;
-        System.arraycopy(data.getBuffer(), trueSkip, buffer, currentLength, size);
-        currentLength += size;
+        System.arraycopy(data.getBuffer(), trueSkip, buffer, currentShortLength, size);
+        currentShortLength += size;
         samplesDecoded += size / sampleShortSize;
 
         return true;

@@ -43,6 +43,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -124,7 +125,7 @@ public final class Bitstream implements BitstreamErrors
 	 0x00001FFF, 0x00003FFF, 0x00007FFF, 0x0000FFFF,
      0x0001FFFF };
 
-	private final UnreadBufferedInputStream source;
+	private final PushbackBufferedInputStream source;
 
 	private final Header			header = new Header();
 
@@ -157,10 +158,9 @@ public final class Bitstream implements BitstreamErrors
 	 *
 	 * @param in	The InputStream to read from.
 	 */
-	public Bitstream(InputStream in)
-	{
+	public Bitstream(InputStream in) throws IOException {
 		if (in==null) throw new NullPointerException("in");
-		source = new UnreadBufferedInputStream(in, BUFFER_INT_SIZE*4);
+		source = new PushbackBufferedInputStream(in, BUFFER_INT_SIZE*4);
 		loadID3v2(source);
 		firstframe = true;
 		closeFrame();
@@ -214,51 +214,20 @@ public final class Bitstream implements BitstreamErrors
 	 * @param in MP3 InputStream.
 	 * @author JavaZOOM
 	 */
-	private void loadID3v2(UnreadBufferedInputStream in)
-	{		
-		int size = -1;
-		try {
-			// Read ID3v2 header (10 bytes).
-			size = readID3v2Header(in);
-			header_pos = size;
-		}
-		catch (IOException ignored) {}
+	private void loadID3v2(PushbackBufferedInputStream in) throws IOException {
+		rawid3v2 = new byte[10];
+		in.read(rawid3v2,0,10);
 
-		// Unread ID3v2 header (10 bytes).
-		in.unread(10);
+		// Look for ID3v2
+		if ( !((rawid3v2[0]=='I') && (rawid3v2[1]=='D') && (rawid3v2[2]=='3')) )
+			throw new RuntimeException("Could not find ID3 header");
+
+		int contentLength = (rawid3v2[6] << 21) + (rawid3v2[7] << 14) + (rawid3v2[8] << 7) + (rawid3v2[9]);
+		header_pos = contentLength+10;
 
 		// Read ID3v2 bytes.
-		try {
-			if (size > 0) {
-				rawid3v2 = new byte[size];
-				in.read(rawid3v2,0,rawid3v2.length);
-			}			
-		}
-		catch (IOException ignored) {}
-	}
-	
-	/**
-	 * Parse ID3v2 tag header to find out size of ID3v2 frames. 
-	 * @param in MP3 InputStream
-	 * @return size of ID3v2 frames + header
-	 * @throws IOException
-	 * @author JavaZOOM
-	 */
-	private int readID3v2Header(InputStream in) throws IOException
-	{		
-		byte[] id3header = new byte[4];
-		int size = -10;
-		in.read(id3header,0,3);
-		// Look for ID3v2
-		if ( (id3header[0]=='I') && (id3header[1]=='D') && (id3header[2]=='3'))
-		{
-			in.read(id3header,0,3);
-			int majorVersion = id3header[0];
-			int revision = id3header[1];
-			in.read(id3header,0,4);
-			size = (int) (id3header[0] << 21) + (id3header[1] << 14) + (id3header[2] << 7) + (id3header[3]);
-		}
-		return (size+10);
+		rawid3v2 = Arrays.copyOf(rawid3v2, contentLength+10);
+		in.read(rawid3v2, 10, contentLength);
 	}
 	
 	/**
@@ -465,7 +434,11 @@ public final class Bitstream implements BitstreamErrors
 	public void unreadFrame() throws BitstreamException
 	{
 		if (wordpointer==-1 && bitindex==-1 && (framesize>0))
-			source.unread(framesize);
+			try {
+				source.unread(frame_bytes, 0, framesize);
+			} catch (IOException ex) {
+				throw newBitstreamException(STREAM_ERROR);
+			}
 	}
 
 	/**
@@ -487,7 +460,10 @@ public final class Bitstream implements BitstreamErrors
 		int read = readBytes(syncbuf, 0, 4);
 		int headerstring = ((syncbuf[0] << 24) & 0xFF000000) | ((syncbuf[1] << 16) & 0x00FF0000) | ((syncbuf[2] << 8) & 0x0000FF00) | ((syncbuf[3] << 0) & 0x000000FF);
 
-		source.unread(read);
+		try {
+			source.unread(syncbuf, 0, read);
+		} catch (IOException ex) {
+		}
 
 		boolean sync = false;
 		switch (read)

@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
+import javazoom.jlayer_am_custom.decoder.Obuffer;
 import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
 import org.jetbrains.annotations.Nullable;
@@ -52,7 +53,7 @@ public class FlacDecoder extends AmDecoder
         sampleByteSize = (streamInfo.getBitsPerSample() / 8) * streamInfo.getChannels();
         maxFrameSize = streamInfo.getMaxFrameSize();
         maxFrameByteSize = maxFrameSize * sampleByteSize;
-        buffer = new byte[BUFFER_SIZE + 2*maxFrameByteSize]; // Part after plus allows the two latest frames to overflow the buffer. Handled later
+        buffer = new byte[BUFFER_SIZE + 2*maxFrameByteSize];
 
         if (mInst.music().loop()) {
             var startAndEnd = new FlacTagReader(getTags(metadata)).getLoopStartAndEnd();
@@ -99,14 +100,11 @@ public class FlacDecoder extends AmDecoder
                 return null;
 
             // Create new buffer to return
-            int len = Math.min(BUFFER_SIZE, currentLength);
-            ByteBuffer buf = BufferUtils.createByteBuffer(len);
-            buf.put(buffer, 0, len);
+            ByteBuffer buf = BufferUtils.createByteBuffer(currentLength);
+            buf.put(buffer, 0, currentLength);
             buf.rewind();
 
-            // Move surplus data to start of "buffer"
-            System.arraycopy(buffer, BUFFER_SIZE, buffer, 0, maxFrameByteSize);
-            currentLength -= BUFFER_SIZE; // If this goes negative, we are out of audio data anyway, so no problem.
+            currentLength = 0;
 
             return buf;
         } catch (Exception e) {

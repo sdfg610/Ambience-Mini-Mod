@@ -1,4 +1,9 @@
 
+### Version 2.7.3:
+
+- Fixed intermittent stuttering/glitches when playing MP3 files.
+- Bugfixes and improvements in music players/decoders.
+
 ### Version 2.7.2:
 
 - Fixed server-sided crash bug when attacking entities with projectiles.
