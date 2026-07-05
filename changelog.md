@@ -1,4 +1,8 @@
 
+### Version 2.7.4:
+
+- Fixed mixin refmap issue.
+
 ### Version 2.7.3:
 
 - Fixed intermittent stuttering/glitches when playing MP3 files.
