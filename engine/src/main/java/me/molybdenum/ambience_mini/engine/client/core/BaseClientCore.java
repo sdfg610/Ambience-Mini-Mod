@@ -143,6 +143,10 @@ public abstract class BaseClientCore<
     // -----------------------------------------------------------------------------------------------------------------
     // State
     public GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> getGameStateProvider() {
+        if (gameStateProvider == null)
+            gameStateProvider = new GameStateProviderReal<>(
+                    mcVersion, this, playerState, levelState, combatState
+            );
         return gameStateProvider;
     }
 

@@ -88,18 +88,17 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
         if (isClicked(printAllKey)) {
             BaseGameStateProvider provider = core.getGameStateProvider();
-            if (provider != null) {
-                core.notification.showToast(AmLang.MSG_PRINTING_ALL);
+            core.notification.showToast(AmLang.MSG_PRINTING_ALL);
 
-                var monitor = core.getMonitor();
-                if (monitor == null || !monitor.isRunning())
-                    provider.prepare(null);
-                long timeStart = System.currentTimeMillis();
-                String allState = provider.readAll();
-                long elapsedTime = System.currentTimeMillis() - timeStart;
+            var monitor = core.getMonitor();
+            if (monitor == null || !monitor.isRunning())
+                provider.prepare(null);
 
-                core.logger.info("All current Ambience Mini state (took {} ms):\n{}", elapsedTime, allState);
-            }
+            long timeStart = System.currentTimeMillis();
+            String allState = provider.readAll();
+            long elapsedTime = System.currentTimeMillis() - timeStart;
+
+            core.logger.info("All current Ambience Mini state (took {} ms):\n{}", elapsedTime, allState);
         }
 
         if (isClicked(toggleAreasKey))

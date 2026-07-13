@@ -47,7 +47,7 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
     @Override
     public Boolean isWorldTickingPaused() {
         IntegratedServer srv = Minecraft.getInstance().getSingleplayerServer();
-        return srv == null ? null : ObfuscationReflectionHelper.getPrivateValue(IntegratedServer.class, srv, "paused");
+        return srv != null && (Boolean)ObfuscationReflectionHelper.getPrivateValue(IntegratedServer.class, srv, "paused");
     }
 
     @Override

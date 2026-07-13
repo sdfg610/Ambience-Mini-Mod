@@ -1,16 +1,24 @@
 
+### Version 2.7.5:
+
+- Fixed crash when near a jukebox (or a cockroach with Maracas from Alex's mobs since the music is played like record music) in multiplayer affecting Minecraft versions 1.19.2 and above.
+
+
 ### Version 2.7.4:
 
 - Fixed mixin refmap issue.
+
 
 ### Version 2.7.3:
 
 - Fixed intermittent stuttering/glitches when playing MP3 files.
 - Bugfixes and improvements in music players/decoders.
 
+
 ### Version 2.7.2:
 
 - Fixed server-sided crash bug when attacking entities with projectiles.
+
 
 ### Version 2.7.1:
 
@@ -24,6 +32,7 @@
 - Improved combat tracking in general.
 - Improved error messaging in an edge case.
 - Fixed brainfart where messages (errors, notifications, etc.) are created but not printed to the chat...
+
 
 ### Version 2.7.0:
 

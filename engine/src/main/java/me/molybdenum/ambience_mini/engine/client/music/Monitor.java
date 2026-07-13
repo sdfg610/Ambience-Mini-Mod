@@ -329,7 +329,7 @@ public class Monitor
     }
 
     private boolean handleJukebox() {
-        if (_doFadeOnJukebox && _player.notNull() && _level.notNull()) {
+        if (_doFadeOnJukebox && _player.notNull()) {
             boolean isJukeboxPlaying = _player.canHearJukeboxMusic() && !_level.isWorldTickingPaused();
             if (isJukeboxPlaying && !_isHalted)
                 haltMusic();
