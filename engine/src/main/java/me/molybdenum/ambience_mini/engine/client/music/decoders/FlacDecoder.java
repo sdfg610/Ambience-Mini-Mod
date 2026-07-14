@@ -1,6 +1,5 @@
 package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
-import javazoom.jlayer_am_custom.decoder.Obuffer;
 import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
 import org.jetbrains.annotations.Nullable;
@@ -13,6 +12,7 @@ import org.jflac_am_custom.util.ByteData;
 import org.lwjgl.BufferUtils;
 
 import javax.sound.sampled.AudioFormat;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -25,7 +25,6 @@ public class FlacDecoder extends AmDecoder
     private final int sampleByteSize;
 
     private final int maxFrameSize;
-    private final int maxFrameByteSize;
     private final byte[] buffer;
     private int currentLength = 0;
 
@@ -38,30 +37,38 @@ public class FlacDecoder extends AmDecoder
 
 
     public FlacDecoder(MusicInstance mInst) {
-        this.stream = mInst.createStream();
-        this.decoder = new FLACDecoder(stream);
-
-        Metadata[] metadata;
         try {
-            metadata = decoder.readMetadata();
+            boolean doLoop = mInst.music().loop();
+
+            this.stream = ensureLoopableIfNeeded(mInst.createStream(), doLoop);
+            this.decoder = new FLACDecoder(stream);
+
+            Metadata[] metadata = decoder.readMetadata();
+
+            StreamInfo streamInfo = getStreamInfo(metadata);
+            format = streamInfo.getAudioFormat();
+            sampleByteSize = (streamInfo.getBitsPerSample() / 8) * streamInfo.getChannels();
+            maxFrameSize = streamInfo.getMaxFrameSize();
+
+            int maxFrameByteSize = maxFrameSize * sampleByteSize;
+            buffer = new byte[BUFFER_SIZE + 2*maxFrameByteSize];
+
+            if (doLoop) {
+                var startAndEnd = new FlacTagReader(getTags(metadata)).getLoopStartAndEnd();
+                loopStart = startAndEnd.left();
+                loopEnd = startAndEnd.right();
+            }
+            else
+                loopStart = loopEnd = Long.MAX_VALUE;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
-        StreamInfo streamInfo = getStreamInfo(metadata);
-        format = streamInfo.getAudioFormat();
-        sampleByteSize = (streamInfo.getBitsPerSample() / 8) * streamInfo.getChannels();
-        maxFrameSize = streamInfo.getMaxFrameSize();
-        maxFrameByteSize = maxFrameSize * sampleByteSize;
-        buffer = new byte[BUFFER_SIZE + 2*maxFrameByteSize];
-
-        if (mInst.music().loop()) {
-            var startAndEnd = new FlacTagReader(getTags(metadata)).getLoopStartAndEnd();
-            loopStart = startAndEnd.left();
-            loopEnd = startAndEnd.right();
-        }
-        else
-            loopStart = loopEnd = Long.MAX_VALUE;
+    private InputStream ensureLoopableIfNeeded(InputStream stream, boolean requireMark) {
+        return requireMark && !stream.markSupported()
+                ? new BufferedInputStream(stream)
+                : stream;
     }
 
 

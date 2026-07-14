@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 public abstract class AmDecoder {
     private static final AtomicBoolean isInitialized = new AtomicBoolean(false);
-    protected static final HashMap<String, Function<MusicInstance, AmDecoder>> FILETYPE_TO_DECODER = new HashMap<>();
+    private static final HashMap<String, Function<MusicInstance, AmDecoder>> FILETYPE_TO_DECODER = new HashMap<>();
 
 
     public abstract AudioFormat getFormat();

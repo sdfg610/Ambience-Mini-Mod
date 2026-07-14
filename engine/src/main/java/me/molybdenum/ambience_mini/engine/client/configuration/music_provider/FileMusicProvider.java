@@ -21,8 +21,21 @@ public class FileMusicProvider implements MusicProvider
         return Files.exists(Path.of(musicBasePath, musicPath));
     }
 
-    public BufferedInputStream getMusicStream(String musicPath) throws FileNotFoundException {
-        return new BufferedInputStream(new FileInputStream(getFullPath(musicPath).toFile()));
+    public InputStream getMusicStream(String musicPath) throws FileNotFoundException {
+        return new FileInputStream(getFullPath(musicPath).toFile());
+    }
+
+    @Override
+    public int getMusicSize(String musicPath) throws FileNotFoundException {
+        var file = getFullPath(musicPath).toFile();
+        if (file.exists()) {
+            if (file.isFile())
+                return Math.toIntExact(file.length());
+            else
+                throw new RuntimeException("The path '" + musicPath + "' does not denote a file.");
+        }
+        else
+            throw new FileNotFoundException("No file found at path '" + musicPath + "'");
     }
 
     @Override

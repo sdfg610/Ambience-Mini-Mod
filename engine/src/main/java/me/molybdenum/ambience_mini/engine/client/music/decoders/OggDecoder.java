@@ -1,16 +1,16 @@
 package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
-import com.jcraft_am_custom.jorbis.Comment;
-import com.jcraft_am_custom.jorbis.Info;
-import com.jcraft_am_custom.jorbis.JOrbisException;
-import com.jcraft_am_custom.jorbis.VorbisFile;
+import com.jcraft_am_custom.jorbis.*;
 import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
+import me.molybdenum.ambience_mini.engine.client.music.streams.FullyBufferedInputStream;
+import me.molybdenum.ambience_mini.engine.client.music.streams.LazyPreAllocatedBuffer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 public class OggDecoder extends AmDecoder
@@ -31,22 +31,30 @@ public class OggDecoder extends AmDecoder
 
     public OggDecoder(MusicInstance mInst) {
         try {
+            boolean doLoop = mInst.music().loop();
+
             // Thanks to: https://github.com/tulskiy/musique/blob/master/musique-core/src/main/java/com/tulskiy/musique/audio/formats/ogg/VorbisDecoder.java
-            file = new VorbisFile(mInst.getMusicPath().toString());
+            file = new VorbisFile(ensureLoopableIfNeeded(mInst.createStream(), mInst.getMusicSize(), doLoop));
             Info info = file.getInfo()[0];
             format = new AudioFormat(info.rate, 16, info.channels, true, false);
             sampleByteSize = 2 * info.channels;
 
-            if (mInst.music().loop()) {
+            if (doLoop) {
                 var startAndEnd = new OggTagReader(file.getComment()).getLoopStartAndEnd();
                 loopStart = startAndEnd.left();
                 loopEnd = startAndEnd.right();
             }
             else
                 loopStart = loopEnd = Long.MAX_VALUE;
-        } catch (JOrbisException e) {
+        } catch (IOException | JOrbisException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private InputStream ensureLoopableIfNeeded(InputStream stream, int musicSize, boolean doLoop) {
+        return doLoop && !(stream instanceof FullyBufferedInputStream)
+                ? new FullyBufferedInputStream(new LazyPreAllocatedBuffer(stream, musicSize, 1024*5), true)
+                : stream;
     }
 
 

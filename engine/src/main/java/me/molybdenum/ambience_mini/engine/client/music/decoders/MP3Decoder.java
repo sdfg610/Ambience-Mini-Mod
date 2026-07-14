@@ -7,8 +7,12 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
 import javax.sound.sampled.AudioFormat;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.function.Function;
 
 public class MP3Decoder extends AmDecoder {
     private static final int BUFFER_SIZE = 200_000; // Double the number measured in bytes since using "short"
@@ -33,23 +37,31 @@ public class MP3Decoder extends AmDecoder {
 
     public MP3Decoder(MusicInstance mInst) {
         try {
-            bitstream = new Bitstream(mInst.createStream());
+            boolean doLoop = mInst.music().loop();
+
+            bitstream = new Bitstream(ensureLoopableIfNeeded(mInst.createStream(), doLoop));
             decoder.initialize(bitstream.readFrame()); // Load metadata
             bitstream.unreadFrame();
 
             sampleShortSize = decoder.getOutputChannels(); // JLayer always produces samples of 2 bytes or 1 short.
             bufferMaxSamples = Obuffer.OBUFFERSIZE / sampleShortSize;
 
-            if (mInst.music().loop()) {
+            if (doLoop) {
                 var startAndEnd = new MP3TagReader(bitstream.getID3v2Tags()).getLoopStartAndEnd();
                 loopStart = startAndEnd.left();
                 loopEnd = startAndEnd.right();
             }
             else
                 loopStart = loopEnd = Long.MAX_VALUE;
-        } catch (Exception e) {
+        } catch (IOException | BitstreamException | DecoderException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private InputStream ensureLoopableIfNeeded(InputStream stream, boolean requireMark) {
+        return requireMark && !stream.markSupported()
+                ? new BufferedInputStream(stream)
+                : stream;
     }
 
 

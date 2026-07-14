@@ -31,11 +31,10 @@ import com.jcraft_am_custom.jogg.Packet;
 import com.jcraft_am_custom.jogg.Page;
 import com.jcraft_am_custom.jogg.StreamState;
 import com.jcraft_am_custom.jogg.SyncState;
-import org.jetbrains.annotations.NotNull;
+import me.molybdenum.ambience_mini.engine.client.music.streams.FullyBufferedInputStream;
 
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 public class VorbisFile{
   public static final int CHUNKSIZE=8500;
@@ -92,23 +91,13 @@ public class VorbisFile{
 
   //ov_callbacks callbacks;
 
-  public VorbisFile(String file)
-          throws JOrbisException
+
+  public VorbisFile(InputStream is) throws JOrbisException
   {
-    try{
-      InputStream is = new SeekableInputStream(file);
-      int ret=open(is, null, 0);
-      if(ret==-1){
-        throw new JOrbisException("VorbisFile: open return -1");
-      }
-    }
-    catch(Exception e){
-      throw new JOrbisException("VorbisFile: " + e, e);
-    }
+    this(is, null, 0);
   }
 
-  public VorbisFile(InputStream is, byte[] initial, int ibytes)
-          throws JOrbisException
+  public VorbisFile(InputStream is, byte[] initial, int ibytes) throws JOrbisException
   {
     if(open(is, initial, ibytes) == -1){
       throw new JOrbisException("VorbisFile: open return -1");
@@ -168,12 +157,12 @@ public class VorbisFile{
     }
   }
 
-  private int get_prev_page(Page page) throws JOrbisException{
+  private int get_prev_page(Page page) {
     long begin=offset; //!!!
     int ret;
     int offst=-1;
     while(offst==-1){
-      begin-=CHUNKSIZE;
+      begin -= CHUNKSIZE;
       if(begin<0)
         begin=0;
       seek_helper(begin);
@@ -183,8 +172,9 @@ public class VorbisFile{
           return OV_EREAD;
         }
         if(ret<0){
-          if(offst==-1)
-            throw new JOrbisException();
+          // Molybdenum: No idea why this was here. Causes exception when previous page is bigger than CHUNKSIZE.
+          //if(offst==-1)
+          //  throw new JOrbisException();
           break;
         }
         else{
@@ -311,8 +301,7 @@ public class VorbisFile{
   // vorbis_info structs and PCM positions.  Only called by the seekable
   // initialization (local stream storage is hacked slightly; pay
   // attention to how that's done)
-  void prefetch_all_headers(Info first_i, Comment first_c, int dataoffset)
-      throws JOrbisException{
+  void prefetch_all_headers(Info first_i, Comment first_c, int dataoffset) {
     Page og=new Page();
     int ret;
 
@@ -377,7 +366,7 @@ public class VorbisFile{
     return (0);
   }
 
-  int open_seekable() throws JOrbisException{
+  int open_seekable() {
     Info initial_i=new Info();
     Comment initial_c=new Comment();
     int serialno;
@@ -616,8 +605,8 @@ public class VorbisFile{
   }
 
   static int fseek(InputStream fis, long off, int whence){
-    if(fis instanceof SeekableInputStream){
-      SeekableInputStream sis=(SeekableInputStream)fis;
+    if(fis instanceof FullyBufferedInputStream){
+      FullyBufferedInputStream sis=(FullyBufferedInputStream)fis;
       try{
         if(whence==SEEK_SET){
           sis.seek(off);
@@ -628,7 +617,7 @@ public class VorbisFile{
         else{
         }
       }
-      catch(Exception e){
+      catch(Exception ignored){
       }
       return 0;
     }
@@ -646,8 +635,8 @@ public class VorbisFile{
 
   static long ftell(InputStream fis){
     try{
-      if(fis instanceof SeekableInputStream){
-        SeekableInputStream sis=(SeekableInputStream)fis;
+      if(fis instanceof FullyBufferedInputStream){
+        FullyBufferedInputStream sis=(FullyBufferedInputStream)fis;
         return (sis.tell());
       }
     }
@@ -663,12 +652,11 @@ public class VorbisFile{
   // return: -1) error
   //          0) OK
 
-  int open(InputStream is, byte[] initial, int ibytes) throws JOrbisException{
+  int open(InputStream is, byte[] initial, int ibytes) {
     return open_callbacks(is, initial, ibytes);
   }
 
-  int open_callbacks(InputStream is, byte[] initial, int ibytes//, callbacks callbacks
-  ) throws JOrbisException{
+  int open_callbacks(InputStream is, byte[] initial, int ibytes /*, callbacks callbacks*/ ){
     int ret;
     datasource=is;
 
@@ -684,7 +672,7 @@ public class VorbisFile{
       oy.wrote(ibytes);
     }
     // can we seek? Stevens suggests the seek test was portable
-    if(is instanceof SeekableInputStream){
+    if(is instanceof FullyBufferedInputStream){
       ret=open_seekable();
     }
     else{
@@ -1413,51 +1401,4 @@ public class VorbisFile{
   public void close() throws IOException{
     datasource.close();
   }
-
-  static class SeekableInputStream extends InputStream {
-    private final RandomAccessFile raf;
-
-
-    SeekableInputStream(String file) throws IOException{
-      raf = new RandomAccessFile(file, "r");
-    }
-
-
-    public int read() throws IOException{
-      return raf.read();
-    }
-
-    public int read(byte @NotNull [] buf) throws IOException{
-      return raf.read(buf);
-    }
-
-    public int read(byte @NotNull [] buf, int s, int len) throws IOException{
-      return raf.read(buf, s, len);
-    }
-
-    public long skip(long n) throws IOException{
-      return raf.skipBytes((int)n);
-    }
-
-    public long getLength() throws IOException{
-      return raf.length();
-    }
-
-    public long tell() throws IOException{
-      return raf.getFilePointer();
-    }
-
-    public int available() throws IOException{
-      return (raf.length() == raf.getFilePointer()) ? 0 : 1;
-    }
-
-    public void close() throws IOException{
-      raf.close();
-    }
-
-    public void seek(long pos) throws IOException{
-      raf.seek(pos);
-    }
-  }
-
 }

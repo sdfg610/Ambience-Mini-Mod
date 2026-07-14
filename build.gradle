@@ -5,6 +5,16 @@ plugins {
 println "Gradle info : Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 
 subprojects {
+    repositories {
+        maven {
+            name = 'CurseMaven'
+            url = "https://cursemaven.com"
+            content {
+                includeGroup "curse.maven"
+            }
+        }
+    }
+
     plugins.withType(JavaPlugin).configureEach {
         dependencies {
             implementation("org.jetbrains:annotations:24.0.0")

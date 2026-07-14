@@ -125,7 +125,7 @@ public final class Bitstream implements BitstreamErrors
 	 0x00001FFF, 0x00003FFF, 0x00007FFF, 0x0000FFFF,
      0x0001FFFF };
 
-	private final PushbackBufferedInputStream source;
+	private final PushbackWrapperInputStream source;
 
 	private final Header			header = new Header();
 
@@ -160,7 +160,7 @@ public final class Bitstream implements BitstreamErrors
 	 */
 	public Bitstream(InputStream in) throws IOException {
 		if (in==null) throw new NullPointerException("in");
-		source = new PushbackBufferedInputStream(in, BUFFER_INT_SIZE*4);
+		source = new PushbackWrapperInputStream(in, BUFFER_INT_SIZE*4);
 		loadID3v2(source);
 		firstframe = true;
 		closeFrame();
@@ -214,7 +214,7 @@ public final class Bitstream implements BitstreamErrors
 	 * @param in MP3 InputStream.
 	 * @author JavaZOOM
 	 */
-	private void loadID3v2(PushbackBufferedInputStream in) throws IOException {
+	private void loadID3v2(PushbackWrapperInputStream in) throws IOException {
 		rawid3v2 = new byte[10];
 		in.read(rawid3v2,0,10);
 

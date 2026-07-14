@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
 public interface MusicProvider
 {
     boolean exists(String musicPath);
-    BufferedInputStream getMusicStream(String musicPath) throws FileNotFoundException;
+    InputStream getMusicStream(String musicPath) throws FileNotFoundException;
+    int getMusicSize(String musicPath) throws FileNotFoundException;
     Path getFullPath(String musicPath);
     List<Path> listAllMusicFiles();
 
