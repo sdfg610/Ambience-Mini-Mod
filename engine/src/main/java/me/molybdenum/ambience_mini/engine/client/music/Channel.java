@@ -3,6 +3,7 @@ package me.molybdenum.ambience_mini.engine.client.music;
 import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.music.decoders.AmDecoder;
 import me.molybdenum.ambience_mini.engine.client.music.misc.ALUtils;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.AL10;
 
 import java.nio.ByteBuffer;
@@ -30,6 +31,22 @@ public class Channel {
 
         this.source = ALUtils.genSource();
         loadNextBuffers(BUFFER_COUNT);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Music info
+    @Nullable
+    public String getMusicPath() {
+        return decoder.getMusicPath();
+    }
+
+    @Nullable public String getMusicTitle() {
+        return decoder.getMusicTitle();
+    }
+
+    @Nullable public String getMusicAuthor() {
+        return decoder.getMusicAuthor();
     }
 
 

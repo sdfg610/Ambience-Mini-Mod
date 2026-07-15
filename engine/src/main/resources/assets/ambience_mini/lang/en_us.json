@@ -24,6 +24,9 @@
   "message.pausing_music": "Pausing music...",
   "message.resuming_music": "Resuming music...",
 
+  "message.playing_name": "Now playing '%s'",
+  "message.playing_name_author": "Now playing '%s'\nby '%s'",
+
   "message.area_view_off": "Area view disabled",
   "message.area_selector_enabled": "Area selector enabled",
   "message.area_constructor_enabled": "Area constructor enabled",

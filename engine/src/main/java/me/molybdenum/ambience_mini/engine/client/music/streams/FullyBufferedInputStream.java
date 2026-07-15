@@ -49,7 +49,7 @@ public class FullyBufferedInputStream extends InputStream {
 
     @Override
     public int available() throws IOException{
-        return (position == bufferSize) ? 0 : 1;
+        return bufferSize - position;
     }
 
     @Override

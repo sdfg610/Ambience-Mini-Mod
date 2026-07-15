@@ -32,6 +32,9 @@ public enum AmLang
     MSG_PAUSING_MUSIC("message.pausing_music"),
     MSG_RESUMING_MUSIC("message.resuming_music"),
 
+    MSG_PLAYING_NAME("message.playing_name", 1), // Args: "path or title"
+    MSG_PLAYING_NAME_AUTHOR("message.playing_name_author", 2), // Args: "path or title", "author"
+
     MSG_AREA_VIEW_OFF("message.area_view_off"),
     MSG_AREA_SELECTOR_ENABLED("message.area_selector_enabled"),
     MSG_AREA_CONSTRUCTOR_ENABLED("message.area_constructor_enabled"),

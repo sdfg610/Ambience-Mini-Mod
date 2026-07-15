@@ -1,6 +1,7 @@
 
 ### Version 2.7.5:
 
+- Added mod-config option for showing a toast with music info whenever the music changes.
 - Fixed music player crash when near a jukebox (or a cockroach with Maracas from Alex's mobs since the music is played like record music) in multiplayer affecting Minecraft versions 1.19.2 and above.
 - Fixed music player crash with some OGG files.
 

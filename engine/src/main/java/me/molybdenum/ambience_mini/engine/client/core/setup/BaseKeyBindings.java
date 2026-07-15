@@ -63,27 +63,24 @@ public abstract class BaseKeyBindings<TKeyBinding>
             core.tryReloadMusicEngine();
         }
 
-        if (isClicked(playPauseKey) && playerIsRunning()) {
+        if (isClicked(playPauseKey) && checkMonitorRunning()) {
             var monitor = core.getMonitor();
-            if (monitor != null) {
-                if (monitor.isPaused()) {
-                    core.notification.showToast(AmLang.MSG_RESUMING_MUSIC);
-                    monitor.resume();
-                } else {
-                    core.notification.showToast(AmLang.MSG_PAUSING_MUSIC);
-                    monitor.pause();
-                }
+            if (monitor.isPaused()) {
+                core.notification.showToast(AmLang.MSG_RESUMING_MUSIC);
+                monitor.resume();
+            } else {
+                core.notification.showToast(AmLang.MSG_PAUSING_MUSIC);
+                monitor.pause();
             }
         }
 
-        if (isClicked(nextMusicKey) && playerIsRunning()) {
-            core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
+        if (isClicked(nextMusicKey) && checkMonitorRunning()) {
+            if (!core.clientConfig.printNowPlaying.get())
+                core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
 
             var monitor = core.getMonitor();
-            if (monitor != null) {
-                monitor.forceSelectNewMusic();
-                monitor.resume();
-            }
+            monitor.forceSelectNewMusic();
+            monitor.resume();
         }
 
         if (isClicked(printAllKey)) {
@@ -115,7 +112,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
             core.areaRenderer.registerCancel();
     }
 
-    private boolean playerIsRunning() {
+    private boolean checkMonitorRunning() {
         if (core.isMusicThreadRunning())
             return true;
         core.notification.showToast(AmLang.MSG_NOT_RUNNING);

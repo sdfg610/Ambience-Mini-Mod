@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
 import me.molybdenum.ambience_mini.engine.client.music.streams.FullyBufferedInputStream;
 import me.molybdenum.ambience_mini.engine.client.music.streams.LazyPreAllocatedBuffer;
+import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
@@ -30,6 +31,7 @@ public class OggDecoder extends AmDecoder
 
 
     public OggDecoder(MusicInstance mInst) {
+        super(mInst.music(), new Deferred<>());
         try {
             boolean doLoop = mInst.music().loop();
 
@@ -38,9 +40,10 @@ public class OggDecoder extends AmDecoder
             Info info = file.getInfo()[0];
             format = new AudioFormat(info.rate, 16, info.channels, true, false);
             sampleByteSize = 2 * info.channels;
+            tagReader.set(new OggTagReader(file.getComment()));
 
             if (doLoop) {
-                var startAndEnd = new OggTagReader(file.getComment()).getLoopStartAndEnd();
+                var startAndEnd = tagReader.get().getLoopStartAndEnd();
                 loopStart = startAndEnd.left();
                 loopEnd = startAndEnd.right();
             }
@@ -128,6 +131,16 @@ public class OggDecoder extends AmDecoder
         @Override
         public String getLoopLengthStr() {
             return getByKey("looplength");
+        }
+
+        @Override
+        public @Nullable String getTitle() {
+            return getByKey("title");
+        }
+
+        @Override
+        public @Nullable String getAuthor() {
+            return getByKey("artist");
         }
 
 

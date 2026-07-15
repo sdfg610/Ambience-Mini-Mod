@@ -14,6 +14,7 @@ public abstract class BaseClientConfig {
     public final Supplier<Boolean> notifyServerSupport;
     public final Supplier<Boolean> verboseMode;
     public final Supplier<Boolean> printBasicControls;
+    public final Supplier<Boolean> printNowPlaying;
 
     // Timing
     public final Supplier<Integer> updateInterval;
@@ -67,6 +68,12 @@ public abstract class BaseClientConfig {
         printBasicControls = registerBoolOption(
                 "If enabled, the mod will print a message once (each time Minecraft is launched) with all the basic controls of the mod. [Default: false]",
                 "Print_Basic_Controls",
+                false
+        );
+
+        printNowPlaying = registerBoolOption(
+                "If enabled, the mod will show a toast with info about the currently playing music each time the music changes. [Default: false]",
+                "Print_Now_Playing",
                 false
         );
 

@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
 import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
+import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
 import org.jetbrains.annotations.Nullable;
 import org.jflac_am_custom.FLACDecoder;
 import org.jflac_am_custom.frame.Frame;
@@ -37,6 +38,7 @@ public class FlacDecoder extends AmDecoder
 
 
     public FlacDecoder(MusicInstance mInst) {
+        super(mInst.music(), new Deferred<>());
         try {
             boolean doLoop = mInst.music().loop();
 
@@ -44,6 +46,7 @@ public class FlacDecoder extends AmDecoder
             this.decoder = new FLACDecoder(stream);
 
             Metadata[] metadata = decoder.readMetadata();
+            tagReader.set(new FlacTagReader(getTags(metadata)));
 
             StreamInfo streamInfo = getStreamInfo(metadata);
             format = streamInfo.getAudioFormat();
@@ -54,7 +57,7 @@ public class FlacDecoder extends AmDecoder
             buffer = new byte[BUFFER_SIZE + 2*maxFrameByteSize];
 
             if (doLoop) {
-                var startAndEnd = new FlacTagReader(getTags(metadata)).getLoopStartAndEnd();
+                var startAndEnd = tagReader.get().getLoopStartAndEnd();
                 loopStart = startAndEnd.left();
                 loopEnd = startAndEnd.right();
             }
@@ -176,6 +179,16 @@ public class FlacDecoder extends AmDecoder
         @Override
         public String getLoopLengthStr() {
             return Arrays.stream(comment.getCommentByName("looplength")).findFirst().orElse(null);
+        }
+
+        @Override
+        public @Nullable String getTitle() {
+            return Arrays.stream(comment.getCommentByName("title")).findFirst().orElse(null);
+        }
+
+        @Override
+        public @Nullable String getAuthor() {
+            return Arrays.stream(comment.getCommentByName("artist")).findFirst().orElse(null);
         }
     }
 }

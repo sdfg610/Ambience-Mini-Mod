@@ -65,6 +65,9 @@ public class Monitor
     private boolean _volumeZero = false;
     private final Consumer<Float> _volumeChangedHandler;
 
+    // Notification
+    private final boolean _printNowPlaying;
+
     // Debugging
     private final boolean _verboseMode;
     private List<Music> _currentPlaylist = null;
@@ -99,6 +102,7 @@ public class Monitor
         _lostFocusEnabled = clientCore.clientConfig.lostFocusEnabled.get();
         _meticulousPlaylistSelector = clientCore.clientConfig.meticulousPlaylistSelector.get();
 
+        _printNowPlaying = clientCore.clientConfig.printNowPlaying.get();
         _verboseMode = clientCore.clientConfig.verboseMode.get();
 
         // Setup music player and volume
@@ -108,6 +112,14 @@ public class Monitor
                 () -> _chooseNextMusicTime = System.currentTimeMillis() + nextMusicDelay
         );
         _musicPlayer.setVolume(VolumeState.getMusicVolume());
+        _musicPlayer.addListener(nowPlaying -> {
+            if (_printNowPlaying) {
+                if (nowPlaying.author() == null)
+                    _notification.showToast(AmLang.MSG_PLAYING_NAME, nowPlaying.titleOrPath());
+                else
+                    _notification.showToast(AmLang.MSG_PLAYING_NAME_AUTHOR, nowPlaying.titleOrPath(), nowPlaying.author());
+            }
+        });
 
         _volumeChangedHandler = volume -> {
             handleVolumeZero(volume);

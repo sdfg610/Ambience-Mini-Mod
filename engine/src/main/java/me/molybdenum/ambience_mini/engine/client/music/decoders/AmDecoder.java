@@ -1,6 +1,9 @@
 package me.molybdenum.ambience_mini.engine.client.music.decoders;
 
+import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
+import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
+import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sound.sampled.AudioFormat;
@@ -15,15 +18,43 @@ public abstract class AmDecoder {
     private static final AtomicBoolean isInitialized = new AtomicBoolean(false);
     private static final HashMap<String, Function<MusicInstance, AmDecoder>> FILETYPE_TO_DECODER = new HashMap<>();
 
+    protected final Music music;
+    protected final Deferred<TagReader> tagReader;
 
+
+    protected AmDecoder(Music music, Deferred<TagReader> tagReader) {
+        this.music = music;
+        this.tagReader = tagReader;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Abstract API
     public abstract AudioFormat getFormat();
-
-    @Nullable
-    public abstract ByteBuffer getFrame();
+    @Nullable public abstract ByteBuffer getFrame();
 
     public abstract void close();
 
 
+    // -----------------------------------------------------------------------------------------------------------------
+    // Concrete API
+    public String getMusicPath() {
+        return music.path();
+    }
+
+    @Nullable
+    public String getMusicTitle() {
+        return tagReader.get().getTitle();
+    }
+
+    @Nullable
+    public String getMusicAuthor() {
+        return tagReader.get().getAuthor();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Static API
     public static AmDecoder of(MusicInstance mInst) {
         init();
         var constructor = FILETYPE_TO_DECODER.get(mInst.music().getExtension());

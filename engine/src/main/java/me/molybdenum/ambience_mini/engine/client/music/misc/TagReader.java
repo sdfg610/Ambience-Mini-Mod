@@ -1,11 +1,15 @@
 package me.molybdenum.ambience_mini.engine.client.music.misc;
 
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class TagReader {
     public abstract String getLoopStartStr();
     public abstract String getLoopEndStr();
     public abstract String getLoopLengthStr();
+
+    @Nullable public abstract String getTitle();
+    @Nullable public abstract String getAuthor();
 
     public Pair<Long, Long> getLoopStartAndEnd() {
         long loopStart, loopEnd;

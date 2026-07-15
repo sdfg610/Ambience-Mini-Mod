@@ -3,6 +3,7 @@ package me.molybdenum.ambience_mini.engine.client.music.decoders;
 import javazoom.jlayer_am_custom.decoder.*;
 import me.molybdenum.ambience_mini.engine.client.music.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.music.misc.TagReader;
+import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
@@ -12,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.function.Function;
 
 public class MP3Decoder extends AmDecoder {
     private static final int BUFFER_SIZE = 200_000; // Double the number measured in bytes since using "short"
@@ -36,6 +36,7 @@ public class MP3Decoder extends AmDecoder {
 
 
     public MP3Decoder(MusicInstance mInst) {
+        super(mInst.music(), new Deferred<>());
         try {
             boolean doLoop = mInst.music().loop();
 
@@ -45,9 +46,10 @@ public class MP3Decoder extends AmDecoder {
 
             sampleShortSize = decoder.getOutputChannels(); // JLayer always produces samples of 2 bytes or 1 short.
             bufferMaxSamples = Obuffer.OBUFFERSIZE / sampleShortSize;
+            tagReader.set(new MP3TagReader(bitstream.getID3v2TextTags()));
 
             if (doLoop) {
-                var startAndEnd = new MP3TagReader(bitstream.getID3v2Tags()).getLoopStartAndEnd();
+                var startAndEnd = tagReader.get().getLoopStartAndEnd();
                 loopStart = startAndEnd.left();
                 loopEnd = startAndEnd.right();
             }
@@ -166,6 +168,16 @@ public class MP3Decoder extends AmDecoder {
         @Override
         public String getLoopLengthStr() {
             return getCaseInsensitive("looplength");
+        }
+
+        @Override
+        public @Nullable String getTitle() {
+            return getCaseInsensitive("tit2");
+        }
+
+        @Override
+        public @Nullable String getAuthor() {
+            return getCaseInsensitive("tpe1");
         }
 
 

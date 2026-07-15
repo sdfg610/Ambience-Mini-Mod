@@ -234,21 +234,22 @@ public final class Bitstream implements BitstreamErrors
 	 * Return raw ID3v2 frames + header.
 	 * @return ID3v2 InputStream or null if ID3v2 frames are not available.
 	 */
-	public InputStream getRawID3v2() {
+	public ByteArrayInputStream getRawID3v2() {
 		return rawid3v2 == null ? null : new ByteArrayInputStream(rawid3v2);
 	}
 
-	public HashMap<String, String> getID3v2Tags() {
-		var stream = getRawID3v2();
+	public HashMap<String, String> getID3v2TextTags() {
+		ByteArrayInputStream stream = getRawID3v2();
 		if (stream == null)
 			throw new RuntimeException("Could not read ID3v2.3.0 metadata from MP3 file");
 
 		var map = new HashMap<String, String>();
+
 		Pair<String, String> tag;
 		try {
 			//noinspection ResultOfMethodCallIgnored
 			stream.skip(10); // Skip header
-			while ((tag = findNextTag(stream)) != null)
+			while ((tag = findNextTextTag(stream)) != null)
 				map.put(tag.left(), tag.right());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -257,32 +258,41 @@ public final class Bitstream implements BitstreamErrors
 		return map;
 	}
 
-	private Pair<String, String> findNextTag(InputStream stream) throws IOException {
-		if (stream.available() == 0)
-			return null;
+	private Pair<String, String> findNextTextTag(ByteArrayInputStream stream) throws IOException {
+		String frameId;
+		int encoding = 0;
+		byte[] frameData = null;
 
-		// Frame ID
-		String frameId = new String(stream.readNBytes(4));
+		// find next text-frame
+		do {
+			byte[] frameHeader = stream.readNBytes(10);
+			if (frameHeader.length != 10)
+				return null;
 
-		// Frame size
-		ByteBuffer buf = ByteBuffer.wrap(stream.readNBytes(4));
-		int length = buf.getInt() - 1; // First byte is encoding byte
+			frameId = new String(frameHeader, 0, 4);
+			int frameSize = ByteBuffer.wrap(frameHeader, 4, 4).getInt();
 
-		// Skip flag bytes
-		//noinspection ResultOfMethodCallIgnored
-		stream.skip(2);
+			boolean isCompressed = (frameHeader[9] & 0b1) != 0;
+			if (isCompressed)
+				stream.skip(4); // Skip 4 bytes of "uncompressed size" added after header
 
-		// Read text
-		int encoding = stream.read();
-		byte[] data = stream.readNBytes(length);
+			char ch = frameId.charAt(0);
+			if (ch == 0) return null;
+			else if (ch != 'T') {
+                //noinspection ResultOfMethodCallIgnored
+                stream.skip(frameSize);
+				continue;
+			}
+
+			encoding = stream.read();
+			frameData = stream.readNBytes(frameSize-1);
+		} while (frameData == null);
 
 		String[] values;
-		if (encoding == 0) // ISO-8859-1 encoding
-			values = readAsciiArray(data);
-		else if (encoding == 1) // UTF16LE BOM encoding
-			values = readUtfArray(data);
-		else
-			throw new RuntimeException("Unsupported ID3v2.3.0 encoding value: " + encoding);
+		if (encoding == 1) // UTF16 BOM encoding
+			values = readUtfArray(frameData);
+		else // ISO-8859-1 encoding
+			values = readAsciiArray(frameData);
 
 		if (frameId.equals("TXXX"))
 			return new Pair<>(values[0], values[1]); // User-defined tag
@@ -315,25 +325,24 @@ public final class Bitstream implements BitstreamErrors
 		var values = new ArrayList<String>();
 
 		byte[] str = new byte[data.length];
-		int index = 0;
-		boolean alreadyHitZero = false;
+		int length = 0;
+		boolean firstByteZero = false;
 		for (var b : data) {
+			str[length++] = b;
 			if (b == 0) {
-				if (alreadyHitZero) { // UTF16 uses two zero bytes for null terminator
-					values.add(new String(str, 0, index-1, StandardCharsets.UTF_16LE)); // -1 to discard previous zero
-					index = 0;
-					alreadyHitZero = false;
+				if (firstByteZero) { // UTF16 uses two zero bytes for null terminator
+					values.add(new String(str, 0, length-2, StandardCharsets.UTF_16)); // '-2' to discard null character at end
+					length = 0;
+					firstByteZero = false;
 				}
-				else
-					alreadyHitZero = true;
+				else if (length % 2 == 1)
+					firstByteZero = true;
 			}
-			else {
-				str[index++] = b;
-				alreadyHitZero = false;
-			}
+			else
+				firstByteZero = false;
 		}
-		if (index > 0)
-			values.add(new String(str, 0, index, StandardCharsets.UTF_16LE));
+		if (length > 0)
+			values.add(new String(str, 0, length, StandardCharsets.UTF_16));
 
 		String[] vals = new String[values.size()];
 		values.toArray(vals);
