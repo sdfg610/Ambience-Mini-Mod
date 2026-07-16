@@ -6,13 +6,26 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class Notification extends BaseNotification<Component>
 {
     public static final SystemToast.SystemToastId AMBIENCE_TOAST = new SystemToast.SystemToastId();
-    private static final Component title = Component.translatable("mod_name");
 
+    private static final Component title = Component.translatable("mod_name");
     private static final Minecraft mc = Minecraft.getInstance();
+
+    // I know! One is supposed to make an interface that exposes new mixin members, make the mixin class inherit
+    // from this interface, and then cast to the interface when accessing the mixin class members.
+    // However! The class-loader just deadlocks when SystemToastMixin inherits from an interface! WHY!? JUST WHY!?
+    private static final Method resetMultiline = ObfuscationReflectionHelper.findMethod(
+            SystemToast.class,
+            "ambienceMini$resetMultiline",
+            Minecraft.class, Component.class, Component.class
+    );
 
 
     @Override
@@ -28,9 +41,18 @@ public class Notification extends BaseNotification<Component>
 
     @Override
     protected void addToast(Component message) {
-        mc.getToasts().addToast(SystemToast.multiline(
-                Minecraft.getInstance(), AMBIENCE_TOAST, title, message
-        ));
+        mc.execute(() -> {
+            SystemToast systemtoast = mc.getToasts().getToast(SystemToast.class, AMBIENCE_TOAST);
+            try {
+                if (systemtoast != null)
+                    systemtoast.forceHide();
+                var toast = SystemToast.multiline(mc, AMBIENCE_TOAST, title, message);
+                resetMultiline.invoke(toast, mc, title, message);
+                mc.getToasts().addToast(toast);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @Override

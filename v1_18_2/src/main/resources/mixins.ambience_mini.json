@@ -8,7 +8,8 @@
     "ClassInstanceMultiMapMixin",
     "MusicManagerMixin",
     "SoundEngineMixin",
-    "SoundManagerMixin"
+    "SoundManagerMixin",
+    "SystemToastMixin"
   ],
   "injectors": {
     "defaultRequire": 1

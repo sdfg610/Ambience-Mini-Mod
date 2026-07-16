@@ -219,8 +219,10 @@ public final class Bitstream implements BitstreamErrors
 		in.read(rawid3v2,0,10);
 
 		// Look for ID3v2
-		if ( !((rawid3v2[0]=='I') && (rawid3v2[1]=='D') && (rawid3v2[2]=='3')) )
-			throw new RuntimeException("Could not find ID3 header");
+		if ( !((rawid3v2[0]=='I') && (rawid3v2[1]=='D') && (rawid3v2[2]=='3')) ) {
+			in.unread(rawid3v2, 0, 10);
+			return;
+		}
 
 		int contentLength = (rawid3v2[6] << 21) + (rawid3v2[7] << 14) + (rawid3v2[8] << 7) + (rawid3v2[9]);
 		header_pos = contentLength+10;
@@ -239,11 +241,10 @@ public final class Bitstream implements BitstreamErrors
 	}
 
 	public HashMap<String, String> getID3v2TextTags() {
+		var map = new HashMap<String, String>();
 		ByteArrayInputStream stream = getRawID3v2();
 		if (stream == null)
-			throw new RuntimeException("Could not read ID3v2.3.0 metadata from MP3 file");
-
-		var map = new HashMap<String, String>();
+			return map;
 
 		Pair<String, String> tag;
 		try {
