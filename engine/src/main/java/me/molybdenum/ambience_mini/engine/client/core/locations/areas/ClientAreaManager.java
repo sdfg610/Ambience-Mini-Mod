@@ -3,11 +3,13 @@ package me.molybdenum.ambience_mini.engine.client.core.locations.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
+import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaStorage;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaOperation;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.GetAreasMessage;
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +20,7 @@ import java.util.function.BiConsumer;
 public class ClientAreaManager
 {
     private BaseClientNetworkManager networkManager;
+    private ServerSetup serverSetup;
 
     private AreaStorage areaStorage;
 
@@ -33,6 +36,7 @@ public class ClientAreaManager
             throw new RuntimeException("Multiple calls to 'BaseClientAreaManager.init'!");
 
         networkManager = core.networkManager;
+        serverSetup = core.serverSetup;
     }
 
 
@@ -91,7 +95,8 @@ public class ClientAreaManager
 
     public void loadAreas(AreaStorage areaStorage) {
         areas.clear();
-        networkManager.sendToServer(new GetAreasMessage());
+        if (serverSetup.serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
+            networkManager.sendToServer(new GetAreasMessage());
 
         this.areaStorage = areaStorage;
         loadLocalAreas();

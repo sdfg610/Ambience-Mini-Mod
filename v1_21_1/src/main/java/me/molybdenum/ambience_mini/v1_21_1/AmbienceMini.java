@@ -70,7 +70,7 @@ public class AmbienceMini extends BaseAmbienceMini
     private static KeyBindings keyBindings;
     public static ClientCore clientCore = null;
 
-    public static AmVersion configuredAmVersion = null;
+    public static AmVersion configuredAmVersion = AmVersion.ZERO;
 
     // Server
     public static ServerCore serverCore = null;

@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.v1_21_1.client.handlers;
 
+import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.v1_21_1.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.shared.Common;
 import net.minecraft.client.Minecraft;
@@ -19,12 +20,12 @@ public class LoginHandler
                 event.getPlayer().getGameProfile().getId().toString(),
                 event.getPlayer().getGameProfile().getName()
         );
-        AmbienceMini.configuredAmVersion = null;
+        AmbienceMini.configuredAmVersion = AmVersion.ZERO;
     }
 
     @SubscribeEvent
     public static void onLoggingOut(final ClientPlayerNetworkEvent.LoggingOut event) {
-        AmbienceMini.configuredAmVersion = null;
+        AmbienceMini.configuredAmVersion = AmVersion.ZERO;
         AmbienceMini.clientCore.onLoggedOut();
     }
 }
