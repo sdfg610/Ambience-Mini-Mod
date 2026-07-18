@@ -69,6 +69,10 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     };
 
 
+    // Global properties
+    public static final PropertyTemplateV1 P_SCREEN_ID = new PropertyTemplateV1("screen_id", new StringT(), instance -> instance::getMenuID);
+    public static final PropertyTemplateV1 P_MENU = new PropertyTemplateV1("menu", new StringT(), instance -> instance::getMenuType);
+
     // World properties
     public static final PropertyTemplateV1 P_DIFFICULTY = new PropertyTemplateV1("difficulty", new StringT(), instance -> instance::getDifficulty);
     public static final PropertyTemplateV1 P_DIMENSION = new PropertyTemplateV1("dimension", new StringT(), instance -> instance::getDimensionId);
@@ -101,6 +105,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     public static final PropertyTemplateV1 P_FLAGS = new PropertyTemplateV1("flags", new MapT(new StringT(), new StringT()), instance -> instance::getFlags);
 
     public static final PropertyTemplateV1[] PROPERTIES = new PropertyTemplateV1[] {
+            P_SCREEN_ID, P_MENU,
             P_DIFFICULTY, P_DIMENSION, P_BIOME, P_BIOME_TAGS, P_TIME, P_CAVE_SCORE, P_SKYLIGHT_SCORE,
             P_AREAS, P_STRUCTURES,
             P_UUID, P_GAME_MODE, P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
@@ -183,6 +188,12 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     public abstract BoolVal inCombat();
     public abstract BoolVal inBossFight();
 
+
+
+    // ------------------------------------------------------------------------------------------------
+    // World properties
+    public abstract StringVal getMenuID();
+    public abstract StringVal getMenuType();
 
 
     // ------------------------------------------------------------------------------------------------

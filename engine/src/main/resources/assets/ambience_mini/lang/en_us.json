@@ -64,6 +64,8 @@
   "ambience_mini.configuration.Notify_Server_Support": "Notify server support",
   "ambience_mini.configuration.Verbose_Mode": "Verbose mode",
   "ambience_mini.configuration.Print_Basic_Controls": "Print basic controls",
+  "ambience_mini.configuration.Print_Now_Playing": "Print 'now playing'",
+  "ambience_mini.configuration.Print_Menu_On_Change": "Print menu when changed",
   "ambience_mini.configuration.Update_Interval": "Update interval",
   "ambience_mini.configuration.Next_Music_Delay": "Next music delay",
   "ambience_mini.configuration.Meticulous_Playlist_Selector": "Meticulous playlist selector",

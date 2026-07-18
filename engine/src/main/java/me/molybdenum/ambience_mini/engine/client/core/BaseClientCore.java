@@ -128,6 +128,7 @@ public abstract class BaseClientCore<
         this.areaRenderer.init(this, levelState);
         this.flagCache.init(this);
         this.keyBindings.init(this);
+        this.screenState.init(this);
         this.combatState.init(this, playerState, levelState);
     }
 

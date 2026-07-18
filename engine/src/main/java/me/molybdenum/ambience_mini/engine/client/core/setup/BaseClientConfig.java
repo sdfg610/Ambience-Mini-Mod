@@ -10,11 +10,12 @@ import java.util.function.Supplier;
 public abstract class BaseClientConfig {
     private final ArrayList<Pair<String, Supplier<?>>> configs = new ArrayList<>();
 
-    // Misc
+    // Printing
     public final Supplier<Boolean> notifyServerSupport;
     public final Supplier<Boolean> verboseMode;
     public final Supplier<Boolean> printBasicControls;
     public final Supplier<Boolean> printNowPlaying;
+    public final Supplier<Boolean> printScreenOnChange;
 
     // Timing
     public final Supplier<Integer> updateInterval;
@@ -53,6 +54,7 @@ public abstract class BaseClientConfig {
     protected BaseClientConfig() {
         preSetup();
 
+        // Printing
         notifyServerSupport = registerBoolOption(
                 "If enabled, upon joining a multiplayer server the client will notify whether the server has support for Ambience Mini. If no support, server-dependent features will be disabled. [Default: true]",
                 "Notify_Server_Support",
@@ -74,6 +76,12 @@ public abstract class BaseClientConfig {
         printNowPlaying = registerBoolOption(
                 "If enabled, the mod will show a toast with info about the currently playing music each time the music changes. [Default: false]",
                 "Print_Now_Playing",
+                false
+        );
+
+        printScreenOnChange = registerBoolOption(
+                "If enabled, the mod will print, to the Minecraft logs, the current screen (and its type if any) when Minecraft's built-in \"screen changed\" event fires. [Default: false]",
+                "Print_Screen_On_Change",
                 false
         );
 

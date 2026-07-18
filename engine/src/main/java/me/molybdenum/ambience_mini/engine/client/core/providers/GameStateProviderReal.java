@@ -111,22 +111,22 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     // Global events
     @Override
     public BoolVal inMainMenu() {
-        return new BoolVal(_screen.is(Screens.MAIN_MENU));
+        return new BoolVal(_screen.getMemorizedScreenType() == ScreenType.MAIN_MENU);
     }
 
     @Override
     public BoolVal isJoiningWorld() {
-        return new BoolVal(_screen.is(Screens.JOINING));
+        return new BoolVal(_screen.getMemorizedScreenType() == ScreenType.JOINING);
     }
 
     @Override
     public BoolVal isDisconnected() {
-        return new BoolVal(_screen.is(Screens.DISCONNECTED));
+        return new BoolVal(_screen.getMemorizedScreenType() == ScreenType.DISCONNECTED);
     }
 
     @Override
     public BoolVal onCreditsScreen() {
-        return new BoolVal(_screen.is(Screens.CREDITS));
+        return new BoolVal(_screen.getMemorizedScreenType() == ScreenType.CREDITS);
     }
 
     @Override
@@ -223,7 +223,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     // Player-state events
     @Override
     public BoolVal isDead() {
-        return new BoolVal(_screen.is(Screens.DEATH));
+        return new BoolVal(_screen.getMemorizedScreenType() == ScreenType.DEATH);
     }
 
     @Override
@@ -363,6 +363,20 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         return _level.isNull()
                 ? BoolVal.UNDEFINED
                 : new BoolVal(_combat.inBossFight());
+    }
+
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Global properties
+    @Override
+    public StringVal getMenuID() {
+        return new StringVal(_screen.getCurrentScreenID());
+    }
+
+    @Override
+    public StringVal getMenuType() {
+        return new StringVal(_screen.getMemorizedScreenType().name);
     }
 
 
