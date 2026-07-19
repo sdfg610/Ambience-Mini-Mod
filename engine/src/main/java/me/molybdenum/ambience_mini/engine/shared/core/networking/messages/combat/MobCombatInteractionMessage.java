@@ -4,15 +4,15 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMess
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmWriter;
 
-public class IndirectAttackOnMobMessage extends AmMessage {
+public class MobCombatInteractionMessage extends AmMessage {
     public final int entityID;
 
 
-    public IndirectAttackOnMobMessage(AmReader reader) {
+    public MobCombatInteractionMessage(AmReader reader) {
         entityID = reader.readInt();
     }
 
-    public IndirectAttackOnMobMessage(int entityID) {
+    public MobCombatInteractionMessage(int entityID) {
         this.entityID = entityID;
     }
 

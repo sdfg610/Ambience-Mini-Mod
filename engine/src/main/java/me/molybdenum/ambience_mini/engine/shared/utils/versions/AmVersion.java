@@ -10,6 +10,7 @@ public record AmVersion(int major, int minor, int patch, int hotfix)
     public static AmVersion V_2_5_0 = new AmVersion(2,5,0);
     public static AmVersion V_2_6_0 = new AmVersion(2,6,0);
     public static AmVersion V_2_7_1 = new AmVersion(2,7,1);
+    public static AmVersion V_2_7_5 = new AmVersion(2,7,5);
 
 
     public AmVersion(int major, int minor, int patch) {

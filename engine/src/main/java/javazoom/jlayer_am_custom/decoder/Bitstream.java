@@ -36,6 +36,7 @@
 package javazoom.jlayer_am_custom.decoder;
 
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -268,17 +269,22 @@ public final class Bitstream implements BitstreamErrors
 		do {
 			byte[] frameHeader = stream.readNBytes(10);
 			if (frameHeader.length != 10)
-				return null;
+				return null;  // TODO: Error logging
 
 			frameId = new String(frameHeader, 0, 4);
 			int frameSize = ByteBuffer.wrap(frameHeader, 4, 4).getInt();
+			if (frameSize < 0)
+				return null;  // TODO: Error logging
 
 			boolean isCompressed = (frameHeader[9] & 0b1) != 0;
-			if (isCompressed)
-				stream.skip(4); // Skip 4 bytes of "uncompressed size" added after header
+			if (isCompressed && stream.skip(4) != 4) // Skip 4 bytes of "uncompressed size" added after header
+				return null;  // TODO: Error logging
 
 			char ch = frameId.charAt(0);
-			if (ch == 0) return null;
+			if (ch == 0)
+				return null;
+			if (!Character.isAlphabetic(ch))
+				return null;  // TODO: Error logging
 			else if (ch != 'T') {
                 //noinspection ResultOfMethodCallIgnored
                 stream.skip(frameSize);
@@ -287,6 +293,8 @@ public final class Bitstream implements BitstreamErrors
 
 			encoding = stream.read();
 			frameData = stream.readNBytes(frameSize-1);
+			if (encoding == -1 || frameData.length != frameSize-1)
+				return null;  // TODO: Error logging
 		} while (frameData == null);
 
 		String[] values;
@@ -295,13 +303,23 @@ public final class Bitstream implements BitstreamErrors
 		else // ISO-8859-1 encoding
 			values = readAsciiArray(frameData);
 
-		if (frameId.equals("TXXX"))
-			return new Pair<>(values[0], values[1]); // User-defined tag
-		else
-			return new Pair<>(frameId, values[0]); // Builtin tag
+		if (values.length == 0)
+			return null;  // TODO: Error logging
+
+		if (frameId.equals("TXXX")) { // User-defined tag
+			if (values.length == 1)
+				return new Pair<>("TXXX", values[0]);
+			else
+				return new Pair<>(values[0], values[1]);
+		}
+		else // Builtin tag
+			return new Pair<>(frameId, values[0]);
 	}
 
 	private String[] readAsciiArray(byte[] data) {
+		if (data.length == 0)
+			return new String[] { "" };
+
 		var values = new ArrayList<String>();
 
 		byte[] str = new byte[data.length];
@@ -323,6 +341,9 @@ public final class Bitstream implements BitstreamErrors
 	}
 
 	private String[] readUtfArray(byte[] data) {
+		if (data.length == 0)
+			return new String[] { "" };
+
 		var values = new ArrayList<String>();
 
 		byte[] str = new byte[data.length];

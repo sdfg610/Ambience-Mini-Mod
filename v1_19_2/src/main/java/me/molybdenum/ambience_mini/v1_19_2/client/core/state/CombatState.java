@@ -9,6 +9,9 @@ import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.NeutralMob;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -49,6 +52,13 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
     @Override
     public Float getEntityMaxHealth(Entity entity) {
         return (entity instanceof LivingEntity liv) ? liv.getMaxHealth() : null;
+    }
+
+    @Override
+    public boolean isCombatableEntity(Entity entity, Entity player) {
+        return (entity instanceof Monster || entity instanceof NeutralMob)
+                && !(entity instanceof TamableAnimal tam && player != null && player.getUUID() == tam.getOwnerUUID())
+                && entity.isAlive();
     }
 
 

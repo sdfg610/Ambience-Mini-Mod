@@ -3,6 +3,7 @@ package me.molybdenum.ambience_mini.v1_21_1.client.handlers;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.v1_21_1.AmbienceMini;
 import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.v1_21_1.client.core.ClientCore;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -12,9 +13,19 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 @EventBusSubscriber(modid = Common.MOD_ID, value={Dist.CLIENT})
 public class LoginHandler
 {
+    private static ClientCore core;
+
+
+    static {
+        AmbienceMini.loadIfInitializedOrRegisterListener(
+                AmbienceMini::getClientCore, core -> LoginHandler.core = core
+        );
+    }
+
+
     @SubscribeEvent
     public static void onLoggingIn(final ClientPlayerNetworkEvent.LoggingIn event) {
-        AmbienceMini.clientCore.onLoggedIn(
+        core.onLoggedIn(
                 AmbienceMini.configuredAmVersion,
                 Minecraft.getInstance().isLocalServer(),
                 event.getPlayer().getGameProfile().getId().toString(),
@@ -26,6 +37,6 @@ public class LoginHandler
     @SubscribeEvent
     public static void onLoggingOut(final ClientPlayerNetworkEvent.LoggingOut event) {
         AmbienceMini.configuredAmVersion = AmVersion.ZERO;
-        AmbienceMini.clientCore.onLoggedOut();
+        core.onLoggedOut();
     }
 }

@@ -17,8 +17,8 @@ public class KeyInputEventHandler
 
 
     static {
-        AmbienceMini.registerOnClientCoreInitListener(
-                () -> keyBindings = AmbienceMini.clientCore.keyBindings
+        AmbienceMini.loadIfInitializedOrRegisterListener(
+                AmbienceMini::getClientCore, core -> keyBindings = core.keyBindings
         );
     }
 

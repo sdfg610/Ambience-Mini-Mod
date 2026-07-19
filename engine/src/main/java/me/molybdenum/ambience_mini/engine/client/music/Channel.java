@@ -18,6 +18,7 @@ public class Channel {
     private static final int FADE_STEP_COUNT = 10;
 
     private float playingVolume;
+    private final AtomicBoolean isFading = new AtomicBoolean();
 
     public final Music music;
     private final int source;
@@ -101,7 +102,7 @@ public class Channel {
         if (!isClosed.get()) {
             playingVolume = volume + music.getCorrectedAdjustment();
             ALUtils.setMaxVolume(source, playingVolume);
-            if (isPlaying())
+            if (isPlaying() && !isFading.get())
                 ALUtils.setVolume(source, playingVolume);
         }
     }
@@ -117,27 +118,35 @@ public class Channel {
     }
 
     private void fadeIn() {
-        float diff = playingVolume / FADE_STEP_COUNT;
+        isFading.set(true);
         try {
+            float diff = playingVolume / FADE_STEP_COUNT;
+
             for (int i = FADE_STEP_COUNT - 1; i >= 0; i--) {
                 ALUtils.setVolume(source, playingVolume - diff*i);
                 TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
             }
-        } catch (Throwable ignored) { }
 
-        ALUtils.setVolume(source, playingVolume);
+            ALUtils.setVolume(source, playingVolume);
+        } catch (InterruptedException ignored) { }
+        finally {
+            isFading.set(false);
+        }
     }
 
     private void fadeOut() {
-        float diff = playingVolume / FADE_STEP_COUNT;
+        isFading.set(true);
         try {
+            float diff = playingVolume / FADE_STEP_COUNT;
+
             for (int i = 0; i < FADE_STEP_COUNT; i++) {
                 ALUtils.setVolume(source, playingVolume - diff*i);
                 TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
             }
-        } catch (Throwable ignored) { }
 
-        ALUtils.setVolume(source, 0f);
+            ALUtils.setVolume(source, 0f);
+        } catch (InterruptedException ignored) { }
+        isFading.set(false);
     }
 
 

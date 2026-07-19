@@ -4,6 +4,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.value
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.ListVal;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 
 import java.util.ArrayList;
@@ -48,6 +49,8 @@ public abstract class BaseCombatState<TEntity, TVec3>
     public abstract Float getEntityHealth(TEntity entity);
     public abstract Float getEntityMaxHealth(TEntity entity);
 
+    public abstract boolean isCombatableEntity(TEntity entity, TEntity player);
+
     public abstract boolean inBossFight();
     public abstract List<String> getBosses();
 
@@ -84,6 +87,14 @@ public abstract class BaseCombatState<TEntity, TVec3>
         return new ListVal(combatants.values().stream().map(com -> com.asCombatantVal(now)));
     }
 
+
+    public void handleInteraction(TEntity target, TEntity source) {
+        if (_playerState.isCachedPlayer(target) && isCombatableEntity(source, target))
+            handleInteraction(source);
+        else if (_playerState.isCachedPlayer(source) && isCombatableEntity(target, source))
+            handleInteraction(target);
+    }
+
     public void handleInteraction(int id) {
         handleInteraction(_levelState.getEntityById(id));
     }
@@ -97,6 +108,7 @@ public abstract class BaseCombatState<TEntity, TVec3>
         combatant.latestInteraction = now;
         recheckCombatants(now);
     }
+
 
     public void handleTargeting(int id, boolean targetsPlayer) {
         var combatant = combatants.computeIfAbsent(id, ignored ->
@@ -118,12 +130,18 @@ public abstract class BaseCombatState<TEntity, TVec3>
     }
 
 
-    public void removeCombatant(int id) {
-        combatants.remove(id);
-    }
-
     public void clearCombatants() {
         combatants.clear();
+    }
+
+    public void handleGameModeChanged() {
+        if (Utils.isFalse(_playerState.isSurvivalOrAdventureMode()))
+            clearCombatants();
+    }
+
+    public void handlePlayerDeath(TEntity player) {
+        if (_playerState.isCachedPlayer(player))
+            clearCombatants();
     }
 
 
