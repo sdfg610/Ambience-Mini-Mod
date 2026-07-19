@@ -6,6 +6,7 @@
   "client": [
     "BossHealthOverlayMixin",
     "ClassInstanceMultiMapMixin",
+    "LivingEntityMixin",
     "MusicManagerMixin",
     "SoundManagerMixin",
     "SystemToastMixin"

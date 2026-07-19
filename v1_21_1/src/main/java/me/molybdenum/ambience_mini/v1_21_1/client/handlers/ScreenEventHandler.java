@@ -16,8 +16,8 @@ public class ScreenEventHandler
 
 
     static {
-        AmbienceMini.registerOnClientCoreInitListener(
-                () -> screenState = AmbienceMini.clientCore.screenState
+        AmbienceMini.loadIfInitializedOrRegisterListener(
+                AmbienceMini::getClientCore, core -> screenState = core.screenState
         );
     }
 

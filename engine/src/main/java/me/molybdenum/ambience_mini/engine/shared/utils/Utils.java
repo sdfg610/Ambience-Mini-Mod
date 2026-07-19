@@ -71,4 +71,9 @@ public class Utils {
     public static boolean isJsonString(JsonElement elem) {
         return elem.isJsonPrimitive() && elem.getAsJsonPrimitive().isString();
     }
+
+
+    public static boolean isFalse(Boolean b) {
+        return b != null && !b;
+    }
 }

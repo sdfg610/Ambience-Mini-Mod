@@ -101,6 +101,10 @@ public class AmbienceMini extends BaseAmbienceMini
         return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
     }
 
+    public static ClientCore getClientCore() {
+        return clientCore;
+    }
+
 
     // -----------------------------------------------------------------------------------------------------------------
     // Common

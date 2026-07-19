@@ -24,8 +24,8 @@ public class RenderHandler
 
 
     static {
-        AmbienceMini.registerOnClientCoreInitListener(
-                () -> renderer = AmbienceMini.clientCore.areaRenderer
+        AmbienceMini.loadIfInitializedOrRegisterListener(
+                AmbienceMini::getClientCore, core -> renderer = core.areaRenderer
         );
     }
 

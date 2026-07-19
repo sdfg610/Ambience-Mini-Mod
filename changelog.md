@@ -10,6 +10,16 @@
 ****
 
 
+### Version 2.7.6:
+
+- Fixed issue where combat tracking breaks when certain combat mods are installed (or at least Epic Fight and SlashBlade).
+- Fixed issue where combat tracking generally did not work properly in multiplayer (while working in singleplayer).
+- Fixed music player crashes related to MP3 file metadata parsing.
+- Fixed problem where mods that constantly update the music volume cause the game rendering to hang for the duration of Ambience Mini's fade in/out effect when changing music.
+  * Why constantly update music volume? No idea.
+- Attempt at fixing weird null-pointer crash on startup in the mods event handlers in Minecraft 1.21.1.
+
+
 ### Version 2.7.5:
 
 - Fixed crash bugs when joining a server without Ambience Mini.

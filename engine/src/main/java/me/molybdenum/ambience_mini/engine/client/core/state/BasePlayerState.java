@@ -23,6 +23,10 @@ public abstract class BasePlayerState<TBlockPos, TVec3, TLocalPlayer>
         return cachedPlayer != null;
     }
 
+    public boolean isCachedPlayer(Object player) {
+        return player == cachedPlayer;
+    }
+
 
     public void prepare(@Nullable ArrayList<String> messages) {
         TLocalPlayer newPlayer = getCurrentPlayer();

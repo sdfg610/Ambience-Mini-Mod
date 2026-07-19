@@ -5,7 +5,7 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.GetAreasMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.IndirectAttackOnMobMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobCombatInteractionMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.GetNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
@@ -43,7 +43,7 @@ public class MessageRegistry {
 
         // Combat
         registerMessage(20, MobTargetMessage::new, MobTargetMessage.class); // 2.5.0
-        registerMessage(21, IndirectAttackOnMobMessage::new, IndirectAttackOnMobMessage.class); // 2.7.1
+        registerMessage(21, MobCombatInteractionMessage::new, MobCombatInteractionMessage.class); // 2.7.1
 
         // Areas
         registerMessage(30, CreateAreaMessage::new, CreateAreaMessage.class); // 2.5.0

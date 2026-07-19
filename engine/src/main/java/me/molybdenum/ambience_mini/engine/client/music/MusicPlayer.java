@@ -43,10 +43,11 @@ public class MusicPlayer {
         }
     }
 
-    public void setVolume(Float volume) {
-        currentMusicVolume = volume;
-        synchronized (stack) {
-            stack.forEach(pair -> pair.right().setVolume(volume));
+    public void setVolume(float volume) {
+        if (Math.abs(currentMusicVolume - volume) >= 0.01f) {
+            currentMusicVolume = volume;
+            for (var pair : stack)
+                pair.right().setVolume(volume);
         }
     }
 
@@ -72,16 +73,17 @@ public class MusicPlayer {
         if (priority < 0)
             throw new RuntimeException("Priority of music cannot be negative!");
 
+        Channel channel;
         synchronized (stack) {
             try {
-                stopAllAbove(priority-1, doFade);
-                Channel channel = createChannel(music, currentMusicVolume);
+                stopAllAbove(priority - 1, doFade);
+                channel = createChannel(music, currentMusicVolume);
                 stack.push(new Pair<>(priority, channel));
-                innerResume(channel, doFade);
             } catch (FileNotFoundException e) {
-                throw new RuntimeException("File '" + music.path() +  "' not found. Fix your Ambience config!", e);
+                throw new RuntimeException("File '" + music.path() + "' not found. Fix your Ambience config!", e);
             }
         }
+        innerResume(channel, doFade);
     }
 
     public void stopAllAbove(int priority, boolean doFade) {
@@ -122,10 +124,14 @@ public class MusicPlayer {
     }
 
     public void resume(boolean doFade) {
+        Channel channel;
         synchronized (stack) {
             if (!stack.empty())
-                innerResume(stack.peek().right(), doFade);
+                channel = stack.peek().right();
+            else
+                return;
         }
+        innerResume(channel, doFade);
     }
 
     private void innerResume(Channel channel, boolean doFade) {
@@ -135,7 +141,8 @@ public class MusicPlayer {
 
     public void stopAll() {
         synchronized (stack) {
-            stack.forEach(pair -> pair.right().stopAndClose(false));
+            for (var pair : stack)
+                pair.right().stopAndClose(false);
             stack.clear();
         }
     }

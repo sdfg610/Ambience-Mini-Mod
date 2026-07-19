@@ -4,6 +4,8 @@ import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.music.Monitor;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class BaseAmbienceMini
 {
@@ -15,7 +17,7 @@ public class BaseAmbienceMini
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isVanillaPlayerEnabled() {
-        if (baseCore == null) // Until Ambience Mini is actually loaded, don't start anything.
+        if (baseCore == null) // Until Ambience Mini is actually loaded, don't disable vanilla player.
             return true;
 
         Monitor m = baseCore.getMonitor();
@@ -24,11 +26,25 @@ public class BaseAmbienceMini
 
 
     public static void registerOnClientCoreInitListener(Runnable callback) {
-        onClientCoreInitListeners.add(callback);
+        synchronized (onClientCoreInitListeners) {
+            onClientCoreInitListeners.add(callback);
+        }
+    }
+
+    public static <T> void loadIfInitializedOrRegisterListener(Supplier<T> coreSupplier, Consumer<T> callback) {
+        synchronized (onClientCoreInitListeners) {
+            var core = coreSupplier.get();
+            if (core == null)
+                onClientCoreInitListeners.add(() -> callback.accept(coreSupplier.get()));
+            else
+                callback.accept(core);
+        }
     }
 
     protected static void fireClientCoreInit() {
-        for (var callback : onClientCoreInitListeners)
-            callback.run();
+        synchronized (onClientCoreInitListeners) {
+            for (var callback : onClientCoreInitListeners)
+                callback.run();
+        }
     }
 }
