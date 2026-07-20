@@ -24,11 +24,6 @@ public class ClientCombatHandler
 
 
     @SubscribeEvent
-    public static void onGameModeChanged(final ClientPlayerChangeGameTypeEvent event) {
-        combat.handleGameModeChanged();
-    }
-
-    @SubscribeEvent
     public static void onDeathEvent(final LivingDeathEvent event) {
         combat.handlePlayerDeath(event.getEntity());
     }

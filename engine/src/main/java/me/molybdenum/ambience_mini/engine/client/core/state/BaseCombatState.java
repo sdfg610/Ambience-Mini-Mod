@@ -134,11 +134,6 @@ public abstract class BaseCombatState<TEntity, TVec3>
         combatants.clear();
     }
 
-    public void handleGameModeChanged() {
-        if (Utils.isFalse(_playerState.isSurvivalOrAdventureMode()))
-            clearCombatants();
-    }
-
     public void handlePlayerDeath(TEntity player) {
         if (_playerState.isCachedPlayer(player))
             clearCombatants();

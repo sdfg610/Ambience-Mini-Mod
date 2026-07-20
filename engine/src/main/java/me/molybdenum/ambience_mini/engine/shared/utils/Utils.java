@@ -76,4 +76,8 @@ public class Utils {
     public static boolean isFalse(Boolean b) {
         return b != null && !b;
     }
+
+    public static boolean isTrue(Boolean b) {
+        return b != null && b;
+    }
 }

@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.music.misc;
 
+import me.molybdenum.ambience_mini.engine.client.music.exceptions.ALException;
 import org.lwjgl.openal.AL10;
 
 import javax.sound.sampled.AudioFormat;
@@ -12,6 +13,8 @@ import static org.lwjgl.openal.AL10.AL_FORMAT_STEREO16;
 
 public class ALUtils
 {
+    private static final float MIN_VOLUME = 0f;
+
     // -----------------------------------------------------------------------------------------------------------------
     // Source control
     public static int genSource() {
@@ -69,12 +72,12 @@ public class ALUtils
 
 
     public static void setVolume(int source, float volume) {
-        AL10.alSourcef(source, AL_GAIN, volume);
+        AL10.alSourcef(source, AL_GAIN, Math.max(volume, MIN_VOLUME));
         throwIfAlError();
     }
 
     public static void setMaxVolume(int source, float maxVolume) {
-        AL10.alSourcef(source, AL_MAX_GAIN, maxVolume);
+        AL10.alSourcef(source, AL_MAX_GAIN, Math.max(maxVolume, MIN_VOLUME));
         throwIfAlError();
     }
 
@@ -100,9 +103,9 @@ public class ALUtils
 
 
     public static void throwIfAlError() {
-        int err = AL10.alGetError();
-        if (err != AL_NO_ERROR) {
-            throw new RuntimeException(alGetString(err));
+        int errorCode = AL10.alGetError();
+        if (errorCode != AL_NO_ERROR) {
+            throw new ALException(errorCode);
         }
     }
 
