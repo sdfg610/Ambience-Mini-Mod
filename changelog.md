@@ -10,6 +10,12 @@
 ****
 
 
+
+### Version 2.7.8:
+- Fixed music player crash with FLAC files where no metadata is present.
+- Fixed bug that causes game to freeze when combat is registered.
+
+
 ### Version 2.7.7:
 
 - Fixed crash when joining server with other players online in some versions of Minecraft.

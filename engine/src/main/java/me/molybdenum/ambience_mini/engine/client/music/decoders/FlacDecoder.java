@@ -167,17 +167,17 @@ public class FlacDecoder extends AmDecoder
 
 
         @Override
-        public String getLoopStartStr() {
+        public @Nullable String getLoopStartStr() {
             return Arrays.stream(comment.getCommentByName("loopstart")).findFirst().orElse(null);
         }
 
         @Override
-        public String getLoopEndStr() {
+        public @Nullable String getLoopEndStr() {
             return Arrays.stream(comment.getCommentByName("loopend")).findFirst().orElse(null);
         }
 
         @Override
-        public String getLoopLengthStr() {
+        public @Nullable String getLoopLengthStr() {
             return Arrays.stream(comment.getCommentByName("looplength")).findFirst().orElse(null);
         }
 

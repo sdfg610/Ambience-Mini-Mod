@@ -21,6 +21,7 @@ package org.jflac_am_custom.metadata;
  */
 
 import java.io.IOException;
+import java.util.Vector;
 
 import org.jflac_am_custom.io.BitInputStream;
 
@@ -75,17 +76,17 @@ public class VorbisComment extends Metadata {
     }
     
     public String [] getCommentByName( String key )  {
-        if (numComments == 0 || key == null) return null;
-        java.util.Vector sbuff = new java.util.Vector();
-        for( int i=0; i < comments.length; i++ )  {
-            String comment = comments[i].toString();
-            int eqpos = comment.indexOf(0x3D); //Find the equals
-            if (eqpos != -1 )
-                if( comment.substring(0, eqpos).equalsIgnoreCase(key) )
-                    sbuff.add( comment.substring(eqpos+1, comment.length()) );
+        if (numComments == 0 || key == null)
+            return new String[0];
+
+        Vector<String> buffer = new Vector<>();
+        for (VorbisString vorbisString : comments) {
+            String comment = vorbisString.toString();
+            int eqPos = comment.indexOf(0x3D); // Find the equals
+            if (eqPos != -1 && comment.substring(0, eqPos).equalsIgnoreCase(key))
+                buffer.add(comment.substring(eqPos + 1));
         }
-        return (String [])sbuff.toArray(new String[0]);
-        //return null;
+        return buffer.toArray(new String[0]);
     }
 
     public VorbisString getComment(int index) throws IndexOutOfBoundsException {
