@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 
 public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TClientLevel>
 {
+    protected static final int MAIN_THREAD_TIMEOUT = 1000;
+
     private final ArrayList<Consumer<String>> levelChangedListeners = new ArrayList<>();
 
     protected TClientLevel cachedLevel = null;

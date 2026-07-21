@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entity, ClientLevel>
@@ -105,13 +106,10 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
         return cachedLevel == null ? null : cachedLevel.getBiome(blockPos).value().coldEnoughToSnow(blockPos);
     }
 
+
     @Override
     public Entity getEntityById(int id) {
-        try {
-            return cachedLevel == null ? null : mc.submit(() -> cachedLevel.getEntity(id)).get(1000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            throw new RuntimeException(e);
-        }
+        return cachedLevel == null ? null : tryRunOnMainThread(() -> cachedLevel.getEntity(id));
     }
 
     @Override
@@ -122,12 +120,14 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public Integer countNearbyVillagers(BlockPos center, int horizontalRadius, int verticalRadius) {
-        return cachedLevel == null ? null : getNearbyEntities(Villager.class, center, horizontalRadius, verticalRadius).size();
+        var villagers = cachedLevel == null ? null : getNearbyEntities(Villager.class, center, horizontalRadius, verticalRadius);
+        return villagers == null ? null : villagers.size();
     }
 
     @Override
     public Integer countNearbyAnimals(BlockPos center, int horizontalRadius, int verticalRadius) {
-        return cachedLevel == null ? null : getNearbyEntities(Animal.class, center, horizontalRadius, verticalRadius).size();
+        var animals = cachedLevel == null ? null : getNearbyEntities(Animal.class, center, horizontalRadius, verticalRadius);
+        return animals == null ? null : animals.size();
     }
 
     @Override
@@ -222,9 +222,15 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
                 center.getX() + horizontalRadius, center.getY() + verticalRadius, center.getZ() + horizontalRadius
         );
 
+        return tryRunOnMainThread(() -> cachedLevel.getEntitiesOfClass(clazz, area, ignore -> true));
+    }
+
+    private <T> T tryRunOnMainThread(Supplier<T> task) {
         try {
-            return mc.submit(() -> cachedLevel.getEntitiesOfClass(clazz, area, ignore -> true)).get(1000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            return mc.submit(task).get(MAIN_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException ignored) {
+            return null;
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
