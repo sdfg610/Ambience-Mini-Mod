@@ -1,8 +1,12 @@
 
+### Version 2.7.9:
+- Reworded the "auto-reloaded music player" toast to make it clearer that the auto-reload is actually successful.
+- Fixed music player crash when main game thread hangs for a while.
+
 
 ### Version 2.7.8:
 - Fixed music player crash with FLAC files where no metadata is present.
-- Fixed bug that causes game to freeze when combat is registered.
+- Fixed bug that causes the game to freeze when combat is registered.
 
 
 ### Version 2.7.7:
