@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.networking;
 
+import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
@@ -112,11 +113,15 @@ public abstract class BaseClientNetworkManager
 
     // Combat
     private void handleMobTargetMessage(MobTargetMessage msg) {
-        core.combatState.handleTargeting(msg.entityID, msg.isTargetingPlayer);
+        BaseAmbienceMini.executeAsync(
+                () -> core.combatState.handleTargeting(msg.entityID, msg.isTargetingPlayer)
+        );
     }
 
     private void handleMobCombatInteractionMessage(MobCombatInteractionMessage msg) {
-        core.combatState.handleInteraction(msg.entityID);
+        BaseAmbienceMini.executeAsync(
+                () -> core.combatState.handleInteraction(msg.entityID)
+        );
     }
 
 
