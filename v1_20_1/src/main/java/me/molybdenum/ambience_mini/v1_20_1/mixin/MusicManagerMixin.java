@@ -25,8 +25,9 @@ public abstract class MusicManagerMixin {
 
     @Inject(at = @At("HEAD"), method = "tick", cancellable = true)
     public void tick(CallbackInfo ci) {
-        if (currentMusic != null && !BaseAmbienceMini.isVanillaPlayerEnabled()) {
-            stopPlaying();
+        if (!BaseAmbienceMini.isVanillaPlayerEnabled()) {
+            if (currentMusic != null)
+                stopPlaying();
             ci.cancel();
         }
     }

@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.music;
 
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.Selection;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.VanillaSelection;
+import me.molybdenum.ambience_mini.engine.client.music.exceptions.ALException;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
@@ -31,11 +32,18 @@ public class Monitor
     public static final int BUFFER_UPDATE_INTERVAL_MS = 500;
     private static final int NUM_MEASUREMENTS = 10;
 
+    // Auto restart
+    private static final long AUTO_RELOAD_DELAY = 1000;
+    private static long latestAutoRestartTime = 0;
+
     // Utils
     private final Random _rand = new Random(System.nanoTime());
     private final Logger _logger;
 
     // Core components
+    @SuppressWarnings("rawtypes")
+    private final BaseClientCore _core;
+
     private final BasePlayerState<?, ?, ?> _player;
     private final BaseLevelState<?, ?, ?, ?, ?> _level;
     private final BaseNotification<?> _notification;
@@ -93,6 +101,8 @@ public class Monitor
         _logger = logger;
         _isFocused = clientCore::isFocused;
 
+        _core = clientCore;
+
         _player = clientCore.playerState;
         _level = clientCore.levelState;
         _notification = clientCore.notification;
@@ -126,18 +136,18 @@ public class Monitor
             _musicPlayer.setVolume(volume);
         };
         VolumeState.registerMusicVolumeListener(_volumeChangedHandler);
+        handleVolumeZero(VolumeState.getMusicVolume());
 
         // Setup scheduled tasks
-        handleVolumeZero(VolumeState.getMusicVolume());
         cycleFuture = executor.scheduleAtFixedRate(
                 () -> guarded(this::handleMusicCycle),
-                0,
+                2000,
                 clientCore.clientConfig.updateInterval.get(),
                 TimeUnit.MILLISECONDS
         );
         bufferFuture = executor.scheduleAtFixedRate(
                 () -> guarded(_musicPlayer::updateBuffers),
-                0,
+                2000,
                 BUFFER_UPDATE_INTERVAL_MS,
                 TimeUnit.MILLISECONDS
         );
@@ -155,9 +165,28 @@ public class Monitor
         try {
             runnable.run();
         } catch (Exception ex) {
-            _notification.printTranslatableToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
             _logger.error("Error in monitor!", ex);
             stop();
+            attemptAutoRestart();
+        }
+    }
+
+    private void attemptAutoRestart() {
+        long now = System.currentTimeMillis();
+        if (now - latestAutoRestartTime > 10000) {
+            latestAutoRestartTime = now;
+
+            _notification.printTranslatableToChat(AmLang.MSG_PLAYER_AUTO_RESTARTING);
+            _notification.showToast(AmLang.MSG_PLAYER_AUTO_RESTARTING);
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(AUTO_RELOAD_DELAY);
+            } catch (InterruptedException ignored) { }
+            _core.tryReloadMusicEngine();
+        }
+        else {
+            _notification.printTranslatableToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
+            _notification.showToast(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
         }
     }
 

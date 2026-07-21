@@ -24,6 +24,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 
@@ -107,7 +110,11 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public Entity getEntityById(int id) {
-        return cachedLevel == null ? null : cachedLevel.getEntity(id);
+        try {
+            return cachedLevel == null ? null : mc.submit(() -> cachedLevel.getEntity(id)).get(1000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -225,6 +232,11 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
                 center.getX() - horizontalRadius, center.getY() - verticalRadius, center.getZ() - horizontalRadius,
                 center.getX() + horizontalRadius, center.getY() + verticalRadius, center.getZ() + horizontalRadius
         );
-        return cachedLevel.getEntitiesOfClass(clazz, area, ignore -> true);
+
+        try {
+            return mc.submit(() -> cachedLevel.getEntitiesOfClass(clazz, area, ignore -> true)).get(1000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

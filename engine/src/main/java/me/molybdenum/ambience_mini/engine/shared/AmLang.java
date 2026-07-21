@@ -17,7 +17,8 @@ public enum AmLang
     KEY_AREA_CANCEL("key.area_cancel"),
 
     // Messages
-    MSG_PLAYER_CRASHED("message.player_crashed", 1),
+    MSG_PLAYER_CRASHED("message.player_crashed", 1), // Args: "reload key"
+    MSG_PLAYER_AUTO_RESTARTING("message.player_auto_restarting"),
     MSG_RELOAD("message.reload_description"),
     MSG_NEXT_MUSIC("message.next_music_description"),
     MSG_PRINTING_ALL("message.printing_all"),

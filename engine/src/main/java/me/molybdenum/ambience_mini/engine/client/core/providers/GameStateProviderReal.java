@@ -9,6 +9,7 @@ import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
 import me.molybdenum.ambience_mini.engine.client.core.state.*;
 import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,6 +46,8 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private final int _combatGracePeriod;
 
     // Cache
+    private long now;
+
     private TVec3 _latestFishingPos = null;
     private long _latestFishingTime = 0L;
     private long _latestFishingHookInWaterTime = 0L;
@@ -53,6 +56,15 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private boolean _isInCombat = false;
 
     private double _latestCaveScore = 0;
+
+    private Double latestWardenDistance;
+    private long latestWardenCheckTime;
+
+    private boolean latestVillageValue;
+    private long latestVillageTime;
+
+    private boolean latestRanchValue;
+    private long latestRanchTime;
 
     // Properties used by other properties
     private final Property timeProp;
@@ -104,6 +116,8 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     public void prepare(@Nullable ArrayList<String> messages) {
         _player.prepare(messages);
         _level.prepare(messages);
+
+        now = System.currentTimeMillis();
     }
 
 
@@ -208,14 +222,26 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     public BoolVal inVillage() {
         if (_player.isNull() || _level.isNull())
             return BoolVal.UNDEFINED;
-        return new BoolVal(_level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold);
+
+        if (now - latestVillageTime > 1000) {
+            latestVillageValue = _level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold;
+            latestVillageTime = now;
+        }
+
+        return new BoolVal(latestVillageValue);
     }
 
     @Override
     public BoolVal inRanch() {
         if (_player.isNull() || _level.isNull())
             return BoolVal.UNDEFINED;
-        return new BoolVal(_level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold);
+
+        if (now - latestRanchTime > 1000) {
+            latestRanchValue = _level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold;
+            latestRanchTime = now;
+        }
+
+        return new BoolVal(latestRanchValue);
     }
 
 
@@ -239,14 +265,14 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         // The bopping of the fishing hook creates time periods where the hook is not detected as being in water.
         // To combat this, I make a small grace period of 1000 milliseconds.
         if (_player.fishingHookInWater())
-            _latestFishingHookInWaterTime = System.currentTimeMillis();
+            _latestFishingHookInWaterTime = now;
 
-        if (System.currentTimeMillis() - _latestFishingHookInWaterTime < 1000) {
+        if (now - _latestFishingHookInWaterTime < 1000) {
             _latestFishingPos = _player.position();
-            _latestFishingTime = System.currentTimeMillis();
+            _latestFishingTime = now;
         }
         else if (_latestFishingPos != null) { // Grace period where "isFishing" will not turn off to prevent "shuffling" music back and forth.
-            if (_player.distanceTo(_latestFishingPos) > _fishingMoveThreshold || System.currentTimeMillis() - _latestFishingTime > _fishingTimeout)
+            if (_player.distanceTo(_latestFishingPos) > _fishingMoveThreshold || now - _latestFishingTime > _fishingTimeout)
                 _latestFishingPos = null;
         }
 
@@ -277,7 +303,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     public BoolVal isDrowning() {
         return _player.isNull()
                 ? BoolVal.UNDEFINED
-                : new BoolVal(_player.isDrowning() && _player.isSurvivalOrAdventureMode());
+                : new BoolVal(Utils.isTrue(_player.isDrowning()) && Utils.isTrue(_player.isSurvivalOrAdventureMode()));
     }
 
 
@@ -321,8 +347,12 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         if (_player.isNull() || _level.isNull())
             return BoolVal.UNDEFINED;
 
-        Double distance = _level.shortestDistanceToWarden(_player.eyePosition(), Common.WARDEN_SEARCH_RADIUS);
-        return distance == null ? BoolVal.FALSE : new BoolVal(distance <= Common.WARDEN_SEARCH_RADIUS);
+        if (now - latestWardenCheckTime > 1000) {
+            latestWardenDistance = _level.shortestDistanceToWarden(_player.eyePosition(), Common.WARDEN_SEARCH_RADIUS);
+            latestWardenCheckTime = now;
+        }
+
+        return latestWardenDistance == null ? BoolVal.FALSE : new BoolVal(latestWardenDistance <= Common.WARDEN_SEARCH_RADIUS);
     }
 
     @Override
@@ -347,12 +377,12 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         // Active fighting sets off combat
         if (_combat.isPlayerFighting()) {
             _isInCombat = true;
-            _latestCombatTime = System.currentTimeMillis();
+            _latestCombatTime = now;
             return new BoolVal(true);
         }
 
         // As long as there are combatants (either targeting or fighting), the combat timeout is doubled
-        if (_isInCombat && System.currentTimeMillis() - _latestCombatTime > (_combatGracePeriod * (_combat.hasCombatants() ? 2L : 1L)))
+        if (_isInCombat && now - _latestCombatTime > (_combatGracePeriod * (_combat.hasCombatants() ? 2L : 1L)))
             _isInCombat = false;
 
         return new BoolVal(_isInCombat);

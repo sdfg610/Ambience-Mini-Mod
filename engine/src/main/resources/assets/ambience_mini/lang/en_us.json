@@ -9,7 +9,8 @@
   "key.area_confirm": "Area: Confirm",
   "key.area_cancel": "Area: Cancel",
 
-  "message.player_crashed": "Music player crashed! Press '%s' to reload Ambience Mini. See logs for details.",
+  "message.player_crashed": "Music player crashed! Press '%s' in-game to reload Ambience Mini. See logs for details.",
+  "message.player_auto_restarting": "Music player crashed! Attempting automatic reload...",
   "message.reload_description": "Trying to reload music player...",
   "message.next_music_description": "Selecting new music...",
   "message.printing_all": "Printing all events and properties to the Minecraft log...",

@@ -10,6 +10,17 @@
 ****
 
 
+### Version 2.7.7:
+
+- Fixed crash when joining server with other players online in some versions of Minecraft.
+- Fixed rare mod-conflict and crash due to cross-threaded access to world entities.
+  * The `@village`, `@ranch`, and `@warden_nearby` now only update once a second to reduce load on main game thread.
+- Attempted to fix rare music player crash on startup in huge modpacks.
+- Attempted fix at vanilla music and custom music overlapping.
+- Fixed crash with sufficiently low gain on music file (e.g. `"..."<-50.0>`).
+- The music player will now automatically attempt to restart once upon crash.
+
+
 ### Version 2.7.6:
 
 - Fixed issue where combat tracking breaks when certain combat mods are installed (or at least Epic Fight and SlashBlade).
@@ -17,7 +28,7 @@
 - Fixed music player crashes related to MP3 file metadata parsing.
 - Fixed problem where mods that constantly update the music volume cause the game rendering to hang for the duration of Ambience Mini's fade in/out effect when changing music.
   * Why constantly update music volume? No idea.
-- Attempt at fixing weird null-pointer crash on startup in the mods event handlers in Minecraft 1.21.1.
+- Attempt at fixing weird null-pointer crash on startup in the mod's event handlers in Minecraft 1.21.1.
 
 
 ### Version 2.7.5:

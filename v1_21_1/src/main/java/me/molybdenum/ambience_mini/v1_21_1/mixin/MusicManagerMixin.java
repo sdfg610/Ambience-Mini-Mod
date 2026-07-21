@@ -21,10 +21,6 @@ public abstract class MusicManagerMixin {
     public abstract void stopPlaying();
 
     @Shadow
-    @Final
-    private Minecraft minecraft;
-
-    @Shadow
     @Nullable
     private SoundInstance currentMusic;
 
@@ -34,7 +30,6 @@ public abstract class MusicManagerMixin {
         if (!BaseAmbienceMini.isVanillaPlayerEnabled()) {
             if (currentMusic != null)
                 stopPlaying();
-            net.neoforged.neoforge.client.ClientHooks.selectMusic(minecraft.getSituationalMusic(), this.currentMusic);
             ci.cancel();
         }
     }

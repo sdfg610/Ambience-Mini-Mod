@@ -68,18 +68,21 @@ public class PlayerState extends BasePlayerState<BlockPos, Vec3, LocalPlayer> {
 
     @Override
     public Boolean isSurvivalOrAdventureMode() {
-        return cachedPlayer == null ? null : getGameMode().isSurvival();
+        var gameMode = getGameMode();
+        return gameMode == null ? null : gameMode.isSurvival();
     }
 
     @Override
     public String getGameModeName() {
-        return cachedPlayer == null ? null : getGameMode().getName();
+        var gameMode = getGameMode();
+        return gameMode == null ? null : gameMode.getName();
     }
 
     private GameType getGameMode() {
         try {
-            return ((PlayerInfo)getPlayerInfoMethod.invoke(cachedPlayer)).getGameMode();
-        } catch (Exception e) {
+            var playerInfo = cachedPlayer == null ? null : (PlayerInfo)getPlayerInfoMethod.invoke(cachedPlayer);
+            return playerInfo == null ? null : playerInfo.getGameMode();
+        } catch (IllegalAccessException | java.lang.reflect.InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
