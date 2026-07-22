@@ -1,20 +1,25 @@
 
 ### Version 2.8.0:
-### Version 2.7.9:
-- Reworded the "auto-reloaded music player" toast to make it clearer that the auto-reload is actually successful.
-- Fixed music player crash when main game thread hangs for a while.
 
 - Added `$screen_id` property to get the id (fully qualified class name) of the currently open screen (e.g., title screen, pause screen, etc.).
 - Added `$menu` property which represents a collection of screens under some menu name. 
   * Current possible values are: `none` (current screen if any is not part of a menu collection), `main_menu`, `joining`, `disconnected`, `credits`, `death`, `pause` (distinct from `@paused` when the game is halted in singleplayer), `player_inventory`.
   * This is similar to the events `@main_menu`, `@joining`, and so on, but easier to extend with new menu types without adding new events.
 - Added `Print_Screen_On_Change` mod-config option. When enabled, the mod prints out the screen ID (and menu type if any) whenever the menu changes. Use for music pack creation and debugging.
+- Improved startup and auto-reload stability.
+- Fixed `@warden_nearby` causing music player crash if game thread hangs for a while.
 
 ****
 
 
+### Version 2.7.9:
+
+- Reworded the "auto-reloaded music player" toast to make it clearer that the auto-reload is actually successful.
+- Fixed music player crash when main game thread hangs for a while.
+
 
 ### Version 2.7.8:
+
 - Fixed music player crash with FLAC files where no metadata is present.
 - Fixed bug that causes the game to freeze when combat is registered.
 

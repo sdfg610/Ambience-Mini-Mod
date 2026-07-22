@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -137,7 +138,8 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
         if (cachedLevel == null)
             return null;
 
-        var min = getNearbyEntities(Warden.class, BlockPos.containing(position), cubeSearchRadius, cubeSearchRadius).stream()
+        var wardens = getNearbyEntities(Warden.class, BlockPos.containing(position), cubeSearchRadius, cubeSearchRadius);
+        var min = wardens == null ? OptionalDouble.empty() : wardens.stream()
                 .mapToDouble(warden -> warden.getEyePosition().distanceTo(position))
                 .min();
         return min.isPresent() ? min.getAsDouble() : null;
@@ -226,6 +228,7 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     // ------------------------------------------------------------------------------------------------
     // Utilities
+    @Nullable
     private <T extends Entity> List<T> getNearbyEntities(Class<T> clazz, BlockPos center, int horizontalRadius, int verticalRadius)
     {
         var area = new AABB(
@@ -236,6 +239,7 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
         return tryRunOnMainThread(() -> cachedLevel.getEntitiesOfClass(clazz, area, ignore -> true));
     }
 
+    @Nullable
     private <T> T tryRunOnMainThread(Supplier<T> task) {
         try {
             return mc.submit(task).get(MAIN_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
