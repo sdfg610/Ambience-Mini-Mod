@@ -80,4 +80,11 @@ public class Utils {
     public static boolean isTrue(Boolean b) {
         return b != null && b;
     }
+
+
+    public static void ignoreException(Runnable task) {
+        try {
+            task.run();
+        } catch (Exception ignored) { }
+    }
 }

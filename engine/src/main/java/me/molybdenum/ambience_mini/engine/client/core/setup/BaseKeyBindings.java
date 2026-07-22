@@ -113,7 +113,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
     }
 
     private boolean checkMonitorRunning() {
-        if (core.isMusicThreadRunning())
+        if (core.isMonitorRunning())
             return true;
         core.notification.showToast(AmLang.MSG_NOT_RUNNING);
         return false;

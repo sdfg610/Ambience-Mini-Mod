@@ -82,6 +82,7 @@ public abstract class BaseClientCore<
     private GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> gameStateProvider;
 
     // Music
+    private final Object monitorLock = new Object();
     private Monitor monitor;
 
 
@@ -158,23 +159,33 @@ public abstract class BaseClientCore<
 
     // -----------------------------------------------------------------------------------------------------------------
     // Music engine
-    public void tryReloadMusicEngine()
-    {
-        if (monitor != null)
-            monitor.stop();
+    public void onSoundEngineReloaded() {
+        synchronized (monitorLock) {
+            if (isMonitorRunning())
+                monitor.enableAutoRestart();
+            else
+                tryReloadMusicEngine();
+        }
+    }
 
-        combatState.clearCombatants();
-        gameStateProvider = new GameStateProviderReal<>(
-                mcVersion, this, playerState, levelState, combatState
-        );
+    public void tryReloadMusicEngine() {
+        synchronized (monitorLock) {
+            if (monitor != null)
+                monitor.stop();
 
-        File configFile = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_CONFIG_FILE).toFile();
-        try (InputStream configStream = new FileInputStream(configFile)) {
-            Loader.loadFrom(configStream, musicProvider, gameStateProvider).match(
-                    this::initMusicThread,
-                    this::printMessages
+            combatState.clearCombatants();
+            gameStateProvider = new GameStateProviderReal<>(
+                    mcVersion, this, playerState, levelState, combatState
             );
-        } catch (IOException ignored) { }
+
+            File configFile = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_CONFIG_FILE).toFile();
+            try (InputStream configStream = new FileInputStream(configFile)) {
+                Loader.loadFrom(configStream, musicProvider, gameStateProvider).match(
+                        this::initMusicThread,
+                        this::printMessages
+                );
+            } catch (IOException ignored) { }
+        }
     }
 
     private void initMusicThread(Interpreter interpreter, List<Message> warnings) {
@@ -203,7 +214,7 @@ public abstract class BaseClientCore<
         }
     }
 
-    public boolean isMusicThreadRunning() {
+    public boolean isMonitorRunning() {
         return monitor != null && monitor.isRunning();
     }
 

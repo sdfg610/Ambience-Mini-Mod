@@ -32,6 +32,7 @@ import me.molybdenum.ambience_mini.v1_18_2.server.core.command.CommandNodeFactor
 import me.molybdenum.ambience_mini.v1_18_2.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
@@ -46,6 +47,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
 
 
@@ -121,8 +123,8 @@ public class AmbienceMini extends BaseAmbienceMini
     // Common
     /// Called from a Mixin instead of through the event bus since a bug in MC 1.18.2 causes the "MinecraftForge.EVENT_BUS" to shut down somehow...
     public static void onSoundEngineLoaded() {
-        if (clientCore != null && !clientCore.isMusicThreadRunning())
-            clientCore.tryReloadMusicEngine();
+        if (clientCore != null)
+            clientCore.onSoundEngineReloaded();
     }
 
 

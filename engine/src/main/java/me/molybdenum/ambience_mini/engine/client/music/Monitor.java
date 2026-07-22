@@ -141,13 +141,13 @@ public class Monitor
         // Setup scheduled tasks
         cycleFuture = executor.scheduleAtFixedRate(
                 () -> guarded(this::handleMusicCycle),
-                2000,
+                1000,
                 clientCore.clientConfig.updateInterval.get(),
                 TimeUnit.MILLISECONDS
         );
         bufferFuture = executor.scheduleAtFixedRate(
                 () -> guarded(_musicPlayer::updateBuffers),
-                2000,
+                1000,
                 BUFFER_UPDATE_INTERVAL_MS,
                 TimeUnit.MILLISECONDS
         );
@@ -190,22 +190,28 @@ public class Monitor
         }
     }
 
+    public void enableAutoRestart() {
+        latestAutoRestartTime = 0;
+    }
+
     public void stop() {
         synchronized (executor) {
             if (!executor.isShutdown()) {
+                VolumeState.unregisterVolumeListener(_volumeChangedHandler);
+
                 _musicPlayer.stopAll();
 
                 cycleFuture.cancel(true);
                 bufferFuture.cancel(true);
                 executor.shutdown();
-
-                VolumeState.unregisterVolumeListener(_volumeChangedHandler);
             }
         }
     }
 
     public boolean isRunning() {
-        return !executor.isShutdown();
+        synchronized (executor) {
+            return !executor.isShutdown();
+        }
     }
 
 

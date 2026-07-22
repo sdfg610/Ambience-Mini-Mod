@@ -153,8 +153,8 @@ public class AmbienceMini extends BaseAmbienceMini
     }
 
     private static void onSoundEngineLoaded(final SoundEngineLoadEvent event) {
-        if (clientCore != null && !clientCore.isMusicThreadRunning() && Boolean.TRUE.equals(ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class, event.getEngine(), "loaded")))
-            clientCore.tryReloadMusicEngine();
+        if (clientCore != null && Boolean.TRUE.equals(ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class, event.getEngine(), "loaded")))
+            clientCore.onSoundEngineReloaded();
     }
 
 

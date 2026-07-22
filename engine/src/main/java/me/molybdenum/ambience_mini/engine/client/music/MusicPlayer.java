@@ -4,6 +4,7 @@ import me.molybdenum.ambience_mini.engine.client.configuration.Music;
 import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
 import me.molybdenum.ambience_mini.engine.client.music.decoders.AmDecoder;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
@@ -142,7 +143,7 @@ public class MusicPlayer {
     public void stopAll() {
         synchronized (stack) {
             for (var pair : stack)
-                pair.right().stopAndClose(false);
+                Utils.ignoreException(() -> pair.right().stopAndClose(false));
             stack.clear();
         }
     }
