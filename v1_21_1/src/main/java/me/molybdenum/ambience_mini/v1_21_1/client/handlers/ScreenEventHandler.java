@@ -27,8 +27,7 @@ public class ScreenEventHandler
     @SubscribeEvent
     public static void onScreenChanged(final ScreenEvent.Opening event) {
         ScreenState state = screenState;
-        if (state == null)
-            return;   // client core not init, continue
+        if (state == null) return;   // client core not init, continue
 
         Screen screen = event.getNewScreen();
         state.handleScreenChanged(screen == null ? null : screen.getClass());
