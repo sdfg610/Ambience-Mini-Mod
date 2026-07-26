@@ -15,6 +15,7 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.GetFlagsMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.remote_music.*;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.GetStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkReferencesMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkStructuresMessage;
@@ -64,6 +65,13 @@ public class MessageRegistry {
         registerMessage(60, GetFlagsMessage::new, GetFlagsMessage.class); // 2.6.0
         registerMessage(61, PutFlagMessage::new, PutFlagMessage.class); // 2.6.0
         registerMessage(62, DeleteFlagMessage::new, DeleteFlagMessage.class); // 2.6.0
+
+        // Remote music
+        registerMessage(70, NotifyRemoteSizeMessage::new, NotifyRemoteSizeMessage.class); // 2.8.0
+        registerMessage(71, RequestRemoteMessage::new, RequestRemoteMessage.class); // 2.8.0
+        registerMessage(72, ProvideRemoteMessage::new, ProvideRemoteMessage.class); // 2.8.0
+        registerMessage(73, RequestMusicChunkMessage::new, RequestMusicChunkMessage.class); // 2.8.0
+        registerMessage(74, ProvideMusicChunkMessage::new, ProvideMusicChunkMessage.class); // 2.8.0
     }
 
     private static <T extends AmMessage> void registerMessage(int id, Function<AmReader, T> create, Class<T> clazz) {

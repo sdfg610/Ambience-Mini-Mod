@@ -15,7 +15,7 @@ import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 import net.minecraft.client.KeyMapping;

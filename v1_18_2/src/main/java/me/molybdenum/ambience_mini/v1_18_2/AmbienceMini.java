@@ -12,9 +12,9 @@ import me.molybdenum.ambience_mini.v1_18_2.client.core.util.Notification;
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
-import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
-import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
@@ -32,7 +32,6 @@ import me.molybdenum.ambience_mini.v1_18_2.server.core.command.CommandNodeFactor
 import me.molybdenum.ambience_mini.v1_18_2.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.networking.ServerNetworkManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
@@ -47,7 +46,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
 
 
@@ -120,7 +118,7 @@ public class AmbienceMini extends BaseAmbienceMini
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Common
+    // Client
     /// Called from a Mixin instead of through the event bus since a bug in MC 1.18.2 causes the "MinecraftForge.EVENT_BUS" to shut down somehow...
     public static void onSoundEngineLoaded() {
         if (clientCore != null)
@@ -148,12 +146,12 @@ public class AmbienceMini extends BaseAmbienceMini
                 new ServerNetworkManager()
         );
         serverCore.init();
-        serverCore.onStarted();
+        serverCore.onStarting();
     }
 
     private static void onServerStopping(final ServerStoppedEvent ignored) {
         if (serverCore != null) {
-            serverCore.onStopping();
+            serverCore.onStopped();
             serverCore = null;
         }
     }

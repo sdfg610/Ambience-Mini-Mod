@@ -3,7 +3,6 @@ package me.molybdenum.ambience_mini.engine.client.core.caves;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
-import me.molybdenum.ambience_mini.engine.client.core.state.BlockReading;
 
 import java.util.ArrayList;
 import java.util.HashMap;

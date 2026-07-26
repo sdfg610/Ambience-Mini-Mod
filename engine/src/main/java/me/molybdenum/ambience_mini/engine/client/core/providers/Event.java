@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.BoolVal;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.BoolVal;
 
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;

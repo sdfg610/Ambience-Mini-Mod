@@ -1,10 +1,9 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.CombatantVal;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.ListVal;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.CombatantVal;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.ListVal;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 
 import java.util.ArrayList;

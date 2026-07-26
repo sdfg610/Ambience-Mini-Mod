@@ -1,10 +1,10 @@
 package me.molybdenum.ambience_ide;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueList;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueMap;
-import me.molybdenum.ambience_mini.engine.client.configuration.pretty_printer.PrettyPrinter;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.helpers.ValueList;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.helpers.ValueMap;
+import me.molybdenum.ambience_mini.engine.shared.configuration.pretty_printer.PrettyPrinter;
 import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderTemplate;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;

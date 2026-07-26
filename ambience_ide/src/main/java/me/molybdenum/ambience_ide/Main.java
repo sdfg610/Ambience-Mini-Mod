@@ -1,16 +1,16 @@
 package me.molybdenum.ambience_ide;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.Loader;
-import me.molybdenum.ambience_mini.engine.client.configuration.Music;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.Selection;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.VanillaSelection;
-import me.molybdenum.ambience_mini.engine.client.configuration.messages.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.PlaylistSelection;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.BoolVal;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.Value;
-import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.FakeMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
+import me.molybdenum.ambience_mini.engine.shared.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.config.Config;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.selection.Selection;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.selection.VanillaSelection;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.*;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.MusicSelector;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.selection.PlaylistSelection;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.BoolVal;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.Value;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Event;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Property;
 import me.molybdenum.ambience_mini.engine.shared.BuildConfig;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 public class Main
 {
-    private static final GameStateProviderMock provider = new GameStateProviderMock();
+    private static final GameStateProviderMock gameStateProvider = new GameStateProviderMock();
 
 
     @JSExport
@@ -48,11 +48,11 @@ public class Main
         HTMLDocument doc = HTMLDocument.current();
 
         var elemEvents = doc.getElementById("events");
-        for (var ev : provider.getEvents())
+        for (var ev : gameStateProvider.getEvents())
             elemEvents.appendChild(createEventRow(doc, ev));
 
         var elemProperties = doc.getElementById("properties");
-        for (var pr : provider.getProperties())
+        for (var pr : gameStateProvider.getProperties())
             elemProperties.appendChild(createPropertyRow(doc, pr));
     }
 
@@ -118,16 +118,16 @@ public class Main
         HTMLDocument doc = HTMLDocument.current();
 
         if (((HTMLInputElement)doc.getElementById(eventId + "-true")).isChecked())
-            provider.setEventValue(eventId.substring(1), BoolVal.TRUE);
+            gameStateProvider.setEventValue(eventId.substring(1), BoolVal.TRUE);
         else if (((HTMLInputElement)doc.getElementById(eventId + "-false")).isChecked())
-            provider.setEventValue(eventId.substring(1), BoolVal.FALSE);
+            gameStateProvider.setEventValue(eventId.substring(1), BoolVal.FALSE);
         else if (((HTMLInputElement)doc.getElementById(eventId + "-undefined")).isChecked())
-            provider.setEventValue(eventId.substring(1), BoolVal.UNDEFINED);
+            gameStateProvider.setEventValue(eventId.substring(1), BoolVal.UNDEFINED);
     }
 
 
     private static HTMLElement makeStringColumn(HTMLDocument doc, String propertyId, boolean multiline) {
-        var value = provider.getPropertyValueString(propertyId.substring(1));
+        var value = gameStateProvider.getPropertyValueString(propertyId.substring(1));
         var textBox = doc.createElement(multiline ? "textarea" : "input");
         if (!multiline) {
             textBox.setAttribute("type", "text");
@@ -149,7 +149,7 @@ public class Main
 
     @JSExport
     public static void handleStringPropertyUpdate(String propertyId, String value) {
-        provider.setPropertyValueString(propertyId.substring(1), value);
+        gameStateProvider.setPropertyValueString(propertyId.substring(1), value);
     }
 
     public static int countLines(String str) {
@@ -171,7 +171,7 @@ public class Main
         output.setInnerHTML("");
 
         var parseErrors = new ArrayList<String>();
-        provider.prepare(parseErrors);
+        gameStateProvider.prepare(parseErrors);
         if (!parseErrors.isEmpty()) {
             String message = "Found invalid values for some properties! Treating as 'undefined'. The errors are:\n";
             message += parseErrors.stream().map(err -> "  - " + err).collect(Collectors.joining("\n"));
@@ -179,13 +179,13 @@ public class Main
         }
 
         InputStream stream = new ByteArrayInputStream(musicConfig.getBytes(StandardCharsets.UTF_8));
-        Loader.loadFrom(stream, new FakeMusicProvider(), provider).match(
+        Loader.loadFrom(stream, new FakeMusicProvider(), gameStateProvider).match(
                 Main::printResult,
                 Main::printErrors
         );
     }
 
-    private static void printResult(Interpreter interpreter, List<Message> warnings) {
+    private static void printResult(Config config, List<Message> warnings) {
         HTMLDocument doc = HTMLDocument.current();
         var output = doc.getElementById("output");
         output.appendChild(makeParagraph(doc, "Configuration is valid and ran to completion!"));
@@ -193,7 +193,7 @@ public class Main
         printMessages(warnings, output, doc);
 
         ArrayList<Pair<String, Value<?>>> trace = new ArrayList<>();
-        Selection choice = interpreter.selectPlaylist(trace);
+        Selection choice = new MusicSelector(config, gameStateProvider).selectPlaylist(trace);
         if (choice == null)
             output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music (if any) will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));
         else if (choice instanceof PlaylistSelection plSelection) {

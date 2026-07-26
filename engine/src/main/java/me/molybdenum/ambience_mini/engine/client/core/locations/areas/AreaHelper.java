@@ -4,7 +4,7 @@ import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Cube;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
+import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;

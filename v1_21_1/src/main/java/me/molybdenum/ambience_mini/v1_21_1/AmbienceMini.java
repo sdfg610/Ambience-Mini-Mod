@@ -4,11 +4,11 @@ import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
-import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
-import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.ClientCore;
@@ -177,12 +177,12 @@ public class AmbienceMini extends BaseAmbienceMini
                 new ServerNetworkManager()
         );
         serverCore.init();
-        serverCore.onStarted();
+        serverCore.onStarting();
     }
 
     private static void onServerStopping(final ServerStoppedEvent ignored) {
         if (serverCore != null) {
-            serverCore.onStopping();
+            serverCore.onStopped();
             serverCore = null;
         }
     }

@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface AmWriter {
     void writeBoolean(boolean value);
+    void writeByte(byte value);
     void writeInt(int value);
     void writeDouble(double value);
     void writeString(String value);
@@ -25,5 +26,11 @@ public interface AmWriter {
         writeInt(arr.length);
         for (var str : arr)
             writeString(str);
+    }
+
+    default void writeByteArray(byte[] arr) {
+        writeInt(arr.length);
+        for (var b : arr)
+            writeByte(b);
     }
 }

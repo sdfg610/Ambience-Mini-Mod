@@ -1,12 +1,11 @@
 package me.molybdenum.ambience_mini.engine;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.music.Monitor;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.Monitor;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 

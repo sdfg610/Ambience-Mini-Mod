@@ -15,6 +15,7 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.GetFlagsMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.GetNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.remote_music.NotifyRemoteSizeMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.GetStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
@@ -98,8 +99,13 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
 
     // Basic info
     private AmMessage handleModVersionMessage(ClientInfoMessage msg, TServerPlayer sender) {
-        setPlayerModVersion(sender, AmVersion.ofString(msg.modVersion));
+        var modVersion = AmVersion.ofString(msg.modVersion);
+        setPlayerModVersion(sender, modVersion);
         core.nameCache.putPlayerName(msg.playerUUID, msg.playerName);
+
+        if (modVersion.isGreaterThanOrEqual(AmVersion.V_2_8_0))
+            sendToPlayer(new NotifyRemoteSizeMessage(VALUE), sender);    // TODO: Get remote data byte size
+
         return msg.success();
     }
 
@@ -185,6 +191,13 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         for (var elem : core.flagManager.getFlags())
             sendToPlayer(new PutFlagMessage(elem.getKey(), elem.getValue().asString().orElse(null), false), sender);
         return msg.success();
+    }
+
+
+    // Remote music
+    private AmMessage handleRequestRemoteMessage() {
+
+
     }
 
 

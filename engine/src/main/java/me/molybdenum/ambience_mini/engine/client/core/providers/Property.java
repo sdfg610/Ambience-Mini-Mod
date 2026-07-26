@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.Type;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.Value;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.Type;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.Value;
 
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;

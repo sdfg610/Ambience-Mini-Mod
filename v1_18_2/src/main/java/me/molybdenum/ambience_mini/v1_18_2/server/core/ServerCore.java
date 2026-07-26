@@ -3,7 +3,7 @@ package me.molybdenum.ambience_mini.v1_18_2.server.core;
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
-import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.networking.ServerNetworkManager;
 import net.minecraft.server.MinecraftServer;

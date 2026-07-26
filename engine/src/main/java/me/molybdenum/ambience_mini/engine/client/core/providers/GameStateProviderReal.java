@@ -1,7 +1,8 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.caves.BlockReading;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.*;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;

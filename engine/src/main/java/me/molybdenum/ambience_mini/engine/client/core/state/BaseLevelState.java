@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
+import me.molybdenum.ambience_mini.engine.client.core.caves.BlockReading;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;

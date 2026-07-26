@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 public interface AmReader {
     boolean readBoolean();
+    byte readByte();
     int readInt();
     double readDouble();
     String readString();
@@ -32,6 +33,14 @@ public interface AmReader {
         String[] arr = new String[length];
         for (int i = 0; i < length; i++)
             arr[i] = readString();
+        return arr;
+    }
+
+    default byte[] readByteArray() {
+        int length = readInt();
+        byte[] arr = new byte[length];
+        for (int i = 0; i < length; i++)
+            arr[i] = readByte();
         return arr;
     }
 }

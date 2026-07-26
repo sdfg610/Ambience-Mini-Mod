@@ -19,9 +19,9 @@ import me.molybdenum.ambience_mini.v1_20_1.client.handlers.RenderHandler;
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
-import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
-import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.shared.Common;
@@ -76,7 +76,7 @@ public class AmbienceMini extends BaseAmbienceMini
 
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onRegisterServerCommands);
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStarting);
-        MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStopping);
+        MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStopped);
 
         IEventBus modBus = context.getModEventBus();
         modBus.addListener(AmbienceMini::loadComplete);
@@ -157,12 +157,12 @@ public class AmbienceMini extends BaseAmbienceMini
                 new ServerNetworkManager()
         );
         serverCore.init();
-        serverCore.onStarted();
+        serverCore.onStarting();
     }
 
-    private static void onServerStopping(final ServerStoppedEvent ignored) {
+    private static void onServerStopped(final ServerStoppedEvent ignored) {
         if (serverCore != null) {
-            serverCore.onStopping();
+            serverCore.onStopped();
             serverCore = null;
         }
     }

@@ -1,29 +1,31 @@
 package me.molybdenum.ambience_mini.engine.client.core;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.messages.*;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.MusicSelector;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.config.Config;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.*;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
-import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.BuildConfig;
 import me.molybdenum.ambience_mini.engine.shared.Common;
-import me.molybdenum.ambience_mini.engine.client.configuration.Loader;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
-import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.FileMusicProvider;
-import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.MusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
+import me.molybdenum.ambience_mini.engine.shared.configuration.music_provider.LocalMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.configuration.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderReal;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
-import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
+import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseCombatState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
-import me.molybdenum.ambience_mini.engine.client.music.Monitor;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.Monitor;
+import me.molybdenum.ambience_mini.engine.shared.configuration.music_provider.LocalRemoteMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaStorage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
@@ -46,10 +48,10 @@ public abstract class BaseClientCore<
         TScreenState extends BaseScreenState,
         TCombatState extends BaseCombatState<TEntity, TVec3>
 > {
-    public static boolean hasPrintedControls = false;
+    private static boolean hasPrintedControls = false;
 
-    public static final Path musicDirPath = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_DIRECTORY);
-    private static final MusicProvider musicProvider = new FileMusicProvider(musicDirPath.toString());
+    private static final Path musicDirPath = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_DIRECTORY);
+    private static final LocalRemoteMusicProvider musicProvider = new LocalRemoteMusicProvider(musicDirPath.toString());
 
     // Utils
     public final McVersion mcVersion;
@@ -188,10 +190,12 @@ public abstract class BaseClientCore<
         }
     }
 
-    private void initMusicThread(Interpreter interpreter, List<Message> warnings) {
-        monitor = new Monitor(this, interpreter, musicProvider, logger);
-
+    private void initMusicThread(Config config, List<Message> warnings) {
         printMessages(warnings);
+
+        monitor = new Monitor(this, new MusicSelector(config, gameStateProvider), musicProvider, logger);
+
+        // TODO: FireOnMonitorLoaded
 
         if (clientConfig.verboseMode.get())
             logger.info("Successfully loaded Ambience Mini with configuration:\n{}", clientConfig.getConfigsString());

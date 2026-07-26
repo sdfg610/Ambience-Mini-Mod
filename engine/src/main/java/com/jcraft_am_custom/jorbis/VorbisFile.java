@@ -31,7 +31,7 @@ import com.jcraft_am_custom.jogg.Packet;
 import com.jcraft_am_custom.jogg.Page;
 import com.jcraft_am_custom.jogg.StreamState;
 import com.jcraft_am_custom.jogg.SyncState;
-import me.molybdenum.ambience_mini.engine.client.music.streams.FullyBufferedInputStream;
+import me.molybdenum.ambience_mini.engine.shared.music.streams.FullyBufferedInputStream;
 
 import java.io.InputStream;
 import java.io.IOException;

@@ -29,4 +29,7 @@ public class Common
 
     // Networking
     public static final String PROTOCOL_VERSION = "1"; // Should never actually change to preserve backwards compatibility
+
+    // Remote Music
+    public static final int MUSIC_CHUNK_BYTE_SIZE = 1024*3; // 3 KiB
 }

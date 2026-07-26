@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.engine.server.core.flags;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.StringVal;
+import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.StringVal;
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.Common;
@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class FlagManager {
+    private final Object lock = new Object();
+
     private final ArrayList<Consumer<FlagOperation>> updateListeners = new ArrayList<>();
 
     private final ConcurrentHashMap<String, StringVal> idToValue = new ConcurrentHashMap<>();
@@ -37,6 +39,11 @@ public class FlagManager {
     public List<Map.Entry<String, StringVal>> getFlags() {
         return new ArrayList<>(idToValue.entrySet());
     }
+
+    public StringVal getFlag(String id) {
+        return idToValue.get(id);
+    }
+
 
     public Text createFlag(String id, String value) {
         if (idToValue.containsKey(id))
@@ -71,21 +78,21 @@ public class FlagManager {
         return error;
     }
 
-    public StringVal getFlag(String id) {
-        return idToValue.get(id);
-    }
-
 
     public void loadFlags() {
-        idToValue.clear();
-        flagStorage.loadFlagsInto(idToValue);
-        isDirty = false;
+        synchronized (lock) {
+            idToValue.clear();
+            flagStorage.loadFlagsInto(idToValue);
+            isDirty = false;
+        }
     }
 
     public void saveFlags() {
-        if (isDirty) {
-            flagStorage.saveFlagsFrom(idToValue);
-            isDirty = false;
+        synchronized (lock) {
+            if (isDirty) {
+                flagStorage.saveFlagsFrom(idToValue);
+                isDirty = false;
+            }
         }
     }
 
@@ -103,6 +110,7 @@ public class FlagManager {
     }
 
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean validateId(String id) {
         return id != null && !id.isEmpty() && id.chars().noneMatch(Character::isWhitespace) && id.length() <= Common.MAX_FLAG_ID_LENGTH;
     }

@@ -4,7 +4,7 @@ import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.BaseStructureReader;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.networking.BaseServerNetworkManager;
-import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.shared.Common;
 import org.slf4j.Logger;
 
@@ -37,7 +37,7 @@ public abstract class BaseServerCore<
     public final TNetworkManager networkManager;
 
 
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> saveAreasFuture;
 
 
@@ -58,6 +58,8 @@ public abstract class BaseServerCore<
         this.networkManager = networkManager;
     }
 
+    // NOTE: Init must be separate from initializer since extenders of ServerCore have additional initialization logic
+    // in their own constructors.
     public void init() {
         this.nameCache.init(this);
         this.areaManager.init(this);
@@ -81,7 +83,7 @@ public abstract class BaseServerCore<
     }
 
 
-    public void onStarted() {
+    public void onStarting() {
         this.nameCache.loadCache();
         this.areaManager.loadAllAreas();
         this.flagManager.loadFlags();
@@ -94,9 +96,12 @@ public abstract class BaseServerCore<
         );
     }
 
-    public void onStopping() {
+    public void onStopped() {
         saveAreasFuture.cancel(false);
         executor.shutdown();
+        try {
+            var ignored = executor.awaitTermination(5000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ignored) { }
 
         this.nameCache.saveCache();
         this.areaManager.saveAllAreas();

@@ -6,11 +6,12 @@ import java.util.Optional;
 
 public record AmVersion(int major, int minor, int patch, int hotfix)
 {
-    public static AmVersion ZERO = new AmVersion(0,0,0);
-    public static AmVersion V_2_5_0 = new AmVersion(2,5,0);
-    public static AmVersion V_2_6_0 = new AmVersion(2,6,0);
-    public static AmVersion V_2_7_1 = new AmVersion(2,7,1);
-    public static AmVersion V_2_7_5 = new AmVersion(2,7,5);
+    public static final AmVersion ZERO = new AmVersion(0,0,0);
+    public static final AmVersion V_2_5_0 = new AmVersion(2,5,0);
+    public static final AmVersion V_2_6_0 = new AmVersion(2,6,0);
+    public static final AmVersion V_2_7_1 = new AmVersion(2,7,1);
+    public static final AmVersion V_2_7_5 = new AmVersion(2,7,5);
+    public static final AmVersion V_2_8_0 = new AmVersion(2,8,0);
 
 
     public AmVersion(int major, int minor, int patch) {
