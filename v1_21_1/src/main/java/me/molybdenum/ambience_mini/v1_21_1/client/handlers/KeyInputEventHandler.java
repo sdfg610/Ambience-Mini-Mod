@@ -13,7 +13,7 @@ import net.neoforged.neoforge.client.event.InputEvent;
 @EventBusSubscriber(modid = Common.MOD_ID, value={Dist.CLIENT})
 public class KeyInputEventHandler
 {
-    private static BaseKeyBindings<?> keyBindings;
+    private static volatile BaseKeyBindings<?> keyBindings;
 
 
     static {
@@ -25,7 +25,10 @@ public class KeyInputEventHandler
 
     @SubscribeEvent
     public static void keyEvent(final InputEvent.Key event) {
+        BaseKeyBindings<?> kb = keyBindings;
+        if (kb == null) return;   // client core not init, continue
+
         if (Minecraft.getInstance().isWindowActive())
-            keyBindings.handleKeyInput();
+            kb.handleKeyInput();
     }
 }

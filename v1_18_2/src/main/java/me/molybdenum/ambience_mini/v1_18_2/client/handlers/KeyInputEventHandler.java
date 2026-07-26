@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = Common.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value={Dist.CLIENT})
 public class KeyInputEventHandler
 {
-    private static BaseKeyBindings<?> keyBindings;
+    private static volatile BaseKeyBindings<?> keyBindings;
 
 
     static {
@@ -25,7 +25,10 @@ public class KeyInputEventHandler
 
     @SubscribeEvent
     public static void keyEvent(final InputEvent.KeyInputEvent event) {
+        BaseKeyBindings<?> kb = keyBindings;
+        if (kb == null) return;   // client core not init, continue
+
         if (Minecraft.getInstance().isWindowActive())
-            keyBindings.handleKeyInput();
+            kb.handleKeyInput();
     }
 }
