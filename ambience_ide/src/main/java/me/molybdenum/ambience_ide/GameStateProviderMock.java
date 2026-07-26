@@ -19,6 +19,9 @@ public class GameStateProviderMock extends GameStateProviderTemplate
 {
     public HashMap<String, BoolVal> eventValues = new HashMap<>();
     public HashMap<String, String> propertyValues = new HashMap<>() {{
+        put(P_SCREEN_ID.name(), "undefined");
+        put(P_MENU.name(), "undefined");
+
         put(P_DIFFICULTY.name(), "peaceful");
         put(P_DIMENSION.name(), "minecraft:overworld");
         put(P_BIOME.name(), "minecraft:forest");
@@ -102,7 +105,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         throw new RuntimeException("Unhandled type in check for valid values! Type: '" + PrettyPrinter.getTypeString(property.type()) + "'");
     }
 
-    
+
     // Int
     private boolean isValidIntVal(String value) {
         var trim = value.trim();
@@ -497,6 +500,15 @@ public class GameStateProviderMock extends GameStateProviderTemplate
 
     // ------------------------------------------------------------------------------------------------
     // World properties
+    public StringVal getMenuID() {
+        return getAsStringVal(P_SCREEN_ID);
+    }
+
+    @Override
+    public StringVal getMenuType() {
+        return getAsStringVal(P_MENU);
+    }
+
     @Override
     public StringVal getDifficulty() {
         return getAsStringVal(P_DIFFICULTY);
