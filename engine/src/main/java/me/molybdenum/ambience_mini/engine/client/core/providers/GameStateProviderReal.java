@@ -224,12 +224,22 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
             return BoolVal.UNDEFINED;
 
         if (now - latestVillageTime > 1000) {
-            latestVillageValue = _level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold;
+            Integer villagers = _level.countNearbyVillagers(
+                    _player.blockPos(),
+                    _villageScanHorizontalRadius,
+                    _villageScanVerticalRadius
+            );
+
+            // Data temporarily unavailable (world/chunk not ready): do not update cache time, retry next cycle.
+            if (villagers == null) return new BoolVal(latestVillageValue);
+
+            latestVillageValue = villagers >= _villagerCountThreshold;
             latestVillageTime = now;
         }
 
         return new BoolVal(latestVillageValue);
     }
+
 
     @Override
     public BoolVal inRanch() {
@@ -237,12 +247,21 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
             return BoolVal.UNDEFINED;
 
         if (now - latestRanchTime > 1000) {
-            latestRanchValue = _level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold;
+            Integer animals = _level.countNearbyAnimals(
+                    _player.blockPos(),
+                    _ranchScanHorizontalRadius,
+                    _ranchScanVerticalRadius
+            );
+
+            if (animals == null) return new BoolVal(latestRanchValue);
+
+            latestRanchValue = animals >= _animalCountThreshold;
             latestRanchTime = now;
         }
 
         return new BoolVal(latestRanchValue);
     }
+
 
 
     // ------------------------------------------------------------------------------------------------
