@@ -12,7 +12,7 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 @EventBusSubscriber(modid = Common.MOD_ID, value = Dist.CLIENT)
 public class ScreenEventHandler
 {
-    public static ScreenState screenState;
+    public static volatile ScreenState screenState;
 
 
     static {
@@ -26,7 +26,11 @@ public class ScreenEventHandler
     // Client events
     @SubscribeEvent
     public static void onScreenChanged(final ScreenEvent.Opening event) {
+        ScreenState state = screenState;
+        if (state == null)
+            return;   // client core not init, continue
+
         Screen screen = event.getNewScreen();
-        screenState.handleScreenChanged(screen == null ? null : screen.getClass());
+        state.handleScreenChanged(screen == null ? null : screen.getClass());
     }
 }
