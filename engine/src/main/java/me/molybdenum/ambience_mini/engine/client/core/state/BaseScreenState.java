@@ -65,8 +65,8 @@ public abstract class BaseScreenState
             currentScreenID = screenClass.getCanonicalName();
         }
 
-        if (loaded && clientConfig.printScreenOnChange.get())
-            logger.info("Changed to menu with ID '{}' and type '{}'", currentScreenID, memorizedScreenType.name);
+        //if (loaded && clientConfig.printScreenOnChange.get())
+        //    logger.info("Changed to menu with ID '{}' and type '{}'", currentScreenID, memorizedScreenType.name);
     }
 
     private ScreenType getScreenTypeOfClass(Class<?> screenClass) {

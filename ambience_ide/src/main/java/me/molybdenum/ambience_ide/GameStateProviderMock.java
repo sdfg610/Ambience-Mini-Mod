@@ -19,8 +19,8 @@ public class GameStateProviderMock extends GameStateProviderTemplate
 {
     public HashMap<String, BoolVal> eventValues = new HashMap<>();
     public HashMap<String, String> propertyValues = new HashMap<>() {{
-        put(P_SCREEN_ID.name(), "undefined");
-        put(P_MENU.name(), "undefined");
+        //put(P_SCREEN_ID.name(), "undefined");
+        //put(P_MENU.name(), "undefined");
 
         put(P_DIFFICULTY.name(), "peaceful");
         put(P_DIMENSION.name(), "minecraft:overworld");
@@ -501,12 +501,12 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     // ------------------------------------------------------------------------------------------------
     // World properties
     public StringVal getMenuID() {
-        return getAsStringVal(P_SCREEN_ID);
+        return null; // return getAsStringVal(P_SCREEN_ID);
     }
 
     @Override
     public StringVal getMenuType() {
-        return getAsStringVal(P_MENU);
+        return null; // return getAsStringVal(P_MENU);
     }
 
     @Override

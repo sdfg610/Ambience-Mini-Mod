@@ -15,7 +15,7 @@ public abstract class BaseClientConfig {
     public final Supplier<Boolean> verboseMode;
     public final Supplier<Boolean> printBasicControls;
     public final Supplier<Boolean> printNowPlaying;
-    public final Supplier<Boolean> printScreenOnChange;
+    //public final Supplier<Boolean> printScreenOnChange;
 
     // Timing
     public final Supplier<Integer> updateInterval;
@@ -79,11 +79,13 @@ public abstract class BaseClientConfig {
                 false
         );
 
+        /*
         printScreenOnChange = registerBoolOption(
                 "If enabled, the mod will print, to the Minecraft logs, the current screen (and its type if any) when Minecraft's built-in \"screen changed\" event fires. [Default: false]",
                 "Print_Screen_On_Change",
                 false
         );
+        */
 
         // Timing
         updateInterval = registerIntOption(

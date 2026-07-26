@@ -7,9 +7,16 @@
   * This is similar to the events `@main_menu`, `@joining`, and so on, but easier to extend with new menu types without adding new events.
 - Added `Print_Screen_On_Change` mod-config option. When enabled, the mod prints out the screen ID (and menu type if any) whenever the menu changes. Use for music pack creation and debugging.
 - Improved startup and auto-reload stability.
-- Fixed `@warden_nearby` causing music player crash if game thread hangs for a while.
 
 ****
+
+
+### Version 2.7.10:
+
+- Improved stability of music player during Minecraft startup as well as auto-reload on music player crash.
+- Fixed `@warden_nearby` causing music player crash if game thread hangs for a while.
+- Fixed music player caches when entity lookup fails. (thank you create_xiaoyu)
+- Fixed null-pointer crashes in various event handlers. (thank you create_xiaoyu)
 
 
 ### Version 2.7.9:
