@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.v1_21_1.network;
 
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.v1_21_1.network.configuration.ServerAmVersionPacket;
 import me.molybdenum.ambience_mini.v1_21_1.network.configuration.ServerSupportConfigurationTask;
@@ -18,7 +18,7 @@ public class Networking
     }
 
     public static void registerPayloads(final RegisterPayloadHandlersEvent event) {
-        event.registrar(Common.PROTOCOL_VERSION).optional()
+        event.registrar(Constants.PROTOCOL_VERSION).optional()
                 .configurationToClient(ServerAmVersionPacket.TYPE, ServerAmVersionPacket.STREAM_CODEC, ServerAmVersionPacket::handle)
                 .configurationToServer(VersionAckPacket.TYPE, VersionAckPacket.STREAM_CODEC, VersionAckPacket::handle)
                 .playToClient(ToClientMessage.TYPE, ToClientMessage.STREAM_CODEC, ToClientMessage::handle)

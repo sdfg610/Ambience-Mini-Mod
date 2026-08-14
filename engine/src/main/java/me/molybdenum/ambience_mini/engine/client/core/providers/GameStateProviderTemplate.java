@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 
 import java.util.function.Function;
@@ -104,13 +104,17 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     // Flag properties
     public static final PropertyTemplateV1 P_FLAGS = new PropertyTemplateV1("flags", new MapT(new StringT(), new StringT()), instance -> instance::getFlags);
 
+    // Server playlists properties
+    public static final PropertyTemplateV1 P_SERVER_PLAYLISTS = new PropertyTemplateV1("server_playlists", new MapT(new StringT(), new PlaylistT()), instance -> instance::getServerPlaylists);
+
     public static final PropertyTemplateV1[] PROPERTIES = new PropertyTemplateV1[] {
             P_SCREEN_ID, P_MENU,
             P_DIFFICULTY, P_DIMENSION, P_BIOME, P_BIOME_TAGS, P_TIME, P_CAVE_SCORE, P_SKYLIGHT_SCORE,
             P_AREAS, P_STRUCTURES,
             P_UUID, P_GAME_MODE, P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
             P_COMBATANT_COUNT, P_COMBATANTS, P_BOSS, P_BOSSES,
-            P_FLAGS
+            P_FLAGS,
+            P_SERVER_PLAYLISTS
     };
 
 
@@ -235,6 +239,12 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     // ------------------------------------------------------------------------------------------------
     // Flag properties
     public abstract MapVal getFlags();
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Server playlists properties
+    public abstract Value<?> getServerPlaylists();
+
 
 
     public record EventTemplateV1(

@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_19_2.client.handlers;
 
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseKeyBindings;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.v1_19_2.AmbienceMini;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -10,7 +10,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 
-@Mod.EventBusSubscriber(modid = Common.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value={Dist.CLIENT})
+@Mod.EventBusSubscriber(modid = Constants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value={Dist.CLIENT})
 public class KeyInputEventHandler
 {
     private static BaseKeyBindings<?> keyBindings;

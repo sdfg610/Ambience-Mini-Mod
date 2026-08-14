@@ -47,7 +47,7 @@ public abstract class LazyPreAllocBuffer
 
     public int read(int sourcePosition, byte @NotNull [] target, int targetPosition, int length) throws IOException {
         if (length <= 0)
-            return 0;
+            return sourcePosition >= bufferSize ? -1 : 0;
         if (!ensureLoaded(sourcePosition + length - 1))
             return -1;
 
@@ -58,6 +58,22 @@ public abstract class LazyPreAllocBuffer
         );
 
         return length;
+    }
+
+    public byte[] read(int sourcePosition, int length) throws IOException {
+        if (length <= 0)
+            return sourcePosition >= bufferSize ? null : new byte[0];
+        if (!ensureLoaded(sourcePosition + length - 1))
+            return null;
+
+        byte[] data = new byte[length];
+        System.arraycopy(
+                buffer, sourcePosition,
+                data, 0,
+                length
+        );
+
+        return data;
     }
 
     protected boolean ensureLoaded(int targetPosition) throws IOException {

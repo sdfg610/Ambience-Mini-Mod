@@ -2,24 +2,34 @@ package me.molybdenum.ambience_mini.engine.client.core.networking;
 
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.networking.handlers.AsyncHandler;
+import me.molybdenum.ambience_mini.engine.client.core.networking.handlers.Handler;
+import me.molybdenum.ambience_mini.engine.client.core.networking.handlers.SyncHandler;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.Response;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ResponseMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobCombatInteractionMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.FailureMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.SuccessMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.NotifyServerPlaylistCountMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkReferencesMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
+import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
+import me.molybdenum.ambience_mini.engine.shared.utils.Text;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public abstract class BaseClientNetworkManager
 {
@@ -27,7 +37,9 @@ public abstract class BaseClientNetworkManager
     private BaseClientCore core = null;
 
     private static final AtomicInteger UNIQUE_ID_GEN = new AtomicInteger();
-    private final ConcurrentHashMap<Integer, Pair<Runnable, Runnable>> handlers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Pair<Handler, TimeoutJob>> handlers = new ConcurrentHashMap<>();
+
+    private final JobCenter jobCenter = JobCenter.singleThreaded();
 
 
     @SuppressWarnings("rawtypes")
@@ -38,16 +50,23 @@ public abstract class BaseClientNetworkManager
     }
 
 
-    public void sendToServer(AmMessage message) {
-        message.handlerID = Integer.MIN_VALUE;
-        sendToServerInternal(message);
+    public AsyncBuilder configureAsync() {
+        return new AsyncBuilder();
     }
 
-    public void sendToServer(AmMessage message, Runnable onSuccess, Runnable onFailure) {
-        // TODO: Remove old, unused handlers?
-        message.handlerID = UNIQUE_ID_GEN.getAndIncrement();
-        handlers.put(message.handlerID, new Pair<>(onSuccess, onFailure));
+    public void sendAsync(AmMessage message) {
+        new AsyncBuilder().send(message);
+    }
+
+    public Response sendSync(AmMessage message, long timeoutMillis) {
+        int id = UNIQUE_ID_GEN.getAndIncrement();
+        var handler = new SyncHandler();
+
+        handlers.put(id, new Pair<>(handler, null));
+        message.handlerID = id;
         sendToServerInternal(message);
+
+        return handler.await(timeoutMillis);
     }
 
     protected abstract void sendToServerInternal(AmMessage message);
@@ -63,8 +82,10 @@ public abstract class BaseClientNetworkManager
         AmMessage message = msgRes.value;
         if (message instanceof FailureMessage msg)
             handleFailureMessage(msg);
-        if (message instanceof SuccessMessage msg)
+        else if (message instanceof SuccessMessage msg)
             handleSuccessMessage(msg);
+        else if (message instanceof ResponseMessage msg)
+            handleResponseMessage(msg);
 
         else if (message instanceof MobTargetMessage msg)
             handleMobTargetMessage(msg);
@@ -89,6 +110,9 @@ public abstract class BaseClientNetworkManager
         else if (message instanceof DeleteFlagMessage msg)
             handleDeleteFlagMessage(msg);
 
+        else if (message instanceof NotifyServerPlaylistCountMessage msg)
+            handleNotifyServerPlaylistCountMessage(msg);
+
         else {
             core.notification.printTranslatableToChat(AmLang.MSG_UNHANDLED_MESSAGE);
             core.logger.error("Client network handler could not handle message of type: {}", message.getClass().getName());
@@ -98,16 +122,24 @@ public abstract class BaseClientNetworkManager
 
     // Success and failure responses
     private void handleFailureMessage(FailureMessage msg) {
-        core.notification.printToChat(msg.message);
-        var handler = handlers.remove(msg.handlerID);
-        if (handler != null)
-            handler.right().run();
+        handle(msg.handlerID, new Response(msg.message));
     }
 
     private void handleSuccessMessage(SuccessMessage msg) {
-        var handler = handlers.remove(msg.handlerID);
-        if (handler != null)
-            handler.left().run();
+        handle(msg.handlerID, new Response((byte[])null));
+    }
+
+    private void handleResponseMessage(ResponseMessage msg) {
+        handle(msg.handlerID, msg.response);
+    }
+
+    private void handle(int handlerID, Response response) {
+        var handler = handlers.remove(handlerID);
+        if (handler != null) {
+            if (handler.right() != null)
+                handler.right().cancel(true);
+            handler.left().handle(response);
+        }
     }
 
 
@@ -167,5 +199,81 @@ public abstract class BaseClientNetworkManager
 
     private void handleDeleteFlagMessage(DeleteFlagMessage msg) {
         core.flagCache.deleteFlag(msg.id);
+    }
+
+
+    // Server Music
+    private void handleNotifyServerPlaylistCountMessage(NotifyServerPlaylistCountMessage msg) {
+        core.musicCache.handlePlaylistsNotification(msg.byteSize, msg.playlistCount);
+    }
+
+
+
+    public class AsyncBuilder {
+        @Nullable
+        private Consumer<byte[]> onSuccess;
+        @Nullable
+        private Consumer<Text> onFailure;
+        @Nullable
+        private Runnable onTimeout;
+
+        private long timeoutMillis = 1000;
+
+        private boolean hasHandlers = false;
+
+
+        public AsyncBuilder onSuccess(Consumer<byte[]> onSuccess) {
+            this.onSuccess = onSuccess;
+            hasHandlers = true;
+            return this;
+        }
+
+        public AsyncBuilder onFailure(Consumer<Text> onFailure) {
+            this.onFailure = onFailure;
+            hasHandlers = true;
+            return this;
+        }
+
+        public AsyncBuilder onTimeout(Runnable onTimeout) {
+            this.onTimeout = onTimeout;
+            hasHandlers = true;
+            return this;
+        }
+
+        public AsyncBuilder setTimeout(long timeoutMillis) {
+            if (timeoutMillis <= 0)
+                throw new RuntimeException("Cannot have negative timeout. Got '" + timeoutMillis + "'");
+            this.timeoutMillis = timeoutMillis;
+            return this;
+        }
+
+        public void send(AmMessage message) {
+            if (hasHandlers) {
+                int id = UNIQUE_ID_GEN.getAndIncrement();
+                message.handlerID = id;
+
+                handlers.put(id, new Pair<>(
+                        new AsyncHandler(onSuccess, onFailure, onTimeout),
+                        jobCenter.post(new TimeoutJob(id), timeoutMillis)
+                ));
+            }
+
+            sendToServerInternal(message);
+        }
+    }
+
+    private class TimeoutJob extends JobCenter.Job {
+        private final int handlerId;
+
+
+        public TimeoutJob(int handlerId) {
+            this.handlerId = handlerId;
+        }
+
+
+        @Override
+        protected void body() {
+            handle(handlerId, null);
+        }
     }
 }

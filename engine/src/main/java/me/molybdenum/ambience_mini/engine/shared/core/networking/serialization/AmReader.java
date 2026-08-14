@@ -1,24 +1,22 @@
 package me.molybdenum.ambience_mini.engine.shared.core.networking.serialization;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.function.Function;
 
 
 public interface AmReader {
     boolean readBoolean();
-    byte readByte();
     int readInt();
     double readDouble();
     String readString();
+    byte[] readByteArray();
 
 
-    default <T extends AmSerializable> ArrayList<T> readList(Function<AmReader, T> newT) {
-        int length = readInt();
-        ArrayList<T> lst = new ArrayList<>(length);
-        for (int i = 0; i < length; i++)
-            lst.add(newT.apply(this));
-        return lst;
+    default float readFloat() {
+        return Float.intBitsToFloat(readInt());
     }
+
 
     default ArrayList<String> readStringList() {
         int length = readInt();
@@ -36,11 +34,24 @@ public interface AmReader {
         return arr;
     }
 
-    default byte[] readByteArray() {
+
+    default <T extends AmSerializable> ArrayList<T> readList(Function<AmReader, T> newT) {
         int length = readInt();
-        byte[] arr = new byte[length];
+        ArrayList<T> lst = new ArrayList<>(length);
         for (int i = 0; i < length; i++)
-            arr[i] = readByte();
-        return arr;
+            lst.add(newT.apply(this));
+        return lst;
+    }
+
+    default <T> HashMap<String, T> readStringKeyedMap(Function<AmReader, T> ctor) {
+        int length = readInt();
+        HashMap<String, T> map = new HashMap<>();
+        for (int i = 0; i < length; i++) {
+            var key = readString();
+            var val = ctor.apply(this);
+            if (val != null)
+                map.put(key, val);
+        }
+        return map;
     }
 }

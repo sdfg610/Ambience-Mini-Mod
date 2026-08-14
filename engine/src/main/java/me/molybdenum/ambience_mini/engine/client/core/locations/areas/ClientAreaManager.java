@@ -96,7 +96,7 @@ public class ClientAreaManager
     public void loadAreas(AreaStorage areaStorage) {
         areas.clear();
         if (serverSetup.serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
-            networkManager.sendToServer(new GetAreasMessage());
+            networkManager.sendAsync(new GetAreasMessage());
 
         this.areaStorage = areaStorage;
         loadLocalAreas();

@@ -4,5 +4,7 @@ public enum BinaryOperators {
     EQ, APP_EQ, MATCH,
     AND, OR, LT, LE,
     INDEXER,
-    ADD, SUB, MUL, DIV
+    ADD, SUB, MUL, DIV,
+    APPEND,
+    NULL_CHECK
 }

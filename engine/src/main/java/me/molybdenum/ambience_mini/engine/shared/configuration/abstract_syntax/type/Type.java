@@ -14,6 +14,7 @@ public sealed abstract class Type permits AnyT, AreaT, BoolT, CombatantT, FloatT
     protected abstract boolean equalToInternal(@NotNull Type other);
 
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isBool() {
         return this instanceof BoolT || this instanceof AnyT;
     }

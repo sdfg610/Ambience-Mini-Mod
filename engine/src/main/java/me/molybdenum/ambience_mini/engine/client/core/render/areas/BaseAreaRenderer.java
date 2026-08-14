@@ -15,7 +15,7 @@ import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.Triple;
 import org.jetbrains.annotations.Nullable;
@@ -167,8 +167,8 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
             return;
 
         Vector3d camPos = level.toAmVector3d(cameraPos);
-        Vector3d camDir = Vector3d.ofRotationAndDistance(cameraRotX, cameraRotY, Common.AREA_SELECTION_RANGE);
-        Supplier<Vector3i> lookPos = () -> level.toAmVector3i(getAirJustBeforeLookedAtBlockIfInRange(cameraPos, level.offsetVectorByAngle(cameraPos, cameraRotX, cameraRotY, Common.AREA_SELECTION_RANGE)));
+        Vector3d camDir = Vector3d.ofRotationAndDistance(cameraRotX, cameraRotY, Constants.AREA_SELECTION_RANGE);
+        Supplier<Vector3i> lookPos = () -> level.toAmVector3i(getAirJustBeforeLookedAtBlockIfInRange(cameraPos, level.offsetVectorByAngle(cameraPos, cameraRotX, cameraRotY, Constants.AREA_SELECTION_RANGE)));
 
         tickAndRenderNonSelectedAreas(camPos, camDir);
         if (selectedArea != null)
@@ -199,7 +199,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
                 Area area = areaAndCube.left();
                 Cube cube = areaAndCube.right();
                 var hit = cube.getLookingAt(camPos, camDir);
-                if (hit != null && hit.distance <= Common.AREA_SELECTION_RANGE)
+                if (hit != null && hit.distance <= Constants.AREA_SELECTION_RANGE)
                     highlightCandidates.add(new Triple<>(area, cube, hit.distance));
                 else
                     renderCubeSimple(cube, getAreaColor(area), ALPHA_MOD_NON_SELECTED); // Not a highlight-candidate. Render immediately

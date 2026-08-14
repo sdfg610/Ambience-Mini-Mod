@@ -29,6 +29,20 @@ public class MessageSerializer extends AmSerializer
 
 
     @Override
+    public byte[] readByteArray() {
+        byte[] arr = new byte[buffer.readInt()];
+        buffer.readBytes(arr);
+        return arr;
+    }
+
+    @Override
+    public void writeByteArray(byte[] value) {
+        buffer.writeInt(value.length);
+        buffer.writeBytes(value);
+    }
+
+
+    @Override
     public int readInt() {
         return buffer.readInt();
     }

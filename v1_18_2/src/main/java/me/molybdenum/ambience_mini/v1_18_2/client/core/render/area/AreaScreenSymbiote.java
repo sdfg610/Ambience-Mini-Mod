@@ -6,7 +6,7 @@ import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaScreenSymbiote;
 import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import net.minecraft.client.Minecraft;
@@ -41,7 +41,7 @@ public class AreaScreenSymbiote extends BaseAreaScreenSymbiote<EditBox, Checkbox
     @Override
     protected EditBox makeTextBox(Vector2i size, String content) {
         EditBox editBox = new EditBox(mc.font, 0, 0, size.x(), size.y(), TextComponent.EMPTY);
-        editBox.setMaxLength(Common.MAX_AREA_NAME_LENGTH);
+        editBox.setMaxLength(Constants.MAX_AREA_NAME_LENGTH);
         editBox.setValue(content);
         return editBox;
     }

@@ -51,11 +51,14 @@ public class ManualPreAllocBuffer extends LazyPreAllocBuffer
                     break;
             }
         }
-        catch (InterruptedException ignored) { }
+        catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         finally {
             lock.unlock();
         }
     }
+
 
     @Override
     public void close() { }

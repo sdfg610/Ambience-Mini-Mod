@@ -1,7 +1,9 @@
 package me.molybdenum.ambience_mini.engine.client.core;
 
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.MusicSelector;
-import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.config.Config;
+import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.MusicSelector;
+import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStateProvider;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
+import me.molybdenum.ambience_mini.engine.shared.configuration.LoadResult;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.*;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
@@ -11,10 +13,8 @@ import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRende
 import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.BuildConfig;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
-import me.molybdenum.ambience_mini.engine.shared.configuration.music_provider.LocalMusicProvider;
-import me.molybdenum.ambience_mini.engine.shared.configuration.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderReal;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseKeyBindings;
@@ -24,10 +24,13 @@ import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseCombatState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.Monitor;
-import me.molybdenum.ambience_mini.engine.shared.configuration.music_provider.LocalRemoteMusicProvider;
+import me.molybdenum.ambience_mini.engine.client.core.music.Monitor;
+import me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysis.Setup;
+import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.music.music_provider.RealMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaStorage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 import org.slf4j.Logger;
@@ -50,9 +53,6 @@ public abstract class BaseClientCore<
 > {
     private static boolean hasPrintedControls = false;
 
-    private static final Path musicDirPath = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_DIRECTORY);
-    private static final LocalRemoteMusicProvider musicProvider = new LocalRemoteMusicProvider(musicDirPath.toString());
-
     // Utils
     public final McVersion mcVersion;
     public final Logger logger;
@@ -70,6 +70,9 @@ public abstract class BaseClientCore<
     // Flags
     public final FlagCache flagCache;
 
+    // Server music
+    public final ServerMusicCache musicCache;
+
     // Setup
     public final ServerSetup serverSetup;
     public final TClientConfig clientConfig;
@@ -84,6 +87,8 @@ public abstract class BaseClientCore<
     private GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> gameStateProvider;
 
     // Music
+    private final RealMusicProvider musicProvider;
+
     private final Object monitorLock = new Object();
     private Monitor monitor;
 
@@ -98,6 +103,7 @@ public abstract class BaseClientCore<
             ClientAreaManager areaManager,
             TAreaRenderer areaRenderer,
             FlagCache flagCache,
+            ServerMusicCache musicCache,
             ServerSetup serverSetup,
             TClientConfig clientConfig,
             TKeyBindings keyBindings,
@@ -116,6 +122,7 @@ public abstract class BaseClientCore<
         this.areaManager = areaManager;
         this.areaRenderer = areaRenderer;
         this.flagCache = flagCache;
+        this.musicCache = musicCache;
         this.serverSetup = serverSetup;
         this.clientConfig = clientConfig;
         this.keyBindings = keyBindings;
@@ -130,9 +137,12 @@ public abstract class BaseClientCore<
         this.areaManager.init(this);
         this.areaRenderer.init(this, levelState);
         this.flagCache.init(this);
+        this.musicCache.init(this);
         this.keyBindings.init(this);
         this.screenState.init(this);
         this.combatState.init(this, playerState, levelState);
+
+        this.musicProvider = new RealMusicProvider(Constants.musicDirPath.toString(), musicCache);
     }
 
 
@@ -164,7 +174,7 @@ public abstract class BaseClientCore<
     public void onSoundEngineReloaded() {
         synchronized (monitorLock) {
             if (isMonitorRunning())
-                monitor.enableAutoRestart();
+                Monitor.enableAutoRestart();
             else
                 tryReloadMusicEngine();
         }
@@ -180,22 +190,20 @@ public abstract class BaseClientCore<
                     mcVersion, this, playerState, levelState, combatState
             );
 
-            File configFile = Path.of(Common.AMBIENCE_MUSIC_DIRECTORY, Common.MUSIC_CONFIG_FILE).toFile();
+            File configFile = Constants.musicConfigPath.toFile();
             try (InputStream configStream = new FileInputStream(configFile)) {
-                Loader.loadFrom(configStream, musicProvider, gameStateProvider).match(
+                loadClientMusicSelector(configStream, musicProvider, gameStateProvider).match(
                         this::initMusicThread,
-                        this::printMessages
+                        messages -> Utils.printMessages(logger, messages)
                 );
             } catch (IOException ignored) { }
         }
     }
 
-    private void initMusicThread(Config config, List<Message> warnings) {
-        printMessages(warnings);
+    private void initMusicThread(MusicSelector musicSelector, List<Message> warnings) {
+        Utils.printMessages(logger, warnings);
 
-        monitor = new Monitor(this, new MusicSelector(config, gameStateProvider), musicProvider, logger);
-
-        // TODO: FireOnMonitorLoaded
+        monitor = new Monitor(this, musicSelector, musicProvider, logger);
 
         if (clientConfig.verboseMode.get())
             logger.info("Successfully loaded Ambience Mini with configuration:\n{}", clientConfig.getConfigsString());
@@ -203,23 +211,21 @@ public abstract class BaseClientCore<
             logger.info("Successfully loaded Ambience Mini");
     }
 
-    private void printMessages(List<Message> messages) {
-        for (var error : messages) {
-            if (error instanceof SynError err)
-                logger.error("Syntactic error [line {}, column {}]: {}", err.line(), err.column(), err.message());
-            else if (error instanceof SemError err)
-                logger.error("Semantic error [line {}]: {}", err.line(), err.message());
-            else if (error instanceof SemWarning wrn)
-                logger.error("Warning [line {}]: {}", wrn.line(), wrn.message());
-            else if (error instanceof ExcError err)
-                logger.error("An exception occurred while loading the music configuration:\n", err.exception());
-            else
-                throw new RuntimeException("Could not print load-error of type: " + error.getClass().getName());
-        }
-    }
-
     public boolean isMonitorRunning() {
         return monitor != null && monitor.isRunning();
+    }
+
+
+    public static LoadResult<MusicSelector> loadClientMusicSelector(
+            InputStream configStream,
+            BaseMusicProvider musicProvider,
+            BaseGameStateProvider gameStateProvider
+    ) {
+        return Loader.loadAndValidateConfig(
+                configStream,
+                musicProvider,
+                new Setup.Client(gameStateProvider)
+        ).map(config -> new MusicSelector(config, gameStateProvider));
     }
 
 
@@ -229,13 +235,15 @@ public abstract class BaseClientCore<
         serverSetup.serverVersion = serverVersion;
         serverSetup.isOnLocalServer = isOnLocalServer;
 
+        musicCache.clear();
+
         combatState.clearCombatants();
         structureCache.clear();
         nameCache.clear();
         nameCache.setCurrentPlayer(playerUUID, playerName);
 
         if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
-            networkManager.sendToServer(new ClientInfoMessage(
+            networkManager.sendAsync(new ClientInfoMessage(
                     BuildConfig.APP_VERSION.toString(),
                     playerUUID,
                     playerName
@@ -243,7 +251,7 @@ public abstract class BaseClientCore<
 
         areaRenderer.clear();
         String subFolder = serverSetup.isOnLocalServer ? "sp" : "mp";
-        areaManager.loadAreas(new AreaStorage(logger, Path.of(Common.AM_LOCAL_STORAGE_DIRECTORY, subFolder, getWorldNameForLocalStorage())));
+        areaManager.loadAreas(new AreaStorage(logger, Path.of(Constants.AM_LOCAL_STORAGE_DIRECTORY, subFolder, getWorldNameForLocalStorage())));
 
         flagCache.clearAndLoadFlags();
 
@@ -272,6 +280,7 @@ public abstract class BaseClientCore<
         nameCache.clear();
         areaRenderer.clear();
         flagCache.clear();
+        musicCache.clear();
 
         serverSetup.reset();
         combatState.clearCombatants();

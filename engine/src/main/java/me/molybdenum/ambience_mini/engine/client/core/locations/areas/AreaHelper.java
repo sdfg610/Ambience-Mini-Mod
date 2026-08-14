@@ -5,13 +5,16 @@ import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetwo
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Cube;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
+import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.CreateAreaMessage;
+import me.molybdenum.ambience_mini.engine.shared.utils.Text;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class AreaHelper {
@@ -48,13 +51,12 @@ public class AreaHelper {
 
 
     @SuppressWarnings("ConstantValue")
-    public void submitArea(Area area, Runnable onSuccess, Runnable onFailure) {
+    public void submitArea(Area area, Runnable onSuccess, Consumer<Text> onFailure) {
         boolean isLocalOwner = area.owner.isLocal();
 
         boolean hasServerSupport = hasServerSupport();
-        if (!isLocalOwner && !hasServerSupport){
-            notification.printLiteralToChat("Cannot save non-local area without server support! It should not be possible to get here!");
-            onFailure.run();
+        if (!isLocalOwner && !hasServerSupport) {
+            onFailure.accept(Text.ofLiteral("Cannot save non-local area without server support! It should not be possible to get here!"));
         }
 
         if (area.isNew()) {
@@ -77,60 +79,67 @@ public class AreaHelper {
     }
 
 
-    private void createLocalArea(Area area, Runnable onSuccess, Runnable onFailure) {
+    private void createLocalArea(Area area, Runnable onSuccess, Consumer<Text> onFailure) {
         areaManager.createLocalArea(area).ifPresentOrElse(
-                error -> {
-                    notification.printLiteralToChat("Could not create local area! It should not be possible to get here!\nArea: " + area.toJson() + "\nError: " + error);
-                    onFailure.run();
-                },
+                error -> onFailure.accept(Text.ofLiteral("Could not create local area! It should not be possible to get here!\nArea: " + area.toJson() + "\nError: " + error)) ,
                 onSuccess
         );
     }
 
-    private void putLocalArea(Area area, Runnable onSuccess, Runnable onFailure) {
+    private void putLocalArea(Area area, Runnable onSuccess, Consumer<Text> onFailure) {
         areaManager.putArea(area).ifPresentOrElse(
                 error -> {
-                    notification.printLiteralToChat("Could not update local area! It should not be possible to get here!\nArea: " + area.toJson() + "\nError: " + error);
-                    onFailure.run();
+                    onFailure.accept(Text.ofLiteral("Could not update local area! It should not be possible to get here!\nArea: " + area.toJson() + "\nError: " + error));
                 },
                 onSuccess
         );
     }
 
 
-    private void createRemoteArea(Area area, Runnable onSuccess, Runnable onFailure) {
-        networkManager.sendToServer(new CreateAreaMessage(area), onSuccess, onFailure);
+    private void createRemoteArea(Area area, Runnable onSuccess, Consumer<Text> onFailure) {
+        networkManager.configureAsync().setTimeout(5000)
+                .onSuccess(ignored -> onSuccess.run())
+                .onFailure(onFailure)
+                .onTimeout(() -> onFailure.accept(Text.ofTranslatable(AmLang.MSG_MESSAGE_TIMED_OUT)))
+                .send(new CreateAreaMessage(area));
     }
 
-    private void putRemoteArea(Area area, Runnable onSuccess, Runnable onFailure) {
-        networkManager.sendToServer(new PutAreaMessage(area), onSuccess, onFailure);
+    private void putRemoteArea(Area area, Runnable onSuccess, Consumer<Text> onFailure) {
+        networkManager.configureAsync().setTimeout(5000)
+                .onSuccess(ignored -> onSuccess.run())
+                .onFailure(onFailure)
+                .onTimeout(() -> onFailure.accept(Text.ofTranslatable(AmLang.MSG_MESSAGE_TIMED_OUT)))
+                .send(new PutAreaMessage(area));
     }
 
 
-    private void moveToLocalStorage(Area area, Runnable onSuccess, Runnable onFailure) {
+    private void moveToLocalStorage(Area area, Runnable onSuccess, Consumer<Text> onFailure) {
         int oldId = area.id;
+
+        Consumer<Text> failureWrapper = error -> { // If we cannot delete the remote area, remove the newly added area again.
+            notification.printLiteralToChat("Move to local storage failed at deleting the remote area...");
+            areaManager.deleteArea(area.id);
+            onFailure.accept(error);
+        };
+
         createLocalArea(
                 area,
                 () -> { // Success
-                    networkManager.sendToServer(
-                            new DeleteAreaMessage(oldId),
-                            onSuccess,
-                            () -> { // If we cannot delete the remote area, remove the newly added area again.
-                                notification.printLiteralToChat("Move to local storage failed at deleting the remote area...");
-                                areaManager.deleteArea(area.id);
-                                onFailure.run();
-                            }
-                    );
+                    networkManager.configureAsync().setTimeout(5000)
+                            .onSuccess(ignored -> onSuccess.run())
+                            .onFailure(failureWrapper)
+                            .onTimeout(() -> onFailure.accept(Text.ofTranslatable(AmLang.MSG_MESSAGE_TIMED_OUT)))
+                            .send(new DeleteAreaMessage(oldId));
                 },
-                () -> {
-                    notification.printLiteralToChat("Move to local storage failed at creating the local area...");
+                error -> {
                     area.id = oldId;
-                    onFailure.run();
+                    notification.printLiteralToChat("Move to local storage failed at creating the local area...");
+                    onFailure.accept(error);
                 }
         );
     }
 
-    private void moveToRemoteStorage(Area area, Runnable onSuccess, Runnable onFailure) {
+    private void moveToRemoteStorage(Area area, Runnable onSuccess, Consumer<Text> onFailure) {
         int oldId = area.id;
         createRemoteArea(
                 area,
@@ -143,13 +152,17 @@ public class AreaHelper {
     }
 
 
-    public void deleteArea(int id, Runnable onSuccess, Runnable onFailure) {
+    public void deleteArea(int id, Runnable onSuccess, Consumer<Text> onFailure) {
         if (Area.isLocalId(id)) {
             areaManager.deleteArea(id);
             onSuccess.run();
         }
         else if (hasServerSupport())
-            networkManager.sendToServer(new DeleteAreaMessage(id), onSuccess, onFailure);
+            networkManager.configureAsync().setTimeout(5000)
+                    .onSuccess(ignored -> onSuccess.run())
+                    .onFailure(onFailure)
+                    .onTimeout(() -> onFailure.accept(Text.ofTranslatable(AmLang.MSG_MESSAGE_TIMED_OUT)))
+                    .send(new DeleteAreaMessage(id));
     }
 
 

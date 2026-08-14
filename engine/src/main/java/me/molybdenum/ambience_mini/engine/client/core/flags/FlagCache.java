@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.flags;
 
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.StringVal;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.helpers.ValueMap;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.StringVal;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.helpers.ValueMap;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
@@ -71,6 +71,6 @@ public class FlagCache
     public void clearAndLoadFlags() {
         clear();
         if (serverSetup.serverVersion.isGreaterThanOrEqual(AmVersion.V_2_6_0))
-            network.sendToServer(new GetFlagsMessage());
+            network.sendAsync(new GetFlagsMessage());
     }
 }

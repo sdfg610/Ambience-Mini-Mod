@@ -1,7 +1,6 @@
 package me.molybdenum.ambience_ide;
 
-import me.molybdenum.ambience_mini.engine.shared.configuration.music_provider.BaseMusicProvider;
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
 
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -25,12 +24,22 @@ public class FakeMusicProvider extends BaseMusicProvider
     }
 
     @Override
-    public InputStream getMusicStream(Music music) {
+    public int getLocalMusicSize(String musicPath) {
+        throw new RuntimeException("The fake music provider cannot get a music size!");
+    }
+
+    @Override
+    public InputStream getLocalMusicStream(String musicPath) {
         throw new RuntimeException("The fake music provider cannot get a music stream!");
     }
 
     @Override
-    public int getMusicSize(Music music) {
+    public int getServerMusicSize(String musicPath) {
         throw new RuntimeException("The fake music provider cannot get a music size!");
+    }
+
+    @Override
+    public InputStream getServerMusicStream(String musicPath) {
+        throw new RuntimeException("The fake music provider cannot get a music stream!");
     }
 }

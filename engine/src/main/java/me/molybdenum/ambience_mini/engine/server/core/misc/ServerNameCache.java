@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
-import static me.molybdenum.ambience_mini.engine.shared.Common.NAME_CACHE_FILE_NAME;
+import static me.molybdenum.ambience_mini.engine.shared.Constants.NAME_CACHE_FILE_NAME;
 
 
 public class ServerNameCache {

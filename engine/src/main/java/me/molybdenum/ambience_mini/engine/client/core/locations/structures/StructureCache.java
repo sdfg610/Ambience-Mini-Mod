@@ -147,7 +147,7 @@ public class StructureCache {
                     }
 
                 if (!chunks.isEmpty())
-                    network.sendToServer(new GetStructuresMessage(true, chunks));
+                    network.sendAsync(new GetStructuresMessage(true, chunks));
             }
         }
 
@@ -158,7 +158,7 @@ public class StructureCache {
                     .toList();
 
             if (!chunks.isEmpty())
-                network.sendToServer(new GetStructuresMessage(false, chunks));
+                network.sendAsync(new GetStructuresMessage(false, chunks));
         }
     }
 }

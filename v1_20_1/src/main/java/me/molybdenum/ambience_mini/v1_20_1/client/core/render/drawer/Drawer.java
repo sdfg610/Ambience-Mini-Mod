@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.*;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -41,7 +41,7 @@ public class Drawer extends BaseDrawer
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
-        RenderSystem.lineWidth(Common.AREA_LINE_WIDTH);
+        RenderSystem.lineWidth(Constants.AREA_LINE_WIDTH);
 
         builder = Tesselator.getInstance().getBuilder();
         builder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);

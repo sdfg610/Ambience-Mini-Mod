@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.v1_19_2.server.handlers;
 
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobCombatInteractionMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
@@ -19,7 +19,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 
-@Mod.EventBusSubscriber(modid = Common.MOD_ID)
+@Mod.EventBusSubscriber(modid = Constants.MOD_ID)
 public class ServerCombatHandler
 {
     @SubscribeEvent(priority = EventPriority.LOWEST)

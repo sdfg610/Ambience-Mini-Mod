@@ -2,4 +2,5 @@ package me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.
 
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.Expr;
 
-public record When(Expr condition, Schedule body, int line) implements Schedule { }
+public record When(Expr condition, Schedule body, int line) implements Schedule {
+}

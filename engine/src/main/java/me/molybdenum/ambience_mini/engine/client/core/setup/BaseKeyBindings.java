@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.setup;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.music.Monitor;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStateProvider;
 
@@ -60,6 +61,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
     {
         if (isClicked(reloadKey)) {
             core.notification.showToast(AmLang.MSG_RELOAD);
+            Monitor.enableAutoRestart();
             core.tryReloadMusicEngine();
         }
 

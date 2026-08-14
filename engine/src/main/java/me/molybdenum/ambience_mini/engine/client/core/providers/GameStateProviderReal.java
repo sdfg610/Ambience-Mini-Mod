@@ -2,13 +2,14 @@ package me.molybdenum.ambience_mini.engine.client.core.providers;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.caves.BlockReading;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.*;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.engine.client.core.state.*;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
@@ -31,6 +32,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private final ClientAreaManager _areaManager;
     private final StructureCache _structureCache;
     private final FlagCache _flagCache;
+    private final ServerMusicCache _musicCache;
 
     // Config
     private final int _villageScanHorizontalRadius;
@@ -91,6 +93,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         _areaManager = core.areaManager;
         _structureCache = core.structureCache;
         _flagCache = core.flagCache;
+        _musicCache = core.musicCache;
 
         var config = core.clientConfig;
         _villageScanHorizontalRadius = config.villageScanHorizontalRadius.get();
@@ -349,11 +352,11 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
             return BoolVal.UNDEFINED;
 
         if (now - latestWardenCheckTime > 1000) {
-            latestWardenDistance = _level.shortestDistanceToWarden(_player.eyePosition(), Common.WARDEN_SEARCH_RADIUS);
+            latestWardenDistance = _level.shortestDistanceToWarden(_player.eyePosition(), Constants.WARDEN_SEARCH_RADIUS);
             latestWardenCheckTime = now;
         }
 
-        return latestWardenDistance == null ? BoolVal.FALSE : new BoolVal(latestWardenDistance <= Common.WARDEN_SEARCH_RADIUS);
+        return latestWardenDistance == null ? BoolVal.FALSE : new BoolVal(latestWardenDistance <= Constants.WARDEN_SEARCH_RADIUS);
     }
 
     @Override
@@ -565,5 +568,13 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     @Override
     public MapVal getFlags() {
         return new MapVal(_flagCache.getFlags());
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Server playlists properties
+    @Override
+    public Value<?> getServerPlaylists() {
+        return _musicCache.getServerPlaylists();
     }
 }

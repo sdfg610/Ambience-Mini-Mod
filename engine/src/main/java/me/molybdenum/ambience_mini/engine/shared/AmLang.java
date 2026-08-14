@@ -54,9 +54,15 @@ public enum AmLang
     MSG_FLAG_NAME_REQUIREMENTS("message.flag_name_requirements", 1), // Args: "max length"
     MSG_FLAG_VALUE_REQUIREMENTS("message.flag_value_requirements", 1), // Args: "max length"
 
+    MSG_SERVER_PLAYLIST_TIMEOUT("message.server_playlist_timeout"),
+    MSG_SERVER_PLAYLISTS_SKIPPED("message.server_playlists_skipped"),
+    MSG_SERVER_MUSIC_SKIPPED("message.server_music_skipped"),
+    MSG_SERVER_MUSIC_READ_FAIL("message.server_music_read_fail", 1), // Args: "music path"
+
     MSG_UNHANDLED_MESSAGE("message.unhandled_message"),
     MSG_UNHANDLED_CLIENT_MESSAGE("message.unhandled_client_message"),
     MSG_MESSAGE_CAUSED_SERVER_ERROR("message.message_caused_server_error"),
+    MSG_MESSAGE_TIMED_OUT("message.message_timed_out"),
 
     MSG_INVALID_ARGUMENT("message.invalid_argument", 1),
 

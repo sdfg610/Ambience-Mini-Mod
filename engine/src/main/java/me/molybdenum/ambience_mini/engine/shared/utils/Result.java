@@ -17,10 +17,14 @@ public class Result<T> {
     }
 
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isSuccess() {
         return isSuccess;
     }
+
+    public boolean isFailure() {
+        return !isSuccess;
+    }
+
 
     public T getValue() {
         if (isSuccess)

@@ -3,8 +3,12 @@ package me.molybdenum.ambience_mini.engine.shared.core.networking.messages;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.FailureMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.SuccessMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ResponseMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmSerializable;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.helper.HelperWriter;
 import me.molybdenum.ambience_mini.engine.shared.utils.Text;
+
+import java.util.List;
 
 
 public abstract class AmMessage implements AmSerializable {
@@ -16,16 +20,35 @@ public abstract class AmMessage implements AmSerializable {
     }
 
 
-    public FailureMessage failure(AmLang key) {
-        return failure(Text.ofTranslatable(key));
+    // Old responses
+    public FailureMessage failure(AmLang key, String... args) {
+        return failure(Text.ofTranslatable(key, args));
     }
 
     public FailureMessage failure(Text message) {
         return new FailureMessage(handlerID, message);
     }
 
-
     public SuccessMessage success() {
         return new SuccessMessage(handlerID);
+    }
+
+
+    // New responses
+    public ResponseMessage failWith(AmLang key, String... args) {
+        return new ResponseMessage(handlerID, Text.ofTranslatable(key, args));
+    }
+    public ResponseMessage failWith(String text) {
+        return new ResponseMessage(handlerID, Text.ofLiteral(text));
+    }
+
+    public ResponseMessage succeedWith(byte[] data) {
+        return new ResponseMessage(handlerID, data);
+    }
+
+    public <T extends AmSerializable> ResponseMessage succeedWith(List<T> list) {
+        var writer = new HelperWriter();
+        writer.writeList(list);
+        return new ResponseMessage(handlerID, writer.getBytes());
     }
 }

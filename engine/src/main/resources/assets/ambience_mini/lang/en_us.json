@@ -46,9 +46,15 @@
   "message.flag_name_requirements": "The flag id must contain non-blank symbols, may not contain whitespaces, and must be no more than %s characters.",
   "message.flag_value_requirements": "The area value must contain non-blank symbols and be no more than %s characters.",
 
+  "message.server_playlist_timeout": "Fetching of server playlists timed out. Server playlist loading aborted.",
+  "message.server_playlists_skipped": "Server playlists will not be loaded due to size constraints (see logs).",
+  "message.server_music_skipped": "Some server-located music will not be loaded due to size constraints (see logs).",
+  "message.server_music_read_fail": "The server could not read the music file '%s'.",
+
   "message.unhandled_message": "Received an unknown type of message from server! This should not happen, see server logs.",
   "message.unhandled_client_message": "The server could not handle a message from the client! This should not happen, see server logs.",
   "message.message_caused_server_error": "A message from this client caused an error on the server! This should not happen, see server logs.",
+  "message.message.message_timed_out": "A message timed out. Is the server not responding?",
 
   "string.area_name": "Area name",
   "string.ownership_and_sharing": "Ownership and sharing",

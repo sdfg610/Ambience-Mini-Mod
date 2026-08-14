@@ -27,7 +27,7 @@ public class ServerAreaManager
     @SuppressWarnings("rawtypes")
     public void init(BaseServerCore core) {
         if (this.logger != null)
-            throw new RuntimeException("Multiple calls to 'BaseServerAreaManager.init'!");
+            throw new RuntimeException("Multiple calls to '" + getClass().getName() + ".init'!");
 
         this.logger = core.logger;
         this.areaStorage = new AreaStorage(logger, core.getAmStoragePath());

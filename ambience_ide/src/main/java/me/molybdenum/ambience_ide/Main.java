@@ -1,16 +1,13 @@
 package me.molybdenum.ambience_ide;
 
-import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
+import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.selection.*;
 import me.molybdenum.ambience_mini.engine.shared.music.Music;
-import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.config.Config;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.selection.Selection;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.selection.VanillaSelection;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.*;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.MusicSelector;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.selection.PlaylistSelection;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.BoolVal;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.Value;
+import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.MusicSelector;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.BoolVal;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Event;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Property;
 import me.molybdenum.ambience_mini.engine.shared.BuildConfig;
@@ -179,13 +176,13 @@ public class Main
         }
 
         InputStream stream = new ByteArrayInputStream(musicConfig.getBytes(StandardCharsets.UTF_8));
-        Loader.loadFrom(stream, new FakeMusicProvider(), gameStateProvider).match(
+        BaseClientCore.loadClientMusicSelector(stream, new FakeMusicProvider(), gameStateProvider).match(
                 Main::printResult,
                 Main::printErrors
         );
     }
 
-    private static void printResult(Config config, List<Message> warnings) {
+    private static void printResult(MusicSelector musicSelector, List<Message> warnings) {
         HTMLDocument doc = HTMLDocument.current();
         var output = doc.getElementById("output");
         output.appendChild(makeParagraph(doc, "Configuration is valid and ran to completion!"));
@@ -193,14 +190,17 @@ public class Main
         printMessages(warnings, output, doc);
 
         ArrayList<Pair<String, Value<?>>> trace = new ArrayList<>();
-        Selection choice = new MusicSelector(config, gameStateProvider).selectPlaylist(trace);
-        if (choice == null)
+        Selection choice = musicSelector.selectPlaylist(trace);
+        if (choice instanceof NoneSelection)
             output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music (if any) will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));
-        else if (choice instanceof PlaylistSelection plSelection) {
-            output.appendChild(makeParagraph(doc, String.format("Selected new playlist at priority %d: [ %s ]", plSelection.priority(), String.join(", ", plSelection.playlist().stream().map(Music::path).toList()))));
-        }
-        else if (choice instanceof VanillaSelection)
-            output.appendChild(makeParagraph(doc, "Enabled the vanilla music player."));
+        else if (choice instanceof PlaylistSelection plSelection)
+            output.appendChild(makeParagraph(doc,
+                    String.format("On line %d. Selected new playlist at priority %d: [ %s ]", plSelection.line(), plSelection.priority(), String.join(", ", plSelection.playlist().stream().map(Music::path).toList()))
+            ));
+        else if (choice instanceof VanillaSelection vanilla)
+            output.appendChild(makeParagraph(doc, String.format("On line %d. Enabled the vanilla music player.", vanilla.line())));
+        else if (choice instanceof UndefinedSelection undef)
+            output.appendChild(makeParagraph(doc, String.format("On line %d. Current music continues after selecting undefined playlist.", undef.line())));
         else
             output.appendChild(makeParagraph(doc, "The music selector returned an unexpected result!"));
 
@@ -225,7 +225,7 @@ public class Main
                 text = String.format("Syntactic error [line %d, column %d]: %s", err.line(), err.column(), err.message());
             else if (error instanceof SemError err)
                 text = String.format("Semantic error [line %d]: %s", err.line(), err.message());
-            else if (error instanceof SemWarning wrn)
+            else if (error instanceof Warning wrn)
                 text = String.format("Warning [line %d]: %s", wrn.line(), wrn.message());
             else if (error instanceof ExcError err) {
                 StringWriter sw = new StringWriter();

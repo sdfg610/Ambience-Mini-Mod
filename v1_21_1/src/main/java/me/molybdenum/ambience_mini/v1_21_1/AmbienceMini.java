@@ -5,10 +5,12 @@ import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.ClientCore;
@@ -16,7 +18,7 @@ import me.molybdenum.ambience_mini.v1_21_1.client.core.networking.ClientNetworkM
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.drawer.Drawer;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.util.Notification;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
 import me.molybdenum.ambience_mini.v1_21_1.client.handlers.RenderHandler;
@@ -59,7 +61,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.ModContainer;
 
-@Mod(Common.MOD_ID)
+@Mod(Constants.MOD_ID)
 public class AmbienceMini extends BaseAmbienceMini
 {
     // Common
@@ -98,7 +100,7 @@ public class AmbienceMini extends BaseAmbienceMini
     }
 
     public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
+        return ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, path);
     }
 
     public static ClientCore getClientCore() {
@@ -122,7 +124,6 @@ public class AmbienceMini extends BaseAmbienceMini
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             VolumeState.init(
-                    clientConfig,
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC),
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS)
@@ -132,7 +133,7 @@ public class AmbienceMini extends BaseAmbienceMini
                     LOGGER, new ClientNameCache(), new StructureCache(),
                     new Notification(), new ClientNetworkManager(),
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
-                    new FlagCache(),
+                    new FlagCache(), new ServerMusicCache(),
                     new ServerSetup(), clientConfig, keyBindings,
                     new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );
@@ -174,6 +175,7 @@ public class AmbienceMini extends BaseAmbienceMini
                 new ServerAreaManager(),
                 new StructureReader(event.getServer()),
                 new FlagManager(),
+                new ServerMusicManager(),
                 new ServerNetworkManager()
         );
         serverCore.init();

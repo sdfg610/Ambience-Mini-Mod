@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.server.core.flags;
 
 import com.google.gson.*;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.StringVal;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.StringVal;
 import org.slf4j.Logger;
 
 import java.nio.charset.StandardCharsets;

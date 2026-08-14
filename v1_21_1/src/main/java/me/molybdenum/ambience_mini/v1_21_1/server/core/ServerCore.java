@@ -4,6 +4,7 @@ import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.networking.ServerNetworkManager;
 import net.minecraft.server.MinecraftServer;
@@ -16,8 +17,7 @@ import java.nio.file.Path;
 public class ServerCore extends BaseServerCore<
         ServerPlayer,
         ServerNetworkManager,
-        StructureReader,
-        ServerAreaManager
+        StructureReader
 > {
     private final MinecraftServer server;
 
@@ -29,13 +29,19 @@ public class ServerCore extends BaseServerCore<
             ServerAreaManager areaManager,
             StructureReader structureReader,
             FlagManager flagManager,
+            ServerMusicManager musicManager,
             ServerNetworkManager networkManager
     ) {
-        super(logger, nameCache, areaManager, structureReader, flagManager, networkManager);
+        super(logger, nameCache, areaManager, structureReader, flagManager, musicManager, networkManager);
 
         this.server = server;
     }
 
+
+    @Override
+    public boolean isDedicatedServer() {
+        return server.isDedicatedServer();
+    }
 
     @Override
     public Path getWorldRootPath() {

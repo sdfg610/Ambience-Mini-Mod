@@ -1,21 +1,17 @@
 package me.molybdenum.ambience_mini.engine.shared.core.networking;
 
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.CreateAreaMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.GetAreasMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.*;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.*;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobCombatInteractionMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.GetNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.NeoGetNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.FailureMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.SuccessMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.GetFlagsMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.remote_music.*;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.*;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.GetStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkReferencesMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkStructuresMessage;
@@ -38,6 +34,7 @@ public class MessageRegistry {
         // Success and failure
         registerMessage(1, SuccessMessage::new, SuccessMessage.class); // 2.5.0
         registerMessage(2, FailureMessage::new, FailureMessage.class); // 2.5.0
+        registerMessage(3, ResponseMessage::new, ResponseMessage.class); // 2.8.0
 
         // Basic info
         registerMessage(10, ClientInfoMessage::new, ClientInfoMessage.class); // 2.5.0
@@ -55,6 +52,7 @@ public class MessageRegistry {
         // Name cache
         registerMessage(40, PutNameCacheMessage::new, PutNameCacheMessage.class); // 2.5.0
         registerMessage(41, GetNameCacheMessage::new, GetNameCacheMessage.class); // 2.5.0
+        registerMessage(42, NeoGetNameCacheMessage::new, NeoGetNameCacheMessage.class); // 2.8.0
 
         // Structures
         registerMessage(50, GetStructuresMessage::new, GetStructuresMessage.class); // 2.5.0
@@ -67,11 +65,9 @@ public class MessageRegistry {
         registerMessage(62, DeleteFlagMessage::new, DeleteFlagMessage.class); // 2.6.0
 
         // Remote music
-        registerMessage(70, NotifyRemoteSizeMessage::new, NotifyRemoteSizeMessage.class); // 2.8.0
-        registerMessage(71, RequestRemoteMessage::new, RequestRemoteMessage.class); // 2.8.0
-        registerMessage(72, ProvideRemoteMessage::new, ProvideRemoteMessage.class); // 2.8.0
-        registerMessage(73, RequestMusicChunkMessage::new, RequestMusicChunkMessage.class); // 2.8.0
-        registerMessage(74, ProvideMusicChunkMessage::new, ProvideMusicChunkMessage.class); // 2.8.0
+        registerMessage(70, NotifyServerPlaylistCountMessage::new, NotifyServerPlaylistCountMessage.class); // 2.8.0
+        registerMessage(71, RequestServerPlaylistChunkMessage::new, RequestServerPlaylistChunkMessage.class); // 2.8.0
+        registerMessage(72, RequestMusicChunkMessage::new, RequestMusicChunkMessage.class); // 2.8.0
     }
 
     private static <T extends AmMessage> void registerMessage(int id, Function<AmReader, T> create, Class<T> clazz) {

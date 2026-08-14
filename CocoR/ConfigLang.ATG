@@ -11,17 +11,18 @@ which will be explained when met first in context.  */
 /* () is a grouping used alongside |. The parenthesis contains a series of strings separated by |. This means that exactly one of the strings is chosen. */
 
 /* Imports here are inserted at the top of the generated lexer and parser. */
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.expression.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.config.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.schedule.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.playlist.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.misc.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.messages.Message;
-import me.molybdenum.ambience_mini.engine.client.configuration.messages.SynError;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.schedule.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.server_playlists.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.misc.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Message;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.SynError;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /* The required start of a Coco/R grammar file. "Program" specifies the starting symbol of the grammar. */
 COMPILER File
@@ -57,84 +58,64 @@ IGNORE '\r' + '\n' + '\t' /* These characters are ignored by the lexer */
 /* The rest of the file contains the grammar for the Ambience Mini configuration language.  */
 PRODUCTIONS
 
-File = Conf<out mainNode> .
-
-
 /*------------------------------------------------------------------------*/
 // Configurations
-Conf<out Config conf>                (. conf = null; .)
-    = "playlist" IDENT               (. IdentP ident = new IdentP(t.val, t.line); .)
-      '=' Play<out Playlist play> ';'
-      Conf<out Config inner>         (. conf = new PlaylistDecl(ident, play, inner); .)
-    | Shed<out Schedule schedule>    (. conf = new ScheduleDecl(schedule); .)
+File = Conf<out mainNode> .
+
+Conf<out Config conf>              (. var declarations = new ArrayList<GlobalDecl>(); ServerPlaylists serverPl = null; Schedule schedule = null; .)
+    = { Decl<out GlobalDecl decl>  (. declarations.add(decl); .)
+    } [ "serve_playlists" ':' ServerPlaylists<out serverPl>
+    ] [ Shed<out schedule>
+    ]                              (. conf = new Config(declarations, serverPl, schedule); .)
+.
+/* | "preset" STRING [ "default" ] ':' */
+
+
+/*------------------------------------------------------------------------*/
+// Global declarations
+Decl<out GlobalDecl decl>
+     = Type<out Type type> IDENT      (. Ident ident = new Ident(t.val, t.line); .)
+         '=' Expr<out Expr expr> ';'  (. decl = new GlobalDecl(type, ident, expr); .)
 .
 
 
 /*------------------------------------------------------------------------*/
-// Playlists
-Play<out Playlist play>
-     = PlayTerm<out play>
-         { "++" PlayTerm<out Playlist play2> (. play = new Concat(play, play2); .)
-         }
-.
-
-PlayTerm<out Playlist play>               (. play = new Nil(); .)
-    = '['
-        [ PlayTerm<out Playlist load>     (. play = load;      .)
-          { ',' PlayTerm<out load>        (. play = new Concat(play, load); .)
-          }
-        ]
-      ']'
-    | IDENT                         (. play = new IdentP(t.val, t.line); .)
-    | "NIL"
-    | STRING                 (. StringLit file = new StringLit(removeFirstAndLast(t.val)); int line = t.line; var args = new ArgList(); .)
-      [ '<'
-        MusicArgs<out args>
-        '>'
-      ]                      (. play = new Load(file, args, line); .)
-.
-
-MusicArgs<out ArgList args>  (. args = new ArgList(); .)
-    = MusicArg<out Arg arg1>   (. if (arg1 != null) args.add(arg1); .)
-      { ','
-        MusicArg<out Arg arg2>   (. if (arg2 != null) args.add(arg2); .)
+// Server playlist configuration
+ServerPlaylists<out ServerPlaylists serverPl>  (. serverPl = null; .)
+    = Expr<out Expr expr> ';'   (. serverPl = new PlaylistInstance(expr); .)
+    | "group"                                         (. HashMap<String, ServerPlaylists> groups = new HashMap<>(); .)
+      { STRING                                        (. String groupName = removeFirstAndLast(t.val); .)
+        ':' ServerPlaylists<out ServerPlaylists serverPl2>   (. groups.put(groupName, serverPl2); .)
       }
-.
-
-MusicArg<out Arg arg>    (. arg = null; .)
-    = (FLOAT|INT)        (. arg = new Arg(new IdentP("gain", t.line), new FloatLit(Float.parseFloat(t.val))); .)
-    | IDENT              (. IdentP ident = new IdentP(t.val, t.line); Expr value = new BoolLit(true); .)
-      [ '=' Const<out value>
-      ]                  (. arg = new Arg(ident, value); .)
+      "end"                                           (. serverPl = new PlaylistGroup(groups); .)
 .
 
 
 /*------------------------------------------------------------------------*/
-// Remote music configuration
-Remote<out REM>
-    = "haha"
-.
+// Preset configuration
 
 
 /*------------------------------------------------------------------------*/
 // Schedules / Client music selection strategy
-Shed<out Schedule schedule>                  (. schedule = null; boolean instant = false; .)
-    = "play"
-      ["instant"                      (. instant = true; .)
-      ] Play<out Playlist pl>         (. IntLit priority = null; .)
+Shed<out Schedule schedule>                  (. schedule = null; boolean instant = false; boolean ifdef = false; .)
+    = "play"                          (. int line = t.line; .)
+      { "instant"                     (. instant = true; .)
+      | "ifdef"                       (. ifdef = true; .)
+      } Expr<out Expr expr>           (. IntLit priority = null; .)
       [ "priority" INT                (. priority = new IntLit(Integer.parseInt(t.val), t.line); .)
       ]
-      ';'                             (. schedule = new Play(pl, instant, priority); .)
-    | "use_vanilla_player" ';'        (. schedule = new Vanilla(); .)
-    | "begin"                                (. ArrayList<Schedule> items = new ArrayList<>();  .)
-      { Shed<out Schedule schedule2>         (. items.add(schedule2); .)
+      ';'                             (. schedule = new Play(expr, instant, ifdef, priority, line); .)
+    | "use_vanilla_player"            (. int line = t.line; .)
+      ';'                             (. schedule = new Vanilla(line); .)
+    | "begin"                                (. ArrayList<Schedule> body = new ArrayList<>(); int line = t.line; .)
+      { Shed<out Schedule schedule2>         (. body.add(schedule2); .)
       }
-      "end"                                  (. schedule = new Block(items); .)
+      "end"                                  (. schedule = new Block(body, line); .)
     | "when"                                   (. int line = t.line; .)
       '(' Expr<out Expr expr>
       ')' Shed<out Schedule schedule2>         (. schedule = new When(expr, schedule2, line); .)
     | "let"                               (. int line = t.line; Type type = null; .)
-      IDENT                               (. IdentE ident = new IdentE(t.val, t.line); .)
+      IDENT                               (. Ident ident = new Ident(t.val, t.line); .)
       [ ':' Type<out type> ]
       '=' Expr<out Expr expr>
       "in" Shed<out Schedule shed>        (. schedule = new Let(type, ident, expr, shed, line); .)
@@ -180,8 +161,8 @@ ExprRel<out Expr expr>            (. int line = -1; .)
 
 ExprAdd<out Expr expr>    (. BinaryOperators op; int line = -1; .)
     = ExprMul<out expr>
-      { ( '*'               (. op = BinaryOperators.MUL; line = t.line; .)
-        | '/'               (. op = BinaryOperators.DIV; line = t.line; .)
+      { ( '+'               (. op = BinaryOperators.ADD; line = t.line; .)
+        | '-'               (. op = BinaryOperators.SUB; line = t.line; .)
         )
         ExprMul<out Expr expr2>  (. expr = new BinaryOp(op, expr, expr2, line); .)
       }
@@ -189,8 +170,9 @@ ExprAdd<out Expr expr>    (. BinaryOperators op; int line = -1; .)
 
 ExprMul<out Expr expr>    (. BinaryOperators op; int line = -1; .)
     = ExprPre<out expr>
-      { ( '+'               (. op = BinaryOperators.ADD; line = t.line; .)
-        | '-'               (. op = BinaryOperators.SUB; line = t.line; .)
+      { ( '*'               (. op = BinaryOperators.MUL; line = t.line; .)
+        | '/'               (. op = BinaryOperators.DIV; line = t.line; .)
+        | "++"              (. op = BinaryOperators.APPEND; line = t.line; .)
         )
         ExprPre<out Expr expr2>  (. expr = new BinaryOp(op, expr, expr2, line); .)
       }
@@ -209,31 +191,59 @@ ExprSuf<out Expr expr>
       { '['                       (. int line = t.line; .)
         Expr<out Expr index> ']'  (. expr = new BinaryOp(BinaryOperators.INDEXER, expr, index, line); .)
       | '.'    (. int line = t.line; .)
-        IDENT  (. expr = new Accessor(expr, new IdentE(t.val, t.line), line); .)
+        IDENT  (. expr = new Accessor(expr, new Ident(t.val, t.line), line); .)
       }
 .
 
 ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY; .)
-    = IDENT             (. expr = new IdentE(t.val, t.line);                      .)
+    = IDENT             (. expr = new Ident(t.val, t.line);                      .)
     | Const<out expr>
-    | '@' IDENT         (. expr = new GetEvent(new IdentE(t.val, t.line));    .)
-    | '$' IDENT         (. expr = new GetProperty(new IdentE(t.val, t.line)); .)
+    | '@' IDENT         (. expr = new GetEvent(new Ident(t.val, t.line));    .)
+    | '$' IDENT         (. expr = new GetProperty(new Ident(t.val, t.line)); .)
     | ("any" | "all"    (. quantifier = Quantifiers.ALL; .)
       ) IDENT           (. String identifier = t.val; int line = t.line; .)
       "in"                        (. int inLine = t.line; .)
       Expr<out Expr list> "has" (. int whereLine = t.line; .)
       Expr<out Expr cond> "end"
-                        (. expr = new QuantifierOp(quantifier, new IdentE(identifier, line), list, cond, inLine, whereLine); .)
+                        (. expr = new QuantifierOp(quantifier, new Ident(identifier, line), list, cond, inLine, whereLine); .)
     | '(' Expr<out expr> ')'
+    | '['                                  (. expr = new Playlist(t.line); .)
+          [ Music<out Playlist.Load load>  (. ((Playlist)expr).music().add(load); .)
+            { ',' Music<out load>          (. ((Playlist)expr).music().add(load); .)
+            }
+          ]
+      ']'
 .
 
-Const<out Expr expr>    (. expr = null;                                        .)
-    = "undefined"       (. expr = new UndefinedLit();                          .)
-    | "true"            (. expr = new BoolLit(true);                           .)
-    | "false"           (. expr = new BoolLit(false);                          .)
-    | INT               (. expr = new IntLit(Integer.parseInt(t.val), t.line); .)
-    | FLOAT             (. expr = new FloatLit(Float.parseFloat(t.val));       .)
-    | STRING            (. expr = new StringLit(removeFirstAndLast(t.val));    .)
+Const<out Expr expr>    (. expr = null;                                             .)
+    = "undefined"       (. expr = new UndefinedLit(t.line);                         .)
+    | "true"            (. expr = new BoolLit(true, t.line);                        .)
+    | "false"           (. expr = new BoolLit(false, t.line);                       .)
+    | INT               (. expr = new IntLit(Integer.parseInt(t.val), t.line);      .)
+    | FLOAT             (. expr = new FloatLit(Float.parseFloat(t.val), t.line);    .)
+    | STRING            (. expr = new StringLit(removeFirstAndLast(t.val), t.line); .)
+.
+
+Music<out Playlist.Load load>
+    = STRING                   (. StringLit file = new StringLit(removeFirstAndLast(t.val), t.line); int line = t.line; var args = new ArgList(); .)
+        [ '<'
+          MusicArgs<args>
+          '>'
+        ]                      (. load = new Playlist.Load(file, args, line); .)
+.
+
+MusicArgs<ArgList args>
+    = MusicArg<out Arg arg1>   (. if (arg1 != null) args.add(arg1); .)
+      { ','
+        MusicArg<out Arg arg2>   (. if (arg2 != null) args.add(arg2); .)
+      }
+.
+
+MusicArg<out Arg arg>    (. arg = null; .)
+    = (FLOAT|INT)        (. arg = new Arg(new Ident("gain", t.line), new FloatLit(Float.parseFloat(t.val), t.line)); .)
+    | IDENT              (. Ident ident = new Ident(t.val, t.line); Expr value = new BoolLit(true, t.line); .)
+      [ '=' Const<out value>
+      ]                  (. arg = new Arg(ident, value); .)
 .
 
 

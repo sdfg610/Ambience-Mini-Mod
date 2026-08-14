@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.v1_21_1.client.handlers;
 
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.v1_21_1.AmbienceMini;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.area.AreaRenderer;
 import net.minecraft.client.DeltaTracker;
@@ -16,7 +16,7 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.jetbrains.annotations.NotNull;
 
 
-@EventBusSubscriber(modid = Common.MOD_ID, value={Dist.CLIENT})
+@EventBusSubscriber(modid = Constants.MOD_ID, value={Dist.CLIENT})
 public class RenderHandler
 {
     private static final Window window = Minecraft.getInstance().getWindow();

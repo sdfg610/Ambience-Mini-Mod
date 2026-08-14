@@ -2,4 +2,4 @@ package me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.
 
 import java.util.List;
 
-public record Block(List<Schedule> body) implements Schedule { }
+public record Block(List<Schedule> body, int line) implements Schedule { }

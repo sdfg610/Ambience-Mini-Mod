@@ -2,17 +2,16 @@ package me.molybdenum.ambience_mini.v1_18_2.client.handlers;
 
 import me.molybdenum.ambience_mini.v1_18_2.AmbienceMini;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.state.CombatState;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientPlayerChangeGameTypeEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 
-@Mod.EventBusSubscriber(modid = Common.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class ClientCombatHandler
 {
     private static final Minecraft mc = Minecraft.getInstance();

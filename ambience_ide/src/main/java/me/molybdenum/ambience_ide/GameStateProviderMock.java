@@ -1,9 +1,9 @@
 package me.molybdenum.ambience_ide;
 
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.helpers.ValueList;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.helpers.ValueMap;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.helpers.ValueList;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.helpers.ValueMap;
 import me.molybdenum.ambience_mini.engine.shared.configuration.pretty_printer.PrettyPrinter;
 import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderTemplate;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;

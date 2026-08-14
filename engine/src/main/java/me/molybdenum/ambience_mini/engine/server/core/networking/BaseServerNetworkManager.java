@@ -5,22 +5,29 @@ import me.molybdenum.ambience_mini.engine.server.core.flags.FlagOperation;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaOperation;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.MessageRegistry;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.CreateAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.GetAreasMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ResponseMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.GetFlagsMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.GetNameCacheMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.remote_music.NotifyRemoteSizeMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.NeoGetNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.NotifyServerPlaylistCountMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestMusicChunkMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerPlaylistChunkMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.GetStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.Result;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseServerNetworkManager<TServerPlayer>
@@ -30,10 +37,10 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     private final ConcurrentHashMap<TServerPlayer, AmVersion> playerToVersion = new ConcurrentHashMap<>();
 
     // Core functionality
-    private BaseServerCore<TServerPlayer, ?, ?, ?> core = null;
+    private BaseServerCore<TServerPlayer, ?, ?> core = null;
 
 
-    public void init(BaseServerCore<TServerPlayer, ?, ?, ?> core) {
+    public void init(BaseServerCore<TServerPlayer, ?, ?> core) {
         if (this.core != null)
             throw new RuntimeException("Multiple calls to 'BaseServerNetworkManager.init'!");
         this.core = core;
@@ -78,9 +85,16 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
 
             else if (message instanceof GetNameCacheMessage msg)
                 response = handleGetNameCacheMessage(msg, sender);
+            else if (message instanceof NeoGetNameCacheMessage msg)
+                response = handleNeoGetNameCacheMessage(msg);
 
             else if (message instanceof GetFlagsMessage msg)
-                response = handleGetFlagMessage(msg, sender);
+                response = handleGetFlagsMessage(msg, sender);
+
+            else if (message instanceof RequestServerPlaylistChunkMessage msg)
+                response = handleRequestServerPlaylistsChunkMessage(msg);
+            else if (message instanceof RequestMusicChunkMessage msg)
+                response = handleRequestMusicChunkMessage(msg);
 
             else {
                 core.logger.error("Server could not handle message of type '{}'", message.getClass().getName());
@@ -104,7 +118,7 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         core.nameCache.putPlayerName(msg.playerUUID, msg.playerName);
 
         if (modVersion.isGreaterThanOrEqual(AmVersion.V_2_8_0))
-            sendToPlayer(new NotifyRemoteSizeMessage(VALUE), sender);    // TODO: Get remote data byte size
+            sendToPlayer(new NotifyServerPlaylistCountMessage(core.musicManager.getServerPlaylistByteSize(), core.musicManager.getServerPlaylistCount()), sender);
 
         return msg.success();
     }
@@ -113,10 +127,8 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     // Areas
     private AmMessage handleCreateAreaMessage(CreateAreaMessage msg, TServerPlayer sender) {
         String owner = msg.area.owner.getOwnerIdIfOwned();
-        if (owner != null && !owner.equals(getServerPlayerUUID(sender))) {
-            core.logger.error("A player cannot create an area to be owned by another player!");
-            return msg.failure(AmLang.MSG_MESSAGE_CAUSED_SERVER_ERROR);
-        }
+        if (owner != null && !owner.equals(getServerPlayerUUID(sender)))
+            return msg.failure(AmLang.MSG_AREA_CANNOT_EDIT);
 
         var error = core.areaManager.createArea(msg.area);
         if (error.isPresent()) {
@@ -131,12 +143,6 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         String senderID = getServerPlayerUUID(sender);
         if (!msg.area.canBeEditedBy(senderID))
             return msg.failure(AmLang.MSG_AREA_CANNOT_EDIT);
-
-        String owner = msg.area.owner.getOwnerIdIfOwned();
-        if (owner != null && !owner.equals(senderID)) {
-            core.logger.error("A player cannot update an area to be owned by another player!");
-            return msg.failure(AmLang.MSG_MESSAGE_CAUSED_SERVER_ERROR);
-        }
 
         var error = core.areaManager.putArea(msg.area);
         if (error.isPresent()) {
@@ -185,9 +191,13 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         return msg.success();
     }
 
+    private AmMessage handleNeoGetNameCacheMessage(NeoGetNameCacheMessage msg) {
+        return msg.succeedWith(core.nameCache.getPlayerName(msg.playerUuid).getBytes(StandardCharsets.UTF_8));
+    }
+
 
     // Flags
-    private AmMessage handleGetFlagMessage(GetFlagsMessage msg, TServerPlayer sender) {
+    private AmMessage handleGetFlagsMessage(GetFlagsMessage msg, TServerPlayer sender) {
         for (var elem : core.flagManager.getFlags())
             sendToPlayer(new PutFlagMessage(elem.getKey(), elem.getValue().asString().orElse(null), false), sender);
         return msg.success();
@@ -195,9 +205,19 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
 
 
     // Remote music
-    private AmMessage handleRequestRemoteMessage() {
+    private ResponseMessage handleRequestServerPlaylistsChunkMessage(RequestServerPlaylistChunkMessage msg) {
+        return msg.succeedWith(core.musicManager.getServerPlaylistChunk(msg.offset, msg.byteLength));
+    }
 
+    private ResponseMessage handleRequestMusicChunkMessage(RequestMusicChunkMessage msg) {
+        var res = BaseMusicProvider.validatePath(msg.musicPath);
+        if (res.isFailure())
+            return msg.failWith("Got request for music on invalid path '" + msg.musicPath + "'! This should not be possible!");
 
+        var chunk = core.musicManager.getMusicData(msg.musicPath, msg.offset, msg.length);
+        return chunk == null
+                ? msg.failWith(AmLang.MSG_SERVER_MUSIC_READ_FAIL, msg.musicPath)
+                : msg.succeedWith(chunk);
     }
 
 

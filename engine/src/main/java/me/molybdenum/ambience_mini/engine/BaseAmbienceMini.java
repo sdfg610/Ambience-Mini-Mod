@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.Monitor;
+import me.molybdenum.ambience_mini.engine.client.core.music.Monitor;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;

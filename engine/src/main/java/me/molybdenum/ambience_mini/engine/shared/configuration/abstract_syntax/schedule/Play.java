@@ -1,11 +1,12 @@
 package me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.schedule;
 
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.Expr;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.IntLit;
-import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.playlist.Playlist;
 
 import java.util.Optional;
 
-public record Play(Playlist playlist, boolean isInstant, IntLit priority) implements Schedule {
+public record Play(Expr playlist, boolean isInstant, boolean ifdef, IntLit priority, int line) implements Schedule
+{
     public int getPriorityOrElse(int defaultPriority) {
         return priority == null ? defaultPriority : priority.value();
     }

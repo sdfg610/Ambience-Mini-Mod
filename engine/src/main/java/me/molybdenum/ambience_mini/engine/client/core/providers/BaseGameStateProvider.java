@@ -1,8 +1,8 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.Type;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.BoolVal;
-import me.molybdenum.ambience_mini.engine.client.core.monitor.music_selector.values.Value;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.BoolVal;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.jetbrains.annotations.Nullable;

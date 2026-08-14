@@ -2,6 +2,8 @@ package me.molybdenum.ambience_mini.engine.shared.utils;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.*;
+import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
@@ -86,5 +88,21 @@ public class Utils {
         try {
             task.run();
         } catch (Exception ignored) { }
+    }
+
+
+    public static void printMessages(Logger logger, List<Message> messages) {
+        for (var error : messages) {
+            if (error instanceof SynError err)
+                logger.error("Syntactic error [line {}, column {}]: {}", err.line(), err.column(), err.message());
+            else if (error instanceof SemError err)
+                logger.error("Semantic error [line {}]: {}", err.line(), err.message());
+            else if (error instanceof Warning wrn)
+                logger.warn("Warning [line {}]: {}", wrn.line(), wrn.message());
+            else if (error instanceof ExcError err)
+                logger.error("An exception occurred while loading the music configuration:\n", err.exception());
+            else
+                throw new RuntimeException("Could not print error of type: " + error.getClass().getName());
+        }
     }
 }

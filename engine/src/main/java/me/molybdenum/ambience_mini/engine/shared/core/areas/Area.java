@@ -3,7 +3,7 @@ package me.molybdenum.ambience_mini.engine.shared.core.areas;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmReader;
@@ -59,8 +59,8 @@ public class Area implements AmSerializable {
             return Optional.of("Area name cannot be null!");
         else if (name.isBlank())
             return Optional.of("Area name cannot be blank!");
-        else if (name.length() > Common.MAX_AREA_NAME_LENGTH)
-            return Optional.of("Area name cannot be longer than '" + Common.MAX_AREA_NAME_LENGTH + "' symbols. Got: '" + name + "'");
+        else if (name.length() > Constants.MAX_AREA_NAME_LENGTH)
+            return Optional.of("Area name cannot be longer than '" + Constants.MAX_AREA_NAME_LENGTH + "' symbols. Got: '" + name + "'");
 
         else if (dimension == null)
             return Optional.of("Area dimension cannot be null!");

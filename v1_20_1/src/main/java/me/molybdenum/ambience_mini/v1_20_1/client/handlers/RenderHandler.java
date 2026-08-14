@@ -3,7 +3,7 @@ package me.molybdenum.ambience_mini.v1_20_1.client.handlers;
 import com.mojang.blaze3d.vertex.*;
 import me.molybdenum.ambience_mini.v1_20_1.AmbienceMini;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.render.area.AreaRenderer;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -13,7 +13,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 
-@Mod.EventBusSubscriber(modid = Common.MOD_ID, value={Dist.CLIENT})
+@Mod.EventBusSubscriber(modid = Constants.MOD_ID, value={Dist.CLIENT})
 public class RenderHandler
 {
     private static AreaRenderer renderer;

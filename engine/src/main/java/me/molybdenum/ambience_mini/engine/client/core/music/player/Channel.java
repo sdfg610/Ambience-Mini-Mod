@@ -1,0 +1,174 @@
+package me.molybdenum.ambience_mini.engine.client.core.music.player;
+
+import me.molybdenum.ambience_mini.engine.shared.music.Music;
+import me.molybdenum.ambience_mini.engine.client.core.music.decoders.AmDecoder;
+import me.molybdenum.ambience_mini.engine.client.core.music.AL.ALUtils;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.openal.AL10;
+
+import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+
+public class Channel {
+    public static final int BUFFER_COUNT = 4;
+
+    private static final long FADE_STEP_MILLISECONDS = 75;
+    private static final int FADE_STEP_COUNT = 10;
+
+    private float playingVolume;
+    private final AtomicBoolean isFading = new AtomicBoolean();
+
+    public final Music music;
+    private final int source;
+    private final AmDecoder decoder;
+    private final AtomicBoolean isClosed = new AtomicBoolean(false);
+
+
+    public Channel(Music music, AmDecoder decoder) {
+        this.music = music;
+        this.decoder = decoder;
+
+        this.source = ALUtils.genSource();
+        loadNextBuffers(BUFFER_COUNT);
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Music info
+    @Nullable
+    public String getMusicPath() {
+        return decoder.getMusicPath();
+    }
+
+    @Nullable public String getMusicTitle() {
+        return decoder.getMusicTitle();
+    }
+
+    @Nullable public String getMusicAuthor() {
+        return decoder.getMusicAuthor();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Stream management
+    public void updateBuffers() {
+        if (!isClosed.get()) {
+            int count = removeProcessedBuffers();
+            loadNextBuffers(count);
+        }
+    }
+
+    private void loadNextBuffers(int count) {
+        for (int i = 0; i < count; ++i) {
+            ByteBuffer data = decoder.getFrame();
+            if (data != null) {
+                int buffer = ALUtils.genBuffer();
+                ALUtils.bufferData(buffer, data, decoder.getFormat());
+                ALUtils.queueBuffer(source, buffer);
+            }
+        }
+    }
+
+    private int removeProcessedBuffers() {
+        int count = ALUtils.countProcessedBuffers(source);
+        if (count > 0)
+            ALUtils.deleteBuffers(ALUtils.unqueueBuffers(source, count));
+        return count;
+    }
+
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Sound control
+    public void resume(boolean fadeIn) {
+        if (!isClosed.get() && isPaused()) {
+            ALUtils.setVolume(source, fadeIn ? 0f : playingVolume);
+            ALUtils.resumeSource(source);
+            if (fadeIn) fadeIn();
+        }
+    }
+
+    public void pause(boolean fadeOut) {
+        if (!isClosed.get() && isPlaying()) {
+            if (fadeOut) fadeOut();
+            ALUtils.pauseSource(source);
+        }
+    }
+
+
+    public void setVolume(float volume) {
+        if (!isClosed.get()) {
+            playingVolume = volume + music.getCorrectedVolumeAdjustment();
+            ALUtils.setMaxVolume(source, playingVolume);
+            if (isPlaying() && !isFading.get())
+                ALUtils.setVolume(source, playingVolume);
+        }
+    }
+
+    public void stopAndClose(boolean fadeOut) {
+        if (this.isClosed.compareAndSet(false, true)) {
+            if (fadeOut) fadeOut();
+            ALUtils.stopSource(source);
+            removeProcessedBuffers();
+            ALUtils.deleteSource(source);
+            decoder.close();
+        }
+    }
+
+    private void fadeIn() {
+        isFading.set(true);
+        try {
+            float diff = playingVolume / FADE_STEP_COUNT;
+
+            for (int i = FADE_STEP_COUNT - 1; i >= 0; i--) {
+                ALUtils.setVolume(source, playingVolume - diff*i);
+                TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
+            }
+
+            ALUtils.setVolume(source, playingVolume);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            isFading.set(false);
+        }
+    }
+
+    private void fadeOut() {
+        isFading.set(true);
+        try {
+            float diff = playingVolume / FADE_STEP_COUNT;
+
+            for (int i = 0; i < FADE_STEP_COUNT; i++) {
+                ALUtils.setVolume(source, playingVolume - diff*i);
+                TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
+            }
+
+            ALUtils.setVolume(source, 0f);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
+            isFading.set(false);
+        }
+    }
+
+
+    public boolean isPlaying() {
+        return !isClosed.get() && ALUtils.getSourceState(source) == AL10.AL_PLAYING;
+    }
+
+    public boolean isPaused() {
+        int state = ALUtils.getSourceState(source);
+        return !isClosed.get() && state == AL10.AL_PAUSED || state == AL10.AL_INITIAL;
+    }
+
+    public boolean isStopped() {
+        return !isClosed.get() && ALUtils.getSourceState(source) == AL10.AL_STOPPED;
+    }
+
+    public boolean isClosed() {
+        return isClosed.get();
+    }
+}

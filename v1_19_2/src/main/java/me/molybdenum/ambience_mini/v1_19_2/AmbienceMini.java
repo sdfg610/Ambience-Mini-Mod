@@ -17,7 +17,7 @@ import me.molybdenum.ambience_mini.v1_19_2.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.v1_19_2.client.core.render.drawer.Drawer;
 import me.molybdenum.ambience_mini.v1_19_2.client.core.util.Notification;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
 import me.molybdenum.ambience_mini.v1_19_2.client.handlers.RenderHandler;
 import me.molybdenum.ambience_mini.v1_19_2.network.Networking;
@@ -54,7 +54,7 @@ import org.slf4j.Logger;
 
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(Common.MOD_ID)
+@Mod(Constants.MOD_ID)
 public class AmbienceMini extends BaseAmbienceMini
 {
     private static final String OBF_SOUND_ENGINE_LOADED = "f_120219_";
@@ -91,7 +91,7 @@ public class AmbienceMini extends BaseAmbienceMini
     }
 
     public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
+        return ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, path);
     }
 
 
@@ -103,7 +103,6 @@ public class AmbienceMini extends BaseAmbienceMini
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             VolumeState.init(
-                    clientConfig,
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC),
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS)

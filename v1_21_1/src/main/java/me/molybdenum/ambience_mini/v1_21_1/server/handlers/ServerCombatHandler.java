@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.v1_21_1.server.handlers;
 
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobCombatInteractionMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
@@ -17,7 +17,7 @@ import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
 
-@EventBusSubscriber(modid = Common.MOD_ID)
+@EventBusSubscriber(modid = Constants.MOD_ID)
 public class ServerCombatHandler
 {
     @SubscribeEvent(priority = EventPriority.LOWEST)

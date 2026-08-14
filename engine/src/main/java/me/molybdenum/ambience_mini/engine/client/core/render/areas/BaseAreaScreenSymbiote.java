@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
@@ -289,8 +289,8 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
             return;
 
         var name = getValue(txtAreaName);
-        if (name.isBlank() || name.length() > Common.MAX_AREA_NAME_LENGTH) {
-            notification.printTranslatableToChat(AmLang.MSG_AREA_NAME_REQUIREMENTS, Common.MAX_AREA_NAME_LENGTH);
+        if (name.isBlank() || name.length() > Constants.MAX_AREA_NAME_LENGTH) {
+            notification.printTranslatableToChat(AmLang.MSG_AREA_NAME_REQUIREMENTS, Constants.MAX_AREA_NAME_LENGTH);
             return;
         }
 
@@ -307,7 +307,10 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
         areaHelper.submitArea(
                 area,
                 this::resetEditorAndCloseMenu,
-                () -> allowInput = true
+                error -> {
+                    notification.printToChat(error);
+                    allowInput = true;
+                }
         );
     }
 
@@ -319,7 +322,10 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
         areaHelper.deleteArea(
                 area.id,
                 this::resetEditorAndCloseMenu,
-                () -> allowInput = true
+                error -> {
+                    notification.printToChat(error);
+                    allowInput = true;
+                }
         );
     }
 
