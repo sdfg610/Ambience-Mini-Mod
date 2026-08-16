@@ -29,6 +29,8 @@
 - Minor improvements to volume change handling.
 - Architectural improvements to message passing and handling between client and server.
 - Architectural improvements to music-configuration loading and execution.
+- Added support for `.wav` files, but not for metadata.
+  * Since metadata is not supported, you can instead manually specify the loop interval in the music config if you want the music to loop: `"music.wav"<loopstart=1000, loopend=9001>`.
 - Various bug-fixes.
 
 ****

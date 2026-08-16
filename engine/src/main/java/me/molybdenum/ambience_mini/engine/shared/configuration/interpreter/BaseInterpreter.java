@@ -70,7 +70,10 @@ public class BaseInterpreter {
             String musicPath = BaseMusicProvider.validatePath(load.file().value()).getValue();
             float gain = load.getFloatArg(Music.ARG_GAIN, 0f);
             boolean doLoop = load.getBoolArg(Music.ARG_LOOP, false);
-            music.add(new Music(musicPath, gain, doLoop));
+            int loopstart = load.getIntArg(Music.ARG_LOOPSTART, -1);
+            int loopend = load.getIntArg(Music.ARG_LOOPEND, -1);
+            int looplength = load.getIntArg(Music.ARG_LOOPLENGTH, -1);
+            music.add(new Music(musicPath, gain, doLoop, loopstart, loopend, looplength));
         }
 
         return new PlaylistVal(music);

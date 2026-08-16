@@ -22,6 +22,10 @@ public abstract class ValueDTO implements AmSerializable
         return this instanceof FloatDTO f ? f.value : null;
     }
 
+    public Integer tryGetInt() {
+        return this instanceof IntDTO i ? i.value : null;
+    }
+
 
     @Override
     public void writeTo(AmWriter writer) {
@@ -33,6 +37,7 @@ public abstract class ValueDTO implements AmSerializable
         return switch (reader.readString()) {
             case BOOL_ID -> BoolDTO.ctor(reader);
             case FLOAT_ID -> FloatDTO.ctor(reader);
+            case INT_ID -> IntDTO.ctor(reader);
             default -> null;
         };
     }
@@ -109,6 +114,43 @@ public abstract class ValueDTO implements AmSerializable
 
         private static FloatDTO ctor(AmReader reader) {
             return new FloatDTO(reader.readFloat());
+        }
+    }
+
+    private static final String INT_ID = "int";
+    public static class IntDTO extends ValueDTO {
+        public final int value;
+
+
+        public IntDTO(int value) {
+            this.value = value;
+        }
+
+
+        @Override
+        protected String getTypeID() {
+            return INT_ID;
+        }
+
+        @Override
+        protected void innerWriteTo(AmWriter writer) {
+            writer.writeInt(value);
+        }
+
+        @Override
+        public int getSerializedLength() {
+            return Integer.BYTES;
+        }
+
+
+        @Override
+        public String toString() {
+            return Integer.toString(value);
+        }
+
+
+        private static IntDTO ctor(AmReader reader) {
+            return new IntDTO(reader.readInt());
         }
     }
 }

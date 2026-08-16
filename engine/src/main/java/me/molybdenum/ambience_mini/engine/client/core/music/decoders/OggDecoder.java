@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
 import com.jcraft_am_custom.jorbis.*;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
+import me.molybdenum.ambience_mini.engine.shared.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.music.streams.FullyBufferedInputStream;
 import me.molybdenum.ambience_mini.engine.shared.music.streams.StreamPreAllocBuffer;
 import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
@@ -32,14 +33,14 @@ public class OggDecoder extends AmDecoder
     public OggDecoder(MusicInstance mInst) {
         super(mInst.music(), new Deferred<>());
         try {
-            boolean doLoop = mInst.music().loop();
+            boolean doLoop = mInst.music().doLoop();
 
             // Thanks to: https://github.com/tulskiy/musique/blob/master/musique-core/src/main/java/com/tulskiy/musique/audio/formats/ogg/VorbisDecoder.java
             file = new VorbisFile(ensureLoopableIfNeeded(mInst.createStream(), mInst.getMusicSize(), doLoop));
             Info info = file.getInfo()[0];
             format = new AudioFormat(info.rate, 16, info.channels, true, false);
             sampleByteSize = 2 * info.channels;
-            tagReader.set(new OggTagReader(file.getComment()));
+            tagReader.set(new OggTagReader(file.getComment(), mInst.music()));
 
             if (doLoop) {
                 var startAndEnd = tagReader.get().getLoopStartAndEnd();
@@ -110,7 +111,8 @@ public class OggDecoder extends AmDecoder
         private final Comment[] comment;
 
 
-        private OggTagReader(Comment[] comment) {
+        private OggTagReader(Comment[] comment, Music music) {
+            super(music);
             if (comment.length == 0)
                 throw new RuntimeException("Ogg file has no comment, but comments are needed to get looping info!");
             this.comment = comment;

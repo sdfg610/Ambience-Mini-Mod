@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
+import me.molybdenum.ambience_mini.engine.shared.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,12 +12,20 @@ public abstract class TagReader {
     @Nullable public abstract String getTitle();
     @Nullable public abstract String getAuthor();
 
+    private final Music music;
+
+
+    protected TagReader(Music music) {
+        this.music = music;
+    }
+
+
     public Pair<Long, Long> getLoopStartAndEnd() {
         long loopStart, loopEnd;
 
-        String loopStartStr = getLoopStartStr();
+        String loopStartStr = getIfNonNegativeOrElse(music.loopstart(), getLoopStartStr());
         if (loopStartStr == null)
-            throw new RuntimeException("No 'loopstart' tag in metadata.");
+            throw new RuntimeException("No 'loopstart' tag in config or metadata.");
         try {
             loopStart = Long.parseLong(loopStartStr);
             if (loopStart < 0)
@@ -26,8 +35,8 @@ public abstract class TagReader {
             throw new RuntimeException("Could not parse 'loopstart' tag with value '" + loopStartStr + "'");
         }
 
-        String loopEndStr = getLoopEndStr();
-        String loopLengthStr = getLoopLengthStr();
+        String loopEndStr = getIfNonNegativeOrElse(music.loopend(), getLoopEndStr());
+        String loopLengthStr = getIfNonNegativeOrElse(music.looplength(), getLoopLengthStr());
         if (loopEndStr != null) {
             try {
                 loopEnd = Long.parseLong(loopEndStr);
@@ -50,8 +59,12 @@ public abstract class TagReader {
             }
         }
         else
-            throw new RuntimeException("No 'loopend' or 'looplength' tag in metadata.");
+            throw new RuntimeException("No 'loopend' or 'looplength' tag in config or metadata.");
 
         return new Pair<>(loopStart, loopEnd);
+    }
+
+    private String getIfNonNegativeOrElse(int value, String strValue) {
+        return value >= 0 ? Integer.toString(value) : strValue;
     }
 }

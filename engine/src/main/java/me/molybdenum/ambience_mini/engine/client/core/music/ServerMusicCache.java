@@ -278,7 +278,7 @@ public class ServerMusicCache
             }
 
             if (!isCancelled() && !skippedMusic.isEmpty()) {
-                notification.showToast(AmLang.MSG_SERVER_MUSIC_SKIPPED);
+                notification.printTranslatableToChat(AmLang.MSG_SERVER_MUSIC_SKIPPED);
                 var musicList = String.join("\n",
                         skippedMusic.stream().map(pair -> "-- '" + pair.left() + "' (size = " + pair.right() + " bytes)").toList()
                 );
@@ -312,11 +312,19 @@ public class ServerMusicCache
             }
 
             var gain = musicDTO.tryGetFlag(Music.ARG_GAIN).map(ValueDTO::tryGetFloat).orElse(0f);
-            boolean doLoop = musicDTO.tryGetFlag(Music.ARG_LOOP).map(ValueDTO::tryGetBoolean).orElse(false);
+            boolean loop = musicDTO.tryGetFlag(Music.ARG_LOOP).map(ValueDTO::tryGetBoolean).orElse(false);
+            int loopStart = musicDTO.tryGetFlag(Music.ARG_LOOPSTART).map(ValueDTO::tryGetInt).orElse(-1);
+            int loopEnd = musicDTO.tryGetFlag(Music.ARG_LOOPEND).map(ValueDTO::tryGetInt).orElse(-1);
+            int loopLength = musicDTO.tryGetFlag(Music.ARG_LOOPLENGTH).map(ValueDTO::tryGetInt).orElse(-1);
 
             newMusicPathToSize.putIfAbsent(musicPath, musicSize);
             // TODO: locatedOnServer == true only if not on integrated server
-            return new Music(musicPath, true || !serverSetup.isOnLocalServer, gain, doLoop);
+            return new Music(
+                    musicPath,
+                    true || !serverSetup.isOnLocalServer,
+                    gain,
+                    loop, loopStart, loopEnd, loopLength
+            );
         }
     }
 

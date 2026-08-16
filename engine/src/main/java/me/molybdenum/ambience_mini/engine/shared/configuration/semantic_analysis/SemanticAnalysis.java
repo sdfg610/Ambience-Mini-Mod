@@ -343,7 +343,7 @@ public class SemanticAnalysis
                 usedMusicFiles.add(musicPath);
 
             if (!AmDecoder.isSupportedFileType(Utils.getFileExtension(musicPath)))
-                messages.add(new SemError(load.line(), "The file type of '" + musicPath + "' is unsupported. Ambience Mini currently only supports file types: " + String.join(", ", AmDecoder.getSupportedFileTypes())));
+                messages.add(new SemError(load.line(), "The file type '" + musicPath + "' is unsupported. Ambience Mini currently only supports file types: " + String.join(", ", AmDecoder.getSupportedFileTypes())));
 
             for (var arg : load.args()) {
                 Type type = validateExpression(arg.expr(), null, false, messages);
@@ -355,6 +355,12 @@ public class SemanticAnalysis
                     case Music.ARG_LOOP -> {
                         if (type != null && !type.isBool())
                             messages.add(new SemError(arg.ident().line(), "The music argument '" + Music.ARG_LOOP + "' expected a boolean value, but got a value of type '" + type + "'"));
+                    }
+                    case Music.ARG_LOOPSTART,
+                         Music.ARG_LOOPEND,
+                         Music.ARG_LOOPLENGTH -> {
+                        if (type != null && !type.isInt())
+                            messages.add(new SemError(arg.ident().line(), "The music argument '" + arg.ident().value() + "' expected an integer value, but got a value of type '" + type + "'"));
                     }
                     default -> messages.add(new SemError(arg.ident().line(), "The music argument '" + arg.ident().value() + "' is invalid"));
                 }

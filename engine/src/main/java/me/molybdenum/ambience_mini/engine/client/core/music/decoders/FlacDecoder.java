@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
+import me.molybdenum.ambience_mini.engine.shared.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
 import org.jetbrains.annotations.Nullable;
 import org.jflac_am_custom.FLACDecoder;
@@ -39,13 +40,13 @@ public class FlacDecoder extends AmDecoder
     public FlacDecoder(MusicInstance mInst) {
         super(mInst.music(), new Deferred<>());
         try {
-            boolean doLoop = mInst.music().loop();
+            boolean doLoop = mInst.music().doLoop();
 
             this.stream = ensureLoopableIfNeeded(mInst.createStream(), doLoop);
             this.decoder = new FLACDecoder(stream);
 
             Metadata[] metadata = decoder.readMetadata();
-            tagReader.set(new FlacTagReader(getTags(metadata)));
+            tagReader.set(new FlacTagReader(getTags(metadata), mInst.music()));
 
             StreamInfo streamInfo = getStreamInfo(metadata);
             format = streamInfo.getAudioFormat();
@@ -160,7 +161,8 @@ public class FlacDecoder extends AmDecoder
         private final VorbisComment comment;
 
 
-        private FlacTagReader(VorbisComment comment) {
+        private FlacTagReader(VorbisComment comment, Music music) {
+            super(music);
             this.comment = comment;
         }
 

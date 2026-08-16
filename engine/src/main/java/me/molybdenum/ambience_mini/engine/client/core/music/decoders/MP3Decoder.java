@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
 import javazoom.jlayer_am_custom.decoder.*;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
+import me.molybdenum.ambience_mini.engine.shared.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
@@ -37,7 +38,7 @@ public class MP3Decoder extends AmDecoder {
     public MP3Decoder(MusicInstance mInst) {
         super(mInst.music(), new Deferred<>());
         try {
-            boolean doLoop = mInst.music().loop();
+            boolean doLoop = mInst.music().doLoop();
 
             bitstream = new Bitstream(ensureLoopableIfNeeded(mInst.createStream(), doLoop));
             decoder.initialize(bitstream.readFrame()); // Load metadata
@@ -45,7 +46,7 @@ public class MP3Decoder extends AmDecoder {
 
             sampleShortSize = decoder.getOutputChannels(); // JLayer always produces samples of 2 bytes or 1 short.
             bufferMaxSamples = Obuffer.OBUFFERSIZE / sampleShortSize;
-            tagReader.set(new MP3TagReader(bitstream.getID3v2TextTags()));
+            tagReader.set(new MP3TagReader(bitstream.getID3v2TextTags(), mInst.music()));
 
             if (doLoop) {
                 var startAndEnd = tagReader.get().getLoopStartAndEnd();
@@ -149,7 +150,8 @@ public class MP3Decoder extends AmDecoder {
         private final Map<String, String> tags;
 
 
-        private MP3TagReader(Map<String, String> comment) {
+        private MP3TagReader(Map<String, String> comment, Music music) {
+            super(music);
             this.tags = comment;
         }
 
