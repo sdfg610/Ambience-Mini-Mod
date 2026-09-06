@@ -44,8 +44,8 @@ CHARACTERS
 
 TOKENS
   IDENT  = ('_' | letter) {letter | digit | '_'}  .
-  INT    = ['-'|'+'] digit {digit}  .
-  FLOAT  = ['-'|'+'] digit {digit} '.' digit {digit}  .
+  INT    = digit {digit}  .
+  FLOAT  = digit {digit} '.' digit {digit}  .
   STRING = '"' {stringChar} '"' .
 
 COMMENTS FROM "/*" TO "*/" NESTED  /* Nested means: "There can be comments inside comments" */
@@ -207,9 +207,9 @@ ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY
       Expr<out Expr cond> "end"
                         (. expr = new QuantifierOp(quantifier, new Ident(identifier, line), list, cond, inLine, whereLine); .)
     | '(' Expr<out expr> ')'
-    | '['                                  (. expr = new Playlist(t.line); .)
-          [ Music<out Playlist.Load load>  (. ((Playlist)expr).music().add(load); .)
-            { ',' Music<out load>          (. ((Playlist)expr).music().add(load); .)
+    | '['                                  (. expr = new PlaylistLit(t.line); .)
+          [ Music<out PlaylistLit.Load load>  (. ((PlaylistLit)expr).music().add(load); .)
+            { ',' Music<out load>          (. ((PlaylistLit)expr).music().add(load); .)
             }
           ]
       ']'
@@ -219,17 +219,16 @@ Const<out Expr expr>    (. expr = null;                                         
     = "undefined"       (. expr = new UndefinedLit(t.line);                         .)
     | "true"            (. expr = new BoolLit(true, t.line);                        .)
     | "false"           (. expr = new BoolLit(false, t.line);                       .)
-    | INT               (. expr = new IntLit(Integer.parseInt(t.val), t.line);      .)
-    | FLOAT             (. expr = new FloatLit(Float.parseFloat(t.val), t.line);    .)
     | STRING            (. expr = new StringLit(removeFirstAndLast(t.val), t.line); .)
+    | Num<out expr>
 .
 
-Music<out Playlist.Load load>
+Music<out PlaylistLit.Load load>
     = STRING                   (. StringLit file = new StringLit(removeFirstAndLast(t.val), t.line); int line = t.line; var args = new ArgList(); .)
         [ '<'
           MusicArgs<args>
           '>'
-        ]                      (. load = new Playlist.Load(file, args, line); .)
+        ]                      (. load = new PlaylistLit.Load(file, args, line); .)
 .
 
 MusicArgs<ArgList args>
@@ -240,10 +239,19 @@ MusicArgs<ArgList args>
 .
 
 MusicArg<out Arg arg>    (. arg = null; .)
-    = (FLOAT|INT)        (. arg = new Arg(new Ident("gain", t.line), new FloatLit(Float.parseFloat(t.val), t.line)); .)
-    | IDENT              (. Ident ident = new Ident(t.val, t.line); Expr value = new BoolLit(true, t.line); .)
-      [ '=' Const<out value>
-      ]                  (. arg = new Arg(ident, value); .)
+    = Num<out Expr expr> (. arg = new Arg(new Ident("gain", t.line), expr); .)
+    | IDENT              (. Ident ident = new Ident(t.val, t.line); Expr expr = new BoolLit(true, t.line); .)
+      [ '='              (. expr = null; .) // Set expr to null to avoid weird typing errors when arg has syntax errors
+        (Const<out expr> | '(' Expr<out expr> ')')
+      ]                  (. arg = new Arg(ident, expr); .)
+.
+
+Num<out Expr expr>      (. expr = null; int sign = 1; .)
+    = [ '-'             (. sign = -1; .)
+      | '+']
+        ( INT           (. expr = new IntLit(Integer.parseInt(t.val) * sign, t.line);      .)
+        | FLOAT         (. expr = new FloatLit(Float.parseFloat(t.val) * sign, t.line);    .)
+        )
 .
 
 

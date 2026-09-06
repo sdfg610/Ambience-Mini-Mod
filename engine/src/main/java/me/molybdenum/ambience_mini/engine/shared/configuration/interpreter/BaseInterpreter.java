@@ -1,6 +1,5 @@
 package me.molybdenum.ambience_mini.engine.shared.configuration.interpreter;
 
-import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.Config;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.kinds.AccessibleV;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.kinds.IndexableV;
@@ -14,21 +13,11 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class BaseInterpreter {
-    protected final VariableEnv rootEnv = VariableEnv.empty();
-
-    protected final Config config;
     protected final BaseGameStateProvider gameStateProvider;
 
 
-    public BaseInterpreter(Config config, BaseGameStateProvider gameStateProvider) {
-        this.config = config;
+    public BaseInterpreter(BaseGameStateProvider gameStateProvider) {
         this.gameStateProvider = gameStateProvider;
-
-        for (var decl : config.declarations())
-            rootEnv.bind(
-                    decl.ident().value(),
-                    evalExpr(decl.value(), rootEnv)
-            );
     }
 
 
@@ -45,8 +34,10 @@ public class BaseInterpreter {
             return new FloatVal(floatLit.value());
         else if (expr instanceof StringLit stringLit)
             return new StringVal(stringLit.value());
-        else if (expr instanceof Playlist playlist)
-            return evalPlaylist(playlist);
+        else if (expr instanceof PlaylistLit playlistLit)
+            return evalPlaylist(playlistLit);
+        else if (expr instanceof ValueLit valueLit)
+            return valueLit.value();
         else if (expr instanceof GetEvent getEvent)
             return gameStateProvider.getEvent(getEvent.eventName().value()).isActive();
         else if (expr instanceof GetProperty property)
@@ -63,10 +54,10 @@ public class BaseInterpreter {
         throw new RuntimeException("Unhandled Expr-type '" + expr.getClass().getCanonicalName() + "' in evaluator. Please report this error to the developer");
     }
 
-    private PlaylistVal evalPlaylist(Playlist playlist) {
+    protected PlaylistVal evalPlaylist(PlaylistLit playlistLit) {
         var music = new ArrayList<Music>();
 
-        for (var load : playlist.music()) {
+        for (var load : playlistLit.music()) {
             String musicPath = BaseMusicProvider.validatePath(load.file().value()).getValue();
             float gain = load.getFloatArg(Music.ARG_GAIN, 0f);
             boolean doLoop = load.getBoolArg(Music.ARG_LOOP, false);
@@ -82,7 +73,7 @@ public class BaseInterpreter {
 
     // -----------------------------------------------------------------------------------------------------------------
     // Unary operations
-    private Value<?> evalUnOp(UnaryOp unOp, VariableEnv env) {
+    protected Value<?> evalUnOp(UnaryOp unOp, VariableEnv env) {
         Value<?> val = evalExpr(unOp.expr(), env);
 
         return switch (unOp.op()) {
@@ -91,7 +82,7 @@ public class BaseInterpreter {
         };
     }
 
-    private Value<?> opNeg(Value<?> value) {
+    protected Value<?> opNeg(Value<?> value) {
         var i = value.asInt();
         if (i.isPresent())
             return new IntVal(-i.get());
@@ -103,7 +94,7 @@ public class BaseInterpreter {
 
     // -----------------------------------------------------------------------------------------------------------------
     // Binary operations
-    private Value<?> evalBinOp(BinaryOp binOp, VariableEnv env) {
+    protected Value<?> evalBinOp(BinaryOp binOp, VariableEnv env) {
         Value<?> left = evalExpr(binOp.left(), env);
         Supplier<Value<?>> right = () -> evalExpr(binOp.right(), env);
 
@@ -125,13 +116,13 @@ public class BaseInterpreter {
         };
     }
 
-    private BoolVal opAppEq(Value<?> v1, Value<?> v2) {
+    protected BoolVal opAppEq(Value<?> v1, Value<?> v2) {
         return new BoolVal(
                 v1.mapString(s1 -> v2.mapString(s1::contains))
         );
     }
 
-    private BoolVal opMatch(Value<?> v1, Value<?> v2) {
+    protected BoolVal opMatch(Value<?> v1, Value<?> v2) {
         return new BoolVal(
                 v1.mapString(s1 -> v2.mapString(s2 -> {
                     try {
@@ -143,19 +134,19 @@ public class BaseInterpreter {
         );
     }
 
-    private BoolVal opAnd(Value<?> left, Supplier<Value<?>> right) {
+    protected BoolVal opAnd(Value<?> left, Supplier<Value<?>> right) {
         return new BoolVal(left.mapBool(b1 ->
                 b1 ? right.get().asBool().orElse(null) : Boolean.FALSE
         ));
     }
 
-    private BoolVal opOr(Value<?> left, Supplier<Value<?>> right) {
+    protected BoolVal opOr(Value<?> left, Supplier<Value<?>> right) {
         return new BoolVal(left.mapBool(b1 ->
                 b1 ? Boolean.TRUE : right.get().asBool().orElse(null)
         ));
     }
 
-    private BoolVal opLt(Value<?> left, Value<?> right) {
+    protected BoolVal opLt(Value<?> left, Value<?> right) {
         return new BoolVal(
                 left instanceof FloatVal || right instanceof FloatVal
                         ? left.mapFloat(f1 -> right.mapFloat(f2 -> f1 < f2))
@@ -163,7 +154,7 @@ public class BaseInterpreter {
         );
     }
 
-    private BoolVal opLe(Value<?> left, Value<?> right) {
+    protected BoolVal opLe(Value<?> left, Value<?> right) {
         return new BoolVal(
                 left instanceof FloatVal || right instanceof FloatVal
                         ? left.mapFloat(f1 -> right.mapFloat(f2 -> f1 <= f2))
@@ -171,13 +162,13 @@ public class BaseInterpreter {
         );
     }
 
-    private Value<?> opIndex(Value<?> base, Value<?> index) {
+    protected Value<?> opIndex(Value<?> base, Value<?> index) {
         return base instanceof IndexableV indexable
                 ? indexable.getIndex(index)
                 : UndefinedVal.INSTANCE;
     }
 
-    private Value<?> opAdd(Value<?> left, Value<?> right) {
+    protected Value<?> opAdd(Value<?> left, Value<?> right) {
         try {
             if (left instanceof StringVal)
                 return left.mapString(s1 -> right.mapString(s2 -> new StringVal(s1 + s2)));
@@ -191,7 +182,7 @@ public class BaseInterpreter {
         }
     }
 
-    private Value<?> opSub(Value<?> left, Value<?> right) {
+    protected Value<?> opSub(Value<?> left, Value<?> right) {
         try {
             return left instanceof FloatVal || right instanceof FloatVal
                     ? left.mapFloat(f1 -> right.mapFloat(f2 -> new FloatVal(f1 - f2)))
@@ -202,7 +193,7 @@ public class BaseInterpreter {
         }
     }
 
-    private Value<?> opMul(Value<?> left, Value<?> right) {
+    protected Value<?> opMul(Value<?> left, Value<?> right) {
         try {
             return left instanceof FloatVal || right instanceof FloatVal
                     ? left.mapFloat(f1 -> right.mapFloat(f2 -> new FloatVal(f1 * f2)))
@@ -213,7 +204,7 @@ public class BaseInterpreter {
         }
     }
 
-    private Value<?> opDiv(Value<?> left, Value<?> right) {
+    protected Value<?> opDiv(Value<?> left, Value<?> right) {
         try {
             return left instanceof FloatVal || right instanceof FloatVal
                     ? left.mapFloat(f1 -> right.mapFloat(f2 -> new FloatVal(f1 / f2)))
@@ -224,7 +215,7 @@ public class BaseInterpreter {
         }
     }
 
-    private Value<?> opAppend(Value<?> left, Value<?> right) {
+    protected Value<?> opAppend(Value<?> left, Value<?> right) {
         try {
             var pl1 = left.asMusicList().orElse(null);
             var pl2 = right.asMusicList().orElse(null);
@@ -244,14 +235,14 @@ public class BaseInterpreter {
         }
     }
 
-    private Value<?> opNullCheck(Value<?> left, Supplier<Value<?>> right) {
+    protected Value<?> opNullCheck(Value<?> left, Supplier<Value<?>> right) {
         return left.isUndefined() ? right.get() : left;
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
     // Accessors
-    private Value<?> evalAccessor(Accessor acc, VariableEnv env) {
+    protected Value<?> evalAccessor(Accessor acc, VariableEnv env) {
         return evalExpr(acc.base(), env) instanceof AccessibleV accessible
                 ? accessible.getField(acc.field().value())
                 : UndefinedVal.INSTANCE;
@@ -260,7 +251,7 @@ public class BaseInterpreter {
 
     // -----------------------------------------------------------------------------------------------------------------
     // Quantifier operations
-    private BoolVal evalQuantifierOp(QuantifierOp quanOp, VariableEnv env) {
+    protected BoolVal evalQuantifierOp(QuantifierOp quanOp, VariableEnv env) {
         String ident = quanOp.identifier().value();
         Predicate<Value<?>> evaluator = elem -> evalExpr(quanOp.condition(), env.enterScope().bind(ident, elem)).asBool().orElse(false);
 

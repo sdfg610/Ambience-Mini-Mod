@@ -21,16 +21,14 @@ public class Loader
         ArrayList<Message> messages = new ArrayList<>();
 
         try {
-            Config config = new Parser().Parse(configStream, messages);
-            new SemanticAnalysis(musicProvider, setup).validate(config, messages);
-
-            if (messages.stream().noneMatch(Message::isError))
-                return LoadResult.of(config, messages);
+            return SemanticAnalysis.validateAndOptimize(
+                    new Parser().Parse(configStream, messages),
+                    musicProvider, setup, messages
+            );
         }
         catch (Exception ex) {
             messages.add(new ExcError(ex));
+            return LoadResult.fail(messages);
         }
-
-        return LoadResult.fail(messages);
     }
 }

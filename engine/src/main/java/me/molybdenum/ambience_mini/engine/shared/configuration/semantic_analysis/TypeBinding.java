@@ -6,6 +6,8 @@ public class TypeBinding {
     public final Type type;
     public final int line;
     private boolean isUsed;
+    private boolean isConst;
+    private boolean isWellDefined;
 
 
     public TypeBinding(Type type, int line) {
@@ -14,11 +16,34 @@ public class TypeBinding {
     }
 
 
-    public void markIsUsed() {
+    public void markAsUsed() {
         isUsed = true;
     }
 
     public boolean getIsUsed() {
         return isUsed;
+    }
+
+
+    public void markAsConst() {
+        isConst = true;
+    }
+
+    public boolean getIsConst() {
+        return isConst;
+    }
+
+
+    public void markAsWellDefined() {
+        isWellDefined = true;
+    }
+
+    public boolean getIsWellDefined() {
+        return isWellDefined;
+    }
+
+
+    public boolean isStaticallyEvaluable() {
+        return isConst && isWellDefined;
     }
 }

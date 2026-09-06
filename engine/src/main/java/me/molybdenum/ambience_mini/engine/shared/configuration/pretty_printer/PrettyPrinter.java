@@ -33,7 +33,13 @@ public class PrettyPrinter {
 
     private static String printSchedule(Schedule schedule, int depth) {
         if (schedule instanceof Play play)
-            return indent(depth) + "play " + printExpr(play.playlist()) + play.getPriorityOpt().map(p -> " priority " + p).orElse("") + ";\n";
+            return indent(depth) + "play "
+                    + (play.isInstant() ? "instant " : "")
+                    + (play.ifdef() ? "ifdef " : "")
+                    + printExpr(play.playlist())
+                    + play.getPriorityOpt().map(p -> " priority " + p).orElse("") + ";\n";
+        else if (schedule instanceof Vanilla)
+            return indent(depth) + "use_vanilla_player;\n";
         else if (schedule instanceof Interrupt interrupt)
             return indent(depth) + "interrupt " +
                     printSchedule(interrupt.body(), interrupt.body() instanceof Block ? depth : 0);
@@ -67,8 +73,10 @@ public class PrettyPrinter {
             return Float.toString(floatLit.value());
         else if (expr instanceof StringLit stringLit)
             return '"' + stringLit.value() + '"';
-        else if (expr instanceof Playlist playlist)
-            return printPlaylist(playlist);
+        else if (expr instanceof PlaylistLit playlistLit)
+            return printPlaylist(playlistLit);
+        else if (expr instanceof ValueLit valueLit)
+            return "ValueLit(" + valueLit.value() + ")";
         else if (expr instanceof GetEvent getEvent)
             return '@' + getEvent.eventName().value();
         else if (expr instanceof GetProperty getProperty)
@@ -97,8 +105,8 @@ public class PrettyPrinter {
     }
 
 
-    public static String printPlaylist(Playlist playlist) {
-        var loads = playlist.music().stream()
+    public static String printPlaylist(PlaylistLit playlistLit) {
+        var loads = playlistLit.music().stream()
                 .map(load -> '"' + load.file().value() + '"' + getArgsString(load.args()))
                 .toList();
 

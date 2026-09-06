@@ -25,11 +25,11 @@ public class ServerMusicManager
 
     private BaseMusicProvider musicProvider;
 
-    private final HashMap<String, Boolean> mayLoadCache = new HashMap<>();
-    private final ArrayList<PlaylistDTO> serverPlaylists = new ArrayList<>();
-    private final ArrayList<MusicDataCache> musicCache = new ArrayList<>();
-
+    private ArrayList<PlaylistDTO> serverPlaylists = new ArrayList<>();
     private int serverPlaylistsByteSize;
+
+    private final HashMap<String, Boolean> mayLoadCache = new HashMap<>();
+    private final ArrayList<MusicDataCache> musicCache = new ArrayList<>();
 
     private ScheduledFuture<?> cleanupFuture;
     private long unusedThresholdMillis = 30_000;
@@ -67,8 +67,7 @@ public class ServerMusicManager
         this.musicProvider = musicProvider;
 
         try {
-            serverPlaylists.clear();
-            serverConfig.loadServerPlaylists(serverPlaylists);
+            serverPlaylists = serverConfig.loadServerPlaylists();
             serverPlaylistsByteSize = serverPlaylists.stream()
                     .mapToInt(PlaylistDTO::getSerializedLength)
                     .sum();

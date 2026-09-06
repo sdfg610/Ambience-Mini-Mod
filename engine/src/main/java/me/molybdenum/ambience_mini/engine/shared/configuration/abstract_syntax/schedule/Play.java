@@ -7,6 +7,11 @@ import java.util.Optional;
 
 public record Play(Expr playlist, boolean isInstant, boolean ifdef, IntLit priority, int line) implements Schedule
 {
+    public Play withPlaylistAndPriority(Expr newPlaylist, IntLit newPriority) {
+        return new Play(newPlaylist, isInstant, ifdef, newPriority, line);
+    }
+
+
     public int getPriorityOrElse(int defaultPriority) {
         return priority == null ? defaultPriority : priority.value();
     }

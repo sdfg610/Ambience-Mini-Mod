@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.shared.configuration;
 
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Message;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,11 @@ public class LoadResult<T> {
     }
 
 
+    public boolean isSuccess() {
+        return result != null;
+    }
+
+
     public <E> LoadResult<E> map(Function<T, E> transform) {
         return result == null
                 ? LoadResult.fail(messages)
@@ -33,7 +39,7 @@ public class LoadResult<T> {
     }
 
 
-    public static <T> LoadResult<T> of(T result, List<Message> warnings) {
+    public static <T> LoadResult<T> of(@NotNull T result, List<Message> warnings) {
         return new LoadResult<T>(result, warnings);
     }
 

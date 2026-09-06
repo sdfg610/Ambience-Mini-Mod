@@ -23,12 +23,14 @@ public class TypeEnv {
     /// If "ident" is undefined in the current scope, register "ident" with type "type" and return true.
     /// Otherwise, return false.
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public boolean bind(String ident, Type type, int line) {
+    public Optional<TypeBinding> bind(String ident, Type type, int line) {
         var scope = scopes.getFirst();
         if (scope.containsKey(ident))
-            return false;
-        scope.put(ident, new TypeBinding(type, line));
-        return true;
+            return Optional.empty();
+
+        var binding = new TypeBinding(type, line);
+        scope.put(ident, binding);
+        return Optional.of(binding);
     }
 
     public Optional<TypeBinding> lookup(String ident) {

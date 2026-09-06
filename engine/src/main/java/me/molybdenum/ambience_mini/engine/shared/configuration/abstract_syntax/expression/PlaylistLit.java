@@ -4,20 +4,29 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.m
 
 import java.util.ArrayList;
 
-public record Playlist(ArrayList<Load> music, int line) implements Expr
+public record PlaylistLit(ArrayList<Load> music, int line) implements Expr
 {
-    public Playlist(int line) {
+    public PlaylistLit(int line) {
         this(new ArrayList<>(), line);
+    }
+
+    public PlaylistLit withMusic(ArrayList<Load> newMusic) {
+        return new PlaylistLit(newMusic, line);
     }
 
 
     public record Load(StringLit file, ArgList args, int line)
     {
+        public Load withArgs(ArgList newArgs) {
+            return new Load(file, newArgs, line);
+        }
+
+
         public boolean getBoolArg(String ident, boolean defaultValue) {
             return args.stream()
                     .filter(arg -> arg.ident().value().equals(ident))
                     .findFirst()
-                    .map(arg -> ((BoolLit)arg.expr()).value())
+                    .flatMap(arg -> ((ValueLit)arg.expr()).value().asBool())
                     .orElse(defaultValue);
         }
 
@@ -25,7 +34,7 @@ public record Playlist(ArrayList<Load> music, int line) implements Expr
             return args.stream()
                     .filter(arg -> arg.ident().value().equals(ident))
                     .findFirst()
-                    .map(arg -> ((IntLit)arg.expr()).value())
+                    .flatMap(arg -> ((ValueLit)arg.expr()).value().asInt())
                     .orElse(defaultValue);
         }
 
@@ -33,7 +42,8 @@ public record Playlist(ArrayList<Load> music, int line) implements Expr
             return args.stream()
                     .filter(arg -> arg.ident().value().equals(ident))
                     .findFirst()
-                    .map(arg -> arg.expr() instanceof FloatLit fl ? fl.value() : (float)((IntLit)arg.expr()).value())
+                    .map(arg -> ((ValueLit)arg.expr()).value())
+                    .flatMap(val -> val.asFloat().or(() -> val.asInt().map(Integer::floatValue)))
                     .orElse(defaultValue);
         }
     }

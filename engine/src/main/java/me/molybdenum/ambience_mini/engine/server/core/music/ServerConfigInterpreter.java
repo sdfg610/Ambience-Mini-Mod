@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.BaseI
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.Config;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.server_playlists.PlaylistInstance;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.server_playlists.ServerPlaylists;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.VariableEnv;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.PlaylistVal;
 import me.molybdenum.ambience_mini.engine.shared.music.music_dto.MusicDTO;
 import me.molybdenum.ambience_mini.engine.shared.music.music_dto.PlaylistDTO;
@@ -15,23 +16,28 @@ import java.util.ArrayList;
 
 public class ServerConfigInterpreter extends BaseInterpreter
 {
+    private final ServerPlaylists serverPlaylists;
     private final BaseMusicProvider musicProvider;
 
 
     public ServerConfigInterpreter(Config config, BaseMusicProvider musicProvider) {
-        super(config, null);
+        super(null);
+
+        this.serverPlaylists = config.serverPlaylists();
         this.musicProvider = musicProvider;
     }
 
-    public void loadServerPlaylists(ArrayList<PlaylistDTO> serverPlaylists) throws FileNotFoundException {
-        if (config.serverPlaylists() != null)
-            loadServerPlaylists(config.serverPlaylists(), serverPlaylists, "");
+    public ArrayList<PlaylistDTO> loadServerPlaylists() throws FileNotFoundException {
+        ArrayList<PlaylistDTO> playlistDTOs = new ArrayList<>();
+        if (serverPlaylists != null)
+            loadServerPlaylists(serverPlaylists, playlistDTOs, "");
+        return playlistDTOs;
     }
 
 
     private void loadServerPlaylists(ServerPlaylists playlists, ArrayList<PlaylistDTO> serverPlaylists, String groupName) throws FileNotFoundException {
         if (playlists instanceof PlaylistInstance inst) {
-            var musicList = ((PlaylistVal)evalExpr(inst.expr(), rootEnv)).getValue(); // Static analysis ensures we get playlist here.
+            var musicList = ((PlaylistVal)evalExpr(inst.expr(), null)).getValue(); // Static analysis ensures we get playlist here.
 
             var musicDTOs = new ArrayList<MusicDTO>(musicList.size());
             for (var music : musicList)

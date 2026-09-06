@@ -5,4 +5,8 @@ public record QuantifierOp(Quantifiers quantifier, Ident identifier, Expr list, 
     public int line() {
         return inLine;
     }
+
+    public Expr withExprs(Expr exprList, Expr exprCondition) {
+        return new QuantifierOp(quantifier, identifier, exprList, exprCondition, inLine, whereLine);
+    }
 }

@@ -5,4 +5,8 @@ public record UnaryOp(UnaryOperators op, Expr expr, int opLine) implements Expr 
     public int line() {
         return opLine;
     }
+
+    public UnaryOp withExpr(Expr newExpr) {
+        return new UnaryOp(op, newExpr, opLine);
+    }
 }

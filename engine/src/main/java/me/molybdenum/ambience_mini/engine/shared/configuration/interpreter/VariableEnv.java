@@ -8,7 +8,7 @@ public class VariableEnv
     private final HashMap<String, Object> bindings = new HashMap<>();
 
 
-    private VariableEnv() {
+    public VariableEnv() {
         this.parent = null;
     }
 
@@ -41,10 +41,5 @@ public class VariableEnv
 
     public boolean isBound(String ident) {
         return bindings.get(ident) != null || (parent != null && parent.isBound(ident));
-    }
-
-
-    public static VariableEnv empty() {
-        return new VariableEnv();
     }
 }

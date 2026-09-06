@@ -276,7 +276,6 @@ public class Scanner {
 		for (int i = 95; i <= 95; ++i) start.set(i, 1);
 		for (int i = 97; i <= 122; ++i) start.set(i, 1);
 		for (int i = 48; i <= 57; ++i) start.set(i, 6);
-		start.set(45, 30); 
 		start.set(34, 4); 
 		start.set(58, 7); 
 		start.set(61, 31); 
@@ -291,13 +290,14 @@ public class Scanner {
 		start.set(60, 34); 
 		start.set(62, 35); 
 		start.set(43, 36); 
-		start.set(47, 22); 
-		start.set(91, 24); 
-		start.set(93, 25); 
-		start.set(46, 26); 
-		start.set(64, 27); 
-		start.set(36, 28); 
-		start.set(44, 29); 
+		start.set(45, 22); 
+		start.set(47, 23); 
+		start.set(91, 25); 
+		start.set(93, 26); 
+		start.set(46, 27); 
+		start.set(64, 28); 
+		start.set(36, 29); 
+		start.set(44, 30); 
 		start.set(Buffer.EOF, -1);
 		literals.put("serve_playlists", 5);
 		literals.put("group", 9);
@@ -520,25 +520,23 @@ public class Scanner {
 				case 21:
 					{t.kind = 33; break loop;}
 				case 22:
-					{t.kind = 37; break loop;}
+					{t.kind = 35; break loop;}
 				case 23:
-					{t.kind = 38; break loop;}
+					{t.kind = 37; break loop;}
 				case 24:
-					{t.kind = 40; break loop;}
+					{t.kind = 38; break loop;}
 				case 25:
-					{t.kind = 41; break loop;}
+					{t.kind = 40; break loop;}
 				case 26:
-					{t.kind = 42; break loop;}
+					{t.kind = 41; break loop;}
 				case 27:
-					{t.kind = 43; break loop;}
+					{t.kind = 42; break loop;}
 				case 28:
-					{t.kind = 44; break loop;}
+					{t.kind = 43; break loop;}
 				case 29:
-					{t.kind = 48; break loop;}
+					{t.kind = 44; break loop;}
 				case 30:
-					recEnd = pos; recKind = 35;
-					if (ch >= '0' && ch <= '9') {AddCh(); state = 6; break;}
-					else {t.kind = 35; break loop;}
+					{t.kind = 48; break loop;}
 				case 31:
 					recEnd = pos; recKind = 7;
 					if (ch == '=') {AddCh(); state = 15; break;}
@@ -561,8 +559,7 @@ public class Scanner {
 					else {t.kind = 31; break loop;}
 				case 36:
 					recEnd = pos; recKind = 34;
-					if (ch >= '0' && ch <= '9') {AddCh(); state = 6; break;}
-					else if (ch == '+') {AddCh(); state = 23; break;}
+					if (ch == '+') {AddCh(); state = 24; break;}
 					else {t.kind = 34; break loop;}
 
 			}

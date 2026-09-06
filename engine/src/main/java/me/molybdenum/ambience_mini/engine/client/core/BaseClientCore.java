@@ -192,10 +192,8 @@ public abstract class BaseClientCore<
 
             File configFile = Constants.musicConfigPath.toFile();
             try (InputStream configStream = new FileInputStream(configFile)) {
-                loadClientMusicSelector(configStream, musicProvider, gameStateProvider).match(
-                        this::initMusicThread,
-                        messages -> Utils.printMessages(logger, messages)
-                );
+                loadClientMusicSelector(configStream, musicProvider, gameStateProvider)
+                        .match(this::initMusicThread, this::printErrors);
             } catch (IOException ignored) { }
         }
     }
@@ -209,6 +207,11 @@ public abstract class BaseClientCore<
             logger.info("Successfully loaded Ambience Mini with configuration:\n{}", clientConfig.getConfigsString());
         else
             logger.info("Successfully loaded Ambience Mini");
+    }
+
+    private void printErrors(List<Message> messages) {
+        logger.warn("Ambience Mini failed to load! Errors are as follows:");
+        Utils.printMessages(logger, messages);
     }
 
     public boolean isMonitorRunning() {
