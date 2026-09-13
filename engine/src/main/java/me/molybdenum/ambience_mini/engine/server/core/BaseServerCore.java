@@ -7,11 +7,13 @@ import me.molybdenum.ambience_mini.engine.server.core.music.ServerConfigInterpre
 import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
 import me.molybdenum.ambience_mini.engine.server.core.networking.BaseServerNetworkManager;
 import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.setup.BaseServerConfig;
 import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.configuration.LoadResult;
 import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Message;
 import me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysis.Setup;
+import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
 import me.molybdenum.ambience_mini.engine.shared.music.music_provider.RealMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.slf4j.Logger;
@@ -23,12 +25,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public abstract class BaseServerCore<
         TServerPlayer,
+        TServerConfig extends BaseServerConfig,
         TNetworkManager extends BaseServerNetworkManager<TServerPlayer>,
         TStructureReader extends BaseStructureReader<TServerPlayer, ?, ?>
 > {
@@ -36,9 +36,15 @@ public abstract class BaseServerCore<
 
     // Utils
     public final Logger logger;
-    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private final JobCenter jobCenter = JobCenter.singleThreaded();
 
     public final ServerNameCache nameCache;
+
+    // Setup
+    public final TServerConfig serverConfig;
+
+    // Networking
+    public final TNetworkManager networkManager;
 
     // Locations
     public final ServerAreaManager areaManager;
@@ -50,13 +56,11 @@ public abstract class BaseServerCore<
     // Music
     public ServerMusicManager musicManager;
 
-    // Networking
-    public final TNetworkManager networkManager;
-
 
     public BaseServerCore(
             Logger logger,
             ServerNameCache nameCache,
+            TServerConfig serverConfig,
             ServerAreaManager areaManager,
             TStructureReader structureReader,
             FlagManager flagManager,
@@ -66,6 +70,7 @@ public abstract class BaseServerCore<
         this.logger = logger;
 
         this.nameCache = nameCache;
+        this.serverConfig = serverConfig;
         this.areaManager = areaManager;
         this.structureReader = structureReader;
         this.flagManager = flagManager;
@@ -88,13 +93,9 @@ public abstract class BaseServerCore<
     private void loadMusicConfig() {
         File configFile = Constants.musicConfigPath.toFile();
         try (InputStream configStream = new FileInputStream(configFile)) {
-            loadServerConfig(configStream).match(
-                    this::loadServerPlaylists,
-                    messages -> Utils.printMessages(logger, messages)
-            );
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+            loadServerConfig(configStream)
+                    .match(this::loadServerPlaylists, this::printErrors);
+        } catch (IOException ignored) { }
     }
 
     private LoadResult<ServerConfigInterpreter> loadServerConfig(
@@ -113,6 +114,11 @@ public abstract class BaseServerCore<
         this.musicManager.loadServerPlaylists(serverConfig, localOnlyMusicProvider);
 
         logger.info("Successfully loaded server-sided Ambience Mini configuration");
+    }
+
+    private void printErrors(List<Message> messages) {
+        logger.warn("Ambience Mini failed to load!");
+        Utils.printMessages(logger, messages);
     }
 
 
@@ -136,20 +142,13 @@ public abstract class BaseServerCore<
         this.areaManager.loadAllAreas();
         this.flagManager.loadFlags();
 
-        this.flagManager.registerPeriodicTasks(executor);
-        this.musicManager.registerPeriodicTasks(executor);
+        this.flagManager.registerPeriodicTasks(jobCenter);
+        this.musicManager.registerPeriodicTasks(jobCenter);
     }
 
     public void onStopped() {
-        this.flagManager.stopPeriodicTasks();
-        this.musicManager.stopPeriodicTasks();
-        try {
-            executor.shutdown();
-            if (!executor.awaitTermination(10000, TimeUnit.MILLISECONDS))
-                logger.warn("Background task executor refuses to shut down. Data might be lost!");
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        if (!jobCenter.shutdownAndAwaitTermination(10000))
+            logger.warn("Background task executor refuses to shut down. Data might be lost!");
 
         this.nameCache.saveCache();
         this.areaManager.saveAllAreas();

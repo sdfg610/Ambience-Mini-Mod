@@ -2,20 +2,21 @@
 ### Version 2.8.0:
 
 **Server-located playlists and music:**
-- Added property `$server_playlists` which is a map from strings (playlist names) to playlists with music located on the server.
-  * Server-located music is streamed to the client and stored in memory from where it is then played.
-  * You can configure limits for music size, total `$server_playlists` size, and total cache size.
+- Added property `$server_playlists` to the configuration language which is a map from strings (playlist names) to playlists with music located on the server.
+  * Server-located music is streamed to the client and stored in-memory from where it is then played.
+  * You can configure limits for music size, playlists size, and total cache size on the client side.
 - Servers now support music packs wherein server-located playlists can be configured (see also below).
   * This allows server maintainers to add new music (e.g., for areas) without redistributing the music pack.
 
 **Configuration language:**
-- In addition to playlists in the "top half" of `music_conig.txt`, you can now define constants of any type, e.g. `int some_constant = 42;`.
+- In addition to playlists in the beginning of `music_conig.txt`, you can now define global constants of any type, e.g. `int horde_fight_threshold = 5;`.
 - The playlist given to `play` commands can now evaluate to `undefined` (e.g., `play $server_playlists["non_existent_playlist"];`), in which case the currently playing music (or silence) continues like when no `play` command is hit.
   * You can now use `play ifdef PLAYLIST;` to continue past the `play` command in case `PLAYLIST` is undefined.
 - The "`+`" operator now works between strings (as well as numbers). Use "`++`" between playlists.
 - Added null/undefined-check operator `??`. 
-- Between the global constants and the music schedule, you can now configure the server playlists using [the `define_playlists` keyword](link to wiki).
-- 
+- Right after the playlists and global constants, you can now configure the playlists that the server should make available using [the `serve_playlists` keyword](link to wiki).
+- You can now manually specify loop intervals in the music config. For example `"music.wav"<loopstart=1000, loopend=9001>`. A `looplength` flag is also available.
+- Upon loading a music configuration, the mod now pre-computes all constant expressions/values to improve performance. This also allows validating that certain constant values are sensible (e.g., one cannot have `loopstart=-1`).
 
 **Menu detection:**
 - Added `$screen_id` property to get the id (fully qualified class name) of the currently open screen (e.g., title screen, pause screen, etc.).
@@ -24,13 +25,21 @@
   * This is similar to the events `@main_menu`, `@joining`, and so on, but easier to extend with new menu types without adding new events.
 - Added `Print_Screen_On_Change` mod-config option. When enabled, the mod prints out the screen ID (and menu type if any) whenever the menu changes. Use for music pack creation and debugging.
 
+**Server-side mod config:**
+- Added server-side mod options for auto-save interval for flags.
+- Added server-side mod options for server-located music cache:
+  * maximum memory to use when caching music being sent to clients.
+  * the time after which a cached music is unused and can be de-allocated.
+  * the interval for checking and de-allocating unused music-caches.
+- Added server-side mod options for enabling and disabling use of server flags and server areas.
+
 **Miscellaneous:**
 - Minor improvements to output created by verbose mode.
 - Minor improvements to volume change handling.
 - Architectural improvements to message passing and handling between client and server.
 - Architectural improvements to music-configuration loading and execution.
-- Added support for `.wav` files, but not for metadata.
-  * Since metadata is not supported, you can instead manually specify the loop interval in the music config if you want the music to loop: `"music.wav"<loopstart=1000, loopend=9001>`.
+- Added support for `.wav` files.
+  * Metadata is not supported, however, so you should use the new `loopstart` and similar music flags to configure looping for `.wav` files.
 - Various bug-fixes.
 
 ****

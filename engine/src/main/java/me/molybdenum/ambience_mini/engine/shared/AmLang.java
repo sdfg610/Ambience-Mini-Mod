@@ -43,6 +43,8 @@ public enum AmLang
     MSG_AREA_LOOK_AT_DESTINATION("message.area_look_at_destination"),
     MSG_AREA_CANNOT_EDIT("message.area_cannot_edit"),
     MSG_AREA_NAME_REQUIREMENTS("message.area_name_requirements", 1), // Args: "max length"
+    MSG_AREAS_DISABLED("message.areas_disabled"),
+    MSG_NO_SUCH_AREA_ID("message.no_such_area_id", 1), // Args: "id"
 
     MSG_FLAG_ALREADY_EXISTS("message.flag_already_exists", 1), // Args: "id"
     MSG_FLAG_NOT_EXISTS("message.flag_not_exists", 1), // Args: "id"
@@ -53,11 +55,17 @@ public enum AmLang
     MSG_FLAG_VALUE_INVALID("message.flag_value_invalid", 2), // Args: "value", "max length"
     MSG_FLAG_NAME_REQUIREMENTS("message.flag_name_requirements", 1), // Args: "max length"
     MSG_FLAG_VALUE_REQUIREMENTS("message.flag_value_requirements", 1), // Args: "max length"
+    MSG_FLAGS_DISABLED("message.flags_disabled"),
 
     MSG_SERVER_PLAYLIST_TIMEOUT("message.server_playlist_timeout"),
+    MSG_SERVER_PLAYLIST_FETCH_ERROR("message.server_playlist_fetch_error"),
     MSG_SERVER_PLAYLISTS_SKIPPED("message.server_playlists_skipped"),
     MSG_SERVER_MUSIC_SKIPPED("message.server_music_skipped"),
     MSG_SERVER_MUSIC_READ_FAIL("message.server_music_read_fail", 1), // Args: "music path"
+    MSG_SERVER_MUSIC_TIMEOUT("message.server_music_timeout"),
+    MSG_MUSIC_CACHE_OUT_OF_MEMORY("message.music_cache_out_of_memory"),
+    MSG_SERVER_MUSIC_CACHE_OUT_OF_MEMORY("message.server_music_cache_out_of_memory"),
+    MSG_SERVER_MUSIC_FETCH_ERROR("message.server_music_fetch_error"),
 
     MSG_UNHANDLED_MESSAGE("message.unhandled_message"),
     MSG_UNHANDLED_CLIENT_MESSAGE("message.unhandled_client_message"),

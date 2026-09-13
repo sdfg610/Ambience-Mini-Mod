@@ -16,7 +16,7 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.struct
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkReferencesMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmReader;
-import me.molybdenum.ambience_mini.engine.shared.utils.Result;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 
 import java.util.HashMap;
 import java.util.function.Function;
@@ -65,7 +65,7 @@ public class MessageRegistry {
         registerMessage(62, DeleteFlagMessage::new, DeleteFlagMessage.class); // 2.6.0
 
         // Remote music
-        registerMessage(70, NotifyServerPlaylistCountMessage::new, NotifyServerPlaylistCountMessage.class); // 2.8.0
+        registerMessage(70, RequestServerPlaylistInfoMessage::new, RequestServerPlaylistInfoMessage.class); // 2.8.0
         registerMessage(71, RequestServerPlaylistChunkMessage::new, RequestServerPlaylistChunkMessage.class); // 2.8.0
         registerMessage(72, RequestMusicChunkMessage::new, RequestMusicChunkMessage.class); // 2.8.0
     }
@@ -81,11 +81,11 @@ public class MessageRegistry {
     }
 
 
-    public static Result<AmMessage> createFromId(int id, AmReader reader) {
+    public static StrResult<AmMessage> createFromId(int id, AmReader reader) {
         Function<AmReader, AmMessage> constructor = ID_TO_CONSTRUCTOR.get(id);
         return constructor == null
-                ? Result.fail("Could not find a message type with id '" + id + "'")
-                : Result.of(constructor.apply(reader));
+                ? StrResult.fail("Could not find a message type with id '" + id + "'")
+                : StrResult.of(constructor.apply(reader));
     }
 
     public static <T extends AmMessage> int idFromClass(Class<T> clazz) {

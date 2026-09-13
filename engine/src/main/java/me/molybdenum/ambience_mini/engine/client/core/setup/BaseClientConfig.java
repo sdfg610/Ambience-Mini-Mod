@@ -50,6 +50,14 @@ public abstract class BaseClientConfig {
     public final Supplier<Integer> combatGracePeriod;
     public final Supplier<Integer> combatantTimeout;
 
+    // Server-located music
+    public final Supplier<Integer> maxMusicCacheSize;
+    public final Supplier<Integer> maxPlaylistsSize;
+    public final Supplier<Integer> playlistChunkTimeout;
+    public final Supplier<Integer> maxMusicSize;
+    public final Supplier<Integer> musicChunkTimeout;
+
+
 
     protected BaseClientConfig() {
         preSetup();
@@ -194,6 +202,37 @@ public abstract class BaseClientConfig {
                 "If no interaction has been made between a player and a mob for the time given here (in milliseconds), these will no longer be considered 'in combat'. [Default: 5000]",
                 "Combatant_Timeout",
                 5000, 2500, 15000
+        );
+
+        // Server-located music
+        maxMusicCacheSize = registerIntOption(
+                "The maximal amount of memory, in megabytes, that the mod will spend caching server-located music. [Default: 500]",
+                "Max_Music_Cache_Memory",
+                500, 100, 10_000
+        );
+
+        maxPlaylistsSize = registerIntOption(
+                "The maximal size, in megabytes, of the server playlists. This is mostly a safeguard - the playlists should not be that big. [Default: 100]",
+                "",
+                100, 10, 100
+        );
+
+        playlistChunkTimeout = registerIntOption(
+                "If more than the given amount of milliseconds passes without receiving playlist-data from the server, the client gives up fetching the server playlists. [Default: 500]",
+                "",
+                500, 250, 5000
+        );
+
+        maxMusicSize = registerIntOption(
+                "The maximal size, in megabytes, of any single piece of server-located music. Music exceeding the size limit will not be fetched. [Default: 50]",
+                "",
+                50, 5, 1000
+        );
+
+        musicChunkTimeout = registerIntOption(
+                "If more than the given amount of milliseconds passes without receiving music-data from the server, the client gives up fetching some server-located music. [Default: 500]",
+                "",
+                500, 250, 5000
         );
 
         postSetup();

@@ -33,6 +33,7 @@ import me.molybdenum.ambience_mini.v1_21_1.server.core.ServerCore;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.command.CommandNodeFactory;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_21_1.server.core.networking.ServerNetworkManager;
+import me.molybdenum.ambience_mini.v1_21_1.server.core.setup.ServerConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.resources.ResourceLocation;
@@ -75,6 +76,7 @@ public class AmbienceMini extends BaseAmbienceMini
     public static AmVersion configuredAmVersion = AmVersion.ZERO;
 
     // Server
+    private static ServerConfig serverConfig;
     public static ServerCore serverCore = null;
 
 
@@ -88,6 +90,8 @@ public class AmbienceMini extends BaseAmbienceMini
         NeoForge.EVENT_BUS.addListener(AmbienceMini::onServerStopping);
 
         modEventBus.addListener(AmbienceMini::loadComplete);
+
+        serverConfig = new ServerConfig(modContainer);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             clientConfig = new ClientConfig(modContainer);
@@ -171,6 +175,7 @@ public class AmbienceMini extends BaseAmbienceMini
         serverCore = new ServerCore(
                 event.getServer(),
                 LOGGER,
+                serverConfig,
                 new ServerNameCache(),
                 new ServerAreaManager(),
                 new StructureReader(event.getServer()),

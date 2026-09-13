@@ -82,8 +82,11 @@ public class Monitor
         musicPlayer.setVolume(VolumeState.getMusicVolume());
         musicPlayer.addNowPlayingListener(nowPlaying -> {
             try {
-                if (nowPlaying.music().locatedOnServer())
-                    _core.musicCache.bufferThis(nowPlaying.path());
+                if (nowPlaying.music().locatedOnServer()) {
+                    var res = _core.musicCache.bufferThis(nowPlaying.path());
+                    if (res.isFailure())
+                        _notification.printToChat(res.error);
+                }
             } catch (FileNotFoundException ignored) { }
 
             if (_core.clientConfig.printNowPlaying.get()) {
@@ -101,6 +104,10 @@ public class Monitor
 
     public boolean isVanillaPlayerSelected() {
         return musicCycleJob.vanillaPlayerSelected;
+    }
+
+    public List<String> getActiveSoundtracks() {
+        return musicPlayer.getActiveSoundtracks();
     }
 
 

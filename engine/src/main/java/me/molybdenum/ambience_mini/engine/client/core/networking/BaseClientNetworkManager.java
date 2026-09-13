@@ -17,13 +17,12 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.F
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.SuccessMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.NotifyServerPlaylistCountMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkReferencesMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
-import me.molybdenum.ambience_mini.engine.shared.utils.Result;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 import me.molybdenum.ambience_mini.engine.shared.utils.Text;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,7 +71,7 @@ public abstract class BaseClientNetworkManager
     protected abstract void sendToServerInternal(AmMessage message);
 
 
-    public void handleMessage(Result<AmMessage> msgRes) {
+    public void handleMessage(StrResult<AmMessage> msgRes) {
         if (!msgRes.isSuccess()) {
             core.notification.printTranslatableToChat(AmLang.MSG_UNHANDLED_MESSAGE);
             core.logger.error(msgRes.error);
@@ -109,9 +108,6 @@ public abstract class BaseClientNetworkManager
             handleUpdateFlagMessage(msg);
         else if (message instanceof DeleteFlagMessage msg)
             handleDeleteFlagMessage(msg);
-
-        else if (message instanceof NotifyServerPlaylistCountMessage msg)
-            handleNotifyServerPlaylistCountMessage(msg);
 
         else {
             core.notification.printTranslatableToChat(AmLang.MSG_UNHANDLED_MESSAGE);
@@ -199,12 +195,6 @@ public abstract class BaseClientNetworkManager
 
     private void handleDeleteFlagMessage(DeleteFlagMessage msg) {
         core.flagCache.deleteFlag(msg.id);
-    }
-
-
-    // Server Music
-    private void handleNotifyServerPlaylistCountMessage(NotifyServerPlaylistCountMessage msg) {
-        core.musicCache.handlePlaylistsNotification(msg.byteSize, msg.playlistCount);
     }
 
 

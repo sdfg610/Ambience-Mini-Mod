@@ -23,7 +23,7 @@ import me.molybdenum.ambience_mini.engine.shared.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.configuration.pretty_printer.PrettyPrinter;
 import me.molybdenum.ambience_mini.engine.client.core.music.decoders.AmDecoder;
-import me.molybdenum.ambience_mini.engine.shared.utils.Result;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Property;
 
@@ -493,7 +493,7 @@ public class SemanticAnalysis extends BaseInterpreter
     }
 
     private PlaylistLit.Load validateAndOptimizeMusic(PlaylistLit.Load load, TypeEnv typEnv, VariableEnv varEnv, MessageListBuilder messages) {
-        Result<String> musicPathRes = BaseMusicProvider.validatePath(load.file().value());
+        StrResult<String> musicPathRes = BaseMusicProvider.validatePath(load.file().value());
         if (musicPathRes.isFailure()) {
             messages.add(new SemError(load.line(), musicPathRes.error));
             return null;

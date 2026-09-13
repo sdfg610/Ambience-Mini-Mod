@@ -6,7 +6,6 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.value
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.StringVal;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.helpers.ValueMap;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
-import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.MapVal;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
@@ -19,12 +18,16 @@ import me.molybdenum.ambience_mini.engine.shared.music.music_dto.MusicDTO;
 import me.molybdenum.ambience_mini.engine.shared.music.music_dto.PlaylistDTO;
 import me.molybdenum.ambience_mini.engine.shared.music.music_dto.ValueDTO;
 import me.molybdenum.ambience_mini.engine.shared.music.streams.ManualPreAllocBuffer;
+import me.molybdenum.ambience_mini.engine.shared.utils.Lazy;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
+import me.molybdenum.ambience_mini.engine.shared.utils.Text;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.TextResult;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.function.Supplier;
 
 public class ServerMusicCache
 {
@@ -36,16 +39,17 @@ public class ServerMusicCache
     private Logger logger;
 
     private BaseClientNetworkManager network;
-    private BaseClientConfig clientConfig;
     private ServerSetup serverSetup;
     private BaseNotification<?> notification;
 
-    // Playlists
-    private int maxPlaylistsByteSize = 1024  * 20; // 20 KiB
-    private long playlistChunkTimeoutMillis = 500;
+    private Supplier<List<String>> getActiveSoundtracks;
 
-    private int maxMusicByteSize = 1048576 * 20; // 20 MiB
-    private long musicChunkTimeoutMillis = 500;
+    // Playlists
+    private int maxPlaylistsByteSize;
+    private long playlistChunkTimeoutMillis;
+
+    private int maxMusicByteSize;
+    private long musicChunkTimeoutMillis;
 
     private ValueMap serverPlaylists; // Map from 'string' to 'playlist'
     private Map<String, Integer> musicPathToSize;
@@ -55,6 +59,7 @@ public class ServerMusicCache
     // Music
     private final ArrayList<MusicDataCache> cachedMusic = new ArrayList<>();
     private int memoryUsage = 0;
+    private int maxMemoryUsage;
 
     private BufferMusicJob bufferMusicJob;
 
@@ -69,11 +74,21 @@ public class ServerMusicCache
         logger = core.logger;
 
         network = core.networkManager;
-        clientConfig = core.clientConfig;
         serverSetup = core.serverSetup;
         notification = core.notification;
 
-        // TODO: Configurable size limits and timeouts
+        this.getActiveSoundtracks = () -> {
+            var mon = core.getMonitor();
+            return mon == null ? List.of() : mon.getActiveSoundtracks();
+        };
+
+        this.maxMemoryUsage = core.clientConfig.maxMusicCacheSize.get() * 1_000_000; // MB to bytes
+
+        this.maxPlaylistsByteSize = core.clientConfig.maxPlaylistsSize.get() * 1_000_000; // MB to bytes
+        this.playlistChunkTimeoutMillis = core.clientConfig.playlistChunkTimeout.get();
+
+        this.maxMusicByteSize = core.clientConfig.maxMusicSize.get() * 1_000_000; // MB to bytes
+        this.musicChunkTimeoutMillis = core.clientConfig.musicChunkTimeout.get();
     }
 
 
@@ -140,15 +155,20 @@ public class ServerMusicCache
         synchronized (lock) {
             if (serverPlaylists == null)
                 throw new FileNotFoundException("Server playlists are not loaded!");
-            var cache = getOrCreateCache(musicPath);
-            bufferThisOrAny(cache);
-            return cache.musicData;
+            var res = getOrCreateCache(musicPath);
+            if (res.isFailure()) {
+                notification.printToChat(res.error);
+                throw new RuntimeException("Could not get or create music buffer!");
+            }
+            var cache = res.value;
+                bufferThisOrAny(cache);
+            return cache.getMusicData();
         }
     }
 
-    private MusicDataCache getOrCreateCache(String musicPath) throws FileNotFoundException {
+    private TextResult<MusicDataCache> getOrCreateCache(String musicPath) throws FileNotFoundException {
         var oCache = getCache(musicPath);
-        return (oCache.isPresent() ? oCache.get() : createCache(musicPath));
+        return (oCache.isPresent() ? TextResult.of(oCache.get()) : createCache(musicPath));
     }
 
     private Optional<MusicDataCache> getCache(String musicPath) {
@@ -158,32 +178,64 @@ public class ServerMusicCache
         return Optional.empty();
     }
 
-    private MusicDataCache createCache(String musicPath) throws FileNotFoundException {
-        // TODO: Remove unused caches to free space if exceeding max memory
+    private TextResult<MusicDataCache> createCache(String musicPath) throws FileNotFoundException {
+        var size = getMusicSize(musicPath);
+        if (!freeMemory(size)) {
+            cachedMusic.clear();
+            bufferMusicJob.cancel(true);
+            return TextResult.fail(Text.ofTranslatable(AmLang.MSG_SERVER_MUSIC_CACHE_OUT_OF_MEMORY));
+        }
 
         var cache = new MusicDataCache(musicPath, getMusicSize(musicPath));
         cachedMusic.add(cache);
         memoryUsage += cache.musicSize();
 
-        return cache;
+        return TextResult.of(cache);
+    }
+
+    private boolean freeMemory(int requiredSpace) {
+        var tracks = new Lazy<>(getActiveSoundtracks);
+        while (requiredSpace > maxMemoryUsage - memoryUsage) {
+            MusicDataCache cacheToRemove = null;
+
+            for (var cache : cachedMusic)
+                if (!tracks.get().contains(cache.musicPath)) {
+                    if (cacheToRemove == null || cache.getLatestAccessTime() < cacheToRemove.getLatestAccessTime())
+                        cacheToRemove = cache;
+                }
+
+            if (cacheToRemove == null)
+                return false;
+            deleteCache(cacheToRemove);
+        }
+        return true;
     }
 
     private void deleteCache(String musicPath) {
-        var it = cachedMusic.iterator();
-        while (it.hasNext()) {
-           var cache = it.next();
-           if (cache.musicPath.equals(musicPath)) {
-               it.remove();
-               memoryUsage -= cache.musicSize();
-               return;
-           }
+        synchronized (lock) {
+            cachedMusic.stream()
+                    .filter(cache -> cache.musicPath.equals(musicPath))
+                    .findFirst()
+                    .ifPresent(this::deleteCache);
+        }
+    }
+
+    private void deleteCache(MusicDataCache cache) {
+        synchronized (lock) {
+            cachedMusic.remove(cache);
+            if (bufferMusicJob != null)
+                bufferMusicJob.cancelIfHasCache(cache);
+            memoryUsage -= cache.musicSize();
         }
     }
 
 
-    public void bufferThis(String musicPath) throws FileNotFoundException {
+    public TextResult<Void> bufferThis(String musicPath) throws FileNotFoundException {
         synchronized (lock) {
-            buffer(getOrCreateCache(musicPath));
+            return getOrCreateCache(musicPath).map(cache -> {
+                buffer(cache);
+                return null;
+            });
         }
     }
 
@@ -215,10 +267,22 @@ public class ServerMusicCache
     }
 
 
-    private record MusicDataCache(@NotNull String musicPath, ManualPreAllocBuffer musicData) {
+    private static class MusicDataCache {
+        public final String musicPath;
+        private final ManualPreAllocBuffer musicData;
+
+        private long latestAccessTime;
+
+
+        private MusicDataCache(@NotNull String musicPath, ManualPreAllocBuffer musicData) {
+            this.musicPath = musicPath;
+            this.musicData = musicData;
+        }
+
         private MusicDataCache(String musicPath, int musicSize) {
             this(musicPath, new ManualPreAllocBuffer(musicSize, 3000));
         }
+
 
         public int musicSize() {
             return musicData.getBufferSize();
@@ -230,6 +294,16 @@ public class ServerMusicCache
 
         public int getBytesLoaded() {
             return musicData.getBytesLoaded();
+        }
+
+
+        public ManualPreAllocBuffer getMusicData() {
+            latestAccessTime = System.currentTimeMillis();
+            return musicData;
+        }
+
+        public long getLatestAccessTime() {
+            return latestAccessTime;
         }
     }
 
@@ -266,13 +340,20 @@ public class ServerMusicCache
                     }
                 } else if (res.isSuccess()) {
                     var playlists = res.decodeList(PlaylistDTO::new);
-                    // TODO: Handle playlists size zero???
+                    if (playlists.isEmpty()) {
+                        notification.printLiteralToChat("Received empty playlist chunk. This should not happen. Please report this error.");
+                        cancel(false);
+                        break;
+                    }
                     loadedPlaylists += playlists.size();
                     for (var pl : playlists)
                         loadPlaylist(pl);
+                    retries = 0;
                 }
                 else {
-                    // TODO: Handle failure
+                    assert res.error != null;
+                    notification.printTranslatableToChat(AmLang.MSG_SERVER_PLAYLIST_FETCH_ERROR);
+                    notification.printToChat(res.error);
                     cancel(false);
                 }
             }
@@ -345,9 +426,15 @@ public class ServerMusicCache
             return cache.isFullyLoaded();
         }
 
+        public void cancelIfHasCache(MusicDataCache cache) {
+            if (this.cache == cache)
+                cancel(true);
+        }
+
 
         @Override
         protected void body() {
+            int retries = 0;
             String musicPath = cache.musicPath;
             while (!isCancelled() && !cache.isFullyLoaded()) {
                 int offset = cache.getBytesLoaded();
@@ -359,18 +446,26 @@ public class ServerMusicCache
                 );
 
                 if (res == null) {
-                    // TODO: Handle timeout
-                    notification.printLiteralToChat("Music timeout!");
+                    if (retries++ >= 5) {
+                        notification.printTranslatableToChat(AmLang.MSG_SERVER_MUSIC_TIMEOUT);
+                        cancel(false);
+                        break;
+                    }
                 } else if (res.isSuccess()) {
                     try {
                         assert res.data != null;
                         cache.musicData.writeToBuffer(res.data);
-                    } catch (Exception ignored) {
-                        // TODO: Handle errors
+                        retries = 0;
+                    } catch (Exception ex) {
+                        notification.printTranslatableToChat(AmLang.MSG_SERVER_MUSIC_FETCH_ERROR);
+                        logger.error("Error while fetching server-located music:", ex);
+                        deleteCache(musicPath);
+                        break;
                     }
                 }
                 else {
                     assert res.error != null;
+                    notification.printTranslatableToChat(AmLang.MSG_SERVER_MUSIC_FETCH_ERROR);
                     notification.printToChat(res.error);
                     deleteCache(musicPath);
                     break;

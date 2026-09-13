@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.ClientCore;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.render.drawer.Drawer;
@@ -31,6 +32,7 @@ import me.molybdenum.ambience_mini.v1_20_1.server.core.ServerCore;
 import me.molybdenum.ambience_mini.v1_20_1.server.core.command.CommandNodeFactory;
 import me.molybdenum.ambience_mini.v1_20_1.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_20_1.server.core.networking.ServerNetworkManager;
+import me.molybdenum.ambience_mini.v1_20_1.server.core.setup.ServerConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.resources.ResourceLocation;
@@ -67,6 +69,7 @@ public class AmbienceMini extends BaseAmbienceMini
     public static ClientCore clientCore = null;
 
     // Server
+    private static ServerConfig serverConfig;
     public static ServerCore serverCore = null;
 
 
@@ -80,6 +83,8 @@ public class AmbienceMini extends BaseAmbienceMini
 
         IEventBus modBus = context.getModEventBus();
         modBus.addListener(AmbienceMini::loadComplete);
+
+        serverConfig = new ServerConfig(context);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             clientConfig = new ClientConfig(context);
@@ -149,10 +154,12 @@ public class AmbienceMini extends BaseAmbienceMini
         serverCore = new ServerCore(
                 event.getServer(),
                 LOGGER,
+                serverConfig,
                 new ServerNameCache(),
                 new ServerAreaManager(),
                 new StructureReader(event.getServer()),
                 new FlagManager(),
+                new ServerMusicManager(),
                 new ServerNetworkManager()
         );
         serverCore.init();

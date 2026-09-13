@@ -10,6 +10,7 @@ import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.v1_19_2.client.core.ClientCore;
 import me.molybdenum.ambience_mini.v1_19_2.client.core.networking.ClientNetworkManager;
@@ -31,6 +32,7 @@ import me.molybdenum.ambience_mini.v1_19_2.server.core.ServerCore;
 import me.molybdenum.ambience_mini.v1_19_2.server.core.command.CommandNodeFactory;
 import me.molybdenum.ambience_mini.v1_19_2.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_19_2.server.core.networking.ServerNetworkManager;
+import me.molybdenum.ambience_mini.v1_19_2.server.core.setup.ServerConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.resources.ResourceLocation;
@@ -68,19 +70,22 @@ public class AmbienceMini extends BaseAmbienceMini
     public static ClientCore clientCore = null;
 
     // Server
+    private static ServerConfig serverConfig;
     public static ServerCore serverCore = null;
 
 
     public AmbienceMini(FMLJavaModLoadingContext context)
     {
-        IEventBus modBus = context.getModEventBus();
-        modBus.addListener(AmbienceMini::loadComplete);
-
         Networking.initialize();
 
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onRegisterServerCommands);
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStarting);
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStopping);
+
+        IEventBus modBus = context.getModEventBus();
+        modBus.addListener(AmbienceMini::loadComplete);
+
+        serverConfig = new ServerConfig(context);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             clientConfig = new ClientConfig(context);
@@ -150,10 +155,12 @@ public class AmbienceMini extends BaseAmbienceMini
         serverCore = new ServerCore(
                 event.getServer(),
                 LOGGER,
+                serverConfig,
                 new ServerNameCache(),
                 new ServerAreaManager(),
                 new StructureReader(event.getServer()),
                 new FlagManager(),
+                new ServerMusicManager(),
                 new ServerNetworkManager()
         );
         serverCore.init();

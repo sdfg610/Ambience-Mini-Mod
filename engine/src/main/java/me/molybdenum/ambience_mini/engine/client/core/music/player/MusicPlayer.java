@@ -31,6 +31,15 @@ public class MusicPlayer {
     }
 
 
+    public List<String> getActiveSoundtracks() {
+        synchronized (stack) {
+            return stack.stream()
+                    .map(pair -> pair.right().music.path())
+                    .toList();
+        }
+    }
+
+
     public void updateBuffers() {
         synchronized (stack) {
             if (stack.empty())

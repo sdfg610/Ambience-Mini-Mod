@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.shared.music.music_provider;
 
 import me.molybdenum.ambience_mini.engine.shared.music.Music;
-import me.molybdenum.ambience_mini.engine.shared.utils.Result;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -55,7 +55,7 @@ public abstract class BaseMusicProvider
 
     //------------------------------------------------------------------------------------------------------------------
     // Static API
-    public static Result<String> validatePath(String filePath) {
+    public static StrResult<String> validatePath(String filePath) {
         String pathSeparator = getPathSeparator();
         filePath = filePath.replace("\\", pathSeparator).replace("/", pathSeparator);
 
@@ -63,18 +63,18 @@ public abstract class BaseMusicProvider
         try {
             path = Path.of(filePath);
         } catch (InvalidPathException ignored) {
-            return Result.fail("The path '" + filePath + "' is invalid.");
+            return StrResult.fail("The path '" + filePath + "' is invalid.");
         }
 
         if (path.isAbsolute())
-            return Result.fail("Music paths must be relative. The path '" + path + "' is not.");
+            return StrResult.fail("Music paths must be relative. The path '" + path + "' is not.");
 
         var parts = path.toString().split(Pattern.quote(pathSeparator));
         for (String part : parts)
             if (part.equals(".."))
-                return Result.fail("Music paths cannot contain '..'-directories");
+                return StrResult.fail("Music paths cannot contain '..'-directories");
 
-        return Result.of(path.toString());
+        return StrResult.of(path.toString());
     }
 
     private static String getPathSeparator() {

@@ -34,11 +34,6 @@ public class Text implements AmSerializable {
     }
 
 
-    public static Text ofBytes(byte[] bytes) {
-        return new Text(new HelperReader(bytes));
-    }
-
-
     @Override
     public void writeTo(AmWriter writer) {
         writer.writeBoolean(isLiteral);

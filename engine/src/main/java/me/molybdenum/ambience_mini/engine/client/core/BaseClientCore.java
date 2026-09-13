@@ -26,6 +26,7 @@ import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
 import me.molybdenum.ambience_mini.engine.client.core.music.Monitor;
 import me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysis.Setup;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerPlaylistInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.music.music_provider.RealMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaStorage;
@@ -210,7 +211,7 @@ public abstract class BaseClientCore<
     }
 
     private void printErrors(List<Message> messages) {
-        logger.warn("Ambience Mini failed to load! Errors are as follows:");
+        logger.warn("Ambience Mini failed to load!");
         Utils.printMessages(logger, messages);
     }
 
@@ -235,14 +236,10 @@ public abstract class BaseClientCore<
     // -----------------------------------------------------------------------------------------------------------------
     // Common Handlers
     public void onLoggedIn(AmVersion serverVersion, boolean isOnLocalServer, String playerUUID, String playerName) {
+        onLoggedOut(); // Ensure everything has been reset
+
         serverSetup.serverVersion = serverVersion;
         serverSetup.isOnLocalServer = isOnLocalServer;
-
-        musicCache.clear();
-
-        combatState.clearCombatants();
-        structureCache.clear();
-        nameCache.clear();
         nameCache.setCurrentPlayer(playerUUID, playerName);
 
         if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
@@ -252,7 +249,13 @@ public abstract class BaseClientCore<
                     playerName
             ));
 
-        areaRenderer.clear();
+        if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_8_0))
+            networkManager.configureAsync().onSuccess(data -> {
+                var response = RequestServerPlaylistInfoMessage.parseResponse(data);
+                if (response.hasServerPlaylists)
+                    musicCache.handlePlaylistsNotification(response.byteSize, response.playlistCount);
+            }).setTimeout(10_000).send(new RequestServerPlaylistInfoMessage());
+
         String subFolder = serverSetup.isOnLocalServer ? "sp" : "mp";
         areaManager.loadAreas(new AreaStorage(logger, Path.of(Constants.AM_LOCAL_STORAGE_DIRECTORY, subFolder, getWorldNameForLocalStorage())));
 
@@ -284,8 +287,8 @@ public abstract class BaseClientCore<
         areaRenderer.clear();
         flagCache.clear();
         musicCache.clear();
+        combatState.clearCombatants();
 
         serverSetup.reset();
-        combatState.clearCombatants();
     }
 }

@@ -36,19 +36,29 @@ public abstract class AmMessage implements AmSerializable {
 
     // New responses
     public ResponseMessage failWith(AmLang key, String... args) {
-        return new ResponseMessage(handlerID, Text.ofTranslatable(key, args));
+        return failWith(Text.ofTranslatable(key, args));
     }
+
     public ResponseMessage failWith(String text) {
-        return new ResponseMessage(handlerID, Text.ofLiteral(text));
+        return failWith(Text.ofLiteral(text));
     }
+
+    public ResponseMessage failWith(Text text) {
+        return new ResponseMessage(handlerID, text);
+    }
+
 
     public ResponseMessage succeedWith(byte[] data) {
         return new ResponseMessage(handlerID, data);
     }
 
+    public <T extends AmSerializable> ResponseMessage succeedWith(T data) {
+        return succeedWith(data.toBytes());
+    }
+
     public <T extends AmSerializable> ResponseMessage succeedWith(List<T> list) {
         var writer = new HelperWriter();
         writer.writeList(list);
-        return new ResponseMessage(handlerID, writer.getBytes());
+        return succeedWith(writer.getBytes());
     }
 }

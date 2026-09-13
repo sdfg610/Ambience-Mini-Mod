@@ -17,7 +17,7 @@ public class AmCommandContext extends BaseCommandContext
 
 
     public AmCommandContext(
-            Supplier<BaseServerCore<?, ?, ?>> serverCore,
+            Supplier<BaseServerCore<?, ?, ?, ?>> serverCore,
             CommandContext<CommandSourceStack> ctx
     ) {
         super(serverCore);

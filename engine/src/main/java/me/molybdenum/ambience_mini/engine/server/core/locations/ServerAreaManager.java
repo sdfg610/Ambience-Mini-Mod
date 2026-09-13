@@ -1,9 +1,11 @@
 package me.molybdenum.ambience_mini.engine.server.core.locations;
 
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
+import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaOperation;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaStorage;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.TextResult;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -22,6 +24,7 @@ public class ServerAreaManager
     private Logger logger;
 
     private AreaStorage areaStorage;
+    private boolean areasDisabled;
 
 
     @SuppressWarnings("rawtypes")
@@ -31,17 +34,35 @@ public class ServerAreaManager
 
         this.logger = core.logger;
         this.areaStorage = new AreaStorage(logger, core.getAmStoragePath());
+
+        this.areasDisabled = !core.serverConfig.enableAreas.get();
     }
 
 
-    public Area getAreaById(int id) {
-        return areas.get(id);
+    public boolean areasDisabled() {
+        return areasDisabled;
     }
 
-    public List<Area> getAreasVisibleTo(String playerUUID) {
-        return areas.values().stream().filter(
-                area -> area.canBeSeenBy(playerUUID)
-        ).toList();
+
+    public TextResult<Area> getAreaById(int id) {
+        if (areasDisabled)
+            return TextResult.fail(AmLang.MSG_AREAS_DISABLED.text());
+
+        var area = areas.get(id);
+        return area == null
+                ? TextResult.fail(AmLang.MSG_NO_SUCH_AREA_ID.text(Integer.toString(id)))
+                : TextResult.of(area);
+    }
+
+    public TextResult<List<Area>> getAreasVisibleTo(String playerUUID) {
+        if (areasDisabled)
+            return TextResult.fail(AmLang.MSG_AREAS_DISABLED.text());
+
+        return TextResult.of(
+                areas.values().stream().filter(
+                        area -> area.canBeSeenBy(playerUUID)
+                ).toList()
+        );
     }
 
 

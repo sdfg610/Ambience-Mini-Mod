@@ -6,15 +6,15 @@ import me.molybdenum.ambience_mini.engine.shared.utils.Text;
 import java.util.function.Supplier;
 
 public abstract class BaseCommandContext {
-    protected final Supplier<BaseServerCore<?, ?, ?>> core;
+    protected final Supplier<BaseServerCore<?, ?, ?, ?>> core;
 
 
-    public BaseCommandContext(Supplier<BaseServerCore<?, ?, ?>> core) {
+    public BaseCommandContext(Supplier<BaseServerCore<?, ?, ?, ?>> core) {
         this.core = core;
     }
 
 
-    public BaseServerCore<?, ?, ?> getServer() {
+    public BaseServerCore<?, ?, ?, ?> getServer() {
         return core.get();
     }
 

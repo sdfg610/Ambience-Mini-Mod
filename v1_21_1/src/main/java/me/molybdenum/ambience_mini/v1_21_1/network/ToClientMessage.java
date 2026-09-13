@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.v1_21_1.network;
 
 import io.netty.buffer.ByteBuf;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
-import me.molybdenum.ambience_mini.engine.shared.utils.Result;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 import me.molybdenum.ambience_mini.v1_21_1.AmbienceMini;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -10,7 +10,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
 
-public record ToClientMessage(Result<AmMessage> message) implements CustomPacketPayload {
+public record ToClientMessage(StrResult<AmMessage> message) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<ToClientMessage> TYPE
             = new CustomPacketPayload.Type<>(AmbienceMini.rl("to_client_message"));
 
@@ -19,7 +19,7 @@ public record ToClientMessage(Result<AmMessage> message) implements CustomPacket
 
 
     public ToClientMessage(AmMessage message) {
-        this(Result.of(message));
+        this(StrResult.of(message));
     }
 
     public ToClientMessage(ByteBuf buffer) {

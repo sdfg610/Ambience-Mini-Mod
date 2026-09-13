@@ -1,7 +1,6 @@
 package me.molybdenum.ambience_mini.engine.shared.jobs;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.*;
 
 public class JobCenter {
@@ -21,10 +20,6 @@ public class JobCenter {
         return new JobCenter(Executors.newScheduledThreadPool(corePoolSize));
     }
 
-
-    public List<Job> getJobs() {
-        return jobs;
-    }
 
     public synchronized <T extends Job> T post(T job) {
         jobs.add(job);
@@ -54,8 +49,18 @@ public class JobCenter {
         executor.shutdownNow();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public synchronized boolean isShutdown() {
         return executor.isShutdown();
+    }
+
+    public boolean shutdownAndAwaitTermination(long millis) {
+        try {
+            shutdown();
+            return executor.awaitTermination(millis, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ignored) {
+            return false;
+        }
     }
 
 
@@ -110,12 +115,23 @@ public class JobCenter {
             }
         }
 
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         public synchronized boolean isCancelled() {
             return (state & 0b1) != 0;
         }
 
         public synchronized boolean isTerminated() {
             return (state & 0b10) != 0;
+        }
+
+
+        public static Job of(Runnable body) {
+            return new Job() {
+                @Override
+                protected void body() {
+                    body.run();
+                }
+            };
         }
     }
 }
