@@ -14,7 +14,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import org.lwjgl.opengl.GL11;
 
-public class Drawer extends BaseDrawer
+public class Drawer extends BaseDrawer<PoseStack.Pose>
 {
     private final Minecraft mc = Minecraft.getInstance();
 
@@ -24,6 +24,7 @@ public class Drawer extends BaseDrawer
     private MultiBufferSource.BufferSource buffer = null;
 
 
+    @Override
     public void setup(PoseStack.Pose pose) {
         this.pose = pose.pose();
         this.normal = pose.normal();

@@ -74,6 +74,7 @@
   "string.cancel": "Cancel",
   "string.edit_bounds": "Edit Bounds",
   "string.delete": "Delete",
+  "string.confirm_delete": "Confirm Delete?",
 
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
   "ambience_mini.configuration.Notify_Server_Support": "Notify server support",
@@ -100,5 +101,10 @@
   "ambience_mini.configuration.Y_Axis_Granularity": "Y-axis granularity",
   "ambience_mini.configuration.X_Axis_Granularity": "X-axis granularity",
   "ambience_mini.configuration.Combat_Grace_Period": "Combat grace period",
-  "ambience_mini.configuration.Combatant_Timeout": "Combatant timeout"
+  "ambience_mini.configuration.Combatant_Timeout": "Combatant timeout",
+  "ambience_mini.configuration.Max_Music_Cache_Memory": "Max music cache size",
+  "ambience_mini.configuration.Max_Server_Playlists_Size": "Max server playlists size",
+  "ambience_mini.configuration.Playlists_Fetch_Timeout": "Playlists fetch timeout",
+  "ambience_mini.configuration.Max_Server_Music_Size": "Max server music size",
+  "ambience_mini.configuration.Music_Fetch_Timeout": "Music fetch timeout"
 }

@@ -6,6 +6,7 @@ import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
@@ -117,7 +118,7 @@ public class AmbienceMini extends BaseAmbienceMini
                     LOGGER, new ClientNameCache(), new StructureCache(),
                     new Notification(), new ClientNetworkManager(),
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
-                    new FlagCache(),
+                    new FlagCache(), new ServerMusicCache(),
                     new ServerSetup(), clientConfig, keyBindings,
                     new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );

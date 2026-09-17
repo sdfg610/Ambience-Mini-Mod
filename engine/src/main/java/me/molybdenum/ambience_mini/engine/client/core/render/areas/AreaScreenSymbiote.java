@@ -2,6 +2,8 @@ package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
+import me.molybdenum.ambience_mini.engine.client.core.render.screens.IGuiTools;
+import me.molybdenum.ambience_mini.engine.client.core.render.screens.BaseScreenSymbiote;
 import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
@@ -11,11 +13,14 @@ import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Owner;
 
 
-// Java does not have multiple inheritance, but I needed the Area screen to extend Minecraft's Screen class
-// in addition to a general class with all the general logic. The symbiote contains all the general logic
-// whereas the non-symbiote contains what is needed for the screen to work in Minecraft.
-public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
-{
+public class AreaScreenSymbiote<
+        TScreen,
+        TPose,
+        TWidget,
+        TEditBox extends TWidget,
+        TCheckBox extends TWidget,
+        TButton extends TWidget
+> extends BaseScreenSymbiote<TScreen, TPose, TWidget, TEditBox, TCheckBox, TButton> {
     // Menu dimensions relative to GuiScale = 1
     public static final int MENU_MIN_WIDTH = 250;
     public static final int MENU_BORDER_THICKNESS = 1;
@@ -25,7 +30,7 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
     public static final int CHECKBOX_SIDE_LENGTH = 20;
 
     private final Area area;
-    private final BaseDrawer baseDrawer;
+    private final BaseDrawer<TPose> baseDrawer;
     private final BaseNotification<?> notification;
     private final BaseAreaRenderer<?,?,?> areaRenderer;
     private final AreaHelper areaHelper;
@@ -64,18 +69,24 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
     private boolean latestPublicChecked = false;
     private boolean latestLocalChecked = false;
 
+    // Delete state
+    private final String deleteString;
+    private final String confirmDeleteString;
+    private boolean confirmingDelete = false;
+
     // Widget states
-    boolean allowInput = true;
+    private boolean allowInput = true;
 
-
-
-    public BaseAreaScreenSymbiote(
+    public AreaScreenSymbiote(
+            IGuiTools<TScreen, TPose, TWidget, TEditBox, TCheckBox, TButton> gui,
             Area area,
-            BaseDrawer baseDrawer,
+            BaseDrawer<TPose> baseDrawer,
             BaseNotification<?> notification,
             BaseAreaRenderer<?,?,?> areaRenderer,
             AreaHelper areaHelper
     ) {
+        super(gui, "Area screen");
+
         // Core state
         this.area = area;
         this.baseDrawer = baseDrawer;
@@ -92,17 +103,17 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
 
         String privateString = notification.translateFromKey(AmLang.STRING_PRIVATE);
         privateStringWidth = baseDrawer.getTextWidth(privateString);
-        cbxPrivate = makeCheckBox((isNew || area.owner.isPrivate()) && hasServerSupport, privateString);
+        cbxPrivate = gui.makeCheckBox((isNew || area.owner.isPrivate()) && hasServerSupport, privateString);
 
         String sharedString = notification.translateFromKey(AmLang.STRING_SHARED);
         sharedStringWidth = baseDrawer.getTextWidth(sharedString);
-        cbxShared = makeCheckBox(area.owner.isShared() && hasServerSupport, sharedString);
+        cbxShared = gui.makeCheckBox(area.owner.isShared() && hasServerSupport, sharedString);
 
         String publicString = notification.translateFromKey(AmLang.STRING_PUBLIC);
         publicStringWidth = baseDrawer.getTextWidth(sharedString);
-        cbxPublic = makeCheckBox(area.owner.isPublic() && hasServerSupport, publicString);
+        cbxPublic = gui.makeCheckBox(area.owner.isPublic() && hasServerSupport, publicString);
 
-        cbxLocal = makeCheckBox(area.owner.isLocal() || !hasServerSupport, notification.translateFromKey(AmLang.STRING_LOCAL));
+        cbxLocal = gui.makeCheckBox(area.owner.isLocal() || !hasServerSupport, notification.translateFromKey(AmLang.STRING_LOCAL));
 
         // Buttons
         buttonHeight = lineHeight + switch (areaHelper.mcVersion) {
@@ -112,19 +123,20 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
 
         String confirmString = notification.translateFromKey(AmLang.STRING_SAVE);
         btnSaveWidth = baseDrawer.getTextWidth(confirmString) + 25;
-        btnSave = makeButton(new Vector2i(btnSaveWidth, buttonHeight), confirmString, this::onConfirmClicked);
+        btnSave = gui.makeButton(new Vector2i(btnSaveWidth, buttonHeight), confirmString, this::onConfirmClicked);
 
         String cancelString = notification.translateFromKey(AmLang.STRING_CANCEL);
         btnCancelWidth = baseDrawer.getTextWidth(cancelString) + 25;
-        btnCancel = makeButton(new Vector2i(btnCancelWidth, buttonHeight), cancelString, this::resetEditorAndCloseMenu);
+        btnCancel = gui.makeButton(new Vector2i(btnCancelWidth, buttonHeight), cancelString, this::onCancelClicked);
 
         String editBoundsString = notification.translateFromKey(AmLang.STRING_EDIT_BOUNDS);
         btnEditBoundsWidth = baseDrawer.getTextWidth(editBoundsString) + 25;
-        btnEditBounds = makeButton(new Vector2i(btnEditBoundsWidth, buttonHeight), editBoundsString, this::onEditBoundsClicked);
+        btnEditBounds = gui.makeButton(new Vector2i(btnEditBoundsWidth, buttonHeight), editBoundsString, this::onEditBoundsClicked);
 
-        String deleteString = notification.translateFromKey(AmLang.STRING_DELETE);
-        btnDeleteWidth = baseDrawer.getTextWidth(editBoundsString) + 25;
-        btnDelete = makeButton(new Vector2i(btnDeleteWidth, buttonHeight), deleteString, this::onDeleteClicked);
+        deleteString = notification.translateFromKey(AmLang.STRING_DELETE);
+        confirmDeleteString = notification.translateFromKey(AmLang.STRING_CONFIRM_DELETE);
+        btnDeleteWidth = Math.max(baseDrawer.getTextWidth(deleteString), baseDrawer.getTextWidth(confirmDeleteString)) + 25;
+        btnDelete = gui.makeButton(new Vector2i(btnDeleteWidth, buttonHeight), deleteString, this::onDeleteClicked);
 
         if (!area.canBeEditedBy(areaHelper.getPlayerUUID())) {
             allowInput = false;
@@ -141,21 +153,22 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
         areaNameLabelWidth = baseDrawer.getTextWidth(areaNameString);
 
         int areaNameInputWidth = menuWidth - 2*MENU_INNER_MARGIN - areaNameLabelWidth - MENU_WIDGET_BASE_SEPARATION;
-        txtAreaName = makeTextBox(new Vector2i(areaNameInputWidth, areaNameInputHeight), this.area.name);
+        txtAreaName = gui.makeTextBox(new Vector2i(areaNameInputWidth, areaNameInputHeight), this.area.name);
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
     // Setup, rendering, and ticking
-    public void init(IAreaScreenAccessor<TEditBox, TCheckBox, TButton> areaScreen) {
-        Vector2i borderPos = new Vector2i((areaScreen.screenWidth() - menuWidth)/2, (areaScreen.screenHeight() - menuHeight)/2);
+    @Override
+    public void init() {
+        Vector2i borderPos = new Vector2i((screen.screenWidth() - menuWidth)/2, (screen.screenHeight() - menuHeight)/2);
 
         // Area name label
         areaNameLabelPos = borderPos.offset(MENU_INNER_MARGIN, MENU_INNER_MARGIN + 2);
 
         // Area name textbox
-        setEditBoxPos(txtAreaName, borderPos.x() + MENU_INNER_MARGIN + areaNameLabelWidth + MENU_WIDGET_BASE_SEPARATION, borderPos.y() + MENU_INNER_MARGIN);
-        areaScreen.addTextBox(txtAreaName);
+        gui.setEditBoxPos(txtAreaName, borderPos.x() + MENU_INNER_MARGIN + areaNameLabelWidth + MENU_WIDGET_BASE_SEPARATION, borderPos.y() + MENU_INNER_MARGIN);
+        screen.addWidget(txtAreaName);
 
         // Ownership label
         ownershipLabelPos = areaNameLabelPos.offset(0, baseDrawer.getLineHeight() + MENU_WIDGET_BASE_SEPARATION*4);
@@ -168,84 +181,91 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
             int publicX = sharedX + sharedStringWidth + CHECKBOX_SIDE_LENGTH + 10;
             int localX = publicX + publicStringWidth + CHECKBOX_SIDE_LENGTH + 10;
 
-            setCheckBoxPos(cbxPrivate, firstCheckboxX, checkboxY);
-            areaScreen.addCheckBox(cbxPrivate);
+            gui.setCheckBoxPos(cbxPrivate, firstCheckboxX, checkboxY);
+            screen.addWidget(cbxPrivate);
 
-            setCheckBoxPos(cbxShared, sharedX, checkboxY);
-            areaScreen.addCheckBox(cbxShared);
+            gui.setCheckBoxPos(cbxShared, sharedX, checkboxY);
+            screen.addWidget(cbxShared);
 
-            setCheckBoxPos(cbxPublic, publicX, checkboxY);
-            areaScreen.addCheckBox(cbxPublic);
+            gui.setCheckBoxPos(cbxPublic, publicX, checkboxY);
+            screen.addWidget(cbxPublic);
 
-            setCheckBoxPos(cbxLocal, localX, checkboxY);
-            areaScreen.addCheckBox(cbxLocal);
+            gui.setCheckBoxPos(cbxLocal, localX, checkboxY);
+            screen.addWidget(cbxLocal);
         }
         else {
-            setCheckBoxPos(cbxLocal, firstCheckboxX, checkboxY);
-            areaScreen.addCheckBox(cbxLocal);
+            gui.setCheckBoxPos(cbxLocal, firstCheckboxX, checkboxY);
+            screen.addWidget(cbxLocal);
         }
 
         // Buttons
         int buttonY = checkboxY + CHECKBOX_SIDE_LENGTH + MENU_WIDGET_BASE_SEPARATION*4;
 
         int confirmX = borderPos.x() + MENU_INNER_MARGIN;
-        setButtonPos(btnSave, confirmX, buttonY);
-        areaScreen.addButton(btnSave);
+        gui.setButtonPos(btnSave, confirmX, buttonY);
+        screen.addWidget(btnSave);
 
         int cancelX = confirmX + btnSaveWidth + MENU_WIDGET_BASE_SEPARATION;
-        setButtonPos(btnCancel, cancelX, buttonY);
-        areaScreen.addButton(btnCancel);
+        gui.setButtonPos(btnCancel, cancelX, buttonY);
+        screen.addWidget(btnCancel);
 
         int editBoundsX = cancelX + btnCancelWidth + MENU_WIDGET_BASE_SEPARATION;
-        setButtonPos(btnEditBounds, editBoundsX, buttonY);
-        areaScreen.addButton(btnEditBounds);
+        gui.setButtonPos(btnEditBounds, editBoundsX, buttonY);
+        screen.addWidget(btnEditBounds);
 
         int deleteX = editBoundsX + btnEditBoundsWidth + MENU_WIDGET_BASE_SEPARATION;
-        setButtonPos(btnDelete, deleteX, buttonY);
+        gui.setButtonPos(btnDelete, deleteX, buttonY);
         if (!area.isNew())
-            areaScreen.addButton(btnDelete);
+            screen.addWidget(btnDelete);
     }
 
+    @Override
     public void tick() {
-        tickEditBox(txtAreaName);
+        gui.tickEditBox(txtAreaName);
 
         // Make checkboxes behave like radio buttons
-        boolean currentPrivateChecked = getSelected(cbxPrivate);
-        boolean currentSharedChecked = getSelected(cbxShared);
-        boolean currentPublicChecked = getSelected(cbxPublic);
-        boolean currentLocalChecked = getSelected(cbxLocal);
+        boolean currentPrivateChecked = gui.getSelected(cbxPrivate);
+        boolean currentSharedChecked = gui.getSelected(cbxShared);
+        boolean currentPublicChecked = gui.getSelected(cbxPublic);
+        boolean currentLocalChecked = gui.getSelected(cbxLocal);
 
         if (!currentPrivateChecked && !currentSharedChecked && !currentPublicChecked && !currentLocalChecked) {
-            setSelected(cbxPrivate, latestPrivateChecked);
-            setSelected(cbxShared, latestSharedChecked);
-            setSelected(cbxPublic, latestPublicChecked);
-            setSelected(cbxLocal, latestLocalChecked);
+            gui.setSelected(cbxPrivate, latestPrivateChecked);
+            gui.setSelected(cbxShared, latestSharedChecked);
+            gui.setSelected(cbxPublic, latestPublicChecked);
+            gui.setSelected(cbxLocal, latestLocalChecked);
         }
         else if (!latestPrivateChecked && currentPrivateChecked)  {
-            setSelected(cbxShared, false);
-            setSelected(cbxPublic, false);
-            setSelected(cbxLocal, false);
+            gui.setSelected(cbxShared, false);
+            gui.setSelected(cbxPublic, false);
+            gui.setSelected(cbxLocal, false);
         }
         else if (!latestSharedChecked && currentSharedChecked)  {
-            setSelected(cbxPrivate, false);
-            setSelected(cbxPublic, false);
-            setSelected(cbxLocal, false);
+            gui.setSelected(cbxPrivate, false);
+            gui.setSelected(cbxPublic, false);
+            gui.setSelected(cbxLocal, false);
         }
         else if (!latestPublicChecked && currentPublicChecked)  {
-            setSelected(cbxPrivate, false);
-            setSelected(cbxShared, false);
-            setSelected(cbxLocal, false);
+            gui.setSelected(cbxPrivate, false);
+            gui.setSelected(cbxShared, false);
+            gui.setSelected(cbxLocal, false);
         }
         else if (!latestLocalChecked && currentLocalChecked)  {
-            setSelected(cbxPrivate, false);
-            setSelected(cbxShared, false);
-            setSelected(cbxPublic, false);
+            gui.setSelected(cbxPrivate, false);
+            gui.setSelected(cbxShared, false);
+            gui.setSelected(cbxPublic, false);
         }
 
-        latestPrivateChecked = getSelected(cbxPrivate);
-        latestSharedChecked = getSelected(cbxShared);
-        latestPublicChecked = getSelected(cbxPublic);
-        latestLocalChecked = getSelected(cbxLocal);
+        latestPrivateChecked = gui.getSelected(cbxPrivate);
+        latestSharedChecked = gui.getSelected(cbxShared);
+        latestPublicChecked = gui.getSelected(cbxPublic);
+        latestLocalChecked = gui.getSelected(cbxLocal);
+    }
+
+    @Override
+    public void renderBackground(TPose pose, int screenWidth, int screenHeight) {
+        baseDrawer.setup(pose);
+        renderGeneralAreaScreen(screenWidth, screenHeight);
     }
 
     public void renderGeneralAreaScreen(int screenWidth, int screenHeight) {
@@ -277,6 +297,7 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
         });
     }
 
+    @Override
     public void onClose() {
         areaRenderer.resetEditor();
     }
@@ -287,19 +308,20 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
     private void onConfirmClicked() {
         if (!allowInput)
             return;
+        resetDelete();
 
-        var name = getValue(txtAreaName);
+        var name = gui.getEditBoxValue(txtAreaName);
         if (name.isBlank() || name.length() > Constants.MAX_AREA_NAME_LENGTH) {
             notification.printTranslatableToChat(AmLang.MSG_AREA_NAME_REQUIREMENTS, Constants.MAX_AREA_NAME_LENGTH);
             return;
         }
 
         allowInput = false;
-        area.name = getValue(txtAreaName);
+        area.name = name;
         area.owner = new Owner(
-                getSelected(cbxPublic) || getSelected(cbxLocal)
-                        ? new Owner.Ownerless(getSelected(cbxLocal))
-                        : new Owner.Owned(areaHelper.getPlayerUUID(), getSelected(cbxShared))
+                gui.getSelected(cbxPublic) || gui.getSelected(cbxLocal)
+                        ? new Owner.Ownerless(gui.getSelected(cbxLocal))
+                        : new Owner.Owned(areaHelper.getPlayerUUID(), gui.getSelected(cbxShared))
                 );
         area.fromBlock = areaHelper.getSelectedCube().getFromBlock();
         area.toBlock = areaHelper.getSelectedCube().getToBlock();
@@ -314,47 +336,51 @@ public abstract class BaseAreaScreenSymbiote<TEditBox, TCheckBox, TButton>
         );
     }
 
+    private void onCancelClicked() {
+        if (!allowInput)
+            return;
+
+        resetEditorAndCloseMenu();
+    }
+
     private void onDeleteClicked() {
         if (!allowInput)
             return;
 
-        allowInput = false;
-        areaHelper.deleteArea(
-                area.id,
-                this::resetEditorAndCloseMenu,
-                error -> {
-                    notification.printToChat(error);
-                    allowInput = true;
-                }
-        );
+        if (confirmingDelete) {
+            allowInput = false;
+            areaHelper.deleteArea(
+                    area.id,
+                    this::resetEditorAndCloseMenu,
+                    error -> {
+                        notification.printToChat(error);
+                        allowInput = true;
+                        resetDelete();
+                    }
+            );
+        }
+        else {
+            gui.setButtonText(btnDelete, confirmDeleteString);
+            confirmingDelete = true;
+        }
     }
 
     private void onEditBoundsClicked() {
-        if (allowInput)
-            closeScreen();
+        if (!allowInput)
+            return;
+
+        resetDelete();
+        gui.closeScreen();
     }
+
 
     private void resetEditorAndCloseMenu() {
         areaRenderer.resetEditor();
-        closeScreen();
+        gui.closeScreen();
     }
 
-
-    // -----------------------------------------------------------------------------------------------------------------
-    // Abstract API
-    protected abstract TEditBox makeTextBox(Vector2i size, String content);
-    protected abstract TCheckBox makeCheckBox(boolean selected, String label);
-    protected abstract TButton makeButton(Vector2i size, String content, Runnable onClick);
-
-    protected abstract void setEditBoxPos(TEditBox editBox, int x, int y);
-    protected abstract void setCheckBoxPos(TCheckBox checkBox, int x, int y);
-    protected abstract void setButtonPos(TButton button, int x, int y);
-
-    protected abstract void tickEditBox(TEditBox editBox);
-    protected abstract String getValue(TEditBox editBox);
-
-    protected abstract void setSelected(TCheckBox checkBox, boolean selected);
-    protected abstract boolean getSelected(TCheckBox checkBox);
-
-    protected abstract void closeScreen();
+    private void resetDelete() {
+        confirmingDelete = false;
+        gui.setButtonText(btnDelete, deleteString);
+    }
 }

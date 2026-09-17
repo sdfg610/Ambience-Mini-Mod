@@ -83,7 +83,8 @@ public enum AmLang
     STRING_SAVE("string.save"),
     STRING_CANCEL("string.cancel"),
     STRING_EDIT_BOUNDS("string.edit_bounds"),
-    STRING_DELETE("string.delete")
+    STRING_DELETE("string.delete"),
+    STRING_CONFIRM_DELETE("string.confirm_delete")
 
     ;
 

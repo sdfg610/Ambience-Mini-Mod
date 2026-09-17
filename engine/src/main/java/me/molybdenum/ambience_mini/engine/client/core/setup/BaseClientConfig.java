@@ -23,7 +23,7 @@ public abstract class BaseClientConfig {
     public final Supplier<Boolean> meticulousPlaylistSelector;
 
     // Volume control
-    public final Supplier<Boolean> fadeOnJukeBox;
+    public final Supplier<Boolean> fadeOnJukebox;
     public final Supplier<Boolean> lostFocusEnabled;
 
     // Village detection
@@ -112,7 +112,7 @@ public abstract class BaseClientConfig {
         );
 
         // Volume control
-        fadeOnJukeBox = registerBoolOption(
+        fadeOnJukebox = registerBoolOption(
                 "Fade out Ambience Mini's music when a jukebox is playing music nearby. [Default true]",
                 "Fade_On_Jukebox",
                 true
@@ -213,25 +213,25 @@ public abstract class BaseClientConfig {
 
         maxPlaylistsSize = registerIntOption(
                 "The maximal size, in megabytes, of the server playlists. This is mostly a safeguard - the playlists should not be that big. [Default: 100]",
-                "",
+                "Max_Server_Playlists_Size",
                 100, 10, 100
         );
 
         playlistChunkTimeout = registerIntOption(
                 "If more than the given amount of milliseconds passes without receiving playlist-data from the server, the client gives up fetching the server playlists. [Default: 500]",
-                "",
+                "Playlists_Fetch_Timeout",
                 500, 250, 5000
         );
 
         maxMusicSize = registerIntOption(
                 "The maximal size, in megabytes, of any single piece of server-located music. Music exceeding the size limit will not be fetched. [Default: 50]",
-                "",
+                "Max_Server_Music_Size",
                 50, 5, 1000
         );
 
         musicChunkTimeout = registerIntOption(
-                "If more than the given amount of milliseconds passes without receiving music-data from the server, the client gives up fetching some server-located music. [Default: 500]",
-                "",
+                "If more than the given amount of milliseconds passes without receiving music-data from the server, the client gives up fetching a server-located music. [Default: 500]",
+                "Music_Fetch_Timeout",
                 500, 250, 5000
         );
 

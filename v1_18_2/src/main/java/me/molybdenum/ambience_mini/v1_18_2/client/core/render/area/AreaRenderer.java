@@ -1,12 +1,14 @@
 package me.molybdenum.ambience_mini.v1_18_2.client.core.render.area;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.molybdenum.ambience_mini.engine.client.core.render.areas.AreaScreenSymbiote;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.render.drawer.Drawer;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Cube;
 import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
+import me.molybdenum.ambience_mini.v1_18_2.client.core.render.screens.GuiTools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.culling.Frustum;
@@ -64,9 +66,9 @@ public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos, Screen>
 
     @Override
     protected Screen createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper) {
-        return new AreaScreen(new AreaScreenSymbiote(
-                selectedArea, drawer, notification, this, areaHelper
-        ));
+        return new AreaScreenSymbiote<>(
+                GuiTools.INSTANCE, selectedArea, drawer, notification, this, areaHelper
+        ).getScreen();
     }
 
     @Override

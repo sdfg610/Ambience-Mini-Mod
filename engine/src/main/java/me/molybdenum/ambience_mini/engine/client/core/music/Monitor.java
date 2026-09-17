@@ -223,7 +223,7 @@ public class Monitor
             // Music config
             this.useMeticulousPlaylistSelector = _core.clientConfig.meticulousPlaylistSelector.get();
             this.fadeOnLostFocus = _core.clientConfig.lostFocusEnabled.get();
-            this.doFadeOnJukebox = _core.clientConfig.fadeOnJukeBox.get();
+            this.doFadeOnJukebox = _core.clientConfig.fadeOnJukebox.get();
 
             // Debug config
             this.verboseMode = _core.clientConfig.verboseMode.get();

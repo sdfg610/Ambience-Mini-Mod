@@ -60,10 +60,10 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
     private boolean inputWasConfirm;
 
     // Rendering
-    private final BaseDrawer baseDrawer;
+    private final BaseDrawer<?> baseDrawer;
 
 
-    protected BaseAreaRenderer(BaseDrawer baseDrawer) {
+    protected BaseAreaRenderer(BaseDrawer<?> baseDrawer) {
         this.baseDrawer = baseDrawer;
     }
 

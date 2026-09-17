@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.v1_18_2.client.core;
 
 
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.setup.ClientConfig;
@@ -44,6 +45,7 @@ public class ClientCore extends BaseClientCore<
             ClientAreaManager areaManager,
             AreaRenderer renderer,
             FlagCache flagCache,
+            ServerMusicCache musicCache,
             ServerSetup serverSetup,
             ClientConfig clientConfig,
             KeyBindings keyBindings,
@@ -52,7 +54,7 @@ public class ClientCore extends BaseClientCore<
             ScreenState screenState,
             CombatState combatState
     ) {
-        super(McVersion.V1_18, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
+        super(McVersion.V1_18, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, musicCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
     }
 
 

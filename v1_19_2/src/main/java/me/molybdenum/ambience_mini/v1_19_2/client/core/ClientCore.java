@@ -4,6 +4,7 @@ package me.molybdenum.ambience_mini.v1_19_2.client.core;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
@@ -32,7 +33,6 @@ public class ClientCore extends BaseClientCore<
         BlockPos, Vec3, BlockState, Entity, KeyMapping, Component,
         Notification, ClientNetworkManager, AreaRenderer, ClientConfig, KeyBindings, PlayerState, LevelState, ScreenState, CombatState>
 {
-    private static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
     private static final Minecraft mc = Minecraft.getInstance();
 
 
@@ -45,6 +45,7 @@ public class ClientCore extends BaseClientCore<
             ClientAreaManager areaManager,
             AreaRenderer renderer,
             FlagCache flagCache,
+            ServerMusicCache musicCache,
             ServerSetup serverSetup,
             ClientConfig clientConfig,
             KeyBindings keyBindings,
@@ -53,7 +54,7 @@ public class ClientCore extends BaseClientCore<
             ScreenState screenState,
             CombatState combatState
     ) {
-        super(McVersion.V1_19, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
+        super(McVersion.V1_19, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, musicCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
     }
 
 

@@ -7,11 +7,14 @@ import me.molybdenum.ambience_mini.engine.shared.utils.Triple;
 
 import java.util.function.Consumer;
 
-public abstract class BaseDrawer
+public abstract class BaseDrawer<TPose>
 {
     private final LineDrawer lineDrawer = BaseDrawer.this::drawLine;
     private final QuadDrawer quadDrawer = BaseDrawer.this::drawQuad;
     private final TextDrawer textDrawer = BaseDrawer.this::drawText;
+
+
+    public abstract void setup(TPose pose);
 
 
     protected abstract void beginLineBuilder();
