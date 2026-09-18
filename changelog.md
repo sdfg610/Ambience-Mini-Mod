@@ -35,6 +35,7 @@
 
 **Miscellaneous:**
 - You now need to click the "Delete" button twice in the area-menu to actually delete the area.
+- Pressing "Cancel" when in "edit area bounds"-mode now returns you to the area menu instead of cancelling everything.
 - Minor improvements to output created by verbose mode.
 - Minor improvements to volume change handling.
 - Architectural improvements to message passing and handling between client and server.

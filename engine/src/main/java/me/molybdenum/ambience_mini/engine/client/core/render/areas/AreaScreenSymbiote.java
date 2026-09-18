@@ -371,6 +371,7 @@ public class AreaScreenSymbiote<
 
         resetDelete();
         gui.closeScreen();
+        areaRenderer.enableAreaResize();
     }
 
 

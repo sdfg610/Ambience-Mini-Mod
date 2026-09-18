@@ -44,6 +44,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
     private final ConcurrentHashMap<Integer, Pair<Area, Cube>> areaIdToCube = new ConcurrentHashMap<>();
 
     // Area manipulation
+    private AreaViewMode cachedMode = AreaViewMode.OFF;
     private AreaViewMode mode = AreaViewMode.OFF;
 
     private Vector3i areaFromBlock = null;
@@ -142,6 +143,11 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         return this.mode;
     }
 
+    public void enableAreaResize() {
+        cachedMode = mode;
+        mode = AreaViewMode.AREA_RESIZE;
+    }
+
     public void resetEditor() {
         areaFromBlock = null;
         selectedArea = null;
@@ -232,6 +238,11 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
     }
 
     private void tickAndRenderSelectedArea(Vector3d camPos, Vector3d camDir, Vector3i lookPos) {
+        if (mode != AreaViewMode.AREA_RESIZE) {
+            renderCubeSimple(selectedCube, Color.AREA_LOOKING, 1);
+            return;
+        }
+
         FaceHitResult hit = selectedFace == null ? selectedCube.getLookingAt(camPos, camDir) : null;
         Cube.Face lookingAt = hit != null ? hit.face : selectedFace;
 
@@ -277,8 +288,10 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         }
 
         if (consumeCancelInput()) {
-            if (selectedFace == null)
-                resetEditor();
+            if (selectedFace == null) {
+                openScreen(latestScreen);
+                mode = cachedMode;
+            }
             else
                 selectedFace = null;
         }
