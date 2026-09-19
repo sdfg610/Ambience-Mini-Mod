@@ -23,9 +23,9 @@ public interface IGuiTools<
     TCheckBox makeCheckBox(boolean selected, String label);
     TButton makeButton(Vector2i size, String content, Runnable onClick);
 
-    void setEditBoxPos(TEditBox editBox, int x, int y);
-    void setCheckBoxPos(TCheckBox checkBox, int x, int y);
-    void setButtonPos(TButton button, int x, int y);
+    void setWidgetPos(TWidget widget, int x, int y);
+    void setWidgetEnabled(TWidget widget, boolean enabled);
+
     void setButtonText(TButton button, String text);
 
     void tickEditBox(TEditBox editBox);

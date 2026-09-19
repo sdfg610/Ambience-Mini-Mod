@@ -9,12 +9,12 @@ import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.Response;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ResponseMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.Response;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.ResponseMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobCombatInteractionMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.FailureMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.SuccessMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.FailureMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.SuccessMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkReferencesMessage;
@@ -216,6 +216,10 @@ public abstract class BaseClientNetworkManager
             this.onSuccess = onSuccess;
             hasHandlers = true;
             return this;
+        }
+
+        public AsyncBuilder onSuccess(Runnable onSuccess) {
+            return onSuccess((ignored) -> onSuccess.run());
         }
 
         public AsyncBuilder onFailure(Consumer<Text> onFailure) {

@@ -97,23 +97,23 @@ public class AreaScreenSymbiote<
         int lineHeight = baseDrawer.getLineHeight();
 
         // Ownership
-        boolean hasServerSupport = areaHelper.hasServerSupport();
+        boolean areasEnabled = areaHelper.areServerAreasEnabled();
         boolean isNew = area.isNew();
         ownershipString = notification.translateFromKey(AmLang.STRING_OWNERSHIP_AND_SHARING);
 
         String privateString = notification.translateFromKey(AmLang.STRING_PRIVATE);
         privateStringWidth = baseDrawer.getTextWidth(privateString);
-        cbxPrivate = gui.makeCheckBox((isNew || area.owner.isPrivate()) && hasServerSupport, privateString);
+        cbxPrivate = gui.makeCheckBox((isNew || area.owner.isPrivate()) && areasEnabled, privateString);
 
         String sharedString = notification.translateFromKey(AmLang.STRING_SHARED);
         sharedStringWidth = baseDrawer.getTextWidth(sharedString);
-        cbxShared = gui.makeCheckBox(area.owner.isShared() && hasServerSupport, sharedString);
+        cbxShared = gui.makeCheckBox(area.owner.isShared() && areasEnabled, sharedString);
 
         String publicString = notification.translateFromKey(AmLang.STRING_PUBLIC);
         publicStringWidth = baseDrawer.getTextWidth(sharedString);
-        cbxPublic = gui.makeCheckBox(area.owner.isPublic() && hasServerSupport, publicString);
+        cbxPublic = gui.makeCheckBox(area.owner.isPublic() && areasEnabled, publicString);
 
-        cbxLocal = gui.makeCheckBox(area.owner.isLocal() || !hasServerSupport, notification.translateFromKey(AmLang.STRING_LOCAL));
+        cbxLocal = gui.makeCheckBox(area.owner.isLocal() || !areasEnabled, notification.translateFromKey(AmLang.STRING_LOCAL));
 
         // Buttons
         buttonHeight = lineHeight + switch (areaHelper.mcVersion) {
@@ -167,7 +167,7 @@ public class AreaScreenSymbiote<
         areaNameLabelPos = borderPos.offset(MENU_INNER_MARGIN, MENU_INNER_MARGIN + 2);
 
         // Area name textbox
-        gui.setEditBoxPos(txtAreaName, borderPos.x() + MENU_INNER_MARGIN + areaNameLabelWidth + MENU_WIDGET_BASE_SEPARATION, borderPos.y() + MENU_INNER_MARGIN);
+        gui.setWidgetPos(txtAreaName, borderPos.x() + MENU_INNER_MARGIN + areaNameLabelWidth + MENU_WIDGET_BASE_SEPARATION, borderPos.y() + MENU_INNER_MARGIN);
         screen.addWidget(txtAreaName);
 
         // Ownership label
@@ -176,25 +176,25 @@ public class AreaScreenSymbiote<
         // Ownership checkboxes
         int checkboxY = ownershipLabelPos.y() + baseDrawer.getLineHeight() + MENU_WIDGET_BASE_SEPARATION;
         int firstCheckboxX = borderPos.x() + MENU_INNER_MARGIN;
-        if (areaHelper.hasServerSupport()) {
+        if (areaHelper.areServerAreasEnabled()) {
             int sharedX = firstCheckboxX + privateStringWidth + CHECKBOX_SIDE_LENGTH + 10;
             int publicX = sharedX + sharedStringWidth + CHECKBOX_SIDE_LENGTH + 10;
             int localX = publicX + publicStringWidth + CHECKBOX_SIDE_LENGTH + 10;
 
-            gui.setCheckBoxPos(cbxPrivate, firstCheckboxX, checkboxY);
+            gui.setWidgetPos(cbxPrivate, firstCheckboxX, checkboxY);
             screen.addWidget(cbxPrivate);
 
-            gui.setCheckBoxPos(cbxShared, sharedX, checkboxY);
+            gui.setWidgetPos(cbxShared, sharedX, checkboxY);
             screen.addWidget(cbxShared);
 
-            gui.setCheckBoxPos(cbxPublic, publicX, checkboxY);
+            gui.setWidgetPos(cbxPublic, publicX, checkboxY);
             screen.addWidget(cbxPublic);
 
-            gui.setCheckBoxPos(cbxLocal, localX, checkboxY);
+            gui.setWidgetPos(cbxLocal, localX, checkboxY);
             screen.addWidget(cbxLocal);
         }
         else {
-            gui.setCheckBoxPos(cbxLocal, firstCheckboxX, checkboxY);
+            gui.setWidgetPos(cbxLocal, firstCheckboxX, checkboxY);
             screen.addWidget(cbxLocal);
         }
 
@@ -202,19 +202,19 @@ public class AreaScreenSymbiote<
         int buttonY = checkboxY + CHECKBOX_SIDE_LENGTH + MENU_WIDGET_BASE_SEPARATION*4;
 
         int confirmX = borderPos.x() + MENU_INNER_MARGIN;
-        gui.setButtonPos(btnSave, confirmX, buttonY);
+        gui.setWidgetPos(btnSave, confirmX, buttonY);
         screen.addWidget(btnSave);
 
         int cancelX = confirmX + btnSaveWidth + MENU_WIDGET_BASE_SEPARATION;
-        gui.setButtonPos(btnCancel, cancelX, buttonY);
+        gui.setWidgetPos(btnCancel, cancelX, buttonY);
         screen.addWidget(btnCancel);
 
         int editBoundsX = cancelX + btnCancelWidth + MENU_WIDGET_BASE_SEPARATION;
-        gui.setButtonPos(btnEditBounds, editBoundsX, buttonY);
+        gui.setWidgetPos(btnEditBounds, editBoundsX, buttonY);
         screen.addWidget(btnEditBounds);
 
         int deleteX = editBoundsX + btnEditBoundsWidth + MENU_WIDGET_BASE_SEPARATION;
-        gui.setButtonPos(btnDelete, deleteX, buttonY);
+        gui.setWidgetPos(btnDelete, deleteX, buttonY);
         if (!area.isNew())
             screen.addWidget(btnDelete);
     }

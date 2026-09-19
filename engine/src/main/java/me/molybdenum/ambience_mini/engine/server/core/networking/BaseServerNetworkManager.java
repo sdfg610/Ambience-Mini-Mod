@@ -10,8 +10,9 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.GetAreasMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ResponseMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.client.ClientInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.features.RequestFeatureFlagsMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.ResponseMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.GetFlagsMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
@@ -22,11 +23,14 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerPlaylistInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.GetStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.features.Feature;
 import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseServerNetworkManager<TServerPlayer>
@@ -69,6 +73,8 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         try {
             if (message instanceof ClientInfoMessage msg)
                 response = handleModVersionMessage(msg, sender);
+            else if (message instanceof RequestFeatureFlagsMessage msg)
+                response = handleRequestFeatureFlagsMessage(msg);
 
             else if (message instanceof CreateAreaMessage msg)
                 response = handleCreateAreaMessage(msg, sender);
@@ -120,6 +126,15 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         return msg.success();
     }
 
+    private AmMessage handleRequestFeatureFlagsMessage(RequestFeatureFlagsMessage msg) {
+        var config = core.serverConfig;
+        return msg.succeedWith(
+                Arrays.stream(Feature.values())
+                        .map(feature -> feature.init(config))
+                        .toList()
+        );
+    }
+
 
     // Areas
     private AmMessage handleCreateAreaMessage(CreateAreaMessage msg, TServerPlayer sender) {
@@ -157,6 +172,9 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     }
 
     private AmMessage handleDeleteAreaMessage(DeleteAreaMessage msg, TServerPlayer sender) {
+        if (core.areaManager.areasDisabled())
+            return msg.failure(AmLang.MSG_AREAS_DISABLED.text());
+
         var result = core.areaManager.getAreaById(msg.areaId);
         if (result.isFailure())
             return msg.failure(result.error);
@@ -170,6 +188,9 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     }
 
     private AmMessage handleGetAreasMessage(GetAreasMessage msg, TServerPlayer sender) {
+        if (core.areaManager.areasDisabled())
+            return msg.failure(AmLang.MSG_AREAS_DISABLED.text());
+
         var res = core.areaManager.getAreasVisibleTo(getServerPlayerUUID(sender));
         if (res.isFailure())
             return msg.failWith(res.error);

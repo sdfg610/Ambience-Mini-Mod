@@ -26,11 +26,14 @@ import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseScreenState;
 import me.molybdenum.ambience_mini.engine.client.core.music.Monitor;
 import me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysis.Setup;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.features.RequestFeatureFlagsMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerPlaylistInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.helper.HelperReader;
+import me.molybdenum.ambience_mini.engine.shared.features.FeatureInstance;
 import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.music.music_provider.RealMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaStorage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.client.ClientInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
@@ -238,28 +241,24 @@ public abstract class BaseClientCore<
     public void onLoggedIn(AmVersion serverVersion, boolean isOnLocalServer, String playerUUID, String playerName) {
         onLoggedOut(); // Ensure everything has been reset
 
-        serverSetup.serverVersion = serverVersion;
+        serverSetup.setServerVersion(serverVersion);
         serverSetup.isOnLocalServer = isOnLocalServer;
         nameCache.setCurrentPlayer(playerUUID, playerName);
 
-        if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
-            networkManager.sendAsync(new ClientInfoMessage(
-                    BuildConfig.APP_VERSION.toString(),
-                    playerUUID,
-                    playerName
-            ));
-
-        if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_8_0))
-            networkManager.configureAsync().onSuccess(data -> {
-                var response = RequestServerPlaylistInfoMessage.parseResponse(data);
-                if (response.hasServerPlaylists)
-                    musicCache.handlePlaylistsNotification(response.byteSize, response.playlistCount);
-            }).setTimeout(10_000).send(new RequestServerPlaylistInfoMessage());
-
+        // Setup areas before loading client or server areas
         String subFolder = serverSetup.isOnLocalServer ? "sp" : "mp";
-        areaManager.loadAreas(new AreaStorage(logger, Path.of(Constants.AM_LOCAL_STORAGE_DIRECTORY, subFolder, getWorldNameForLocalStorage())));
+        areaManager.setAreaStorage(new AreaStorage(logger, Path.of(Constants.AM_LOCAL_STORAGE_DIRECTORY, subFolder, getWorldNameForLocalStorage())));
+        areaManager.loadLocalAreas();
 
-        flagCache.clearAndLoadFlags();
+        if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
+            networkManager.configureAsync()
+                    .onSuccess(this::afterClientInfoReceived)
+                    .setTimeout(10_000)
+                    .send(new ClientInfoMessage(
+                            BuildConfig.APP_VERSION.toString(),
+                            playerUUID,
+                            playerName
+                    ));
 
         if (clientConfig.notifyServerSupport.get() && !isOnLocalServer) {
             if (serverVersion.isGreaterThanOrEqual(BuildConfig.APP_VERSION))
@@ -281,9 +280,44 @@ public abstract class BaseClientCore<
         }
     }
 
+    private void afterClientInfoReceived() {
+        var version = serverSetup.serverVersion;
+
+        if (version.isGreaterThanOrEqual(AmVersion.V_2_8_0))
+        {
+            // Load server playlists
+            networkManager.configureAsync().onSuccess(data -> {
+                var response = RequestServerPlaylistInfoMessage.parseResponse(data);
+                if (response.hasServerPlaylists)
+                    musicCache.startLoadServerPlaylists(response.byteSize, response.playlistCount);
+            }).setTimeout(10_000).send(new RequestServerPlaylistInfoMessage());
+
+            // Load server features
+            networkManager.configureAsync()
+                    .onSuccess(data -> {
+                        serverSetup.setFeatures(new HelperReader(data).readList(FeatureInstance::new));
+                        afterFeaturesLoaded();
+                    })
+                    .setTimeout(10_000)
+                    .send(new RequestFeatureFlagsMessage());
+        } else {
+            // If below v2.8.0, we already know which server-features are supported/enabled at this point.
+            afterFeaturesLoaded();
+        }
+    }
+
+    private void afterFeaturesLoaded() {
+        if (serverSetup.areasFeature.isEnabled())
+            areaManager.loadServerAreas();
+        if (serverSetup.flagsFeature.isEnabled())
+            flagCache.loadFlags();
+    }
+
+
     public void onLoggedOut() {
         structureCache.clear();
         nameCache.clear();
+        areaManager.clear();
         areaRenderer.clear();
         flagCache.clear();
         musicCache.clear();

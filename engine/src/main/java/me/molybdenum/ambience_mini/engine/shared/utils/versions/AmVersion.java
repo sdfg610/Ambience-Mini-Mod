@@ -1,10 +1,13 @@
 package me.molybdenum.ambience_mini.engine.shared.utils.versions;
 
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmReader;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmSerializable;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmWriter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public record AmVersion(int major, int minor, int patch, int hotfix)
+public record AmVersion(int major, int minor, int patch, int hotfix) implements AmSerializable
 {
     public static final AmVersion ZERO = new AmVersion(0,0,0);
     public static final AmVersion V_2_5_0 = new AmVersion(2,5,0);
@@ -16,6 +19,10 @@ public record AmVersion(int major, int minor, int patch, int hotfix)
 
     public AmVersion(int major, int minor, int patch) {
         this(major, minor, patch, 0);
+    }
+
+    public AmVersion(AmReader reader) {
+        this(reader.readInt(), reader.readInt(), reader.readInt(), reader.readInt());
     }
 
 
@@ -94,5 +101,14 @@ public record AmVersion(int major, int minor, int patch, int hotfix)
 
     private static RuntimeException invalid(String version) {
         return new RuntimeException("Not a valid version string: '" + version + "'");
+    }
+
+
+    @Override
+    public void writeTo(AmWriter writer) {
+        writer.writeInt(major);
+        writer.writeInt(minor);
+        writer.writeInt(patch);
+        writer.writeInt(hotfix);
     }
 }

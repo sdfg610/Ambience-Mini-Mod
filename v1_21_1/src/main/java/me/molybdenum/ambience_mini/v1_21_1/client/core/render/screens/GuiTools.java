@@ -62,18 +62,13 @@ public class GuiTools implements IGuiTools<Screen, PoseStack.Pose, AbstractWidge
 
 
     @Override
-    public void setEditBoxPos(EditBox editBox, int x, int y) {
-        editBox.setPosition(x, y);
+    public void setWidgetPos(AbstractWidget widget, int x, int y) {
+        widget.setPosition(x, y);
     }
 
     @Override
-    public void setCheckBoxPos(Checkbox checkbox, int x, int y) {
-        checkbox.setPosition(x, y);
-    }
-
-    @Override
-    public void setButtonPos(Button button, int x, int y) {
-        button.setPosition(x, y);
+    public void setWidgetEnabled(AbstractWidget widget, boolean enabled) {
+        widget.active = enabled;
     }
 
     @Override

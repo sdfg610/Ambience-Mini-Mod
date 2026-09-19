@@ -116,7 +116,7 @@ public class ServerMusicCache
         }
     }
 
-    public void handlePlaylistsNotification(int playlistsByteSize, int playlistCount) {
+    public void startLoadServerPlaylists(int playlistsByteSize, int playlistCount) {
         synchronized (lock) {
             if (loadPlaylistsJob == null && serverPlaylists == null) {
                 if (playlistsByteSize <= maxPlaylistsByteSize)

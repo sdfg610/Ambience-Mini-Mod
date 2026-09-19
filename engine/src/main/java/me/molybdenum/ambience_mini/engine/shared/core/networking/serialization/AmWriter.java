@@ -44,4 +44,8 @@ public interface AmWriter {
                 val.writeTo(this);
         }
     }
+
+    default <T extends AmSerializable> void write(T elem) {
+        elem.writeTo(this);
+    }
 }

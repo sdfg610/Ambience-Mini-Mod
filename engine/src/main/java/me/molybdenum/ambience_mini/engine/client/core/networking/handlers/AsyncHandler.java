@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.networking.handlers;
 
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.Response;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.Response;
 import me.molybdenum.ambience_mini.engine.shared.utils.Text;
 import org.jetbrains.annotations.Nullable;
 

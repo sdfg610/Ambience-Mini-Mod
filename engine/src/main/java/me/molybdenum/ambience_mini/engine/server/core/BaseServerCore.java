@@ -117,7 +117,7 @@ public abstract class BaseServerCore<
     }
 
     private void printErrors(List<Message> messages) {
-        logger.warn("Ambience Mini failed to load!");
+        logger.warn("Ambience Mini failed to load server-sided Ambience Mini configuration!");
         Utils.printMessages(logger, messages);
     }
 

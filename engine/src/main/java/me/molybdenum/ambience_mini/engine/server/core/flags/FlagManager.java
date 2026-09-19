@@ -45,6 +45,9 @@ public class FlagManager {
 
 
     public void registerPeriodicTasks(JobCenter executor) {
+        if (flagsDisabled)
+            return;
+
         executor.schedule(
                 JobCenter.Job.of(this::saveFlags), 0, saveIntervalMillis
         );

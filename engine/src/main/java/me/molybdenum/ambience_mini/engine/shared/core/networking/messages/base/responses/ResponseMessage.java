@@ -1,4 +1,4 @@
-package me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base;
+package me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses;
 
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmReader;

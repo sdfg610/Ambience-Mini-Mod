@@ -2,7 +2,11 @@ package me.molybdenum.ambience_mini.engine.shared.core.networking;
 
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.*;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.*;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.client.ClientInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.features.RequestFeatureFlagsMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.FailureMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.ResponseMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.SuccessMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobCombatInteractionMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.GetNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.NeoGetNameCacheMessage;
@@ -38,6 +42,7 @@ public class MessageRegistry {
 
         // Basic info
         registerMessage(10, ClientInfoMessage::new, ClientInfoMessage.class); // 2.5.0
+        registerMessage(11, RequestFeatureFlagsMessage::new, RequestFeatureFlagsMessage.class); // 2.8.0
 
         // Combat
         registerMessage(20, MobTargetMessage::new, MobTargetMessage.class); // 2.5.0

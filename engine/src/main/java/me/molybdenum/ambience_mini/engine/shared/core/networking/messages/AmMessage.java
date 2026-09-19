@@ -1,9 +1,9 @@
 package me.molybdenum.ambience_mini.engine.shared.core.networking.messages;
 
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.FailureMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.SuccessMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ResponseMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.FailureMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.SuccessMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.ResponseMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmSerializable;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.helper.HelperWriter;
 import me.molybdenum.ambience_mini.engine.shared.utils.Text;

@@ -88,9 +88,7 @@ public class AreaHelper {
 
     private void putLocalArea(Area area, Runnable onSuccess, Consumer<Text> onFailure) {
         areaManager.putArea(area).ifPresentOrElse(
-                error -> {
-                    onFailure.accept(Text.ofLiteral("Could not update local area! It should not be possible to get here!\nArea: " + area.toJson() + "\nError: " + error));
-                },
+                error -> onFailure.accept(Text.ofLiteral("Could not update local area! It should not be possible to get here!\nArea: " + area.toJson() + "\nError: " + error)),
                 onSuccess
         );
     }
@@ -167,6 +165,10 @@ public class AreaHelper {
 
 
     public boolean hasServerSupport() {
-        return serverSetup.serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0);
+        return serverSetup.areasFeature.isSupported();
+    }
+
+    public boolean areServerAreasEnabled() {
+        return serverSetup.areasFeature.isEnabled();
     }
 }
