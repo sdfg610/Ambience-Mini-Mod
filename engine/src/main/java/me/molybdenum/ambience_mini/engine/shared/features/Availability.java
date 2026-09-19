@@ -9,6 +9,10 @@ public enum Availability {
         return this == ENABLED;
     }
 
+    public boolean isDisabledOrUnsupported() {
+        return this != ENABLED;
+    }
+
     public boolean isSupported() {
         return this != NOT_SUPPORTED;
     }

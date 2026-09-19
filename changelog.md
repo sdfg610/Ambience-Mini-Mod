@@ -18,6 +18,9 @@
 - You can now manually specify loop intervals in the music config. For example `"music.wav"<loopstart=1000, loopend=9001>`. A `looplength` flag is also available.
 - Upon loading a music configuration, the mod now pre-computes all constant expressions/values to improve performance. This also allows validating that certain constant values are sensible (e.g., one cannot have `loopstart=-1`).
 
+**Events and Properties:**
+- Added a `$nearby_living` property which lists the types and (max) health of all nearby living entities.
+
 **Menu detection:**
 - Added `$screen_id` property to get the id (fully qualified class name) of the currently open screen (e.g., title screen, pause screen, etc.).
 - Added `$menu` property which represents a collection of screens under some menu name.
@@ -31,7 +34,7 @@
   * maximum memory to use when caching music being sent to clients.
   * the time after which a cached music is unused and can be de-allocated.
   * the interval for checking and de-allocating unused music-caches.
-- Added server-side mod options for enabling and disabling use of server flags and server areas.
+- Added server-side mod options for enabling and disabling use of server flags, server areas, and the `$structure` property.
 
 **Miscellaneous:**
 - You now need to click the "Delete" button twice in the area-menu to actually delete the area.

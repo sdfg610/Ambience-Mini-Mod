@@ -15,6 +15,9 @@ public abstract class BaseServerConfig {
     public final Supplier<Boolean> enableFlags;
     public final Supplier<Integer> flagsSaveInterval;
 
+    // Structures
+    public final Supplier<Boolean> enableStructures;
+
 
     protected BaseServerConfig() {
         preSetup();
@@ -56,6 +59,13 @@ public abstract class BaseServerConfig {
                 "The time in milliseconds between auto-saving flags. [Default: 60000]",
                 "Flags_Save_Interval",
                 60_000, 10_000, 600_000
+        );
+
+        // Structures
+        enableStructures = makeBoolOption(
+                "Whether or not the server will send structures to the client when using $structures.",
+                "Enable_Structures",
+                true
         );
 
         postSetup();

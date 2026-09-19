@@ -24,8 +24,14 @@ public enum Feature implements AmSerializable {
     FLAGS(
             "flags",
             config -> config.enableFlags.get(),
-            (avail, setup) -> setup.flagsFeature = avail)
-    //STRUCTURES("structures")
+            (avail, setup) -> setup.flagsFeature = avail
+    ),
+
+    STRUCTURES(
+            "structures",
+            config -> config.enableStructures.get(),
+            (avail, setup) -> setup.structuresFeature = avail
+    )
 
     ;
 

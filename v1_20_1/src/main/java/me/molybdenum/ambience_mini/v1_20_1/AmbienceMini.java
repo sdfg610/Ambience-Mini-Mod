@@ -158,7 +158,7 @@ public class AmbienceMini extends BaseAmbienceMini
                 serverConfig,
                 new ServerNameCache(),
                 new ServerAreaManager(),
-                new StructureReader(event.getServer()),
+                new StructureReader(event.getServer(), serverConfig),
                 new FlagManager(),
                 new ServerMusicManager(),
                 new ServerNetworkManager()

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-public sealed abstract class Value<T> permits AreaVal, BoolVal, CombatantVal, FloatVal, IntVal, ListVal, MapVal, PlaylistVal, StringVal, UndefinedVal
+public sealed abstract class Value<T> permits AreaVal, BoolVal, CombatantVal, FloatVal, IntVal, ListVal, LivingVal, MapVal, PlaylistVal, StringVal, UndefinedVal
 {
     protected final T value;
 

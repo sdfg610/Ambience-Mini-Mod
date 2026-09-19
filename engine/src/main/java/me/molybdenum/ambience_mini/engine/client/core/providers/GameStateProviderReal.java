@@ -43,6 +43,9 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private final int _ranchScanVerticalRadius;
     private final int _animalCountThreshold;
 
+    private final int _livingScanHorizontalRadius;
+    private final int _livingScanVerticalRadius;
+
     private final int _fishingTimeout;
     private final int _fishingMoveThreshold;
 
@@ -59,15 +62,6 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private boolean _isInCombat = false;
 
     private double _latestCaveScore = 0;
-
-    private Double latestWardenDistance;
-    private long latestWardenCheckTime;
-
-    private boolean latestVillageValue;
-    private long latestVillageTime;
-
-    private boolean latestRanchValue;
-    private long latestRanchTime;
 
     // Properties used by other properties
     private final Property timeProp;
@@ -103,6 +97,9 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         _ranchScanHorizontalRadius = config.ranchScanHorizontalRadius.get();
         _ranchScanVerticalRadius = config.ranchScanVerticalRadius.get();
         _animalCountThreshold = config.animalCountThreshold.get();
+
+        _livingScanHorizontalRadius = config.livingScanHorizontalRadius.get();
+        _livingScanVerticalRadius = config.livingScanHorizontalRadius.get();
 
         _fishingTimeout = config.fishingTimeout.get();
         _fishingMoveThreshold = config.fishingMoveThreshold.get();
@@ -226,26 +223,14 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     public BoolVal inVillage() {
         if (_player.isNull() || _level.isNull())
             return BoolVal.UNDEFINED;
-
-        if (now - latestVillageTime > 1000) {
-            latestVillageValue = _level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold;
-            latestVillageTime = now;
-        }
-
-        return new BoolVal(latestVillageValue);
+        return new BoolVal(_level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold);
     }
 
     @Override
     public BoolVal inRanch() {
         if (_player.isNull() || _level.isNull())
             return BoolVal.UNDEFINED;
-
-        if (now - latestRanchTime > 1000) {
-            latestRanchValue = _level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold;
-            latestRanchTime = now;
-        }
-
-        return new BoolVal(latestRanchValue);
+        return new BoolVal(_level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold);
     }
 
 
@@ -350,13 +335,8 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     public BoolVal wardenNearby() {
         if (_player.isNull() || _level.isNull())
             return BoolVal.UNDEFINED;
-
-        if (now - latestWardenCheckTime > 1000) {
-            latestWardenDistance = _level.shortestDistanceToWarden(_player.eyePosition(), Constants.WARDEN_SEARCH_RADIUS);
-            latestWardenCheckTime = now;
-        }
-
-        return latestWardenDistance == null ? BoolVal.FALSE : new BoolVal(latestWardenDistance <= Constants.WARDEN_SEARCH_RADIUS);
+        var distance = _level.shortestDistanceToWarden(_player.eyePosition(), Constants.WARDEN_SEARCH_RADIUS);
+        return new BoolVal(distance != null && distance <= Constants.WARDEN_SEARCH_RADIUS);
     }
 
     @Override
@@ -560,6 +540,24 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     @Override
     public ListVal getBosses() {
         return ListVal.ofStringList(_combat.getBosses());
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Entity properties
+    @Override
+    public Value<?> getNearbyLiving() {
+        if (_player.isNull() || _level.isNull())
+            return UndefinedVal.INSTANCE;
+
+        return new ListVal(
+                _level.getNearbyLiving(_player.eyeBlockPos(), _livingScanHorizontalRadius, _livingScanVerticalRadius)
+                        .map(entity -> new LivingVal(
+                                _combat.getEntityResourceLocation(entity),
+                                _combat.getEntityHealth(entity),
+                                _combat.getEntityMaxHealth(entity)
+                        ))
+        );
     }
 
 

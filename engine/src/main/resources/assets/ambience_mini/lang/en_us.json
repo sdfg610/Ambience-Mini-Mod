@@ -94,6 +94,8 @@
   "ambience_mini.configuration.Ranch_Scan_Horizontal_Radius": "Ranch scan: horizontal radius",
   "ambience_mini.configuration.Ranch_Scan_Vertical_Radius": "Ranch scan: vertical radius",
   "ambience_mini.configuration.Animal_Count_Threshold": "Animal count threshold",
+  "ambience_mini.configuration.Living_Scan_Horizontal_Radius": "Living scan: horizontal radius",
+  "ambience_mini.configuration.Living_Scan_Vertical_Radius": "Living scan: vertical radius",
   "ambience_mini.configuration.Fishing_Timeout": "Fishing timeout",
   "ambience_mini.configuration.Fishing_Move_Threshold": "Fishing move threshold",
   "ambience_mini.configuration.Cave_Score_Radius": "Cave score radius",

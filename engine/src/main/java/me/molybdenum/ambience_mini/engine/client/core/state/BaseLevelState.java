@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
 import me.molybdenum.ambience_mini.engine.client.core.caves.BlockReading;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.LivingVal;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
@@ -80,6 +81,8 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TCl
     public abstract Integer countNearbyVillagers(TBlockPos center, int horizontalRadius, int verticalRadius);
     public abstract Integer countNearbyAnimals(TBlockPos center, int horizontalRadius, int verticalRadius);
     public abstract Double shortestDistanceToWarden(TVec3 position, int cubeSearchRadius);
+
+    public abstract Stream<TEntity> getNearbyLiving(TBlockPos center, int horizontalRadius, int verticalRadius);
 
     public abstract TBlockState getBlockState(TBlockPos blockPos);
     public abstract Object getBlock(TBlockState blockState);

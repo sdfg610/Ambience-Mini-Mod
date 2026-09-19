@@ -13,6 +13,7 @@ public class ServerSetup
 
     public Availability areasFeature;
     public Availability flagsFeature;
+    public Availability structuresFeature;
 
 
     public ServerSetup() {
@@ -26,6 +27,7 @@ public class ServerSetup
 
         areasFeature = Availability.NOT_SUPPORTED;
         flagsFeature = Availability.NOT_SUPPORTED;
+        structuresFeature = Availability.NOT_SUPPORTED;
     }
 
 
@@ -34,8 +36,10 @@ public class ServerSetup
 
         var ltV2_8_0 = serverVersion.isLessThan(AmVersion.V_2_8_0);
 
-        if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0) && ltV2_8_0)
+        if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0) && ltV2_8_0) {
             areasFeature = Availability.ENABLED;
+            structuresFeature = Availability.ENABLED;
+        }
 
         if (serverVersion.isGreaterThanOrEqual(AmVersion.V_2_6_0) && ltV2_8_0)
             flagsFeature = Availability.ENABLED;

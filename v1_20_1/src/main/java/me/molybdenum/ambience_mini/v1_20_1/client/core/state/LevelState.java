@@ -9,6 +9,7 @@ import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.Villager;
@@ -143,6 +144,13 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
                 .mapToDouble(warden -> warden.getEyePosition().distanceTo(position))
                 .min();
         return min.isPresent() ? min.getAsDouble() : null;
+    }
+
+
+    @Override
+    public Stream<Entity> getNearbyLiving(BlockPos center, int horizontalRadius, int verticalRadius) {
+        var nearby = cachedLevel == null ? null : getNearbyEntities(LivingEntity.class, center, horizontalRadius, verticalRadius);
+        return nearby == null ? null : nearby.stream().map(ent -> ent);
     }
 
 

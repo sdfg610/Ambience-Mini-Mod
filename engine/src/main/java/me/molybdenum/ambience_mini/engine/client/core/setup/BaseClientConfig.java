@@ -36,6 +36,10 @@ public abstract class BaseClientConfig {
     public final Supplier<Integer> ranchScanVerticalRadius;
     public final Supplier<Integer> animalCountThreshold;
 
+    // Nearby Living
+    public final Supplier<Integer> livingScanHorizontalRadius;
+    public final Supplier<Integer> livingScanVerticalRadius;
+
     // Fishing
     public final Supplier<Integer> fishingTimeout;
     public final Supplier<Integer> fishingMoveThreshold;
@@ -142,7 +146,7 @@ public abstract class BaseClientConfig {
 
         // Ranch detection
         ranchScanHorizontalRadius = registerIntOption(
-                "The horizontal radius/distance to scan for villagers. [Default: 30]",
+                "The horizontal radius/distance to scan for animals. [Default: 30]",
                 "Ranch_Scan_Horizontal_Radius",
                 30, 10, 100
         );
@@ -155,6 +159,18 @@ public abstract class BaseClientConfig {
                 "The minimum number of animals needed within the search box to count as a ranch. [Default: 15]",
                 "Animal_Count_Threshold",
                 15, 5, Integer.MAX_VALUE
+        );
+
+        // Nearby living
+        livingScanHorizontalRadius = registerIntOption(
+                "The horizontal radius/distance to scan for living entities in $nearby_living. [Default: 30]",
+                "Living_Scan_Horizontal_Radius",
+                30, 5, 100
+        );
+        livingScanVerticalRadius = registerIntOption(
+                "The vertical radius/distance to scan for living entities in $nearby_living. [Default: 30]",
+                "Living_Scan_Vertical_Radius",
+                30, 5, 100
         );
 
         // Fishing

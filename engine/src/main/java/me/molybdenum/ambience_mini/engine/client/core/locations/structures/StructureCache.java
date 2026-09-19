@@ -32,10 +32,8 @@ public class StructureCache {
 
 
     public List<String> getIntersectingStructures(String dimension, Vector3i position) {
-        if (!serverSetup.serverVersion.isGreaterThanOrEqual(AmVersion.V_2_5_0))
-            return null;
-
-        return getSubCache(dimension).getStructureNamesAt(position);
+        return serverSetup.structuresFeature.isDisabledOrUnsupported() ? null
+                : getSubCache(dimension).getStructureNamesAt(position);
     }
 
 

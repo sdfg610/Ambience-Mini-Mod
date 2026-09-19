@@ -4,61 +4,62 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.t
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public abstract class GameStateProviderTemplate extends BaseGameStateProvider
 {
     // Global events
-    public static final EventTemplateV1 E_MAIN_MENU = new EventTemplateV1("main_menu", instance -> instance::inMainMenu);
-    public static final EventTemplateV1 E_JOINING = new EventTemplateV1("joining", instance -> instance::isJoiningWorld);
-    public static final EventTemplateV1 E_DISCONNECTED = new EventTemplateV1("disconnected", instance -> instance::isDisconnected);
-    public static final EventTemplateV1 E_CREDITS = new EventTemplateV1("credits", instance -> instance::onCreditsScreen);
-    public static final EventTemplateV1 E_PAUSED = new EventTemplateV1("paused", instance -> instance::isPaused);
-    public static final EventTemplateV1 E_IN_GAME = new EventTemplateV1("in_game", instance -> instance::inGame);
+    public static final EventTemplate E_MAIN_MENU = new EventTemplate("main_menu", instance -> instance::inMainMenu);
+    public static final EventTemplate E_JOINING = new EventTemplate("joining", instance -> instance::isJoiningWorld);
+    public static final EventTemplate E_DISCONNECTED = new EventTemplate("disconnected", instance -> instance::isDisconnected);
+    public static final EventTemplate E_CREDITS = new EventTemplate("credits", instance -> instance::onCreditsScreen);
+    public static final EventTemplate E_PAUSED = new EventTemplate("paused", instance -> instance::isPaused);
+    public static final EventTemplate E_IN_GAME = new EventTemplate("in_game", instance -> instance::inGame);
 
     // Time events
-    public static final EventTemplateV1 E_DAY = new EventTemplateV1("day", instance -> instance::isDay);
-    public static final EventTemplateV1 E_DAWN = new EventTemplateV1("dawn", instance -> instance::isDawn);
-    public static final EventTemplateV1 E_DUSK = new EventTemplateV1("dusk", instance -> instance::isDusk);
-    public static final EventTemplateV1 E_NIGHT = new EventTemplateV1("night", instance -> instance::isNight);
+    public static final EventTemplate E_DAY = new EventTemplate("day", instance -> instance::isDay);
+    public static final EventTemplate E_DAWN = new EventTemplate("dawn", instance -> instance::isDawn);
+    public static final EventTemplate E_DUSK = new EventTemplate("dusk", instance -> instance::isDusk);
+    public static final EventTemplate E_NIGHT = new EventTemplate("night", instance -> instance::isNight);
 
     // Weather events
-    public static final EventTemplateV1 E_DOWNFALL = new EventTemplateV1("downfall", instance -> instance::isDownfall);
-    public static final EventTemplateV1 E_RAIN = new EventTemplateV1("rain", instance -> instance::isRaining);
-    public static final EventTemplateV1 E_SNOW = new EventTemplateV1("snow", instance -> instance::isSnowing);
-    public static final EventTemplateV1 E_THUNDERING = new EventTemplateV1("thunder", instance -> instance::isThundering);
+    public static final EventTemplate E_DOWNFALL = new EventTemplate("downfall", instance -> instance::isDownfall);
+    public static final EventTemplate E_RAIN = new EventTemplate("rain", instance -> instance::isRaining);
+    public static final EventTemplate E_SNOW = new EventTemplate("snow", instance -> instance::isSnowing);
+    public static final EventTemplate E_THUNDERING = new EventTemplate("thunder", instance -> instance::isThundering);
 
     // Location events
-    public static final EventTemplateV1 E_VILLAGE = new EventTemplateV1("village", instance -> instance::inVillage);
-    public static final EventTemplateV1 E_RANCH = new EventTemplateV1("ranch", instance -> instance::inRanch);
+    public static final EventTemplate E_VILLAGE = new EventTemplate("village", 1000, instance -> instance::inVillage);
+    public static final EventTemplate E_RANCH = new EventTemplate("ranch", 1000, instance -> instance::inRanch);
 
     // Player state events
-    public static final EventTemplateV1 E_DEAD = new EventTemplateV1("dead", instance -> instance::isDead);
-    public static final EventTemplateV1 E_SLEEPING = new EventTemplateV1("sleeping", instance -> instance::isSleeping);
-    public static final EventTemplateV1 E_FISHING = new EventTemplateV1("fishing", instance -> instance::isFishing);
-    public static final EventTemplateV1 E_UNDER_WATER = new EventTemplateV1("under_water", instance -> instance::isUnderWater);
-    public static final EventTemplateV1 E_IN_LAVA = new EventTemplateV1("in_lava", instance -> instance::inLava);
-    public static final EventTemplateV1 E_ON_FIRE = new EventTemplateV1("on_fire", instance -> instance::onFire);
-    public static final EventTemplateV1 E_IN_POWDER_SNOW = new EventTemplateV1("in_powder_snow", instance -> instance::inPowderSnow);
-    public static final EventTemplateV1 E_DROWNING = new EventTemplateV1("drowning", instance -> instance::isDrowning);
+    public static final EventTemplate E_DEAD = new EventTemplate("dead", instance -> instance::isDead);
+    public static final EventTemplate E_SLEEPING = new EventTemplate("sleeping", instance -> instance::isSleeping);
+    public static final EventTemplate E_FISHING = new EventTemplate("fishing", instance -> instance::isFishing);
+    public static final EventTemplate E_UNDER_WATER = new EventTemplate("under_water", instance -> instance::isUnderWater);
+    public static final EventTemplate E_IN_LAVA = new EventTemplate("in_lava", instance -> instance::inLava);
+    public static final EventTemplate E_ON_FIRE = new EventTemplate("on_fire", instance -> instance::onFire);
+    public static final EventTemplate E_IN_POWDER_SNOW = new EventTemplate("in_powder_snow", instance -> instance::inPowderSnow);
+    public static final EventTemplate E_DROWNING = new EventTemplate("drowning", instance -> instance::isDrowning);
 
     // Mount events
-    public static final EventTemplateV1 E_MINECART = new EventTemplateV1("minecart", instance -> instance::inMinecart);
-    public static final EventTemplateV1 E_BOAT = new EventTemplateV1("boat", instance -> instance::inBoat);
-    public static final EventTemplateV1 E_HORSE = new EventTemplateV1("horse", instance -> instance::onHorse);
-    public static final EventTemplateV1 E_DONKEY = new EventTemplateV1("donkey", instance -> instance::onDonkey);
-    public static final EventTemplateV1 E_PIG = new EventTemplateV1("pig", instance -> instance::onPig);
-    public static final EventTemplateV1 E_ELYTRA = new EventTemplateV1("elytra", instance -> instance::flyingElytra);
+    public static final EventTemplate E_MINECART = new EventTemplate("minecart", instance -> instance::inMinecart);
+    public static final EventTemplate E_BOAT = new EventTemplate("boat", instance -> instance::inBoat);
+    public static final EventTemplate E_HORSE = new EventTemplate("horse", instance -> instance::onHorse);
+    public static final EventTemplate E_DONKEY = new EventTemplate("donkey", instance -> instance::onDonkey);
+    public static final EventTemplate E_PIG = new EventTemplate("pig", instance -> instance::onPig);
+    public static final EventTemplate E_ELYTRA = new EventTemplate("elytra", instance -> instance::flyingElytra);
 
     // Combat events
-    public static final EventTemplateV1 E_WARDEN_NEARBY = new EventTemplateV1("warden_nearby", instance -> instance::wardenNearby, McVersion.V1_19);
-    public static final EventTemplateV1 E_IS_TARGETED = new EventTemplateV1("is_targeted", instance -> instance::isTargeted);
-    public static final EventTemplateV1 E_IS_FIGHTING = new EventTemplateV1("is_fighting", instance -> instance::isFighting);
-    public static final EventTemplateV1 E_IN_COMBAT = new EventTemplateV1("in_combat", instance -> instance::inCombat);
-    public static final EventTemplateV1 E_BOSS_FIGHT = new EventTemplateV1("boss_fight", instance -> instance::inBossFight);
+    public static final EventTemplate E_WARDEN_NEARBY = new EventTemplate("warden_nearby", 1000, instance -> instance::wardenNearby, McVersion.V1_19);
+    public static final EventTemplate E_IS_TARGETED = new EventTemplate("is_targeted", instance -> instance::isTargeted);
+    public static final EventTemplate E_IS_FIGHTING = new EventTemplate("is_fighting", instance -> instance::isFighting);
+    public static final EventTemplate E_IN_COMBAT = new EventTemplate("in_combat", instance -> instance::inCombat);
+    public static final EventTemplate E_BOSS_FIGHT = new EventTemplate("boss_fight", instance -> instance::inBossFight);
 
-    public static final EventTemplateV1[] EVENTS = new EventTemplateV1[] {
+    public static final EventTemplate[] EVENTS = new EventTemplate[] {
             E_MAIN_MENU, E_JOINING, E_DISCONNECTED, E_CREDITS, E_PAUSED, E_IN_GAME,
             E_DAY, E_DAWN, E_DUSK, E_NIGHT,
             E_DOWNFALL, E_RAIN, E_SNOW, E_THUNDERING,
@@ -70,49 +71,53 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
 
 
     // Global properties
-    public static final PropertyTemplateV1 P_SCREEN_ID = new PropertyTemplateV1("screen_id", new StringT(), instance -> instance::getMenuID);
-    public static final PropertyTemplateV1 P_MENU = new PropertyTemplateV1("menu", new StringT(), instance -> instance::getMenuType);
+    public static final PropertyTemplate P_SCREEN_ID = new PropertyTemplate("screen_id", new StringT(), instance -> instance::getMenuID);
+    public static final PropertyTemplate P_MENU = new PropertyTemplate("menu", new StringT(), instance -> instance::getMenuType);
 
     // World properties
-    public static final PropertyTemplateV1 P_DIFFICULTY = new PropertyTemplateV1("difficulty", new StringT(), instance -> instance::getDifficulty);
-    public static final PropertyTemplateV1 P_DIMENSION = new PropertyTemplateV1("dimension", new StringT(), instance -> instance::getDimensionId);
-    public static final PropertyTemplateV1 P_BIOME = new PropertyTemplateV1("biome", new StringT(), instance -> instance::getBiomeId);
-    public static final PropertyTemplateV1 P_BIOME_TAGS = new PropertyTemplateV1("biome_tags", new ListT(new StringT()), instance -> instance::getBiomeTagIDs);
-    public static final PropertyTemplateV1 P_TIME = new PropertyTemplateV1("time", new IntT(), instance -> instance::getTime);
-    public static final PropertyTemplateV1 P_CAVE_SCORE = new PropertyTemplateV1("cave_score", new FloatT(), instance -> instance::getCaveScore);
-    public static final PropertyTemplateV1 P_SKYLIGHT_SCORE = new PropertyTemplateV1("skylight_potential", new FloatT(), instance -> instance::getSkylightScore);
+    public static final PropertyTemplate P_DIFFICULTY = new PropertyTemplate("difficulty", new StringT(), instance -> instance::getDifficulty);
+    public static final PropertyTemplate P_DIMENSION = new PropertyTemplate("dimension", new StringT(), instance -> instance::getDimensionId);
+    public static final PropertyTemplate P_BIOME = new PropertyTemplate("biome", new StringT(), instance -> instance::getBiomeId);
+    public static final PropertyTemplate P_BIOME_TAGS = new PropertyTemplate("biome_tags", new ListT(new StringT()), instance -> instance::getBiomeTagIDs);
+    public static final PropertyTemplate P_TIME = new PropertyTemplate("time", new IntT(), instance -> instance::getTime);
+    public static final PropertyTemplate P_CAVE_SCORE = new PropertyTemplate("cave_score", new FloatT(), instance -> instance::getCaveScore);
+    public static final PropertyTemplate P_SKYLIGHT_SCORE = new PropertyTemplate("skylight_potential", new FloatT(), instance -> instance::getSkylightScore);
 
     // Location properties
-    public static final PropertyTemplateV1 P_AREAS = new PropertyTemplateV1("areas", new ListT(new AreaT()), instance -> instance::getIntersectingAreas);
-    public static final PropertyTemplateV1 P_STRUCTURES = new PropertyTemplateV1("structures", new ListT(new StringT()), instance -> instance::getIntersectingStructures);
+    public static final PropertyTemplate P_AREAS = new PropertyTemplate("areas", new ListT(new AreaT()), instance -> instance::getIntersectingAreas);
+    public static final PropertyTemplate P_STRUCTURES = new PropertyTemplate("structures", new ListT(new StringT()), instance -> instance::getIntersectingStructures);
 
     // Player properties
-    public static final PropertyTemplateV1 P_UUID = new PropertyTemplateV1("uuid", new StringT(), instance -> instance::getPlayerUUID);
-    public static final PropertyTemplateV1 P_GAME_MODE = new PropertyTemplateV1("game_mode", new StringT(), instance -> instance::getGameMode);
-    public static final PropertyTemplateV1 P_HEALTH = new PropertyTemplateV1("health", new FloatT(), instance -> instance::getPlayerHealth);
-    public static final PropertyTemplateV1 P_MAX_HEALTH = new PropertyTemplateV1("max_health", new FloatT(), instance -> instance::getPlayerMaxHealth);
-    public static final PropertyTemplateV1 P_ELEVATION = new PropertyTemplateV1("elevation", new FloatT(), instance -> instance::getPlayerElevation);
-    public static final PropertyTemplateV1 P_VEHICLE = new PropertyTemplateV1("vehicle", new StringT(), instance -> instance::getVehicleId);
-    public static final PropertyTemplateV1 P_EFFECTS = new PropertyTemplateV1("effects", new ListT(new StringT()), instance -> instance::getActiveEffects);
+    public static final PropertyTemplate P_UUID = new PropertyTemplate("uuid", new StringT(), instance -> instance::getPlayerUUID);
+    public static final PropertyTemplate P_GAME_MODE = new PropertyTemplate("game_mode", new StringT(), instance -> instance::getGameMode);
+    public static final PropertyTemplate P_HEALTH = new PropertyTemplate("health", new FloatT(), instance -> instance::getPlayerHealth);
+    public static final PropertyTemplate P_MAX_HEALTH = new PropertyTemplate("max_health", new FloatT(), instance -> instance::getPlayerMaxHealth);
+    public static final PropertyTemplate P_ELEVATION = new PropertyTemplate("elevation", new FloatT(), instance -> instance::getPlayerElevation);
+    public static final PropertyTemplate P_VEHICLE = new PropertyTemplate("vehicle", new StringT(), instance -> instance::getVehicleId);
+    public static final PropertyTemplate P_EFFECTS = new PropertyTemplate("effects", new ListT(new StringT()), instance -> instance::getActiveEffects);
 
     // Combat properties
-    public static final PropertyTemplateV1 P_COMBATANT_COUNT = new PropertyTemplateV1("combatant_count", new IntT(), instance -> instance::countCombatants);
-    public static final PropertyTemplateV1 P_COMBATANTS = new PropertyTemplateV1("combatants", new ListT(new CombatantT()), instance -> instance::getCombatants);
-    public static final PropertyTemplateV1 P_BOSS = new PropertyTemplateV1("boss", new StringT(), instance -> instance::getBoss);
-    public static final PropertyTemplateV1 P_BOSSES = new PropertyTemplateV1("bosses", new ListT(new StringT()), instance -> instance::getBosses);
+    public static final PropertyTemplate P_COMBATANT_COUNT = new PropertyTemplate("combatant_count", new IntT(), instance -> instance::countCombatants);
+    public static final PropertyTemplate P_COMBATANTS = new PropertyTemplate("combatants", new ListT(new CombatantT()), instance -> instance::getCombatants);
+    public static final PropertyTemplate P_BOSS = new PropertyTemplate("boss", new StringT(), instance -> instance::getBoss);
+    public static final PropertyTemplate P_BOSSES = new PropertyTemplate("bosses", new ListT(new StringT()), instance -> instance::getBosses);
+
+    // Entity properties
+    public static final PropertyTemplate P_LIVING = new PropertyTemplate("nearby_living", new ListT(new LivingT()), 1000, instance -> instance::getNearbyLiving);
 
     // Flag properties
-    public static final PropertyTemplateV1 P_FLAGS = new PropertyTemplateV1("flags", new MapT(new StringT(), new StringT()), instance -> instance::getFlags);
+    public static final PropertyTemplate P_FLAGS = new PropertyTemplate("flags", new MapT(new StringT(), new StringT()), instance -> instance::getFlags);
 
     // Server playlists properties
-    public static final PropertyTemplateV1 P_SERVER_PLAYLISTS = new PropertyTemplateV1("server_playlists", new MapT(new StringT(), new PlaylistT()), instance -> instance::getServerPlaylists);
+    public static final PropertyTemplate P_SERVER_PLAYLISTS = new PropertyTemplate("server_playlists", new MapT(new StringT(), new PlaylistT()), instance -> instance::getServerPlaylists);
 
-    public static final PropertyTemplateV1[] PROPERTIES = new PropertyTemplateV1[] {
+    public static final PropertyTemplate[] PROPERTIES = new PropertyTemplate[] {
             P_SCREEN_ID, P_MENU,
             P_DIFFICULTY, P_DIMENSION, P_BIOME, P_BIOME_TAGS, P_TIME, P_CAVE_SCORE, P_SKYLIGHT_SCORE,
             P_AREAS, P_STRUCTURES,
             P_UUID, P_GAME_MODE, P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
             P_COMBATANT_COUNT, P_COMBATANTS, P_BOSS, P_BOSSES,
+            P_LIVING,
             P_FLAGS,
             P_SERVER_PLAYLISTS
     };
@@ -121,12 +126,44 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     public GameStateProviderTemplate(McVersion currentVersion)
     {
         for (var event : EVENTS)
-            if (currentVersion.greaterThanOrEqual(event.minimumMcVersion))
-                registerEvent(event.name, event.getter.apply(this));
+            if (currentVersion.greaterThanOrEqual(event.minimumMcVersion)) {
+                var getter = event.getter.apply(this);
+                registerEvent(
+                        event.name,
+                        event.delay
+                                .map(delay -> withDelay(delay, getter))
+                                .orElse(getter)
+                );
+            }
 
         for (var property : PROPERTIES)
-            if (currentVersion.greaterThanOrEqual(property.minimumMcVersion))
-                registerProperty(property.name, property.type, property.getter.apply(this));
+            if (currentVersion.greaterThanOrEqual(property.minimumMcVersion)) {
+                var getter = property.getter.apply(this);
+                registerProperty(
+                        property.name,
+                        property.type,
+                        property.delay
+                                .map(delay -> withDelay(delay, getter))
+                                .orElse(getter)
+                );
+            }
+    }
+
+    protected <T> Supplier<T> withDelay(long delay, Supplier<T> getter) {
+        return new Supplier<>() {
+            private long latestTime = 0;
+            private T latestVal;
+
+            @Override
+            public T get() {
+                long now = System.currentTimeMillis();
+                if (now - latestTime > delay) {
+                    latestTime = now;
+                    latestVal = getter.get();
+                }
+                return latestVal;
+            }
+        };
     }
 
 
@@ -237,6 +274,11 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
 
 
     // ------------------------------------------------------------------------------------------------
+    // Entity properties
+    public abstract Value<?> getNearbyLiving();
+
+
+    // ------------------------------------------------------------------------------------------------
     // Flag properties
     public abstract MapVal getFlags();
 
@@ -247,24 +289,38 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
 
 
 
-    public record EventTemplateV1(
+    public record EventTemplate(
             String name,
+            Optional<Long> delay,
             Function<GameStateProviderTemplate, Supplier<BoolVal>> getter,
             McVersion minimumMcVersion
     ) {
-        public EventTemplateV1(String name, Function<GameStateProviderTemplate, Supplier<BoolVal>> getter) {
-            this(name, getter, McVersion.V1_18);
+        public EventTemplate(String name, Function<GameStateProviderTemplate, Supplier<BoolVal>> getter) {
+            this(name, Optional.empty(), getter, McVersion.V1_18);
+        }
+
+        public EventTemplate(String name, long delay, Function<GameStateProviderTemplate, Supplier<BoolVal>> getter) {
+            this(name, Optional.of(delay), getter, McVersion.V1_18);
+        }
+
+        public EventTemplate(String name, long delay, Function<GameStateProviderTemplate, Supplier<BoolVal>> getter, McVersion minimumMcVersion) {
+            this(name, Optional.of(delay), getter, minimumMcVersion);
         }
     }
 
-    public record PropertyTemplateV1(
+    public record PropertyTemplate(
             String name,
             Type type,
+            Optional<Long> delay,
             Function<GameStateProviderTemplate, Supplier<Value<?>>> getter,
             McVersion minimumMcVersion
     ) {
-        public PropertyTemplateV1(String name, Type type, Function<GameStateProviderTemplate, Supplier<Value<?>>> getter) {
-            this(name, type, getter, McVersion.V1_18);
+        public PropertyTemplate(String name, Type type, Function<GameStateProviderTemplate, Supplier<Value<?>>> getter) {
+            this(name, type, Optional.empty(), getter, McVersion.V1_18);
+        }
+
+        public PropertyTemplate(String name, Type type, long delay, Function<GameStateProviderTemplate, Supplier<Value<?>>> getter) {
+            this(name, type, Optional.of(delay), getter, McVersion.V1_18);
         }
     }
 }
