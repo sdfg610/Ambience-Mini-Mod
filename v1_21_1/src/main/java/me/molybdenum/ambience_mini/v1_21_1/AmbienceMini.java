@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.v1_21_1;
 
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
+import me.molybdenum.ambience_mini.engine.client.core.gui.BaseGuiSounds;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
@@ -14,6 +15,7 @@ import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.ClientCore;
+import me.molybdenum.ambience_mini.v1_21_1.client.core.gui.GuiSounds;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.drawer.Drawer;
@@ -94,6 +96,8 @@ public class AmbienceMini extends BaseAmbienceMini
         serverConfig = new ServerConfig(modContainer);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
+            BaseGuiSounds.init(GuiSounds::new);
+
             clientConfig = new ClientConfig(modContainer);
             modEventBus.addListener(AmbienceMini::registerGuiOverlays);
             modEventBus.addListener(AmbienceMini::registerKeybindings);

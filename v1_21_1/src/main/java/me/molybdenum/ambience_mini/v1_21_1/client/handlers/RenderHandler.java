@@ -42,7 +42,7 @@ public class RenderHandler
         poseStack.pushPose();
         poseStack.translate(-viewFrom.x, -viewFrom.y, -viewFrom.z);
 
-        renderer.setup(poseStack.last(), event.getFrustum());
+        renderer.setup(poseStack, event.getFrustum());
         renderer.tickAndRender(viewFrom, event.getCamera().getXRot(), event.getCamera().getYRot());
 
         poseStack.popPose();
@@ -50,7 +50,7 @@ public class RenderHandler
 
 
     public static void renderAreaOverlay(@NotNull GuiGraphics guiGraphics, @NotNull DeltaTracker ignored) {
-        renderer.setup(guiGraphics.pose().last(), null);
+        renderer.setup(guiGraphics.pose(), null);
         renderer.renderAreaInfoOverlay(window.getGuiScaledWidth(), window.getGuiScaledHeight());
     }
 }

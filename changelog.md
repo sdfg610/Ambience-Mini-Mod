@@ -1,6 +1,8 @@
 
 ### Version 2.8.0:
 
+A huge update is upon us! 
+
 **Server-located playlists and music:**
 - Added property `$server_playlists` to the configuration language which is a map from strings (playlist names) to playlists with music located on the server.
   * Server-located music is streamed to the client and stored in-memory from where it is then played.

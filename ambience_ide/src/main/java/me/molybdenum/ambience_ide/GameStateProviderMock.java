@@ -78,7 +78,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
                 messages.add("Value given for property '$" + property.name() + "' is not a valid value of type '" + PrettyPrinter.getTypeString(property.type()) + "'!");
     }
 
-    private boolean isValidPropertyValue(PropertyTemplateV1 property) {
+    private boolean isValidPropertyValue(PropertyTemplate property) {
         var value = propertyValues.get(property.name());
         if (property.type() instanceof IntT)
             return isValidIntVal(value);
@@ -109,7 +109,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         return trim.matches("^[0-9]+$") || trim.equalsIgnoreCase("undefined");
     }
 
-    private IntVal getAsIntVal(PropertyTemplateV1 property) {
+    private IntVal getAsIntVal(PropertyTemplate property) {
         try {
             return new IntVal(Integer.parseInt(propertyValues.get(property.name()).trim()));
         } catch (NumberFormatException e) {
@@ -123,7 +123,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         return trim.matches("[0-9]+(\\.[0-9]*)?") || trim.equalsIgnoreCase("undefined");
     }
 
-    private FloatVal getAsFloatVal(PropertyTemplateV1 property) {
+    private FloatVal getAsFloatVal(PropertyTemplate property) {
         try {
             return new FloatVal(Float.parseFloat(propertyValues.get(property.name()).trim()));
         } catch (NumberFormatException e) {
@@ -132,12 +132,12 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     }
 
     // String
-    private StringVal getAsStringVal(PropertyTemplateV1 property) {
+    private StringVal getAsStringVal(PropertyTemplate property) {
         return new StringVal(propertyValues.get(property.name()));
     }
 
     // String List
-    private ListVal getAsStringListVal(PropertyTemplateV1 property) {
+    private ListVal getAsStringListVal(PropertyTemplate property) {
         return ListVal.ofStringList(
                 Arrays.stream(propertyValues.get(property.name()).split(",")).map(String::trim).toList()
         );
@@ -160,7 +160,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
                 && getAsAreaListVal(trim) != null;
     }
 
-    private ListVal getAsAreaListVal(PropertyTemplateV1 property) {
+    private ListVal getAsAreaListVal(PropertyTemplate property) {
         return getAsAreaListVal(propertyValues.get(property.name()));
     }
 
@@ -240,7 +240,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         return true;
     }
 
-    private MapVal getAsStringStringMapVal(PropertyTemplateV1 property) {
+    private MapVal getAsStringStringMapVal(PropertyTemplate property) {
         var map = new ValueMap();
         var elementMatcher = elementPattern.matcher(propertyValues.get(property.name()));
         while (elementMatcher.find()) {
@@ -260,7 +260,7 @@ public class GameStateProviderMock extends GameStateProviderTemplate
                         && getAsCombatantListVal(trim) != null;
     }
 
-    private ListVal getAsCombatantListVal(PropertyTemplateV1 property) {
+    private ListVal getAsCombatantListVal(PropertyTemplate property) {
         return getAsCombatantListVal(propertyValues.get(property.name()));
     }
 

@@ -65,6 +65,6 @@ public class FlagCache
     }
 
     public void loadFlags() {
-        network.sendAsync(new GetFlagsMessage());    // TODO: Minimally blocking area loading?????
+        network.sendAsync(new GetFlagsMessage());    // TODO: Minimally blocking flags loading?????
     }
 }

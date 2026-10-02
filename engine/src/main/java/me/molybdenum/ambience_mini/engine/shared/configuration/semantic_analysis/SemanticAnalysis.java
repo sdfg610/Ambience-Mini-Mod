@@ -217,6 +217,8 @@ public class SemanticAnalysis extends BaseInterpreter
                     messages.add(new SemError(when.line(), "The condition inside a 'when' must result in a boolean value. Got '" + type + "'"));
             });
 
+            // TODO: Optimize away when condition is constant
+
             var newBody = validateAndOptimizeSchedule(when.body(), typEnv, varEnv, messages.detatch());
             return newBody == null || messages.hasErrorOnNode() ? null
                     : new When(when.condition(), newBody, when.line());
@@ -240,6 +242,7 @@ public class SemanticAnalysis extends BaseInterpreter
             makeUnusedVariableWarnings(typEnv, messages);
             typEnv.closeScope();
 
+            // TODO: Optimize away when list is constant
 
             return newBody == null || !eoResult.isWellDefined() || messages.hasErrorOnNode() ? null
                     : let.withValueAndBody(eoResult.expr(), newBody);

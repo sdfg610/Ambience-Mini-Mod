@@ -119,8 +119,8 @@ public class Drawer extends BaseDrawer<PoseStack.Pose>
     }
 
     @Override
-    protected void drawText(String text, Vector2i position, Color color, int alpha) {
-        mc.font.drawInBatch(text, (float)position.x(), (float)position.y(), color.toABGR32(alpha), false, pose, buffer, false, 0, 15728880);
+    protected void drawText(String text, Vector2i position, Color color) {
+        mc.font.drawInBatch(text, (float)position.x(), (float)position.y(), color.toABGR32(), false, pose, buffer, false, 0, 15728880);
     }
 
     @Override

@@ -105,4 +105,18 @@ public class Utils {
                 throw new RuntimeException("Could not print error of type: " + error.getClass().getName());
         }
     }
+
+
+    public static int clamp(int value, int min, int max) {
+        if (value < min) {
+            return min;
+        } else {
+            return Math.min(value, max);
+        }
+    }
+
+    public static int floor(double value) {
+        int i = (int)value;
+        return value < (double)i ? i - 1 : i;
+    }
 }

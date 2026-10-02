@@ -47,7 +47,7 @@ public abstract class BaseClientCore<
         TBlockPos, TVec3, TBlockState, TEntity, TKeyBinding, TComponent,
         TNotification extends BaseNotification<TComponent>,
         TNetworkManager extends BaseClientNetworkManager,
-        TAreaRenderer extends BaseAreaRenderer<TVec3, TBlockPos, ?>, // Last type, namely TScreen, is never exposed to a public interface.
+        TAreaRenderer extends BaseAreaRenderer<TVec3, TBlockPos>,
         TClientConfig extends BaseClientConfig,
         TKeyBindings extends BaseKeyBindings<TKeyBinding>,
         TPlayerState extends BasePlayerState<TBlockPos, TVec3, ?>,

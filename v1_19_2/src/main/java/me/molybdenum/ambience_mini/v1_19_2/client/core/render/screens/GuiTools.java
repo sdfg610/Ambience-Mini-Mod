@@ -33,6 +33,11 @@ public class GuiTools implements IGuiTools<Screen, PoseStack.Pose, AbstractWidge
     }
 
     @Override
+    public void showScreen(Screen screen) {
+        Minecraft.getInstance().setScreen(screen);
+    }
+
+    @Override
     public void closeScreen() {
         Minecraft.getInstance().execute(() -> Minecraft.getInstance().setScreen(null));
     }

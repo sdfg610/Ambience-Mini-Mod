@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.gui.menus.AreaMenu;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
@@ -25,7 +26,7 @@ import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
+public abstract class BaseAreaRenderer<TVec3, TBlockPos>
 {
     private static final int ANGLE_THICKNESS = 2;
     private static final int ANGLE_WIDTH = 8;
@@ -54,7 +55,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
 
     private Area lookingAtArea = null;
 
-    private TScreen latestScreen;
+    private AreaMenu<?> latestScreen;
 
     // Input
     private long lastInputTime = 0;
@@ -118,8 +119,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
     protected abstract String getDimensionID();
     protected abstract TBlockPos getAirJustBeforeLookedAtBlockIfInRange(TVec3 from, TVec3 to);
 
-    protected abstract TScreen createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper);
-    protected abstract void openScreen(TScreen screen);
+    protected abstract AreaMenu<?> createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper);
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -229,7 +229,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
                     lookingAtArea = null;
 
                     latestScreen = createAreaScreen(selectedArea.copy(), notification, areaHelper);
-                    openScreen(latestScreen);
+                    latestScreen.open();
                 }
                 else
                     notification.printTranslatableToChat(AmLang.MSG_AREA_CANNOT_EDIT);
@@ -254,7 +254,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         if (consumeConfirmInput()) {
             if (selectedFace == null) {
                 if (lookingAt == null)
-                    openScreen(latestScreen);
+                    latestScreen.open();
                 else
                     selectedFace = lookingAt;
             }
@@ -274,22 +274,20 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         if (selectedFace != null || isVisible(selectedCube)) {
             baseDrawer.drawLines(builder -> {
                 for (var edge : selectedCube.edges)
-                    builder.drawEdge(edge, getEdgeColor(edge, lookingAt), Color.ALPHA_OPAQUE);
+                    builder.drawEdge(edge, getEdgeColor(edge, lookingAt));
 
                 if (selectedFace != null && offset != null)
                     renderAreaExtension(builder, offset);
             });
             baseDrawer.drawQuads(builder -> {
                 for (var face : selectedCube.faces)
-                    getFaceColorAndAlpha(face, lookingAt).deconstructVoid(
-                            (color, alpha) -> builder.drawFace(face, color, alpha)
-                    );
+                    builder.drawFace(face, getFaceColor(face, lookingAt));
             });
         }
 
         if (consumeCancelInput()) {
             if (selectedFace == null) {
-                openScreen(latestScreen);
+                latestScreen.open();
                 mode = cachedMode;
             }
             else
@@ -318,7 +316,7 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
                     areaFromBlock = null;
 
                     latestScreen = createAreaScreen(selectedArea.copy(), notification, areaHelper);
-                    openScreen(latestScreen);
+                    latestScreen.open();
                 }
             }
         }
@@ -330,17 +328,17 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         // Face edges
         Color color = selectedCube.canExtendOrContractBy(selectedFace.direction, offset)
                 ? Color.EXTENSION_VALID : Color.EXTENSION_ERROR;
-        builder.drawLine(offsetFace.p1, offsetFace.p2, color, Color.ALPHA_OPAQUE);
-        builder.drawLine(offsetFace.p2, offsetFace.p3, color, Color.ALPHA_OPAQUE);
-        builder.drawLine(offsetFace.p3, offsetFace.p4, color, Color.ALPHA_OPAQUE);
-        builder.drawLine(offsetFace.p4, offsetFace.p1, color, Color.ALPHA_OPAQUE);
+        builder.drawLine(offsetFace.p1, offsetFace.p2, color);
+        builder.drawLine(offsetFace.p2, offsetFace.p3, color);
+        builder.drawLine(offsetFace.p3, offsetFace.p4, color);
+        builder.drawLine(offsetFace.p4, offsetFace.p1, color);
 
         // Offset lines
         if (offset > 0) {
-            builder.drawLine(selectedFace.p1, offsetFace.p1, Color.EXTENSION_VALID, Color.ALPHA_OPAQUE);
-            builder.drawLine(selectedFace.p2, offsetFace.p2, Color.EXTENSION_VALID, Color.ALPHA_OPAQUE);
-            builder.drawLine(selectedFace.p3, offsetFace.p3, Color.EXTENSION_VALID, Color.ALPHA_OPAQUE);
-            builder.drawLine(selectedFace.p4, offsetFace.p4, Color.EXTENSION_VALID, Color.ALPHA_OPAQUE);
+            builder.drawLine(selectedFace.p1, offsetFace.p1, Color.EXTENSION_VALID);
+            builder.drawLine(selectedFace.p2, offsetFace.p2, Color.EXTENSION_VALID);
+            builder.drawLine(selectedFace.p3, offsetFace.p3, Color.EXTENSION_VALID);
+            builder.drawLine(selectedFace.p4, offsetFace.p4, Color.EXTENSION_VALID);
         }
     }
 
@@ -360,36 +358,37 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
 
         // Box outlines
         int lineAlpha = getPulsingAlpha(alphaModifier);
+        Color lineColor = color.withAlpha(lineAlpha);
         baseDrawer.drawLines(builder -> {
-            builder.drawLine(minimum, pX, color, lineAlpha);
-            builder.drawLine(minimum, pY, color, lineAlpha);
-            builder.drawLine(minimum, pZ, color, lineAlpha);
+            builder.drawLine(minimum, pX, lineColor);
+            builder.drawLine(minimum, pY, lineColor);
+            builder.drawLine(minimum, pZ, lineColor);
 
-            builder.drawLine(pX, pXZ, color, lineAlpha);
-            builder.drawLine(pX, pXY, color, lineAlpha);
+            builder.drawLine(pX, pXZ, lineColor);
+            builder.drawLine(pX, pXY, lineColor);
 
-            builder.drawLine(pY, pXY, color, lineAlpha);
-            builder.drawLine(pY, pYZ, color, lineAlpha);
+            builder.drawLine(pY, pXY, lineColor);
+            builder.drawLine(pY, pYZ, lineColor);
 
-            builder.drawLine(pZ, pXZ, color, lineAlpha);
-            builder.drawLine(pZ, pYZ, color, lineAlpha);
+            builder.drawLine(pZ, pXZ, lineColor);
+            builder.drawLine(pZ, pYZ, lineColor);
 
-            builder.drawLine(pYZ, pXYZ, color, lineAlpha);
-            builder.drawLine(pXZ, pXYZ, color, lineAlpha);
-            builder.drawLine(pXY, pXYZ, color, lineAlpha);
+            builder.drawLine(pYZ, pXYZ, lineColor);
+            builder.drawLine(pXZ, pXYZ, lineColor);
+            builder.drawLine(pXY, pXYZ, lineColor);
         });
 
         // Box faces
-        int quadAlpha = (int)(1d/3 * lineAlpha);
+        var quadColor = color.withAlpha((int)(1d/3 * lineAlpha));
         baseDrawer.drawQuads(builder -> {
-            builder.drawQuad(minimum, pX, pXY, pY, color, quadAlpha); // North
-            builder.drawQuad(minimum, pZ, pYZ, pY, color, quadAlpha); // West
+            builder.drawQuad(minimum, pX, pXY, pY, quadColor); // North
+            builder.drawQuad(minimum, pZ, pYZ, pY, quadColor); // West
 
-            builder.drawQuad(pXZ, pX, pXY, pXYZ, color, quadAlpha); // East
-            builder.drawQuad(pXZ, pZ, pYZ, pXYZ, color, quadAlpha); // South
+            builder.drawQuad(pXZ, pX, pXY, pXYZ, quadColor); // East
+            builder.drawQuad(pXZ, pZ, pYZ, pXYZ, quadColor); // South
 
-            builder.drawQuad(pY, pXY, pXYZ, pYZ, color, quadAlpha); // Top
-            builder.drawQuad(minimum, pX, pXZ, pZ, color, quadAlpha); // Bottom
+            builder.drawQuad(pY, pXY, pXYZ, pYZ, quadColor); // Top
+            builder.drawQuad(minimum, pX, pXZ, pZ, quadColor); // Bottom
         });
     }
 
@@ -420,9 +419,9 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
 
             drawLeftAngle(boxPos.offset(-ANGLE_WIDTH, 0), boxHeight);
             drawRightAngle(boxPos.offset(boxWidth,0), boxHeight);
-            baseDrawer.drawQuads(bld -> bld.draw2dRectangle(boxPos, boxPos.offset(boxWidth, boxHeight), Color.BLACK, Color.ALPHA_OPAQUE / 2));
-            baseDrawer.drawText(bld -> bld.drawText(name, namePos, Color.WHITE, Color.ALPHA_OPAQUE));
-            baseDrawer.drawText(bld -> bld.drawText(owner, ownerPos, Color.WHITE, Color.ALPHA_OPAQUE));
+            baseDrawer.drawQuads(bld -> bld.draw2dRectangle(boxPos, boxPos.offset(boxWidth, boxHeight), Color.BLACK_128));
+            baseDrawer.drawText(bld -> bld.drawText(name, namePos, Color.WHITE));
+            baseDrawer.drawText(bld -> bld.drawText(owner, ownerPos, Color.WHITE));
         }
     }
 
@@ -435,9 +434,9 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         Vector2i bottomRight = position.offset(ANGLE_WIDTH, height);
 
         baseDrawer.drawQuads(quadDrawer -> {
-            quadDrawer.draw2dQuad(upperRight, bottomRight, middleRight, middleRight, Color.BLACK, Color.ALPHA_OPAQUE / 2);
-            quadDrawer.draw2dQuad(upperLeft, upperRight, middleRight, middleLeft, Color.WHITE, Color.ALPHA_OPAQUE);
-            quadDrawer.draw2dQuad(middleRight, middleLeft, bottomLeft, bottomRight, Color.WHITE, Color.ALPHA_OPAQUE);
+            quadDrawer.draw2dQuad(upperRight, bottomRight, middleRight, middleRight, Color.BLACK_128);
+            quadDrawer.draw2dQuad(upperLeft, upperRight, middleRight, middleLeft, Color.WHITE);
+            quadDrawer.draw2dQuad(middleRight, middleLeft, bottomLeft, bottomRight, Color.WHITE);
         });
     }
 
@@ -449,9 +448,9 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         Vector2i bottomRight = upperLeft.offset(ANGLE_THICKNESS, height);
 
         baseDrawer.drawQuads(quadDrawer -> {
-            quadDrawer.draw2dQuad(upperLeft, bottomLeft, middleLeft, middleLeft, Color.BLACK, Color.ALPHA_OPAQUE / 2);
-            quadDrawer.draw2dQuad(upperLeft, upperRight, middleRight, middleLeft, Color.WHITE, Color.ALPHA_OPAQUE);
-            quadDrawer.draw2dQuad(middleRight, middleLeft, bottomLeft, bottomRight, Color.WHITE, Color.ALPHA_OPAQUE);
+            quadDrawer.draw2dQuad(upperLeft, bottomLeft, middleLeft, middleLeft, Color.BLACK_128);
+            quadDrawer.draw2dQuad(upperLeft, upperRight, middleRight, middleLeft, Color.WHITE);
+            quadDrawer.draw2dQuad(middleRight, middleLeft, bottomLeft, bottomRight, Color.WHITE);
         });
     }
 
@@ -485,11 +484,11 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos, TScreen>
         return lookingAt != null && edge.touches(lookingAt.direction) ? Color.AREA_LOOKING : Color.WHITE;
     }
 
-    protected Pair<Color, Integer> getFaceColorAndAlpha(Cube.Face face, @Nullable Cube.Face lookingAt) {
+    protected Color getFaceColor(Cube.Face face, @Nullable Cube.Face lookingAt) {
         boolean isLookingAt = face == lookingAt;
         Color c = isLookingAt ? Color.AREA_LOOKING : Color.WHITE;
-        int a =  (int)((isLookingAt ? 0.5 : 0.33) * Color.ALPHA_OPAQUE);
-        return new Pair<>(c, a);
+        int a = (int)((isLookingAt ? 0.5 : 0.33) * Color.ALPHA_OPAQUE);
+        return c.withAlpha(a);
     }
 
     protected Color getAreaColor(Area area) {
