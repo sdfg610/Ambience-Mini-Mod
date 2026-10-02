@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TClientLevel>
@@ -99,6 +100,8 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TCl
     public abstract TVec3 offsetVector(TVec3 position, double x, double y, double z);
     @Nullable public abstract Vector3i toAmVector3i(@Nullable TBlockPos blockPos);
     @Nullable public abstract Vector3d toAmVector3d(@Nullable TVec3 position);
+
+    @Nullable public abstract <T> T tryRunOnMainThread(Supplier<T> task);
 
 
     // ------------------------------------------------------------------------------------------------

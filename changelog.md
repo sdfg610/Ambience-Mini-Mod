@@ -10,6 +10,10 @@
 
 ****
 
+### Version 2.7.11:
+
+- Fixed crash related to the Sable mod when using the `@cave_score`.
+
 
 ### Version 2.7.10:
 

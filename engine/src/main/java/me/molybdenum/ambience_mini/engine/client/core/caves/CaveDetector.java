@@ -4,11 +4,13 @@ import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BlockReading;
+import me.molybdenum.ambience_mini.engine.shared.compatibility.SableCompat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class CaveDetector<TBlockPos, TVec3, TBlockState>
 {
@@ -38,20 +40,25 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
             BaseLevelState<TBlockPos, TVec3, TBlockState, ?, ?> level,
             BasePlayerState<TBlockPos, TVec3, ?> player
     ) {
-        List<Double> scores = new ArrayList<>();
-        for (int xOff = -_caveScoreRadius; xOff <= _caveScoreRadius; xOff++)
-            for (int yOff = -_caveScoreRadius; yOff <= _caveScoreRadius; yOff++)
-                for (int zOff = -_caveScoreRadius; zOff <= _caveScoreRadius; zOff++) {
-                    TBlockPos bOrigin = level.offsetBlockPos(player.eyeBlockPos(), xOff, yOff, zOff);
-                    if (level.isAirAt(bOrigin)) {
-                        TVec3 vOrigin = level.offsetVector(player.eyePosition(), xOff, yOff, zOff);
-                        List<BlockReading<TBlockPos, TBlockState>> readings
-                                = level.readSurroundings(vOrigin, _xGranularity, _yGranularity, _measureDistance);
-                        scores.add(computeScore(level, readings));
+        Supplier<List<Double>> getScores = () -> {
+            List<Double> scores = new ArrayList<>();
+            for (int xOff = -_caveScoreRadius; xOff <= _caveScoreRadius; xOff++)
+                for (int yOff = -_caveScoreRadius; yOff <= _caveScoreRadius; yOff++)
+                    for (int zOff = -_caveScoreRadius; zOff <= _caveScoreRadius; zOff++) {
+                        TBlockPos bOrigin = level.offsetBlockPos(player.eyeBlockPos(), xOff, yOff, zOff);
+                        if (level.isAirAt(bOrigin)) {
+                            TVec3 vOrigin = level.offsetVector(player.eyePosition(), xOff, yOff, zOff);
+                            List<BlockReading<TBlockPos, TBlockState>> readings
+                                    = level.readSurroundings(vOrigin, _xGranularity, _yGranularity, _measureDistance);
+                            scores.add(computeScore(level, readings));
+                        }
                     }
-                }
+            return scores;
+        };
 
-        if (scores.isEmpty())
+        List<Double> scores = SableCompat.isLoaded ? level.tryRunOnMainThread(getScores) : getScores.get();
+
+        if (scores == null || scores.isEmpty())
             return Optional.empty();
 
         return Optional.of(scores.stream().reduce(0.0, Double::sum) / scores.size());

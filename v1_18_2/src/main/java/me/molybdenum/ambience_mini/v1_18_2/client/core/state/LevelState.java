@@ -225,7 +225,9 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
         return tryRunOnMainThread(() -> cachedLevel.getEntitiesOfClass(clazz, area, ignore -> true));
     }
 
-    private <T> T tryRunOnMainThread(Supplier<T> task) {
+    @Override
+    @Nullable
+    public <T> T tryRunOnMainThread(Supplier<T> task) {
         try {
             return mc.submit(task).get(MAIN_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ignored) {
