@@ -1,6 +1,6 @@
 package me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values;
 
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.helpers.ValueList;
 import org.jetbrains.annotations.NotNull;
 

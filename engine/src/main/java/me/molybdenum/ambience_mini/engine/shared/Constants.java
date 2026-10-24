@@ -12,6 +12,7 @@ public class Constants
     public static final String MUSIC_DIRECTORY = "music";
     public static final String MUSIC_CONFIG_FILE = "music_config.txt";
 
+    public static final Path musicPackPath = Path.of(AMBIENCE_MUSIC_DIRECTORY);
     public static final Path musicDirPath = Path.of(AMBIENCE_MUSIC_DIRECTORY, MUSIC_DIRECTORY);
     public static final Path musicConfigPath = Path.of(AMBIENCE_MUSIC_DIRECTORY, MUSIC_CONFIG_FILE);
 
@@ -38,4 +39,7 @@ public class Constants
     // Remote Music
     public static final int PLAYLIST_CHUNK_BYTE_SIZE = 1024*3; // 3 KiB
     public static final int MUSIC_CHUNK_BYTE_SIZE = 1024*3; // 3 KiB
+
+    // Size measures
+    public static final int BYTES_IN_MEGABYTE = 1_000_000;
 }

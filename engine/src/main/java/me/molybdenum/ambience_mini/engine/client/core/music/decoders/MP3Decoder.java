@@ -1,9 +1,13 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
-import javazoom.jlayer_am_custom.decoder.*;
+import me.molybdenum.ambience_mini.deps.jid3lib.MP3File;
+import me.molybdenum.ambience_mini.deps.jid3lib.TagException;
+import me.molybdenum.ambience_mini.deps.jid3lib.id3.AbstractID3v2;
+import me.molybdenum.ambience_mini.deps.jlayer.*;
+import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
-import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfo;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
@@ -12,7 +16,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.Map;
+
 
 public class MP3Decoder extends AmDecoder {
     private static final int BUFFER_SIZE = 200_000; // Double the number measured in bytes since using "short"
@@ -26,35 +30,33 @@ public class MP3Decoder extends AmDecoder {
     private final Bitstream bitstream;
     private boolean hitLast = false;
 
-    private final long loopStart;
-    private final long loopEnd;
-
     private final int sampleShortSize;
     private long samplesDecoded;
     private long savedSamplesDecoded = -1;
 
+    private final AudioFormat format;
 
 
-    public MP3Decoder(MusicInstance mInst) {
-        super(mInst.music(), new Deferred<>());
+
+    public MP3Decoder(MusicInstance inst) {
+        super(inst);
         try {
-            boolean doLoop = mInst.music().doLoop();
+            boolean doLoop = inst.music.doLoop();
 
-            bitstream = new Bitstream(ensureLoopableIfNeeded(mInst.createStream(), doLoop));
+            bitstream = new Bitstream(ensureLoopableIfNeeded(inst.createStream(), doLoop));
             decoder.initialize(bitstream.readFrame()); // Load metadata
             bitstream.unreadFrame();
 
-            sampleShortSize = decoder.getOutputChannels(); // JLayer always produces samples of 2 bytes or 1 short.
+            sampleShortSize = decoder.getOutputChannels(); // JLayer always produces samples of 2 bytes or 1 short per channel.
             bufferMaxSamples = Obuffer.OBUFFERSIZE / sampleShortSize;
-            tagReader.set(new MP3TagReader(bitstream.getID3v2TextTags(), mInst.music()));
 
-            if (doLoop) {
-                var startAndEnd = tagReader.get().getLoopStartAndEnd();
-                loopStart = startAndEnd.left();
-                loopEnd = startAndEnd.right();
-            }
-            else
-                loopStart = loopEnd = Long.MAX_VALUE;
+            format = new AudioFormat(
+                    (float)decoder.getOutputFrequency(),
+                    16,
+                    decoder.getOutputChannels(),
+                    true,
+                    false
+            );
         } catch (IOException | BitstreamException | DecoderException e) {
             throw new RuntimeException(e);
         }
@@ -67,13 +69,53 @@ public class MP3Decoder extends AmDecoder {
     }
 
 
+    public static MusicInfo getMusicInfo(MusicInstance inst) {
+        try (var stream = new BufferedInputStream(inst.createStream())) {
+            var bitstream = new Bitstream(stream);
+            var decoder = new Decoder();
+            decoder.initialize(bitstream.readFrame());
+            bitstream.unreadFrame();
+
+            int shortsInSample = decoder.getOutputChannels(); // num channels * 1 short
+
+            Header h;
+            long samples = 0;
+            while ((h = bitstream.readFrame()) != null && !Thread.interrupted()) {
+                SampleBuffer data = (SampleBuffer)decoder.decodeFrame(h, bitstream);
+                bitstream.closeFrame();
+                samples += data.getBufferLength() / shortsInSample;
+            }
+
+            String title = null, author = null;
+            Long loopStart = null, loopEnd = null, loopLength = null;
+            try {
+                MP3File mp3file = new MP3File(inst.getLocalPath().toFile());
+                if (mp3file.hasID3v2Tag()) {
+                    AbstractID3v2 tag = mp3file.getID3v2Tag();
+                    title = tag.getSongTitle();
+                    author = tag.getLeadArtist();
+                    loopStart = tag.getTXXXValue("LOOPSTART").map(Utils::tryParseLong).orElse(null);
+                    loopEnd = tag.getTXXXValue("LOOPEND").map(Utils::tryParseLong).orElse(null);
+                    loopLength = tag.getTXXXValue("LOOPLENGTH").map(Utils::tryParseLong).orElse(null);
+                }
+            } catch (Exception e) {
+                BaseAmbienceMini.getBaseCore().logger.error("Error during MP3 tags parsing", e);
+            }
+
+            return new MusicInfo(
+                    title, author,
+                    decoder.getOutputFrequency(), 2*decoder.getOutputChannels(), samples,
+                    loopStart, loopEnd, loopLength
+            );
+        } catch (IOException | BitstreamException | DecoderException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     @Override
     public AudioFormat getFormat() {
-        return new AudioFormat((float)decoder.getOutputFrequency(),
-                16,
-                decoder.getOutputChannels(),
-                true,
-                false);
+        return format;
     }
 
     @Override
@@ -104,6 +146,7 @@ public class MP3Decoder extends AmDecoder {
             throw new RuntimeException(e);
         }
     }
+
 
     /**
      * Decodes a single frame.
@@ -140,53 +183,6 @@ public class MP3Decoder extends AmDecoder {
     public void close() {
         try {
             bitstream.close();
-        } catch (Exception ignored) {
-            // Ignored
-        }
-    }
-
-
-    private static class MP3TagReader extends TagReader {
-        private final Map<String, String> tags;
-
-
-        private MP3TagReader(Map<String, String> comment, Music music) {
-            super(music);
-            this.tags = comment;
-        }
-
-
-        @Override
-        public String getLoopStartStr() {
-            return getCaseInsensitive("loopstart");
-        }
-
-        @Override
-        public String getLoopEndStr() {
-            return getCaseInsensitive("loopend");
-        }
-
-        @Override
-        public String getLoopLengthStr() {
-            return getCaseInsensitive("looplength");
-        }
-
-        @Override
-        public @Nullable String getTitle() {
-            return getCaseInsensitive("tit2");
-        }
-
-        @Override
-        public @Nullable String getAuthor() {
-            return getCaseInsensitive("tpe1");
-        }
-
-
-        private String getCaseInsensitive(String key) {
-            for (var entry : tags.entrySet())
-                if (entry.getKey().toLowerCase().equals(key))
-                    return entry.getValue();
-            return null;
-        }
+        } catch (Exception ignored) { }
     }
 }

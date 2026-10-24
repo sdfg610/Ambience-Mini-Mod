@@ -17,6 +17,10 @@ public interface AmReader {
         return Float.intBitsToFloat(readInt());
     }
 
+    default long readLong() {
+        return readInt() | ((long)readInt() << 32);
+    }
+
 
     default ArrayList<String> readStringList() {
         int length = readInt();

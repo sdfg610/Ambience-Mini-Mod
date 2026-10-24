@@ -16,19 +16,10 @@ public class KeyBindings extends BaseKeyBindings<KeyMapping>
         registerKeys();
     }
 
-    @Override
-    protected int keyP() {
-        return InputConstants.KEY_P;
-    }
 
     @Override
     protected int keyEnd() {
         return InputConstants.KEY_END;
-    }
-
-    @Override
-    protected int keyPageUp() {
-        return InputConstants.KEY_PAGEUP;
     }
 
     @Override

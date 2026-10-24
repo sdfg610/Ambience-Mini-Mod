@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.player;
 
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
+import me.molybdenum.ambience_mini.engine.client.core.music.AL.ALException;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 import me.molybdenum.ambience_mini.engine.client.core.music.decoders.AmDecoder;
 import me.molybdenum.ambience_mini.engine.client.core.music.AL.ALUtils;
 import org.jetbrains.annotations.Nullable;
@@ -9,111 +10,190 @@ import org.lwjgl.openal.AL10;
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
-public class Channel {
-    public static final int BUFFER_COUNT = 4;
+public class Channel implements PlayState {
+    private static final int BUFFER_COUNT = 4;
 
     private static final long FADE_STEP_MILLISECONDS = 75;
     private static final int FADE_STEP_COUNT = 10;
 
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+
     private float playingVolume;
     private final AtomicBoolean isFading = new AtomicBoolean();
 
+    public final MusicInstance inst;
     public final Music music;
-    private final int source;
     private final AmDecoder decoder;
-    private final AtomicBoolean isClosed = new AtomicBoolean(false);
+    private final int source;
+
+    private boolean isInitialized = false;
+    private boolean isClosed = false;
+    private long processedSamples = 0;
 
 
-    public Channel(Music music, AmDecoder decoder) {
-        this.music = music;
-        this.decoder = decoder;
-
+    public Channel(MusicInstance inst) {
+        this.inst = inst;
+        this.music = inst.music;
+        this.decoder = inst.createDecoder();
         this.source = ALUtils.genSource();
-        loadNextBuffers(BUFFER_COUNT);
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Music info
-    @Nullable
-    public String getMusicPath() {
-        return decoder.getMusicPath();
-    }
+    // State and info
+    @Override
+    public long getSamplePosition() {
+        if (readLock.tryLock()) {
+            try {
+                if (!isClosed) {
+                    long position = processedSamples + ALUtils.getBufferSamplePosition(source);
 
-    @Nullable public String getMusicTitle() {
-        return decoder.getMusicTitle();
-    }
-
-    @Nullable public String getMusicAuthor() {
-        return decoder.getMusicAuthor();
-    }
-
-
-    // -----------------------------------------------------------------------------------------------------------------
-    // Stream management
-    public void updateBuffers() {
-        if (!isClosed.get()) {
-            int count = removeProcessedBuffers();
-            loadNextBuffers(count);
-        }
-    }
-
-    private void loadNextBuffers(int count) {
-        for (int i = 0; i < count; ++i) {
-            ByteBuffer data = decoder.getFrame();
-            if (data != null) {
-                int buffer = ALUtils.genBuffer();
-                ALUtils.bufferData(buffer, data, decoder.getFormat());
-                ALUtils.queueBuffer(source, buffer);
+                    long start = getLoopStart();
+                    return start > 0 && position >= getLoopStart()
+                            ? ((position - start) % (getLoopEnd() - start)) + start
+                            : position;
+                }
+            } finally {
+                readLock.unlock();
             }
         }
+        return 0;
     }
 
-    private int removeProcessedBuffers() {
-        int count = ALUtils.countProcessedBuffers(source);
-        if (count > 0)
-            ALUtils.deleteBuffers(ALUtils.unqueueBuffers(source, count));
-        return count;
+    @Override
+    public String getPath() {
+        return decoder.inst.music.path();
+    }
+
+    @Override
+    public @Nullable String getTitleOrNull() {
+        return decoder.info.getTitleOrNull();
+    }
+
+    @Override
+    public @Nullable String getAuthorOrNull() {
+        return decoder.info.getAuthorOrNull();
+    }
+
+    @Override
+    public long getTotalSamples() {
+        return decoder.info.getTotalSamples();
+    }
+
+    @Override
+    public int getSamplesPerSecond() {
+        return decoder.info.getSampleRate();
+    }
+
+    @Override
+    public long getLoopStart() {
+        return decoder.getLoopStart();
+    }
+
+    @Override
+    public long getLoopEnd() {
+        return decoder.getLoopEnd();
+    }
+
+
+    @Override
+    public boolean isPlaying() {
+        try {
+            readLock.lock();
+            return !isClosed && ALUtils.getSourceState(source) == AL10.AL_PLAYING;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    public boolean isPaused() {
+        try {
+            readLock.lock();
+            if (!isClosed) {
+                int state = ALUtils.getSourceState(source);
+                return state == AL10.AL_PAUSED || state == AL10.AL_INITIAL;
+            }
+            return false;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    public boolean isStopped() {
+        try {
+            readLock.lock();
+            return !isClosed && ALUtils.getSourceState(source) == AL10.AL_STOPPED;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    public boolean isInitialized() {
+        return isInitialized;
     }
 
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Sound control
+    // Control
+    public void setVolume(float volume) {
+        playingVolume = volume + music.getCorrectedVolumeAdjustment();
+        try {
+            readLock.lock();
+            if (!isClosed) {
+                try {
+                    ALUtils.setMaxVolume(source, playingVolume);
+                    if (isPlaying() && !isFading.get())
+                        ALUtils.setVolume(source, playingVolume);
+                } catch (ALException ignored) { }
+            }
+        } finally {
+            readLock.unlock();
+        }
+    }
+
     public void resume(boolean fadeIn) {
-        if (!isClosed.get() && isPaused()) {
-            ALUtils.setVolume(source, fadeIn ? 0f : playingVolume);
-            ALUtils.resumeSource(source);
-            if (fadeIn) fadeIn();
+        try {
+            readLock.lock();
+            if (!isClosed && isPaused()) {
+                ALUtils.setVolume(source, fadeIn ? 0f : playingVolume);
+                ALUtils.resumeSource(source);
+                if (fadeIn) fadeIn();
+            }
+        } finally {
+            readLock.unlock();
         }
     }
 
     public void pause(boolean fadeOut) {
-        if (!isClosed.get() && isPlaying()) {
-            if (fadeOut) fadeOut();
-            ALUtils.pauseSource(source);
-        }
-    }
-
-
-    public void setVolume(float volume) {
-        if (!isClosed.get()) {
-            playingVolume = volume + music.getCorrectedVolumeAdjustment();
-            ALUtils.setMaxVolume(source, playingVolume);
-            if (isPlaying() && !isFading.get())
-                ALUtils.setVolume(source, playingVolume);
+        try {
+            readLock.lock();
+            if (!isClosed && isPlaying()) {
+                if (fadeOut) fadeOut();
+                ALUtils.pauseSource(source);
+            }
+        } finally {
+            readLock.unlock();
         }
     }
 
     public void stopAndClose(boolean fadeOut) {
-        if (this.isClosed.compareAndSet(false, true)) {
-            if (fadeOut) fadeOut();
-            ALUtils.stopSource(source);
-            removeProcessedBuffers();
-            ALUtils.deleteSource(source);
-            decoder.close();
+        try {
+            lock.writeLock().lock();
+            if (!isClosed) {
+                isClosed = true;
+                if (fadeOut) fadeOut();
+                ALUtils.stopSource(source);
+                removeProcessedBuffers();
+                ALUtils.deleteSource(source);
+                decoder.close();
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
@@ -155,20 +235,46 @@ public class Channel {
     }
 
 
-    public boolean isPlaying() {
-        return !isClosed.get() && ALUtils.getSourceState(source) == AL10.AL_PLAYING;
+    // -----------------------------------------------------------------------------------------------------------------
+    // Buffering
+    public void initBuffers() {
+        try {
+            readLock.lock();
+            if (!isClosed) {
+                loadNextBuffers(BUFFER_COUNT);
+            }
+        } finally {
+            readLock.unlock();
+        }
     }
 
-    public boolean isPaused() {
-        int state = ALUtils.getSourceState(source);
-        return !isClosed.get() && state == AL10.AL_PAUSED || state == AL10.AL_INITIAL;
+    public void updateBuffers() {
+        try {
+            readLock.lock();
+            if (!isClosed)
+                loadNextBuffers(removeProcessedBuffers());
+        } finally {
+            readLock.unlock();
+        }
     }
 
-    public boolean isStopped() {
-        return !isClosed.get() && ALUtils.getSourceState(source) == AL10.AL_STOPPED;
+    private void loadNextBuffers(int count) {
+        for (int i = 0; i < count; ++i) {
+            ByteBuffer data = decoder.getFrame();
+            if (data == null)
+                return;
+
+            int buffer = ALUtils.genBuffer();
+            ALUtils.bufferData(buffer, data, decoder.getFormat());
+            ALUtils.queueBuffer(source, buffer);
+            isInitialized = true;
+        }
     }
 
-    public boolean isClosed() {
-        return isClosed.get();
+    private int removeProcessedBuffers() {
+        int count = ALUtils.countProcessedBuffers(source);
+        if (count > 0)
+            processedSamples += ALUtils.deleteBuffers(ALUtils.unqueueBuffers(source, count)) / decoder.info.getBytesInSample();
+        return count;
     }
 }

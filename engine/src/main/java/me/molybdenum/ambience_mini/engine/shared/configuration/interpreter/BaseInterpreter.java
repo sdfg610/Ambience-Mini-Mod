@@ -5,8 +5,8 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.value
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.kinds.IndexableV;
 import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStateProvider;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.*;
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
-import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
 
 import java.util.ArrayList;
 import java.util.function.Predicate;

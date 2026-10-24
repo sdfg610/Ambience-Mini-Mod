@@ -17,6 +17,11 @@ public interface AmWriter {
         writeInt(Float.floatToIntBits(value));
     }
 
+    default void writeLong(long value) {
+        writeInt((int) (0xffffffffL & value));
+        writeInt((int) (0xffffffffL & (value >> 32)));
+    }
+
 
     default void writeStringList(Collection<String> list) {
         writeInt(list.size());

@@ -1,9 +1,7 @@
 {
   "mod_name": "Ambience Mini",
 
-  "key.reload": "Music: Reload player",
-  "key.play_pause": "Music: Pause/resume",
-  "key.next_music": "Music: Change soundtrack",
+  "key.open_am_menu": "Open AM Menu",
   "key.print_all": "Debug: Print all readings",
   "key.toggle_areas": "Area: Toggle view",
   "key.area_confirm": "Area: Confirm",
@@ -75,6 +73,17 @@
   "string.edit_bounds": "Edit Bounds",
   "string.delete": "Delete",
   "string.confirm_delete": "Confirm Delete?",
+  "string.reload": "Reload",
+  "string.none": "None",
+  "string.play": "Play",
+  "string.pause": "Pause",
+  "string.pick_random": "Pick Random",
+  "string.by_x": "By: %s",
+  "string.loading": "... Loading info ...",
+  "string.time_x": "Time: %s",
+  "string.clear_cache": "Clear Music Cache",
+  "string.memory_use": "Memory Usage: %s / %s",
+  "string.size_x": "Size: %s",
 
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
   "ambience_mini.configuration.Notify_Server_Support": "Notify server support",

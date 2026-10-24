@@ -129,13 +129,13 @@ public abstract class BaseCombatState<TEntity, TVec3>
     }
 
 
-    public void clearCombatants() {
+    public void clear() {
         combatants.clear();
     }
 
     public void handlePlayerDeath(TEntity player) {
         if (_playerState.isCachedPlayer(player))
-            clearCombatants();
+            clear();
     }
 
 

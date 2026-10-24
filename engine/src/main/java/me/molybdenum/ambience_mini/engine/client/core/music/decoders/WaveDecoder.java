@@ -1,8 +1,10 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
+import me.molybdenum.ambience_mini.deps.JavaWavInfo.InfoTypes;
+import me.molybdenum.ambience_mini.deps.JavaWavInfo.WavInfo;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
-import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfo;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
@@ -30,21 +32,20 @@ public class WaveDecoder extends AmDecoder
     private final byte[] buffer;
 
     private final int numSamples;
-    private int samplesRead = 0;
-
-    private final int loopStart;
-    private final int loopEnd;
+    private long samplesRead = 0;
 
     private int loopState = 0; // 0 -> loop disabled. 1 -> loopStart not found, 2 -> loopStart found.
 
 
-    public WaveDecoder(MusicInstance mInst) {
-        super(mInst.music(), new Deferred<>(new WavTagReader(mInst.music())));
+    public WaveDecoder(MusicInstance inst) {
+        super(inst);
         try {
-            boolean doLoop = mInst.music().doLoop();
+            boolean doLoop = inst.music.doLoop();
+            if (doLoop)
+                loopState = 1;
 
             // RIFF
-            stream = new EndianDataInputStream(ensureLoopableIfNeeded(mInst.createStream(), doLoop));
+            stream = new EndianDataInputStream(ensureLoopableIfNeeded(inst.createStream(), doLoop));
             if( !stream.read4ByteString().equals( "RIFF" ) )
                 throw new RuntimeException( "Could not find 'RIFF' tag" );
 
@@ -78,15 +79,6 @@ public class WaveDecoder extends AmDecoder
 
             bufferSize = sampleByteSize * BUFFER_SAMPLE_CAPACITY;
             buffer = new byte[bufferSize];
-
-            if (doLoop) {
-                var startAndEnd = tagReader.get().getLoopStartAndEnd();
-                loopStart = startAndEnd.left().intValue();
-                loopEnd = startAndEnd.right().intValue();
-                loopState = 1;
-            }
-            else
-                loopStart = loopEnd = Integer.MAX_VALUE;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -131,15 +123,15 @@ public class WaveDecoder extends AmDecoder
             return loadedBytes;
 
         if (loopState == 1 && samplesRead + BUFFER_SAMPLE_CAPACITY >= loopStart) {
-            int length = readSamples(loadedBytes, (loopStart - samplesRead) * sampleByteSize);
+            int length = readSamples(loadedBytes, (int)(loopStart - samplesRead) * sampleByteSize);
             stream.mark(Integer.MAX_VALUE);
             loopState = 2;
             return loadToBuffer(loadedBytes + length);
         }
         else if (loopState == 2 && samplesRead + BUFFER_SAMPLE_CAPACITY >= loopEnd) {
-            int length = readSamples(loadedBytes, (loopEnd - samplesRead) * sampleByteSize);
+            int length = readSamples(loadedBytes, (int)(loopEnd - samplesRead) * sampleByteSize);
             stream.reset();
-            samplesRead = loopStart;
+            samplesRead = Math.toIntExact(loopStart);
             return loadToBuffer(loadedBytes + length);
         }
         else
@@ -147,10 +139,35 @@ public class WaveDecoder extends AmDecoder
     }
 
     private int readSamples(int offset, int length) throws IOException {
-        int remainingBytes = (numSamples - samplesRead) * sampleByteSize;
-        int bytesRead = stream.read(buffer, offset, Math.min(length, remainingBytes));
+        long remainingBytes = (numSamples - samplesRead) * sampleByteSize;
+        int bytesRead = stream.read(buffer, offset, (int)Math.min(length, remainingBytes));
         samplesRead += bytesRead / sampleByteSize;
         return bytesRead;
+    }
+
+
+    public static MusicInfo getMusicInfo(MusicInstance inst) {
+        try {
+            var wavInfo = new WavInfo(inst.getLocalPath().toString());
+            var id3 = wavInfo.getID3v2Tags();
+
+            Long loopStart = Utils.tryParseLong(wavInfo.getInfo("loopstart"));
+            Long loopEnd = Utils.tryParseLong(wavInfo.getInfo("loopend"));
+            Long loopLength = Utils.tryParseLong(wavInfo.getInfo("looplength"));
+            if (id3 != null) {
+                loopStart = loopStart != null ? null : id3.getTXXXValue("LOOPSTART").map(Utils::tryParseLong).orElse(null);
+                loopEnd = loopEnd != null ? null : id3.getTXXXValue("LOOPEND").map(Utils::tryParseLong).orElse(null);
+                loopLength = loopLength != null ? null : id3.getTXXXValue("LOOPLENGTH").map(Utils::tryParseLong).orElse(null);
+            }
+
+            return new MusicInfo(
+                    wavInfo.getInfo(InfoTypes.TRACKTITLE), wavInfo.getInfo(InfoTypes.ARTIST),
+                    (int)wavInfo.getSampleRate(), (int)(wavInfo.getChannels() * (wavInfo.getBitsPerSample() / 8)), wavInfo.getDataSize(),
+                    loopStart, loopEnd, loopLength
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -160,39 +177,6 @@ public class WaveDecoder extends AmDecoder
             stream.close();
         } catch (Exception ignored) {
             // Ignored
-        }
-    }
-
-
-    private static class WavTagReader extends TagReader {
-        private WavTagReader(Music music) {
-            super(music);
-        }
-
-
-        @Override
-        public String getLoopStartStr() {
-            return null;
-        }
-
-        @Override
-        public String getLoopEndStr() {
-            return null;
-        }
-
-        @Override
-        public String getLoopLengthStr() {
-            return null;
-        }
-
-        @Override
-        public @Nullable String getTitle() {
-            return null;
-        }
-
-        @Override
-        public @Nullable String getAuthor() {
-            return null;
         }
     }
 

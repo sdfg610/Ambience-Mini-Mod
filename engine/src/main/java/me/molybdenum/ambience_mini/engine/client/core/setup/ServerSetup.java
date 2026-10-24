@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.setup;
 
-import me.molybdenum.ambience_mini.engine.shared.features.Availability;
-import me.molybdenum.ambience_mini.engine.shared.features.FeatureInstance;
+import me.molybdenum.ambience_mini.engine.shared.core.features.Availability;
+import me.molybdenum.ambience_mini.engine.shared.core.features.FeatureInstance;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 
 import java.util.List;

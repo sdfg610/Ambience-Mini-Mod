@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.server.core;
 
+import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.BaseStructureReader;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
@@ -13,8 +14,10 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.LoadResult;
 import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Message;
 import me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysis.Setup;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
-import me.molybdenum.ambience_mini.engine.shared.music.music_provider.RealMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.RealMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.slf4j.Logger;
 
@@ -54,7 +57,8 @@ public abstract class BaseServerCore<
     public final FlagManager flagManager;
 
     // Music
-    public ServerMusicManager musicManager;
+    public final ServerMusicManager musicManager;
+    public final MusicInfoCache musicInfoCache;
 
 
     public BaseServerCore(
@@ -65,6 +69,7 @@ public abstract class BaseServerCore<
             TStructureReader structureReader,
             FlagManager flagManager,
             ServerMusicManager musicManager,
+            MusicInfoCache musicInfoCache,
             TNetworkManager networkManager
     ) {
         this.logger = logger;
@@ -75,6 +80,7 @@ public abstract class BaseServerCore<
         this.structureReader = structureReader;
         this.flagManager = flagManager;
         this.musicManager = musicManager;
+        this.musicInfoCache = musicInfoCache;
         this.networkManager = networkManager;
     }
 
@@ -86,6 +92,7 @@ public abstract class BaseServerCore<
         this.networkManager.init(this);
         this.flagManager.init(this);
         this.musicManager.init(this);
+        // Do not init "musicInfoCache" here. It is shared, but only initialized from client (only client depends on initialization).
 
         loadMusicConfig();
     }
@@ -153,6 +160,13 @@ public abstract class BaseServerCore<
         this.nameCache.saveCache();
         this.areaManager.saveAllAreas();
         this.flagManager.saveFlags();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Utilities
+    public MusicInstance instantiate(Music music) {
+        return new MusicInstance(music, localOnlyMusicProvider, musicInfoCache);
     }
 
 

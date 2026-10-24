@@ -38,14 +38,14 @@ public class RenderHandler
         poseStack.pushPose();
         poseStack.translate(-viewFrom.x, -viewFrom.y, -viewFrom.z);
 
-        renderer.setup(poseStack.last(), event.getFrustum());
+        renderer.setup(poseStack, event.getFrustum());
         renderer.tickAndRender(viewFrom, event.getCamera().getXRot(), event.getCamera().getYRot());
 
         poseStack.popPose();
     }
 
     public static void renderAreaOverlay(ForgeGui ignored1, GuiGraphics guiGraphics, float ignored2, int screenWidth, int screenHeight) {
-        renderer.setup(guiGraphics.pose().last(), null);
+        renderer.setup(guiGraphics.pose(), null);
         renderer.renderAreaInfoOverlay(screenWidth, screenHeight);
     }
 }

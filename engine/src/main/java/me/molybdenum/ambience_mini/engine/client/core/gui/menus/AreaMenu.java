@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.engine.client.core.gui.menus;
 
 import me.molybdenum.ambience_mini.engine.client.core.gui.base.AmMenu;
 import me.molybdenum.ambience_mini.engine.client.core.gui.base.McScreenBuilder;
-import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.*;
+import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.general.*;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
@@ -64,18 +64,19 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
         panel.backgroundColor = Color.BLACK_128;
 
         // Area name
-        int paddedLineHeight = drawer.getLineHeight() + 8;
+        int paddedLineHeight = tools.getLineHeight() + 8;
 
         String areaNameString = notification.translateFromKey(AmLang.STRING_AREA_NAME);
-        Label lblAreaName = panel.addWidget(new Label(MENU_INNER_MARGIN, MENU_INNER_MARGIN, drawer.getTextWidth(areaNameString), paddedLineHeight, areaNameString));
+        Label lblAreaName = panel.addWidget(new Label(MENU_INNER_MARGIN, MENU_INNER_MARGIN, tools.getTextWidth(areaNameString), paddedLineHeight, areaNameString));
         txtAreaName = panel.addWidget(new Textbox(lblAreaName.right() + BASE_SEPARATION, MENU_INNER_MARGIN, 0, paddedLineHeight)); // Width later
+        txtAreaName.setMaxLength(Constants.MAX_AREA_NAME_LENGTH);
         txtAreaName.setText(area.name);
 
         // Ownership and sharing
         String ownershipString = notification.translateFromKey(AmLang.STRING_OWNERSHIP_AND_SHARING);
         Label lblOwnership = panel.addWidget(new Label(
                 MENU_INNER_MARGIN, lblAreaName.bottom() + BASE_SEPARATION*4,
-                drawer.getTextWidth(ownershipString), paddedLineHeight,
+                tools.getTextWidth(ownershipString), paddedLineHeight,
                 ownershipString
         ));
 
@@ -86,22 +87,22 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
         var radioGroup = RadioButton.newGroup();
 
         RadioButton rdbPrivate = panel.addWidget(new RadioButton(
-                MENU_INNER_MARGIN, radioY, notification.translateFromKey(AmLang.STRING_PRIVATE), radioGroup, drawer
+                MENU_INNER_MARGIN, radioY, notification.translateFromKey(AmLang.STRING_PRIVATE), radioGroup
         ));
         rdbPrivate.setSelected((isNew || area.owner.isPrivate()) && areasEnabled);
 
         rdbShared = panel.addWidget(new RadioButton(
-                MENU_INNER_MARGIN + rdbPrivate.right() + BASE_SEPARATION, radioY, notification.translateFromKey(AmLang.STRING_SHARED), radioGroup, drawer
+                MENU_INNER_MARGIN + rdbPrivate.right() + BASE_SEPARATION, radioY, notification.translateFromKey(AmLang.STRING_SHARED), radioGroup
         ));
         rdbShared.setSelected(area.owner.isShared() && areasEnabled);
 
         rdbPublic = panel.addWidget(new RadioButton(
-                MENU_INNER_MARGIN + rdbShared.right() + BASE_SEPARATION, radioY, notification.translateFromKey(AmLang.STRING_PUBLIC), radioGroup, drawer
+                MENU_INNER_MARGIN + rdbShared.right() + BASE_SEPARATION, radioY, notification.translateFromKey(AmLang.STRING_PUBLIC), radioGroup
         ));
         rdbPublic.setSelected(area.owner.isPublic() && areasEnabled);
 
         rdbLocal = panel.addWidget(new RadioButton(
-                MENU_INNER_MARGIN + rdbPublic.right() + BASE_SEPARATION, radioY, notification.translateFromKey(AmLang.STRING_LOCAL), radioGroup, drawer
+                MENU_INNER_MARGIN + rdbPublic.right() + BASE_SEPARATION, radioY, notification.translateFromKey(AmLang.STRING_LOCAL), radioGroup
         ));
         rdbLocal.setSelected(area.owner.isLocal() || !areasEnabled);
 
@@ -110,17 +111,17 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
         int buttonY = rdbPrivate.bottom() + BASE_SEPARATION*4;
 
         String confirmString = notification.translateFromKey(AmLang.STRING_SAVE);
-        Button btnSave = panel.addWidget(new Button(MENU_INNER_MARGIN, buttonY, drawer.getTextWidth(confirmString) + 20, BUTTON_HEIGHT, confirmString, this::onConfirmClicked));
+        Button btnSave = panel.addWidget(new Button(MENU_INNER_MARGIN, buttonY, tools.getTextWidth(confirmString) + 20, BUTTON_HEIGHT, confirmString, this::onConfirmClicked));
 
         String cancelString = notification.translateFromKey(AmLang.STRING_CANCEL);
-        Button btnCancel = panel.addWidget(new Button(MENU_INNER_MARGIN + btnSave.right(), buttonY, drawer.getTextWidth(cancelString) + 20, BUTTON_HEIGHT, cancelString, this::onCancelClicked));
+        Button btnCancel = panel.addWidget(new Button(MENU_INNER_MARGIN + btnSave.right(), buttonY, tools.getTextWidth(cancelString) + 20, BUTTON_HEIGHT, cancelString, this::onCancelClicked));
 
         String editBoundsString = notification.translateFromKey(AmLang.STRING_EDIT_BOUNDS);
-        Button btnEditBounds = panel.addWidget(new Button(MENU_INNER_MARGIN + btnCancel.right(), buttonY, drawer.getTextWidth(editBoundsString) + 20, BUTTON_HEIGHT, editBoundsString, this::onEditBoundsClicked));
+        Button btnEditBounds = panel.addWidget(new Button(MENU_INNER_MARGIN + btnCancel.right(), buttonY, tools.getTextWidth(editBoundsString) + 20, BUTTON_HEIGHT, editBoundsString, this::onEditBoundsClicked));
 
         deleteString = notification.translateFromKey(AmLang.STRING_DELETE);
         confirmDeleteString = notification.translateFromKey(AmLang.STRING_CONFIRM_DELETE);
-        btnDelete = panel.addWidget(new Button(MENU_INNER_MARGIN + btnEditBounds.right(), buttonY, drawer.getTextWidth(confirmDeleteString) + 20, BUTTON_HEIGHT, deleteString, this::onDeleteClicked));
+        btnDelete = area.isNew() ? null : panel.addWidget(new Button(MENU_INNER_MARGIN + btnEditBounds.right(), buttonY, tools.getTextWidth(confirmDeleteString) + 20, BUTTON_HEIGHT, deleteString, this::onDeleteClicked));
 
 
         // Final sizing
@@ -136,6 +137,9 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
         panel.x = (screen.screenWidth() - panel.width)/2;
         panel.y = (screen.screenHeight() - panel.height)/2;
     }
+
+    @Override
+    public void tick() { }
 
     @Override
     public void onClose() {
@@ -200,7 +204,7 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
             );
         }
         else {
-            btnDelete.text = confirmDeleteString;
+            btnDelete.setText(confirmDeleteString);
             confirmingDelete = true;
         }
     }
@@ -222,6 +226,6 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
 
     private void resetDelete() {
         confirmingDelete = false;
-        btnDelete.text = deleteString;
+        btnDelete.setText(deleteString);
     }
 }

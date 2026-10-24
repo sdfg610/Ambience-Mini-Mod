@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.render.areas;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.gui.BaseGuiTools;
 import me.molybdenum.ambience_mini.engine.client.core.gui.menus.AreaMenu;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
@@ -34,6 +35,8 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos>
     private static final int LINE_SEP = 2;
 
     private static final double ALPHA_MOD_NON_SELECTED = .5;
+
+    private static final BaseGuiTools tools = BaseGuiTools.get();
 
     // Core modules
     private ClientNameCache nameCache;
@@ -397,14 +400,14 @@ public abstract class BaseAreaRenderer<TVec3, TBlockPos>
     // Overlay rendering
     public void renderAreaInfoOverlay(int screenWidth, int screenHeight) {
         if (lookingAtArea != null) {
-            int lineHeight = baseDrawer.getLineHeight();
+            int lineHeight = tools.getLineHeight();
 
             String name = "Name: " + lookingAtArea.name;
             String owner = "Owner: " + lookingAtArea.owner.match(
                     owned -> nameCache.getPlayerName(owned.playerUUID) + (owned.isShared ? " (shared)" : " (private)"),
                     ownerless -> "None " + (ownerless.isLocal ? "(local)" : "(public)")
             );
-            int textWidth = Integer.max(baseDrawer.getTextWidth(name), baseDrawer.getTextWidth(owner));
+            int textWidth = Integer.max(tools.getTextWidth(name), tools.getTextWidth(owner));
             int textHeight = lineHeight * 2 + LINE_SEP;
 
             int boxWidth = textWidth + (TEXT_MARGIN * 2);

@@ -13,7 +13,6 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 @EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class ClientCombatHandler
 {
-    private static Minecraft mc = Minecraft.getInstance();
     private static CombatState combat;
 
 

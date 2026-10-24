@@ -119,28 +119,6 @@ public class Drawer extends BaseDrawer<PoseStack>
     }
 
 
-
-    @Override
-    public int getTextWidth(String text) {
-        return mc.font.width(text);
-    }
-
-    @Override
-    public int getLineHeight() {
-        return mc.font.lineHeight;
-    }
-
-    @Override
-    public String headSubstringByWidth(String str, int width) {
-        return mc.font.plainSubstrByWidth(str, width);
-    }
-
-    @Override
-    public String tailSubstringByWidth(String str, int width) {
-        return mc.font.plainSubstrByWidth(str, width, true);
-    }
-
-
     // -----------------------------------------------------------------------------------------------------------------
     // Cropping
     @Override
@@ -169,6 +147,9 @@ public class Drawer extends BaseDrawer<PoseStack>
         poseStack.popPose();
     }
 
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Scaling
     @Override
     protected double getGuiScale() {
         return Minecraft.getInstance().getWindow().getGuiScale();

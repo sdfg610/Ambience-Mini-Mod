@@ -1,18 +1,22 @@
 package me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets;
 
+import me.molybdenum.ambience_mini.engine.client.core.gui.BaseGuiTools;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 
 public abstract class AmWidget
 {
+    protected static final BaseGuiTools tools = BaseGuiTools.get();
+
     public int x;
     public int y;
     public int width;
     public int height;
 
-    private boolean focused;
-    private boolean enabled = true;
+    protected boolean focused;
+    protected boolean enabled = true;
+    protected boolean visible = true;
 
 
     public AmWidget(int x, int y, int width, int height) {
@@ -51,10 +55,22 @@ public abstract class AmWidget
     }
 
 
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+
     public abstract void render(BaseDrawer<?> drawer, int mouseX, int mouseY);
 
-    public AmWidget mousePressed(BaseDrawer<?> drawer, double mouseX, double mouseY, int mouseKeyIndex) { return null; }
-    public boolean keyPressed(BaseDrawer<?> drawer, int keyIndex) { return false; }
+    public AmWidget mousePressed(double mouseX, double mouseY, int mouseKeyIndex) { return null; }
+    public boolean mouseReleased(double mouseX, double mouseY, int mouseKeyIndex) { return false; }
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaY) { return false; }
+
+    public boolean keyPressed(int keyIndex) { return false; }
     public boolean charTyped(char ch) { return false; }
 
 
@@ -66,6 +82,16 @@ public abstract class AmWidget
 
     public boolean isMouseOver(double mouseX, double mouseY, int paddingX, int paddingY) {
         return x+paddingX <= mouseX && mouseX < x+width-paddingX && y+paddingY <= mouseY && mouseY < y+height-paddingY;
+    }
+
+    public static boolean isMouseOver(double mouseX, double mouseY, int x1, int y1, int x2, int y2) {
+        return x1 <= mouseX && mouseX <= x2 && y1 <= mouseY && mouseY <= y2;
+    }
+
+
+    public void autoCenter(int parentWidth, int parentHeight) {
+        x = (parentWidth-width)/2;
+        y = (parentHeight-height)/2;
     }
 
 

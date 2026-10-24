@@ -1,15 +1,17 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfo;
 import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.jetbrains.annotations.Nullable;
-import org.jflac_am_custom.FLACDecoder;
-import org.jflac_am_custom.frame.Frame;
-import org.jflac_am_custom.metadata.Metadata;
-import org.jflac_am_custom.metadata.StreamInfo;
-import org.jflac_am_custom.metadata.VorbisComment;
-import org.jflac_am_custom.util.ByteData;
+import me.molybdenum.ambience_mini.deps.jflac.FLACDecoder;
+import me.molybdenum.ambience_mini.deps.jflac.frame.Frame;
+import me.molybdenum.ambience_mini.deps.jflac.metadata.Metadata;
+import me.molybdenum.ambience_mini.deps.jflac.metadata.StreamInfo;
+import me.molybdenum.ambience_mini.deps.jflac.metadata.VorbisComment;
+import me.molybdenum.ambience_mini.deps.jflac.util.ByteData;
 import org.lwjgl.BufferUtils;
 
 import javax.sound.sampled.AudioFormat;
@@ -33,36 +35,18 @@ public class FlacDecoder extends AmDecoder
     private final FLACDecoder decoder;
     private final AudioFormat format;
 
-    private final long loopStart;
-    private final long loopEnd;
-
-
     public FlacDecoder(MusicInstance mInst) {
-        super(mInst.music(), new Deferred<>());
+        super(mInst);
         try {
-            boolean doLoop = mInst.music().doLoop();
-
-            this.stream = ensureLoopableIfNeeded(mInst.createStream(), doLoop);
+            this.stream = ensureLoopableIfNeeded(mInst.createStream(), mInst.music.doLoop());
             this.decoder = new FLACDecoder(stream);
 
-            Metadata[] metadata = decoder.readMetadata();
-            tagReader.set(new FlacTagReader(getTags(metadata), mInst.music()));
-
-            StreamInfo streamInfo = getStreamInfo(metadata);
+            StreamInfo streamInfo = getStreamInfo(decoder.readMetadata());
             format = streamInfo.getAudioFormat();
-            sampleByteSize = (streamInfo.getBitsPerSample() / 8) * streamInfo.getChannels();
             maxFrameSize = streamInfo.getMaxFrameSize();
 
-            int maxFrameByteSize = maxFrameSize * sampleByteSize;
-            buffer = new byte[BUFFER_SIZE + 2*maxFrameByteSize];
-
-            if (doLoop) {
-                var startAndEnd = tagReader.get().getLoopStartAndEnd();
-                loopStart = startAndEnd.left();
-                loopEnd = startAndEnd.right();
-            }
-            else
-                loopStart = loopEnd = Long.MAX_VALUE;
+            sampleByteSize = info.getBytesInSample();
+            buffer = new byte[BUFFER_SIZE + 2*(maxFrameSize * sampleByteSize)];
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -74,6 +58,25 @@ public class FlacDecoder extends AmDecoder
                 : stream;
     }
 
+
+    public static MusicInfo getMusicInfo(MusicInstance inst) {
+        try (var stream = inst.createStream()) {
+            var metadata = new FLACDecoder(stream).readMetadata();
+            var streamInfo = getStreamInfo(metadata);
+            var comment = getTags(metadata);
+
+            var bytesInSample = (streamInfo.getBitsPerSample() / 8) * streamInfo.getChannels();
+            return new MusicInfo(
+                    tryGetTag("title", comment), tryGetTag("artist", comment),
+                    streamInfo.getSampleRate(), bytesInSample, streamInfo.getTotalSamples(),
+                    Utils.tryParseLong(tryGetTag("loopstart", comment)),
+                    Utils.tryParseLong(tryGetTag("loopend", comment)),
+                    Utils.tryParseLong(tryGetTag("looplength", comment))
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private static StreamInfo getStreamInfo(Metadata[] metadata) {
         for (Metadata meta : metadata)
@@ -87,6 +90,10 @@ public class FlacDecoder extends AmDecoder
             if (meta instanceof VorbisComment comment)
                 return comment;
         throw new RuntimeException("Malformed flac file: Comment metadata block missing");
+    }
+
+    private static String tryGetTag(String key, VorbisComment comment) {
+        return Arrays.stream(comment.getCommentByName(key)).findFirst().orElse(null);
     }
 
 
@@ -147,49 +154,13 @@ public class FlacDecoder extends AmDecoder
         return true;
     }
 
+
     @Override
     public void close() {
         try {
             stream.close();
         } catch (IOException ignored) {
             // ignored
-        }
-    }
-
-
-    private static class FlacTagReader extends TagReader {
-        private final VorbisComment comment;
-
-
-        private FlacTagReader(VorbisComment comment, Music music) {
-            super(music);
-            this.comment = comment;
-        }
-
-
-        @Override
-        public @Nullable String getLoopStartStr() {
-            return Arrays.stream(comment.getCommentByName("loopstart")).findFirst().orElse(null);
-        }
-
-        @Override
-        public @Nullable String getLoopEndStr() {
-            return Arrays.stream(comment.getCommentByName("loopend")).findFirst().orElse(null);
-        }
-
-        @Override
-        public @Nullable String getLoopLengthStr() {
-            return Arrays.stream(comment.getCommentByName("looplength")).findFirst().orElse(null);
-        }
-
-        @Override
-        public @Nullable String getTitle() {
-            return Arrays.stream(comment.getCommentByName("title")).findFirst().orElse(null);
-        }
-
-        @Override
-        public @Nullable String getAuthor() {
-            return Arrays.stream(comment.getCommentByName("artist")).findFirst().orElse(null);
         }
     }
 }

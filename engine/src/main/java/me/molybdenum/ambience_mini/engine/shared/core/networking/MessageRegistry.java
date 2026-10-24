@@ -73,6 +73,7 @@ public class MessageRegistry {
         registerMessage(70, RequestServerPlaylistInfoMessage::new, RequestServerPlaylistInfoMessage.class); // 2.8.0
         registerMessage(71, RequestServerPlaylistChunkMessage::new, RequestServerPlaylistChunkMessage.class); // 2.8.0
         registerMessage(72, RequestMusicChunkMessage::new, RequestMusicChunkMessage.class); // 2.8.0
+        registerMessage(73, RequestServerMusicInfoMessage::new, RequestServerMusicInfoMessage.class); // 2.8.0
     }
 
     private static <T extends AmMessage> void registerMessage(int id, Function<AmReader, T> create, Class<T> clazz) {

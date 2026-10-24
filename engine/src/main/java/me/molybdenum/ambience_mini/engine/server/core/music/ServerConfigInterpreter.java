@@ -5,11 +5,10 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.BaseI
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.Config;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.server_playlists.PlaylistInstance;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.server_playlists.ServerPlaylists;
-import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.VariableEnv;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.PlaylistVal;
-import me.molybdenum.ambience_mini.engine.shared.music.music_dto.MusicDTO;
-import me.molybdenum.ambience_mini.engine.shared.music.music_dto.PlaylistDTO;
-import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.DTOs.music.MusicDTO;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.DTOs.music.PlaylistDTO;
+import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;

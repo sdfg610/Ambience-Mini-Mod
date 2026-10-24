@@ -1,11 +1,16 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
-import com.jcraft_am_custom.jorbis.*;
+import me.molybdenum.ambience_mini.deps.jcraft.jorbis.Comment;
+import me.molybdenum.ambience_mini.deps.jcraft.jorbis.Info;
+import me.molybdenum.ambience_mini.deps.jcraft.jorbis.JOrbisException;
+import me.molybdenum.ambience_mini.deps.jcraft.jorbis.VorbisFile;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
-import me.molybdenum.ambience_mini.engine.shared.music.streams.FullyBufferedInputStream;
-import me.molybdenum.ambience_mini.engine.shared.music.streams.StreamPreAllocBuffer;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfo;
+import me.molybdenum.ambience_mini.engine.shared.core.music.streams.FullyBufferedInputStream;
+import me.molybdenum.ambience_mini.engine.shared.core.music.streams.StreamPreAllocBuffer;
 import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.BufferUtils;
 
@@ -25,30 +30,17 @@ public class OggDecoder extends AmDecoder
     private final VorbisFile file;
     private final AudioFormat format;
 
-    private final long loopStart;
-    private final long loopEnd;
     private final int sampleByteSize;
 
 
-    public OggDecoder(MusicInstance mInst) {
-        super(mInst.music(), new Deferred<>());
+    public OggDecoder(MusicInstance inst) {
+        super(inst);
         try {
-            boolean doLoop = mInst.music().doLoop();
-
             // Thanks to: https://github.com/tulskiy/musique/blob/master/musique-core/src/main/java/com/tulskiy/musique/audio/formats/ogg/VorbisDecoder.java
-            file = new VorbisFile(ensureLoopableIfNeeded(mInst.createStream(), mInst.getMusicSize(), doLoop));
+            file = new VorbisFile(ensureLoopableIfNeeded(inst.createStream(), inst.getMusicSize(), inst.music.doLoop()));
             Info info = file.getInfo()[0];
-            format = new AudioFormat(info.rate, 16, info.channels, true, false);
             sampleByteSize = 2 * info.channels;
-            tagReader.set(new OggTagReader(file.getComment(), mInst.music()));
-
-            if (doLoop) {
-                var startAndEnd = tagReader.get().getLoopStartAndEnd();
-                loopStart = startAndEnd.left();
-                loopEnd = startAndEnd.right();
-            }
-            else
-                loopStart = loopEnd = Long.MAX_VALUE;
+            format = new AudioFormat(info.rate, 16, info.channels, true, false);
         } catch (IOException | JOrbisException e) {
             throw new RuntimeException(e);
         }
@@ -97,61 +89,49 @@ public class OggDecoder extends AmDecoder
     }
 
 
+    public static MusicInfo getMusicInfo(MusicInstance inst) {
+        try (var stream = inst.createStream()) {
+            var file = new VorbisFile(stream);
+            var fileInfo = file.getInfo()[0];
+
+            int sampleByteSize = 2 * fileInfo.channels;
+            int readSize = sampleByteSize * VorbisFile.CHUNKSIZE;
+
+            byte[] buf = new byte[readSize];
+            int len;
+            long samples = 0;
+            while ((len = file.read(buf, readSize)) != 0 && !Thread.interrupted())
+                samples += len / sampleByteSize;
+
+            var comments = file.getComment();
+            return new MusicInfo(
+                    getByKey("title", comments), getByKey("artist", comments),
+                    fileInfo.rate, sampleByteSize, samples,
+                    Utils.tryParseLong(getByKey("loopstart", comments)),
+                    Utils.tryParseLong(getByKey("loopend", comments)),
+                    Utils.tryParseLong(getByKey("looplength", comments))
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String getByKey(String key, Comment[] comment) {
+        for (var com : comment) {
+            String value = com.getComment(key);
+            if (value != null)
+                return value;
+        }
+        return null;
+    }
+
+
     @Override
     public void close() {
         try {
             file.close();
         } catch (IOException ignored) {
             // ignored
-        }
-    }
-
-
-    private static class OggTagReader extends TagReader {
-        private final Comment[] comment;
-
-
-        private OggTagReader(Comment[] comment, Music music) {
-            super(music);
-            if (comment.length == 0)
-                throw new RuntimeException("Ogg file has no comment, but comments are needed to get looping info!");
-            this.comment = comment;
-        }
-
-
-        @Override
-        public String getLoopStartStr() {
-            return getByKey("loopstart");
-        }
-
-        @Override
-        public String getLoopEndStr() {
-            return getByKey("loopend");
-        }
-
-        @Override
-        public String getLoopLengthStr() {
-            return getByKey("looplength");
-        }
-
-        @Override
-        public @Nullable String getTitle() {
-            return getByKey("title");
-        }
-
-        @Override
-        public @Nullable String getAuthor() {
-            return getByKey("artist");
-        }
-
-
-        private String getByKey(String key) {
-            for (var com : comment) {
-                String value = com.getComment(key);
-                if (value != null)
-                    return value;
-            }
-            return null;
         }
     }
 }

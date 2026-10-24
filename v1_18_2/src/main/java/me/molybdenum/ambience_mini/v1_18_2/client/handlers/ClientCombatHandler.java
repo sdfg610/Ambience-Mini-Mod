@@ -14,7 +14,6 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = Constants.MOD_ID, value = Dist.CLIENT)
 public class ClientCombatHandler
 {
-    private static final Minecraft mc = Minecraft.getInstance();
     private static CombatState combat;
 
 

@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.shared.jobs;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
 
 public class JobCenter {
@@ -16,8 +17,20 @@ public class JobCenter {
         return new JobCenter(Executors.newSingleThreadScheduledExecutor());
     }
 
-    public static JobCenter pooled(int corePoolSize) {
-        return new JobCenter(Executors.newScheduledThreadPool(corePoolSize));
+    public static JobCenter fixed(int poolSize) {
+        return new JobCenter(Executors.newScheduledThreadPool(poolSize));
+    }
+
+    public static JobCenter variable(int maxPoolSize) {
+        var scheduledExecutor = new ScheduledThreadPoolExecutor(maxPoolSize);
+        scheduledExecutor.setKeepAliveTime(10, TimeUnit.SECONDS);
+        scheduledExecutor.allowCoreThreadTimeOut(true);
+        return new JobCenter(scheduledExecutor);
+    }
+
+
+    public synchronized List<Job> getJobs() {
+        return new ArrayList<>(jobs);
     }
 
 
@@ -91,7 +104,7 @@ public class JobCenter {
     public abstract static class Job {
         private JobCenter jobCenter;
         private Future<?> future;
-        private byte state = 0; // Bit 0 : canceled  ,  bit 1 : terminated
+        private boolean cancelled;
 
 
         private synchronized void bind(JobCenter jobCenter, Future<?> future) {
@@ -108,20 +121,16 @@ public class JobCenter {
 
 
         public synchronized void cancel(boolean mayInterruptIfRunning) {
-            if (state == 0) {
+            if (!cancelled) {
                 jobCenter.removeJob(this);
                 future.cancel(mayInterruptIfRunning);
-                state |= 0b1;
+                cancelled = true;
             }
         }
 
         @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-        public synchronized boolean isCancelled() {
-            return (state & 0b1) != 0;
-        }
-
-        public synchronized boolean isTerminated() {
-            return (state & 0b10) != 0;
+        public boolean isCancelled() {
+            return cancelled;
         }
 
 

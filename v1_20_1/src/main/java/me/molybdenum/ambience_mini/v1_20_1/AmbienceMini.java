@@ -2,11 +2,14 @@ package me.molybdenum.ambience_mini.v1_20_1;
 
 import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
+import me.molybdenum.ambience_mini.engine.client.core.gui.BaseGuiTools;
 import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.ClientCore;
+import me.molybdenum.ambience_mini.v1_20_1.client.core.gui.GuiTools;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.render.drawer.Drawer;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.setup.ClientConfig;
@@ -64,6 +67,8 @@ public class AmbienceMini extends BaseAmbienceMini
     // Common
     public static final Logger LOGGER = LogUtils.getLogger();
 
+    private static final MusicInfoCache musicInfoCache = new MusicInfoCache();
+
     // Client
     private static ClientConfig clientConfig;
     private static KeyBindings keyBindings;
@@ -88,6 +93,8 @@ public class AmbienceMini extends BaseAmbienceMini
         serverConfig = new ServerConfig(context);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
+            BaseGuiTools.init(GuiTools::new);
+
             clientConfig = new ClientConfig(context);
             modBus.addListener(AmbienceMini::registerGuiOverlays);
             modBus.addListener(AmbienceMini::registerKeybindings);
@@ -119,7 +126,8 @@ public class AmbienceMini extends BaseAmbienceMini
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
                     new FlagCache(), new ServerMusicCache(),
                     new ServerSetup(), clientConfig, keyBindings,
-                    new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
+                    new PlayerState(), new LevelState(), new ScreenState(), new CombatState(),
+                    musicInfoCache
             );
 
             fireClientCoreInit();
@@ -161,6 +169,7 @@ public class AmbienceMini extends BaseAmbienceMini
                 new StructureReader(event.getServer(), serverConfig),
                 new FlagManager(),
                 new ServerMusicManager(),
+                musicInfoCache,
                 new ServerNetworkManager()
         );
         serverCore.init();

@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.List;
 
+import static me.molybdenum.ambience_mini.engine.shared.Constants.BYTES_IN_MEGABYTE;
+
 public class Utils {
     public static String padToLength(String str, int length) {
         return String.format("%-" + length + "s", str);
@@ -118,5 +120,19 @@ public class Utils {
     public static int floor(double value) {
         int i = (int)value;
         return value < (double)i ? i - 1 : i;
+    }
+
+
+    public static String bytesToMB(int bytes) {
+        return String.format("%.2f MB", (double)bytes / BYTES_IN_MEGABYTE);
+    }
+
+
+    public static Long tryParseLong(String str) {
+        try {
+            return str == null ? null : Long.parseLong(str);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 }

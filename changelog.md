@@ -1,7 +1,7 @@
 
 ### Version 2.8.0:
 
-A huge update is upon us! 
+A new update is upon us and it is huge! 
 
 **Server-located playlists and music:**
 - Added property `$server_playlists` to the configuration language which is a map from strings (playlist names) to playlists with music located on the server.
@@ -12,18 +12,25 @@ A huge update is upon us!
 
 **Configuration language:**
 - In addition to playlists in the beginning of `music_conig.txt`, you can now define global constants of any type, e.g. `int horde_fight_threshold = 5;`.
-- The playlist given to `play` commands can now evaluate to `undefined` (e.g., `play $server_playlists["non_existent_playlist"];`), in which case the currently playing music (or silence) continues like when no `play` command is hit.
-  * You can now use `play ifdef PLAYLIST;` to continue past the `play` command in case `PLAYLIST` is undefined.
-- The "`+`" operator now works between strings (as well as numbers). Use "`++`" between playlists.
-- Added null/undefined-check operator `??`. 
 - Right after the playlists and global constants, you can now configure the playlists that the server should make available using [the `serve_playlists` keyword](link to wiki).
+- The playlist given to `play` commands can now be `undefined` (e.g., `play $server_playlists["non_existent_playlist"];`), in which case the currently playing music (or silence) continues like when no `play` command is hit.
+  * You can now use `play ifdef PLAYLIST;` to continue past the `play` command in case `PLAYLIST` is `undefined`.
+- The "`+`" operator now works between strings (as well as numbers). Use "`++`" between playlists.
+- Added undefined-check operator `??`. E.g., `(undefined ?? 42) == 42` 
 - You can now manually specify loop intervals in the music config. For example `"music.wav"<loopstart=1000, loopend=9001>`. A `looplength` flag is also available.
-- Upon loading a music configuration, the mod now pre-computes all constant expressions/values to improve performance. This also allows validating that certain constant values are sensible (e.g., one cannot have `loopstart=-1`).
+- All constant expressions/values in music configs are now pre-computed on load to improve performance.
+
+**Menus and keybindings:**
+- Removed keybindings for "play/pause" (default: `END`) and "reload music player" (default: `P`).
+- Added an "Ambience Mini Main Menu" for controlling the mod (opened by pressing `END` by default).
+  * Tab1: View current music and playlist. Control the music player (play/pause, reload, select music from current playlist, etc.).
+  * Tab2: View the currently cached server music including memory consumption.
+- You now need to click the "Delete" button twice (instead of only once) in the area-menu to actually delete the area.
+- Pressing the "Cancel" keybind when in "edit area bounds"-mode now returns you to the area menu instead of cancelling everything.
+- Architectural and graphical improvements the menus.
 
 **Events and Properties:**
 - Added a `$nearby_living` property which lists the types and (max) health of all nearby living entities.
-
-**Menu detection:**
 - Added `$screen_id` property to get the id (fully qualified class name) of the currently open screen (e.g., title screen, pause screen, etc.).
 - Added `$menu` property which represents a collection of screens under some menu name.
   * Current possible values are: `none` (current screen if any is not part of a menu collection), `main_menu`, `joining`, `disconnected`, `credits`, `death`, `pause` (distinct from `@paused` when the game is halted in singleplayer), `player_inventory`.
@@ -38,16 +45,15 @@ A huge update is upon us!
   * the interval for checking and de-allocating unused music-caches.
 - Added server-side mod options for enabling and disabling use of server flags, server areas, and the `$structure` property.
 
+**Music:**
+- Added support for `.wav` files.
+- Architectural improvements to music-configuration loading and execution.
+- Music metadata is now cached in a music pack to allow faster loading of such and to send metadata about server-music.
+
 **Miscellaneous:**
-- You now need to click the "Delete" button twice in the area-menu to actually delete the area.
-- Pressing "Cancel" when in "edit area bounds"-mode now returns you to the area menu instead of cancelling everything.
 - Minor improvements to output created by verbose mode.
 - Minor improvements to volume change handling.
 - Architectural improvements to message passing and handling between client and server.
-- Architectural improvements to music-configuration loading and execution.
-- Architectural improvements to menus/screens.
-- Added support for `.wav` files.
-  * Metadata is not supported, however, so you should use the new `loopstart` and similar music flags to configure looping for `.wav` files.
 - Various bug-fixes.
 
 ****

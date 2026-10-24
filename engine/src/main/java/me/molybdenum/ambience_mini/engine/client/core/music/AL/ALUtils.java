@@ -6,8 +6,7 @@ import javax.sound.sampled.AudioFormat;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.openal.AL10.*;
-import static org.lwjgl.openal.AL10.AL_FORMAT_MONO16;
-import static org.lwjgl.openal.AL10.AL_FORMAT_STEREO16;
+import static org.lwjgl.openal.AL11.*;
 
 
 public class ALUtils
@@ -45,6 +44,12 @@ public class ALUtils
         AL10.alSourceUnqueueBuffers(source, buffers);
         throwIfAlError();
         return buffers;
+    }
+
+    public static int getBufferSamplePosition(int source) {
+        int samples = AL10.alGetSourcei(source, AL_SAMPLE_OFFSET);
+        throwIfAlError();
+        return samples;
     }
 
 
@@ -95,9 +100,15 @@ public class ALUtils
         throwIfAlError();
     }
 
-    public static void deleteBuffers(int[] buffers) {
+    public static int deleteBuffers(int[] buffers) {
+        int dequeuedBytes = 0;
+        for (var buf : buffers) {
+            dequeuedBytes += AL10.alGetBufferi(buf, AL_SIZE);
+            throwIfAlError();
+        }
         AL10.alDeleteBuffers(buffers);
         throwIfAlError();
+        return dequeuedBytes;
     }
 
 

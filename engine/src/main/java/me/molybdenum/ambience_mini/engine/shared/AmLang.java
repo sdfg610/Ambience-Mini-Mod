@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.shared;
 
+import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.shared.utils.Text;
 
 public enum AmLang
@@ -8,9 +9,7 @@ public enum AmLang
     MOD_NAME("mod_name"),
 
     // Keys
-    KEY_RELOAD("key.reload"),
-    KEY_PLAY_PAUSE("key.play_pause"),
-    KEY_NEXT_MUSIC("key.next_music"),
+    KEY_OPEN_AM_MENU("key.open_am_menu"),
     KEY_PRINT_ALL("key.print_all"),
     KEY_TOGGLE_AREAS("key.toggle_areas"),
     KEY_AREA_CONFIRM("key.area_confirm"),
@@ -84,7 +83,18 @@ public enum AmLang
     STRING_CANCEL("string.cancel"),
     STRING_EDIT_BOUNDS("string.edit_bounds"),
     STRING_DELETE("string.delete"),
-    STRING_CONFIRM_DELETE("string.confirm_delete")
+    STRING_CONFIRM_DELETE("string.confirm_delete"),
+    STRING_RELOAD("string.reload"),
+    STRING_NONE("string.none"),
+    STRING_PLAY("string.play"),
+    STRING_PAUSE("string.pause"),
+    STRING_PICK_RANDOM("string.pick_random"),
+    STRING_BY_X("string.by_x", 1),  // Arg: Author name
+    STRING_LOADING("string.loading"),
+    STRING_TIME_X("string.time_x", 1),  // Arg: "mm:ss"
+    STRING_CLEAR_CACHE("string.clear_cache"),
+    STRING_MEMORY_USE("string.memory_use", 2),  // Args: "current", "max"
+    STRING_SIZE_X("string.size_x", 1),  // Arg: "size"
 
     ;
 
@@ -104,5 +114,9 @@ public enum AmLang
 
     public Text text(String... args) {
         return Text.ofTranslatable(this, args);
+    }
+
+    public String translate(Object... args) {
+        return BaseAmbienceMini.getBaseCore().notification.translateFromKeyAndArgs(this, args);
     }
 }

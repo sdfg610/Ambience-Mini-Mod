@@ -1,8 +1,9 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfo;
 import me.molybdenum.ambience_mini.engine.shared.utils.Deferred;
+import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sound.sampled.AudioFormat;
@@ -16,14 +17,34 @@ import java.util.function.Function;
 public abstract class AmDecoder {
     private static final AtomicBoolean isInitialized = new AtomicBoolean(false);
     private static final HashMap<String, Function<MusicInstance, AmDecoder>> FILETYPE_TO_DECODER = new HashMap<>();
+    private static final HashMap<String, Function<MusicInstance, MusicInfo>> FILETYPE_TO_INFO_READER = new HashMap<>();
 
-    protected final Music music;
-    protected final Deferred<TagReader> tagReader;
+    public final MusicInstance inst;
+    public final MusicInfo info;
+
+    protected final long loopStart;
+    protected final long loopEnd;
 
 
-    protected AmDecoder(Music music, Deferred<TagReader> tagReader) {
-        this.music = music;
-        this.tagReader = tagReader;
+    protected AmDecoder(MusicInstance inst) {
+        this.inst = inst;
+        this.info = inst.getMusicInfoBlocking();
+
+        if (inst.music.loop()) {
+            var startAndEnd = getLoopStartAndEnd();
+            loopStart = startAndEnd.left();
+            loopEnd = startAndEnd.right();
+        }
+        else
+            loopStart = loopEnd = Long.MAX_VALUE;
+    }
+
+    public long getLoopStart() {
+        return loopStart;
+    }
+
+    public long getLoopEnd() {
+        return loopEnd;
     }
 
 
@@ -37,30 +58,54 @@ public abstract class AmDecoder {
 
     // -----------------------------------------------------------------------------------------------------------------
     // Concrete API
-    public String getMusicPath() {
-        return music.path();
+    protected Pair<Long, Long> getLoopStartAndEnd()
+    {
+        Long loopStart = getIfNonNegativeOrElse(inst.music.loopstart(), info.getLoopStart());
+        if (loopStart == null)
+            throw new RuntimeException("No (valid) 'loopstart' tag in config or metadata.");
+        else if (loopStart < 0)
+            throw new RuntimeException("The 'loopstart' tag must be non-negative. Got: " + loopStart);
+
+        Long loopEnd = getIfNonNegativeOrElse(inst.music.loopend(), info.getLoopEnd());
+        Long loopLength = getIfNonNegativeOrElse(inst.music.looplength(), info.getLoopLength());
+        if (loopEnd != null) {
+            if (loopEnd <= loopStart)
+                throw new RuntimeException("The 'loopstart' tag must be less than the 'loopend' tag. Got: " + loopStart + " and " + loopEnd);
+        }
+        else if (loopLength != null) {
+            if (loopLength <= 0)
+                throw new RuntimeException("The 'looplength' tag must be positive. Got: " + loopLength);
+            loopEnd = loopStart + loopLength;
+        }
+        else
+            throw new RuntimeException("No (valid) 'loopend' or 'looplength' tag in config or metadata.");
+
+        return new Pair<>(loopStart, loopEnd);
     }
 
-    @Nullable
-    public String getMusicTitle() {
-        return tagReader.get().getTitle();
-    }
-
-    @Nullable
-    public String getMusicAuthor() {
-        return tagReader.get().getAuthor();
+    private static Long getIfNonNegativeOrElse(long fromMusic, Long fromInfo) {
+        return fromMusic >= 0 ? (Long)fromMusic : fromInfo;
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
     // Static API
-    public static AmDecoder of(MusicInstance mInst) {
+    public static AmDecoder decoderOf(MusicInstance inst) {
         init();
-        var constructor = FILETYPE_TO_DECODER.get(mInst.music().getExtension());
+        var constructor = FILETYPE_TO_DECODER.get(inst.music.getExtension());
         if (constructor != null)
-            return constructor.apply(mInst);
+            return constructor.apply(inst);
 
-        throw new RuntimeException("Unsupported file format '" + mInst.music().getExtension() + "'! How did this get through the semantic analysis? Or is there another bug?");
+        throw new RuntimeException("Unsupported file format '" + inst.music.getExtension() + "'! How did this get through the semantic analysis? Or is there another bug?");
+    }
+
+    public static MusicInfo infoOf(MusicInstance inst) {
+        init();
+        var reader = FILETYPE_TO_INFO_READER.get(inst.music.getExtension());
+        if (reader != null)
+            return reader.apply(inst);
+
+        throw new RuntimeException("Unsupported file format '" + inst.music.getExtension() + "'! How did this get through the semantic analysis? Or is there another bug?");
     }
 
     public static Set<String> getSupportedFileTypes() {
@@ -79,6 +124,11 @@ public abstract class AmDecoder {
             FILETYPE_TO_DECODER.put("flac", FlacDecoder::new);
             FILETYPE_TO_DECODER.put("ogg", OggDecoder::new);
             FILETYPE_TO_DECODER.put("wav", WaveDecoder::new);
+
+            FILETYPE_TO_INFO_READER.put("mp3", MP3Decoder::getMusicInfo);
+            FILETYPE_TO_INFO_READER.put("flac", FlacDecoder::getMusicInfo);
+            FILETYPE_TO_INFO_READER.put("ogg", OggDecoder::getMusicInfo);
+            FILETYPE_TO_INFO_READER.put("wav", WaveDecoder::getMusicInfo);
         }
     }
 }

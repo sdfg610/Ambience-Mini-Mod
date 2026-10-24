@@ -3,10 +3,10 @@ package me.molybdenum.ambience_mini.engine.server.core.music;
 import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
-import me.molybdenum.ambience_mini.engine.shared.music.music_dto.PlaylistDTO;
-import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
-import me.molybdenum.ambience_mini.engine.shared.music.streams.LazyPreAllocBuffer;
-import me.molybdenum.ambience_mini.engine.shared.music.streams.StreamPreAllocBuffer;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.DTOs.music.PlaylistDTO;
+import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.core.music.streams.LazyPreAllocBuffer;
+import me.molybdenum.ambience_mini.engine.shared.core.music.streams.StreamPreAllocBuffer;
 import me.molybdenum.ambience_mini.engine.shared.utils.Text;
 import me.molybdenum.ambience_mini.engine.shared.utils.results.TextResult;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+
+import static me.molybdenum.ambience_mini.engine.shared.Constants.BYTES_IN_MEGABYTE;
 
 public class ServerMusicManager
 {
@@ -49,7 +51,7 @@ public class ServerMusicManager
 
         this.logger = core.logger;
 
-        this.maxMemoryUsage = core.serverConfig.musicCacheMaxMemory.get() * 1_000_000; // "* 1_000_000" to get in bytes and not megabytes
+        this.maxMemoryUsage = core.serverConfig.musicCacheMaxMemory.get() * BYTES_IN_MEGABYTE; // MB to bytes
         this.unusedThresholdMillis = core.serverConfig.musicCacheUnusedThreshold.get();
         this.cleanupIntervalMillis = core.serverConfig.musicCacheCleanupInterval.get();
     }

@@ -5,6 +5,8 @@ import me.molybdenum.ambience_mini.engine.server.core.flags.FlagOperation;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaOperation;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.CreateAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
@@ -19,18 +21,19 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.GetNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.NeoGetNameCacheMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestMusicChunkMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerMusicInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerPlaylistChunkMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerPlaylistInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.GetStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
-import me.molybdenum.ambience_mini.engine.shared.features.Feature;
-import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.core.features.Feature;
+import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.helper.HelperWriter;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseServerNetworkManager<TServerPlayer>
@@ -102,6 +105,10 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
                 response = handleRequestServerPlaylistsChunkMessage(msg);
             else if (message instanceof RequestMusicChunkMessage msg)
                 response = handleRequestMusicChunkMessage(msg);
+            else if (message instanceof RequestServerMusicInfoMessage msg) {
+                handleRequestServerMusicInfoMessage(msg, sender);
+                response = null; // Delayed response.
+            }
 
             else {
                 core.logger.error("Server could not handle message of type '{}'", message.getClass().getName());
@@ -261,6 +268,17 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
 
         var chunkRes = core.musicManager.getMusicData(msg.musicPath, msg.offset, msg.length);
         return chunkRes.match(msg::succeedWith, msg::failWith);
+    }
+
+    private void handleRequestServerMusicInfoMessage(RequestServerMusicInfoMessage msg, TServerPlayer sender) {
+        core.musicInfoCache.getLocalMusicInfo(
+                core.instantiate(new Music(msg.path, false)),
+                musicInfo -> {
+                    var writer = new HelperWriter();
+                    writer.writeString(musicInfo.toJson("").toString());
+                    sendToPlayer(msg.succeedWith(writer.getBytes()), sender);
+                }
+        );
     }
 
 

@@ -2,9 +2,13 @@ package me.molybdenum.ambience_mini.v1_18_2.client.core;
 
 
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
+import me.molybdenum.ambience_mini.engine.client.core.gui.menus.MainMenu;
 import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
+import me.molybdenum.ambience_mini.v1_18_2.client.core.gui.AmScreen;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.render.area.AreaRenderer;
+import me.molybdenum.ambience_mini.v1_18_2.client.core.render.drawer.Drawer;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.setup.ClientConfig;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.setup.KeyBindings;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.state.CombatState;
@@ -29,6 +33,7 @@ import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
+
 public class ClientCore extends BaseClientCore<
         BlockPos, Vec3, BlockState, Entity, KeyMapping, Component,
         Notification, ClientNetworkManager, AreaRenderer, ClientConfig, KeyBindings, PlayerState, LevelState, ScreenState, CombatState>
@@ -52,9 +57,10 @@ public class ClientCore extends BaseClientCore<
             PlayerState playerState,
             LevelState levelState,
             ScreenState screenState,
-            CombatState combatState
+            CombatState combatState,
+            MusicInfoCache musicInfoCache
     ) {
-        super(McVersion.V1_18, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, musicCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
+        super(McVersion.V1_18, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, musicCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState, musicInfoCache);
     }
 
 
@@ -80,5 +86,10 @@ public class ClientCore extends BaseClientCore<
         }
 
         return name == null ? null : Utils.removeIllegalCharacters(name);
+    }
+
+    @Override
+    protected MainMenu<?> createMainMenu() {
+        return new MainMenu<>(new Drawer(), AmScreen::new, this);
     }
 }

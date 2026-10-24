@@ -1,7 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.setup;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.music.Monitor;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStateProvider;
 
@@ -11,9 +10,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
     @SuppressWarnings("rawtypes")
     private BaseClientCore core = null;
 
-    public TKeyBinding reloadKey;
-    public TKeyBinding playPauseKey;
-    public TKeyBinding nextMusicKey;
+    public TKeyBinding openAmMenu;
     public TKeyBinding printAllKey;
     public TKeyBinding toggleAreasKey;
     public TKeyBinding areaConfirmKey;
@@ -29,9 +26,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
 
     public void registerKeys() {
-        reloadKey = createAndRegister(AmLang.KEY_RELOAD, keyP());
-        playPauseKey = createAndRegister(AmLang.KEY_PLAY_PAUSE, keyEnd());
-        nextMusicKey = createAndRegister(AmLang.KEY_NEXT_MUSIC, keyPageUp());
+        openAmMenu = createAndRegister(AmLang.KEY_OPEN_AM_MENU, keyEnd());
         printAllKey = createAndRegister(AmLang.KEY_PRINT_ALL, keyPageDown());
         toggleAreasKey = createAndRegister(AmLang.KEY_TOGGLE_AREAS, keyHome());
         areaConfirmKey = createAndRegister(AmLang.KEY_AREA_CONFIRM, keyInsert());
@@ -39,9 +34,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
     }
 
 
-    protected abstract int keyP();
     protected abstract int keyEnd();
-    protected abstract int keyPageUp();
     protected abstract int keyPageDown();
     protected abstract int keyHome();
     protected abstract int keyInsert();
@@ -52,38 +45,12 @@ public abstract class BaseKeyBindings<TKeyBinding>
     protected abstract boolean isClicked(TKeyBinding binding);
 
     public abstract String getKeyString(TKeyBinding binding);
-    public String getReloadKeyString() {
-        return getKeyString(reloadKey);
-    }
 
 
     public void handleKeyInput()
     {
-        if (isClicked(reloadKey)) {
-            core.notification.showToast(AmLang.MSG_RELOAD);
-            Monitor.enableAutoRestart();
-            core.tryReloadMusicEngine();
-        }
-
-        if (isClicked(playPauseKey) && checkMonitorRunning()) {
-            var monitor = core.getMonitor();
-            if (monitor.isPaused()) {
-                core.notification.showToast(AmLang.MSG_RESUMING_MUSIC);
-                monitor.resume();
-            } else {
-                core.notification.showToast(AmLang.MSG_PAUSING_MUSIC);
-                monitor.pause();
-            }
-        }
-
-        if (isClicked(nextMusicKey) && checkMonitorRunning()) {
-            if (!core.clientConfig.printNowPlaying.get())
-                core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
-
-            var monitor = core.getMonitor();
-            monitor.forceSelectNewMusic();
-            monitor.resume();
-        }
+        if (isClicked(openAmMenu))
+            core.openMainMenu();
 
         if (isClicked(printAllKey)) {
             BaseGameStateProvider provider = core.getGameStateProvider();
@@ -112,12 +79,5 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
         if (isClicked(areaCancelKey))
             core.areaRenderer.registerCancel();
-    }
-
-    private boolean checkMonitorRunning() {
-        if (core.isMonitorRunning())
-            return true;
-        core.notification.showToast(AmLang.MSG_NOT_RUNNING);
-        return false;
     }
 }

@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.v1_21_1;
 
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
-import me.molybdenum.ambience_mini.engine.client.core.gui.BaseGuiSounds;
+import me.molybdenum.ambience_mini.engine.client.core.gui.BaseGuiTools;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
@@ -13,9 +13,10 @@ import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManage
 import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.ClientCore;
-import me.molybdenum.ambience_mini.v1_21_1.client.core.gui.GuiSounds;
+import me.molybdenum.ambience_mini.v1_21_1.client.core.gui.GuiTools;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.drawer.Drawer;
@@ -70,6 +71,8 @@ public class AmbienceMini extends BaseAmbienceMini
     // Common
     public static final Logger LOGGER = LogUtils.getLogger();
 
+    private static final MusicInfoCache musicInfoCache = new MusicInfoCache();
+
     // Client
     private static ClientConfig clientConfig;
     private static KeyBindings keyBindings;
@@ -96,7 +99,7 @@ public class AmbienceMini extends BaseAmbienceMini
         serverConfig = new ServerConfig(modContainer);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
-            BaseGuiSounds.init(GuiSounds::new);
+            BaseGuiTools.init(GuiTools::new);
 
             clientConfig = new ClientConfig(modContainer);
             modEventBus.addListener(AmbienceMini::registerGuiOverlays);
@@ -143,7 +146,8 @@ public class AmbienceMini extends BaseAmbienceMini
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
                     new FlagCache(), new ServerMusicCache(),
                     new ServerSetup(), clientConfig, keyBindings,
-                    new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
+                    new PlayerState(), new LevelState(), new ScreenState(), new CombatState(),
+                    musicInfoCache
             );
 
             fireClientCoreInit();
@@ -185,6 +189,7 @@ public class AmbienceMini extends BaseAmbienceMini
                 new StructureReader(event.getServer(), serverConfig),
                 new FlagManager(),
                 new ServerMusicManager(),
+                musicInfoCache,
                 new ServerNetworkManager()
         );
         serverCore.init();

@@ -18,6 +18,12 @@ public class BaseAmbienceMini
     protected static BaseClientCore baseCore;
 
 
+    @SuppressWarnings("rawtypes")
+    public static BaseClientCore getBaseCore() {
+        return baseCore;
+    }
+
+
     // Initialization listeners
     public static void registerOnClientCoreInitListener(Runnable callback) {
         synchronized (onClientCoreInitListeners) {
@@ -55,7 +61,7 @@ public class BaseAmbienceMini
 
 
     // Task execution
-    public static void executeAsync(Runnable task) {
+    public static void executeAsync(Runnable task) {  // TODO: Delete this function
         executor.submit(task);
     }
 }

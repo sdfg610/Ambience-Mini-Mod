@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
 import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.networking.ServerNetworkManager;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.setup.ServerConfig;
@@ -33,9 +34,10 @@ public class ServerCore extends BaseServerCore<
             StructureReader structureReader,
             FlagManager flagManager,
             ServerMusicManager musicManager,
+            MusicInfoCache musicInfoCache,
             ServerNetworkManager networkManager
     ) {
-        super(logger, nameCache, serverConfig, areaManager, structureReader, flagManager, musicManager, networkManager);
+        super(logger, nameCache, serverConfig, areaManager, structureReader, flagManager, musicManager, musicInfoCache, networkManager);
 
         this.server = server;
     }

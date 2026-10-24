@@ -1,0 +1,46 @@
+package me.molybdenum.ambience_mini.deps.jid3lib.id3;
+
+import me.molybdenum.ambience_mini.deps.jid3lib.InvalidTagException;
+import me.molybdenum.ambience_mini.deps.jid3lib.accessors.RandomAccessor;
+
+/**
+ * &nbsp;&nbsp; The 'Internet radio station owner' frame contains the name of the<br> &nbsp;&nbsp; owner of the internet
+ * radio station from which the audio is<br> &nbsp;&nbsp; streamed.</p>
+ *
+ * @author Eric Farng
+ * @version $Revision: 1.4 $
+ */
+public class FrameBodyTRSO extends AbstractFrameBodyTextInformation {
+
+    /**
+     * Creates a new FrameBodyTRSO object.
+     */
+    public FrameBodyTRSO() {
+        super();
+    }
+
+    /**
+     * Creates a new FrameBodyTRSO object.
+     */
+    public FrameBodyTRSO(final FrameBodyTRSO body) {
+        super(body);
+    }
+
+    /**
+     * Creates a new FrameBodyTRSO object.
+     */
+    public FrameBodyTRSO(final byte textEncoding, final String text) {
+        super(textEncoding, text);
+    }
+
+    /**
+     * Creates a new FrameBodyTRSO object.
+     */
+    public FrameBodyTRSO(final RandomAccessor file) throws java.io.IOException, InvalidTagException {
+        super(file);
+    }
+
+    public String getIdentifier() {
+        return "TRSO";
+    }
+}

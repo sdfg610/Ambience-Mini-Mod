@@ -2,8 +2,6 @@ package me.molybdenum.ambience_mini.v1_19_2.client.core.render.drawer;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Matrix3f;
-import com.mojang.math.Matrix4f;
 import me.molybdenum.ambience_mini.engine.client.core.render.Color;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.shared.Constants;
@@ -14,20 +12,18 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import org.lwjgl.opengl.GL11;
 
-public class Drawer extends BaseDrawer<PoseStack.Pose>
+public class Drawer extends BaseDrawer<PoseStack>
 {
     private final Minecraft mc = Minecraft.getInstance();
 
-    private Matrix4f pose;
-    private Matrix3f normal;
+    private PoseStack poseStack;
     private BufferBuilder builder = null;
     private MultiBufferSource.BufferSource buffer = null;
 
 
     @Override
-    public void setup(PoseStack.Pose pose) {
-        this.pose = pose.pose();
-        this.normal = pose.normal();
+    public void setup(PoseStack poseStack) {
+        this.poseStack = poseStack;
     }
 
 
@@ -48,15 +44,18 @@ public class Drawer extends BaseDrawer<PoseStack.Pose>
     }
 
     @Override
-    protected void drawLine(Vector3i first, Vector3i last, Color color, int alpha) {
+    protected void drawLine(Vector3i first, Vector3i last, Color color) {
         var size = getNormalSize(first, last);
+        var normal = poseStack.last().normal();
+        var pose = poseStack.last().pose();
+
         builder.vertex(pose, first.x(), first.y(), first.z())
-                .color(color.r, color.g, color.b, alpha)
+                .color(color.r, color.g, color.b, color.a)
                 .normal(normal, size.first(), size.second(), size.third())
                 .endVertex();
 
         builder.vertex(pose, last.x(), last.y(), last.z())
-                .color(color.r, color.g, color.b, alpha)
+                .color(color.r, color.g, color.b, color.a)
                 .normal(normal, size.first(), size.second(), size.third())
                 .endVertex();
     }
@@ -84,21 +83,23 @@ public class Drawer extends BaseDrawer<PoseStack.Pose>
     }
 
     @Override
-    protected void drawQuad(Vector3i p1, Vector3i p2, Vector3i p3, Vector3i p4, Color color, int alpha) {
+    protected void drawQuad(Vector3i p1, Vector3i p2, Vector3i p3, Vector3i p4, Color color) {
+        var pose = poseStack.last().pose();
+
         builder.vertex(pose, p1.x(), p1.y(), p1.z())
-                .color(color.r, color.g, color.b, alpha)
+                .color(color.r, color.g, color.b, color.a)
                 .endVertex();
 
         builder.vertex(pose, p2.x(), p2.y(), p2.z())
-                .color(color.r, color.g, color.b, alpha)
+                .color(color.r, color.g, color.b, color.a)
                 .endVertex();
 
         builder.vertex(pose, p3.x(), p3.y(), p3.z())
-                .color(color.r, color.g, color.b, alpha)
+                .color(color.r, color.g, color.b, color.a)
                 .endVertex();
 
         builder.vertex(pose, p4.x(), p4.y(), p4.z())
-                .color(color.r, color.g, color.b, alpha)
+                .color(color.r, color.g, color.b, color.a)
                 .endVertex();
     }
 
@@ -117,8 +118,8 @@ public class Drawer extends BaseDrawer<PoseStack.Pose>
     }
 
     @Override
-    protected void drawText(String text, Vector2i position, Color color, int alpha) {
-        mc.font.drawInBatch(text, (float)position.x(), (float)position.y(), color.toABGR32(alpha), false, pose, buffer, false, 0, 15728880);
+    protected void drawText(String text, Vector2i position, Color color) {
+        mc.font.drawInBatch(text, (float)position.x(), (float)position.y(), color.toABGR32(), false, poseStack.last().pose(), buffer, false, 0, 15728880);
     }
 
     @Override
@@ -128,14 +129,39 @@ public class Drawer extends BaseDrawer<PoseStack.Pose>
     }
 
 
-
+    // -----------------------------------------------------------------------------------------------------------------
+    // Cropping
     @Override
-    public int getTextWidth(String text) {
-        return mc.font.width(text);
+    protected void enableScissor(int x, int y, int width, int height) {
+        // Render system's y-coordinate is from bottom of the screen. Practically everything else measures y from the top.
+        var trueY = mc.getWindow().getHeight()-y-height;
+        RenderSystem.enableScissor(x, trueY, width, height);
     }
 
     @Override
-    public int getLineHeight() {
-        return mc.font.lineHeight;
+    protected void disableScissor() {
+        RenderSystem.disableScissor();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Offset
+    @Override
+    protected void pushOffset(float x, float y, float z) {
+        poseStack.pushPose();
+        poseStack.translate(x, y, z);
+    }
+
+    @Override
+    protected void popOffset() {
+        poseStack.popPose();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Scaling
+    @Override
+    protected double getGuiScale() {
+        return Minecraft.getInstance().getWindow().getGuiScale();
     }
 }

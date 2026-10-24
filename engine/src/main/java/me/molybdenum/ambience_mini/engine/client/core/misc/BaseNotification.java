@@ -29,6 +29,11 @@ public abstract class BaseNotification<TComponent>
     }
 
 
+    public String translateFromKeyAndArgs(AmLang key, Object... arguments) {
+        return String.format(translateFromKey(key), arguments);
+    }
+
+
     public void printLiteralToChat(String text) {
         printToChat(makeLiteral(text));
     }

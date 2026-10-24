@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.gui.base;
 
+import me.molybdenum.ambience_mini.engine.client.core.gui.BaseGuiTools;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.AmWidget;
 
@@ -8,8 +9,10 @@ import java.util.Objects;
 
 public abstract class AmMenu<TPoseStack>
 {
-    protected static final int MENU_INNER_MARGIN = 10;
-    protected static final int BASE_SEPARATION = 5;
+    protected static final BaseGuiTools tools = BaseGuiTools.get();
+
+    public static final int MENU_INNER_MARGIN = 10;
+    public static final int BASE_SEPARATION = 5;
 
     protected final BaseDrawer<TPoseStack> drawer;
     public final McScreen screen;
@@ -49,7 +52,7 @@ public abstract class AmMenu<TPoseStack>
 
     public boolean mousePressed(double mouseX, double mouseY, int mouseKeyIndex) {
         var handler = widgets.stream()
-                .map(widget -> widget.mousePressed(drawer, mouseX, mouseY, mouseKeyIndex))
+                .map(widget -> widget.mousePressed(mouseX, mouseY, mouseKeyIndex))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
@@ -64,9 +67,23 @@ public abstract class AmMenu<TPoseStack>
         return false;
     }
 
+    public boolean mouseReleased(double mouseX, double mouseY, int mouseKeyIndex) {
+        if (focused != null)
+            return focused.mouseReleased(mouseX, mouseY, mouseKeyIndex);
+        return false;
+    }
+
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaY) {
+        for (var widget : widgets)
+            if (widget.mouseScrolled(mouseX, mouseY, deltaY))
+                return true;
+        return false;
+    }
+
+
     public boolean keyPressed(int keyIndex) {
         if (focused != null)
-            return focused.keyPressed(drawer, keyIndex);
+            return focused.keyPressed(keyIndex);
         return false;
     }
 
@@ -76,5 +93,6 @@ public abstract class AmMenu<TPoseStack>
 
 
     public abstract void onInit();
+    public abstract void tick();
     public abstract void onClose();
 }

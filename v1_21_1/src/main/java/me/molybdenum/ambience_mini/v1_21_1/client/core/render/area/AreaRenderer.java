@@ -7,7 +7,7 @@ import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRende
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Cube;
 import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
-import me.molybdenum.ambience_mini.v1_21_1.client.core.gui.NeoAmScreen;
+import me.molybdenum.ambience_mini.v1_21_1.client.core.gui.AmScreen;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.drawer.Drawer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.culling.Frustum;
@@ -66,6 +66,6 @@ public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos>
 
     @Override
     protected AreaMenu<?> createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper) {
-        return new AreaMenu<>(drawer, NeoAmScreen::new, selectedArea, notification, this, areaHelper);
+        return new AreaMenu<>(drawer, AmScreen::new, selectedArea, notification, this, areaHelper);
     }
 }

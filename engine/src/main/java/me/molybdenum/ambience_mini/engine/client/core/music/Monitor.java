@@ -2,14 +2,14 @@ package me.molybdenum.ambience_mini.engine.client.core.music;
 
 import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.selection.*;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicPlayer;
+import me.molybdenum.ambience_mini.engine.client.core.music.player.PlayState;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.MusicSelector;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.Value;
-import me.molybdenum.ambience_mini.engine.shared.music.music_provider.BaseMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
 import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
@@ -17,17 +17,15 @@ import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.function.Supplier;
 
 public class Monitor
 {
     public static final int JOB_STARTUP_DELAY_MS = 1000;
-
-    public static final int BUFFER_UPDATE_INTERVAL_MS = 500;
     public static final int AUTO_RESTART_GRACE_PERIOD = 10_000;
 
     // Utils
@@ -38,7 +36,6 @@ public class Monitor
     @SuppressWarnings("rawtypes")
     private final BaseClientCore _core;
     private final BaseNotification<?> _notification;
-    private final BaseKeyBindings<?> _keyBindings;
 
     // Music
     private final MusicPlayer musicPlayer;
@@ -46,7 +43,7 @@ public class Monitor
     // Tasks
     private static long latestAutoRestartTime = 0;
 
-    private final JobCenter jobCenter = JobCenter.pooled(1);
+    private final JobCenter jobCenter = JobCenter.singleThreaded();
     private final MusicCycleJob musicCycleJob;
 
 
@@ -54,46 +51,35 @@ public class Monitor
     @SuppressWarnings("rawtypes")
     public Monitor(
             BaseClientCore clientCore, // Raw use of BaseCore since we do not need to know the types used in implementation.
-            MusicSelector playlistSelector,
-            BaseMusicProvider musicProvider,
-            Logger logger
+            MusicSelector playlistSelector
     ) {
-        _logger = logger;
-
         _core = clientCore;
         _notification = _core.notification;
-        _keyBindings = _core.keyBindings;
+        _logger = _core.logger;
+
 
         // Setup scheduled tasks
         musicCycleJob = jobCenter.schedule(
                 new MusicCycleJob(playlistSelector, _core::isFocused),
                 JOB_STARTUP_DELAY_MS, _core.clientConfig.updateInterval.get()
         );
-        jobCenter.schedule(
-                new MusicBufferJob(),
-                JOB_STARTUP_DELAY_MS, BUFFER_UPDATE_INTERVAL_MS
-        );
 
         // Setup music player and volume
         musicPlayer = new MusicPlayer(
-                musicProvider,
-                () -> musicCycleJob.selectNewMusic(_core.clientConfig.nextMusicDelay.get())
+                _core,
+                () -> musicCycleJob.selectNewMusic(_core.clientConfig.nextMusicDelay.get(), null),
+                ex -> {
+                    _logger.error("Error in music buffering!", ex);
+                    attemptAutoRestart();
+                }
         );
         musicPlayer.setVolume(VolumeState.getMusicVolume());
-        musicPlayer.addNowPlayingListener(nowPlaying -> {
-            try {
-                if (nowPlaying.music().locatedOnServer()) {
-                    var res = _core.musicCache.bufferThis(nowPlaying.path());
-                    if (res.isFailure())
-                        _notification.printToChat(res.error);
-                }
-            } catch (FileNotFoundException ignored) { }
-
+        musicPlayer.addNowPlayingListener(plays -> {
             if (_core.clientConfig.printNowPlaying.get()) {
-                if (nowPlaying.author() == null)
-                    _notification.showToast(AmLang.MSG_PLAYING_NAME, nowPlaying.titleOrPath());
+                if (plays.getAuthorOrNull() == null)
+                    _notification.showToast(AmLang.MSG_PLAYING_NAME, plays.getTitleOrPath());
                 else
-                    _notification.showToast(AmLang.MSG_PLAYING_NAME_AUTHOR, nowPlaying.titleOrPath(), nowPlaying.author());
+                    _notification.showToast(AmLang.MSG_PLAYING_NAME_AUTHOR, plays.getTitleOrPath(), plays.getAuthorOrNull());
             }
         });
 
@@ -107,8 +93,9 @@ public class Monitor
     }
 
     public List<String> getActiveSoundtracks() {
-        return musicPlayer.getActiveSoundtracks();
+        return musicPlayer.getActiveServerSoundtracks();
     }
+
 
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -126,8 +113,9 @@ public class Monitor
                 _core.tryReloadMusicEngine();
             }
             else {
-                _notification.printTranslatableToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
-                _notification.showToast(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
+                // TODO: FIX HERE!!!!!
+                //_notification.printTranslatableToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
+                //_notification.showToast(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
             }
         } catch (Exception e) {
             throw new RuntimeException("En exception occurred while attempting to auto restart the music player.", e);
@@ -138,9 +126,9 @@ public class Monitor
         synchronized (jobCenter) {
             if (!jobCenter.isShutdown()) {
                 jobCenter.shutdown();
-                VolumeState.unregisterVolumeListener(musicCycleJob::updateVolume);
-                musicPlayer.stopAll();
+                musicPlayer.shutdown();
             }
+            VolumeState.unregisterVolumeListener(musicCycleJob::updateVolume);
         }
     }
 
@@ -154,7 +142,7 @@ public class Monitor
 
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Manual control
+    // Music control
     public void pause() {
         musicCycleJob.pause();
     }
@@ -168,9 +156,22 @@ public class Monitor
     }
 
     public void forceSelectNewMusic() {
-        musicCycleJob.selectNewMusic(0);
+        musicCycleJob.selectNewMusic(0, null);
     }
 
+    public void forceSelectNewMusic(Music nextMusic) {
+        musicCycleJob.selectNewMusic(0, nextMusic);
+    }
+
+
+    public List<Music> getSelectedPlaylist() {
+        return musicCycleJob.currentPlaylist;
+    }
+
+    @Nullable
+    public PlayState getPlayState() {
+        return musicPlayer.getCurrentPlayState();
+    }
 
 
     private class MusicCycleJob extends JobCenter.Job
@@ -187,9 +188,12 @@ public class Monitor
         private final boolean doFadeOnJukebox;
 
         private final MusicSelector playlistSelector;
-        private List<Music> currentPlaylist = null;
         private boolean vanillaPlayerSelected = false;
         private long _chooseNextMusicTime = 0L;
+        private Music _forcedMusic;
+
+        @Nullable
+        private List<Music> currentPlaylist = null;
 
         private final int _numLatestChoices = 3; // Code below is only designed to handle the value 3 here.
         private int _nextChoiceIndex = 0;
@@ -236,8 +240,9 @@ public class Monitor
             musicPlayer.setVolume(volumeZero ? 0f : musicVolume);
         }
 
-        public void selectNewMusic(long delayMillis) {
+        public void selectNewMusic(long delayMillis, Music nextMusic) {
             _chooseNextMusicTime = System.currentTimeMillis() + delayMillis;
+            _forcedMusic = nextMusic;
         }
 
         public void pause() {
@@ -294,7 +299,6 @@ public class Monitor
             PlaylistSelection nextChoice = (PlaylistSelection)selection;
 
             List<Music> nextPlaylist = nextChoice.playlist();
-            boolean doFade = !nextChoice.isInstant();
             int nextPriority = nextChoice.priority();
 
             if (verboseMode) {
@@ -302,9 +306,8 @@ public class Monitor
                 _benchmarks[_benchmarkIndex] = selectTime;
                 _benchmarkIndex = (_benchmarkIndex + 1) % NUM_MEASUREMENTS;
 
-                if (currentPlaylist != nextPlaylist) {
+                if (!nextPlaylist.equals(currentPlaylist)) {
                     currentPlaylist = nextPlaylist;
-
                     var playlist = String.join(", ", nextPlaylist.stream().map(m -> '"' + m.path() + '"').toList());
                     _logger.info("At tick '{}', on line '{}'. Selected new playlist at priority '{}': [ {} ]", _tick, nextChoice.line(), nextPriority, playlist);
                     _logger.info("Events and properties computed during selection:\n{}", Utils.getKeyValuePairString(trace));
@@ -314,6 +317,7 @@ public class Monitor
                 for (var msg : messages)
                     _logger.info("At tick '{}'. {}", _tick, msg);
             }
+            currentPlaylist = nextPlaylist;
 
             Music currentMusic = musicPlayer.getMusicByPriority(nextPriority);
             boolean musicStillValid = currentMusic != null && nextPlaylist.stream().anyMatch(currentMusic::equals);
@@ -323,35 +327,32 @@ public class Monitor
                     _logger.info("Resuming music!");
                 isHalted = false;
 
-                if (musicStillValid) {
-                    musicPlayer.stopAllAbove(nextPriority, false);
-                    musicPlayer.resume(true);
+                if (musicStillValid && System.currentTimeMillis() <= _chooseNextMusicTime) { // Only resume if not about to pick new.
+                    musicPlayer.resume(nextPriority, false, true);
                     return;
                 }
             }
 
-            Optional<Integer> topPriority = musicPlayer.getTopPriority();
-            boolean presentAndPlaying = topPriority.isPresent() && musicPlayer.isPlaying();
-            if (presentAndPlaying && nextPriority != topPriority.get()) {
+            boolean doFade = !nextChoice.isInstant();
+            if (musicPlayer.isPlaying() && nextPriority != musicPlayer.getTopPriority()) {
                 musicPlayer.pause(doFade);
                 if (doFade) // If faded (which takes some time), start over and recheck if we still need to change music.
                     return; // If not, we can just go directly to the new music selection.
             }
 
             if (nextPlaylist.isEmpty()) {
-                if (musicPlayer.isPlaying()) {
-                    musicPlayer.stopAllAbove(nextPriority - 1, doFade);
-                    musicPlayer.pause(doFade);
-                }
+                if (!musicPlayer.isSilence())
+                    musicPlayer.silence(nextPriority, doFade);
             }
 
             else if (!musicStillValid || System.currentTimeMillis() > _chooseNextMusicTime){
                 musicPlayer.play(nextPriority, selectMusic(nextPlaylist, currentMusic), doFade);
                 _chooseNextMusicTime = Long.MAX_VALUE;
+                _forcedMusic = null;
             }
 
-            else if (!musicPlayer.isPlaying())
-                musicPlayer.resume(nextPriority, doFade);
+            else if (!musicPlayer.isPlaying() && musicPlayer.isInitialized(nextPriority))
+                musicPlayer.resume(nextPriority, true, true);
         }
 
         private @NotNull Selection selectPlaylistMeticulously(ArrayList<Pair<String, Value<?>>> trace) {
@@ -372,6 +373,8 @@ public class Monitor
                 throw new RuntimeException("Cannot select music from empty playlist!");
             if (playlist.size() == 1)
                 return playlist.get(0);
+            if (playlist.contains(_forcedMusic))
+                return _forcedMusic;
 
             Music nextMusic = playlist.get(getRandom(playlist.size()));
             while (nextMusic == currentMusic)
@@ -448,20 +451,6 @@ public class Monitor
         @Override
         protected void onException(Exception ex) {
             _logger.error("Error in music cycle!", ex);
-            attemptAutoRestart();
-        }
-    }
-
-    private class MusicBufferJob extends JobCenter.Job
-    {
-        @Override
-        protected void body() {
-            musicPlayer.updateBuffers();
-        }
-
-        @Override
-        protected void onException(Exception ex) {
-            _logger.error("Error in music buffering!", ex);
             attemptAutoRestart();
         }
     }

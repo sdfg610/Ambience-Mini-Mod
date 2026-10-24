@@ -1,15 +1,14 @@
 package me.molybdenum.ambience_mini.v1_18_2.client.core.render.area;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.molybdenum.ambience_mini.engine.client.core.render.areas.AreaScreenSymbiote;
-import me.molybdenum.ambience_mini.engine.client.core.render.screens.BaseScreenSymbiote;
+import me.molybdenum.ambience_mini.engine.client.core.gui.menus.AreaMenu;
+import me.molybdenum.ambience_mini.v1_18_2.client.core.gui.AmScreen;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.render.drawer.Drawer;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Cube;
 import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
-import me.molybdenum.ambience_mini.v1_18_2.client.core.render.screens.GuiTools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
@@ -32,8 +31,8 @@ public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos>
         this.drawer = drawer;
     }
 
-    public void setup(PoseStack.Pose pose, Frustum frustum) {
-        this.drawer.setup(pose);
+    public void setup(PoseStack poseStack, Frustum frustum) {
+        this.drawer.setup(poseStack);
         this.frustum = frustum;
     }
 
@@ -65,9 +64,9 @@ public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos>
 
 
     @Override
-    protected BaseScreenSymbiote<?,?,?,?,?,?> createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper) {
-        return new AreaScreenSymbiote<>(
-                GuiTools.INSTANCE, selectedArea, drawer, notification, this, areaHelper
+    protected AreaMenu<?> createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper) {
+        return new AreaMenu<>(
+                drawer, AmScreen::new, selectedArea, notification, this, areaHelper
         );
     }
 }
