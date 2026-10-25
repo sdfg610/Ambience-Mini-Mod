@@ -10,9 +10,13 @@
 
 ****
 
+### Version 2.7.12:
+
+- Fixed crash related to the Sable mod when using the `$skylight_potential` property.
+
 ### Version 2.7.11:
 
-- Fixed crash related to the Sable mod when using the `@cave_score`.
+- Fixed crash related to the Sable mod when using the `$cave_score` property.
 
 
 ### Version 2.7.10:

@@ -8,6 +8,7 @@ import me.molybdenum.ambience_mini.engine.client.core.locations.structures.Struc
 import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
 import me.molybdenum.ambience_mini.engine.client.core.state.*;
 import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.compatibility.SableCompat;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> extends GameStateProviderTemplate
@@ -56,6 +58,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private boolean _isInCombat = false;
 
     private double _latestCaveScore = 0;
+    private float _latestSkylightPotential = 0;
 
     private Double latestWardenDistance;
     private long latestWardenCheckTime;
@@ -478,10 +481,12 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         if (_player.isNull() || _level.isNull())
             return FloatVal.UNDEFINED;
 
-        List<BlockReading<TBlockPos, TBlockState>> readings = _level.readSurroundings(_player.eyePosition(), 12, 7, 64);
-        float averageSkyLight = readings.stream().collect(Collectors.averagingDouble(r -> _level.getAverageSkyLightingAround(r.blockPos()))).floatValue();
+        Supplier<List<BlockReading<TBlockPos, TBlockState>>> getReadings = () -> _level.readSurroundings(_player.eyePosition(), 12, 7, 64);
+        List<BlockReading<TBlockPos, TBlockState>> readings = SableCompat.isLoaded ? _level.tryRunOnMainThread(getReadings) : getReadings.get();
+        if (readings != null)
+            _latestSkylightPotential = readings.stream().collect(Collectors.averagingDouble(r -> _level.getAverageSkyLightingAround(r.blockPos()))).floatValue();
 
-        return new FloatVal(averageSkyLight);
+        return new FloatVal(_latestSkylightPotential);
     }
 
 
