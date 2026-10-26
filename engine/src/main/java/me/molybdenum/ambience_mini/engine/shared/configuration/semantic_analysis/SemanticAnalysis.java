@@ -284,7 +284,7 @@ public class SemanticAnalysis extends BaseInterpreter
                 else if (requireConst)
                     messages.add(new SemError(ident.line(), "Use of non-constant identifier '" + ident.value() + "' in a constant context"));
                 else
-                    newExpr = expr;
+                    newExpr = type != null ? expr : null;
             }
 
             return mkRes(newExpr, type, isConst);

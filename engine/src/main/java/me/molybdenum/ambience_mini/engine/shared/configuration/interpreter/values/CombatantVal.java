@@ -19,8 +19,8 @@ public final class CombatantVal extends Value<CombatantVal.CombatantDescriptor> 
         super(value);
     }
 
-    public CombatantVal(String typeId, Float health, Float maxHealth, Boolean targetingPlayer, boolean fightingPlayer) {
-        super(new CombatantVal.CombatantDescriptor(typeId, health, maxHealth, targetingPlayer, fightingPlayer));
+    public CombatantVal(String typeId, Float health, Float maxHealth, Boolean targetingPlayer, boolean fightingPlayer, Boolean isNeutral) {
+        super(new CombatantVal.CombatantDescriptor(typeId, health, maxHealth, targetingPlayer, fightingPlayer, isNeutral));
     }
 
 
@@ -45,13 +45,17 @@ public final class CombatantVal extends Value<CombatantVal.CombatantDescriptor> 
             );
             case FIELD_TARGETING_PLAYER -> new BoolVal(value.targetingPlayer);
             case FIELD_FIGHTING_PLAYER -> new BoolVal(value.fightingPlayer);
+            case FIELD_IS_NEUTRAL -> new BoolVal(value.isNeutral);
             default -> UndefinedVal.INSTANCE;
         };
     }
 
-    // Using boxed types to allow nullable health and maxHealth in case a non-living entity enters this list (and to avoid changing a ton of other things)
-    // Using boxed Boolean in case there is no server-support and in which case targeting cannot be tracked.
-    public record CombatantDescriptor(String typeId, Float health, Float maxHealth, Boolean targetingPlayer, boolean fightingPlayer) {
-
-    }
+    public record CombatantDescriptor(
+            String typeId,
+            Float health,
+            Float maxHealth,
+            Boolean targetingPlayer,
+            boolean fightingPlayer,
+            Boolean isNeutral
+    ) { }
 }

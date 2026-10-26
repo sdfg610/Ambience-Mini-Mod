@@ -1115,9 +1115,9 @@ public class MP3File {
         final int bitRateValue = (buffer[2] & TagConstant.MASK_MP3_BITRATE) |
                                  (buffer[1] & TagConstant.MASK_MP3_ID) |
                                  (buffer[1] & TagConstant.MASK_MP3_LAYER);
-        final Long object = (Long) TagConstant.bitrate.get(new Long(bitRateValue));
+        final Long object = (Long) TagConstant.bitrate.get(bitRateValue);
         if (object != null) {
-            if (object.longValue() != bitRate) {
+            if (object != bitRate) {
                 variableBitRate = true;
             }
             bitRate = object.intValue();

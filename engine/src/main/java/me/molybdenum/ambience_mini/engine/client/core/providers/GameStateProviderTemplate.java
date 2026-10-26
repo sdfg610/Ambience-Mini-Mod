@@ -101,6 +101,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     public static final PropertyTemplate P_COMBATANTS = new PropertyTemplate("combatants", new ListT(new CombatantT()), instance -> instance::getCombatants);
     public static final PropertyTemplate P_BOSS = new PropertyTemplate("boss", new StringT(), instance -> instance::getBoss);
     public static final PropertyTemplate P_BOSSES = new PropertyTemplate("bosses", new ListT(new StringT()), instance -> instance::getBosses);
+    public static final PropertyTemplate P_BOSS_INFOS = new PropertyTemplate("boss_infos", new ListT(new BossT()), instance -> instance::getBossInfos);
 
     // Entity properties
     public static final PropertyTemplate P_LIVING = new PropertyTemplate("nearby_living", new ListT(new LivingT()), 1000, instance -> instance::getNearbyLiving);
@@ -116,7 +117,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
             P_DIFFICULTY, P_DIMENSION, P_BIOME, P_BIOME_TAGS, P_TIME, P_CAVE_SCORE, P_SKYLIGHT_SCORE,
             P_AREAS, P_STRUCTURES,
             P_UUID, P_GAME_MODE, P_HEALTH, P_MAX_HEALTH, P_ELEVATION, P_VEHICLE, P_EFFECTS,
-            P_COMBATANT_COUNT, P_COMBATANTS, P_BOSS, P_BOSSES,
+            P_COMBATANT_COUNT, P_COMBATANTS, P_BOSS, P_BOSSES, P_BOSS_INFOS,
             P_LIVING,
             P_FLAGS,
             P_SERVER_PLAYLISTS
@@ -271,6 +272,7 @@ public abstract class GameStateProviderTemplate extends BaseGameStateProvider
     public abstract ListVal getCombatants();
     public abstract StringVal getBoss();
     public abstract ListVal getBosses();
+    public abstract ListVal getBossInfos();
 
 
     // ------------------------------------------------------------------------------------------------

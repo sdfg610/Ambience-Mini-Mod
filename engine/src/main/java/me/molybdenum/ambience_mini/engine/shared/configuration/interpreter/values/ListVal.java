@@ -19,7 +19,7 @@ public final class ListVal extends Value<ValueList> implements IndexableV, Acces
         super(null);
     }
 
-    public ListVal(List<Value<?>> values) {
+    public <T extends Value<?>> ListVal(List<T> values) {
         super(new ValueList(values));
     }
 

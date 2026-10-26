@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 public class ValueList extends ArrayList<Value<?>> {
     public ValueList() { }
 
-    public ValueList(@NotNull Collection<Value<?>> c) {
+    public <T extends Value<?>> ValueList(@NotNull Collection<T> c) {
         super(c);
     }
 

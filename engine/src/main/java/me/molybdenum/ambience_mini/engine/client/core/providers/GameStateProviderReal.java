@@ -542,6 +542,11 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         return ListVal.ofStringList(_combat.getBosses());
     }
 
+    @Override
+    public ListVal getBossInfos() {
+        return new ListVal(_combat.getBossInfos());
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // Entity properties

@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.v1_18_2.client.core.state;
 
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseCombatState;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.BossVal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.components.LerpingBossEvent;
@@ -51,6 +52,11 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
         return (entity instanceof LivingEntity liv) ? liv.getMaxHealth() : null;
     }
 
+    @Override
+    public boolean isEntityNeutral(Entity entity) {
+        return entity instanceof NeutralMob;
+    }
+
 
     @Override
     public boolean isCombatableEntity(Entity entity, Entity player) {
@@ -75,6 +81,21 @@ public class CombatState extends BaseCombatState<Entity, Vec3>
         List<LerpingBossEvent> bosses = bossMap == null ? List.of() : new ArrayList<>(bossMap.values());
         return bosses.stream()
                 .map(bossEvent -> extractBossKeyOrName(bossEvent.getName()))
+                .toList();
+    }
+
+    @Override
+    public List<BossVal> getBossInfos() {
+        Map<UUID, LerpingBossEvent> bossMap =
+                ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), OBF_MAP_BOSS_INFO);
+
+        List<LerpingBossEvent> bosses = bossMap == null ? List.of() : new ArrayList<>(bossMap.values());
+        return bosses.stream()
+                .map(bossEvent -> {
+                    String id = extractBossKeyOrName(bossEvent.getName());
+                    float healthPercent = bossEvent.getProgress() * 100f;
+                    return new BossVal(id, healthPercent);
+                })
                 .toList();
     }
 

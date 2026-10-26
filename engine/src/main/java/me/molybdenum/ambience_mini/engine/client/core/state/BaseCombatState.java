@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.BossVal;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.CombatantVal;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.ListVal;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
@@ -47,11 +48,13 @@ public abstract class BaseCombatState<TEntity, TVec3>
     public abstract String getEntityResourceLocation(TEntity entity);
     public abstract Float getEntityHealth(TEntity entity);
     public abstract Float getEntityMaxHealth(TEntity entity);
+    public abstract boolean isEntityNeutral(TEntity entity);
 
     public abstract boolean isCombatableEntity(TEntity entity, TEntity player);
 
     public abstract boolean inBossFight();
     public abstract List<String> getBosses();
+    public abstract List<BossVal> getBossInfos();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -98,7 +101,7 @@ public abstract class BaseCombatState<TEntity, TVec3>
         handleInteraction(_levelState.getEntityById(id));
     }
 
-    public void handleInteraction(TEntity entity) {
+    private void handleInteraction(TEntity entity) {
         var combatant = combatants.computeIfAbsent(getEntityId(entity), ignored ->
                 new Combatant(entity)
         );
@@ -139,13 +142,15 @@ public abstract class BaseCombatState<TEntity, TVec3>
     }
 
 
-    class Combatant {
+    private class Combatant {
         private final TEntity entity;
         private Boolean isTargetingPlayer = null;
         public long latestInteraction = 0;
+        private Boolean isNeutral;
 
         public Combatant(TEntity entity) {
             this.entity = entity;
+            this.isNeutral = entity == null ? null : isEntityNeutral(entity);
         }
 
         public CombatantVal asCombatantVal(long now) {
@@ -154,7 +159,8 @@ public abstract class BaseCombatState<TEntity, TVec3>
                     entity == null ? null : getEntityHealth(entity),
                     entity == null ? null : getEntityMaxHealth(entity),
                     isTargetingPlayer,
-                    isFightingPlayer(now)
+                    isFightingPlayer(now),
+                    isNeutral
             );
         }
 
