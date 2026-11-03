@@ -2,6 +2,7 @@ package me.molybdenum.ambience_mini.engine;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.music.Monitor;
+import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -15,12 +16,12 @@ public class BaseAmbienceMini
     private static final ArrayList<Runnable> onClientCoreInitListeners = new ArrayList<>();
 
     @SuppressWarnings("rawtypes")
-    protected static BaseClientCore baseCore;
+    protected static BaseClientCore baseClientCore;
 
 
     @SuppressWarnings("rawtypes")
-    public static BaseClientCore getBaseCore() {
-        return baseCore;
+    public static BaseClientCore getBaseClientCore() {
+        return baseClientCore;
     }
 
 
@@ -52,10 +53,10 @@ public class BaseAmbienceMini
     // Vanilla player
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isVanillaPlayerEnabled() {
-        if (baseCore == null) // Until Ambience Mini is actually loaded, don't disable vanilla player.
+        if (baseClientCore == null) // Until Ambience Mini is actually loaded, don't disable vanilla player.
             return true;
 
-        Monitor m = baseCore.getMonitor();
+        Monitor m = baseClientCore.getMonitor();
         return m == null || !m.isRunning() || m.isVanillaPlayerSelected();
     }
 

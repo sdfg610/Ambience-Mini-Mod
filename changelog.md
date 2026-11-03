@@ -50,6 +50,10 @@ A new update is upon us and it is huge!
 - Architectural improvements to music-configuration loading and execution.
 - Music metadata is now cached in a music pack to allow faster loading of such and to send metadata about server-music.
 
+**Combat:**
+- The mod can now register when the Warden is targeting the player.
+- Fixed bug where mob un-targeting player is not registered, causing "@is_targeted" to stay active until mobs disappear.
+
 **Miscellaneous:**
 - Minor improvements to output created by verbose mode.
 - Minor improvements to volume change handling.

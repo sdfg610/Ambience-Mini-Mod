@@ -15,6 +15,7 @@ import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.client.ClientInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.features.RequestFeatureFlagsMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.ResponseMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.GetFlagsMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
@@ -279,6 +280,16 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
                     sendToPlayer(msg.succeedWith(writer.getBytes()), sender);
                 }
         );
+    }
+
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Message helpers
+    public void sendTargetMessage(int entityId, boolean isTargetingPlayer, TServerPlayer player) {
+        // Only send packet if client has compatible version Ambience Mini installed.
+        if (getPlayerModVersion(player).isGreaterThanOrEqual(AmVersion.V_2_5_0))
+            sendToPlayer(new MobTargetMessage(entityId, isTargetingPlayer), player);
     }
 
 

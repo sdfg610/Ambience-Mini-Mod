@@ -117,6 +117,6 @@ public enum AmLang
     }
 
     public String translate(Object... args) {
-        return BaseAmbienceMini.getBaseCore().notification.translateFromKeyAndArgs(this, args);
+        return BaseAmbienceMini.getBaseClientCore().notification.translateFromKeyAndArgs(this, args);
     }
 }

@@ -121,7 +121,7 @@ public class AmbienceMini extends BaseAmbienceMini
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS)
             );
 
-            baseCore = clientCore = new ClientCore(
+            baseClientCore = clientCore = new ClientCore(
                     LOGGER, new ClientNameCache(), new StructureCache(),
                     new Notification(), new ClientNetworkManager(),
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),

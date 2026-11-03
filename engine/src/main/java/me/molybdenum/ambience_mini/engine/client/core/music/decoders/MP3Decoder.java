@@ -1,7 +1,6 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.decoders;
 
 import me.molybdenum.ambience_mini.deps.jid3lib.MP3File;
-import me.molybdenum.ambience_mini.deps.jid3lib.TagException;
 import me.molybdenum.ambience_mini.deps.jid3lib.id3.AbstractID3v2;
 import me.molybdenum.ambience_mini.deps.jlayer.*;
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
@@ -99,7 +98,7 @@ public class MP3Decoder extends AmDecoder {
                     loopLength = tag.getTXXXValue("LOOPLENGTH").map(Utils::tryParseLong).orElse(null);
                 }
             } catch (Exception e) {
-                BaseAmbienceMini.getBaseCore().logger.error("Error during MP3 tags parsing", e);
+                BaseAmbienceMini.getBaseClientCore().logger.error("Error during MP3 tags parsing", e);
             }
 
             return new MusicInfo(
