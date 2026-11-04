@@ -127,7 +127,18 @@ Shed<out Schedule schedule>                  (. schedule = null; boolean instant
 
 /*------------------------------------------------------------------------*/
 // Expressions
-Expr<out Expr expr>              (. BinaryOperators op; int line = -1; .)
+Expr<out Expr expr>
+    = ExprNull<out expr>
+.
+
+ExprNull<out Expr expr>
+    = ExprLog<out expr> [
+        "??"                      (. int line = t.line; .)
+        ExprLog<out Expr expr2>   (. expr = new BinaryOp(BinaryOperators.NULL_CHECK, expr, expr2, line); .)
+    ]
+.
+
+ExprLog<out Expr expr>              (. BinaryOperators op; int line = -1; .)
     = ExprEq<out expr>
     { ( "&&"                     (. op = BinaryOperators.AND; line = t.line; .)
       | "||"                     (. op = BinaryOperators.OR; line = t.line; .)

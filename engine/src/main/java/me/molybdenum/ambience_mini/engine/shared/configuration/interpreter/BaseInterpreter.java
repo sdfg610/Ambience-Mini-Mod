@@ -216,23 +216,15 @@ public class BaseInterpreter {
     }
 
     protected Value<?> opAppend(Value<?> left, Value<?> right) {
-        try {
-            var pl1 = left.asMusicList().orElse(null);
-            var pl2 = right.asMusicList().orElse(null);
-            if (pl1 == null)
-                return new PlaylistVal(pl2);
-            else if (pl2 == null)
-                return new PlaylistVal(pl1);
-
-            var music = new ArrayList<Music>(pl1.size() + pl2.size());
-            music.addAll(pl1);
-            music.addAll(pl2);
-
-            return new PlaylistVal(music);
-        }
-        catch (Exception ignored) {
+        var pl1 = left.asMusicList().orElse(null);
+        var pl2 = right.asMusicList().orElse(null);
+        if (pl1 == null || pl2 == null)
             return UndefinedVal.INSTANCE;
-        }
+
+        return new PlaylistVal(new ArrayList<>(pl1.size() + pl2.size()) {{
+            addAll(pl1);
+            addAll(pl2);
+        }});
     }
 
     protected Value<?> opNullCheck(Value<?> left, Supplier<Value<?>> right) {

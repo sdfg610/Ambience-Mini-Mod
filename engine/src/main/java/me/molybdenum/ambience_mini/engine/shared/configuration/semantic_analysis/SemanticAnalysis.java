@@ -371,10 +371,15 @@ public class SemanticAnalysis extends BaseInterpreter
             Type typeRight = eoRight.type();
 
             Type resType = switch (binOp.op()) {
-                case EQ, NULL_CHECK -> {
+                case EQ -> {
                     if (isNotEqual(typeLeft, typeRight))
-                        messages.add(new SemError(binOp.line(), "Arguments of '" + PrettyPrinter.getBinaryOpInfix(binOp.op()) + "' must be of same type. Got '" + typeLeft + "' and '" + typeRight + "'"));
+                        messages.add(new SemError(binOp.line(), "Arguments of '==' must be of same type. Got '" + typeLeft + "' and '" + typeRight + "'"));
                     yield BoolT.INSTANCE;
+                }
+                case NULL_CHECK -> {
+                    if (isNotEqual(typeLeft, typeRight))
+                        messages.add(new SemError(binOp.line(), "Arguments of '??' must be of same type. Got '" + typeLeft + "' and '" + typeRight + "'"));
+                    yield typeLeft;
                 }
                 case APP_EQ -> {
                     if (isNotString(typeLeft) || isNotString(typeRight))

@@ -292,7 +292,9 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
     private void onClearClicked() {
         core.notification.showToast(AmLang.MSG_RELOAD);
         Monitor.enableAutoRestart();
-        core.getMonitor().stop();
+        var monitor = core.getMonitor();
+        if (monitor != null)
+            monitor.stop();
         core.musicCache.clearOnlyCache();
         core.tryReloadMusicEngine();
     }

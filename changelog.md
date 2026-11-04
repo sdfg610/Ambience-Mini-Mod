@@ -16,7 +16,7 @@ A new update is upon us and it is huge!
 - The playlist given to `play` commands can now be `undefined` (e.g., `play $server_playlists["non_existent_playlist"];`), in which case the currently playing music (or silence) continues like when no `play` command is hit.
   * You can now use `play ifdef PLAYLIST;` to continue past the `play` command in case `PLAYLIST` is `undefined`.
 - The "`+`" operator now works between strings (as well as numbers). Use "`++`" between playlists.
-- Added undefined-check operator `??`. E.g., `(undefined ?? 42) == 42` 
+- Added undefined-check operator `??`. E.g., `(undefined ?? other) == other` 
 - You can now manually specify loop intervals in the music config. For example `"music.wav"<loopstart=1000, loopend=9001>`. A `looplength` flag is also available.
 - All constant expressions/values in music configs are now pre-computed on load to improve performance.
 
