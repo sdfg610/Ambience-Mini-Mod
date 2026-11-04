@@ -27,6 +27,8 @@ public class MusicPlayer
     private final Runnable onRanToEnd;
     private final Consumer<Exception> onBufferException;
 
+    private final int musicFadeTime;
+
     private float currentMusicVolume;
 
     private final List<Consumer<PlayState>> nowPlayingListeners = new ArrayList<>();
@@ -48,6 +50,8 @@ public class MusicPlayer
         this.instantiate = core::instantiate;
         this.onRanToEnd = onRanToEnd;
         this.onBufferException = onBufferException;
+
+        this.musicFadeTime = core.clientConfig.musicFadeTime.get();
     }
 
 
@@ -55,7 +59,7 @@ public class MusicPlayer
         jobCenter.shutdown();
         synchronized (stack) {
             for (var entry : stack)
-                Utils.ignoreException(() -> entry.ifPresent(ch -> ch.stopAndClose(false)));
+                Utils.ignoreException(() -> entry.ifPresent(ch -> ch.stopAndClose(-1)));
             stack.clear();
         }
     }
@@ -173,14 +177,14 @@ public class MusicPlayer
     public void pause(boolean doFade) {
         synchronized (stack) {
             if (!stack.empty())
-                stack.peek().ifPresent(ch -> ch.pause(doFade));
+                stack.peek().ifPresent(ch -> ch.pause(doFade ? musicFadeTime : -1));
         }
     }
 
     public void stopGreaterThanEqual(int priority, boolean fadeOut) {
         synchronized (stack) {
             while (!stack.empty() && stack.peek().priority >= priority)
-                stack.pop().ifPresent(ch -> ch.stopAndClose(fadeOut));
+                stack.pop().ifPresent(ch -> ch.stopAndClose(fadeOut ? musicFadeTime : -1));
         }
     }
 
@@ -207,7 +211,7 @@ public class MusicPlayer
         bufferJob = jobCenter.schedule(new MusicBufferJob(channel), 0, BUFFER_UPDATE_INTERVAL_MS);
 
         currentChannel = channel;
-        channel.resume(doFade);
+        channel.resume(doFade ? musicFadeTime : -1);
         notifyListeners(channel);
     }
 
@@ -276,7 +280,7 @@ public class MusicPlayer
         protected void body() {
             channel.updateBuffers();
             if (channel.isStopped()) {
-                channel.stopAndClose(false);
+                channel.stopAndClose(-1);
                 onRanToEnd.run();
             }
         }

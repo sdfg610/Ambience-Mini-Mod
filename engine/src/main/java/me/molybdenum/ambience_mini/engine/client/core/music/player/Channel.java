@@ -9,15 +9,13 @@ import org.lwjgl.openal.AL10;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 public class Channel implements PlayState {
     private static final int BUFFER_COUNT = 4;
-
-    private static final long FADE_STEP_MILLISECONDS = 75;
-    private static final int FADE_STEP_COUNT = 10;
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
@@ -156,24 +154,24 @@ public class Channel implements PlayState {
         }
     }
 
-    public void resume(boolean fadeIn) {
+    public void resume(int fadeTimeMillis) {
         try {
             readLock.lock();
             if (!isClosed && isPaused()) {
-                ALUtils.setVolume(source, fadeIn ? 0f : playingVolume);
+                ALUtils.setVolume(source, fadeTimeMillis > 0 ? 0f : playingVolume);
                 ALUtils.resumeSource(source);
-                if (fadeIn) fadeIn();
+                fadeIn(fadeTimeMillis);
             }
         } finally {
             readLock.unlock();
         }
     }
 
-    public void pause(boolean fadeOut) {
+    public void pause(int fadeTimeMillis) {
         try {
             readLock.lock();
             if (!isClosed && isPlaying()) {
-                if (fadeOut) fadeOut();
+                fadeOut(fadeTimeMillis);
                 ALUtils.pauseSource(source);
             }
         } finally {
@@ -181,12 +179,12 @@ public class Channel implements PlayState {
         }
     }
 
-    public void stopAndClose(boolean fadeOut) {
+    public void stopAndClose(int fadeTimeMillis) {
         try {
             lock.writeLock().lock();
             if (!isClosed) {
                 isClosed = true;
-                if (fadeOut) fadeOut();
+                fadeOut(fadeTimeMillis);
                 ALUtils.stopSource(source);
                 removeProcessedBuffers();
                 ALUtils.deleteSource(source);
@@ -197,41 +195,46 @@ public class Channel implements PlayState {
         }
     }
 
-    private void fadeIn() {
-        isFading.set(true);
-        try {
-            float diff = playingVolume / FADE_STEP_COUNT;
+    private void fadeIn(int fadeTimeMillis) {
+        if (fadeTimeMillis > 0) {
+            isFading.set(true);
 
-            for (int i = FADE_STEP_COUNT - 1; i >= 0; i--) {
-                ALUtils.setVolume(source, playingVolume - diff*i);
-                TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
+            try {
+                long now = System.currentTimeMillis();
+                long elapsed;
+                while ((elapsed = System.currentTimeMillis() - now) < fadeTimeMillis) {
+                    ALUtils.setVolume(source, playingVolume * ((float) elapsed / fadeTimeMillis));
+                    //noinspection BusyWait
+                    Thread.sleep(20);
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-
-            ALUtils.setVolume(source, playingVolume);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            isFading.set(false);
         }
+
+        ALUtils.setVolume(source, playingVolume);
+        isFading.set(false);
     }
 
-    private void fadeOut() {
-        isFading.set(true);
-        try {
-            float diff = playingVolume / FADE_STEP_COUNT;
+    private void fadeOut(int fadeTimeMillis) {
+        if (fadeTimeMillis > 0) {
+            isFading.set(true);
 
-            for (int i = 0; i < FADE_STEP_COUNT; i++) {
-                ALUtils.setVolume(source, playingVolume - diff*i);
-                TimeUnit.MILLISECONDS.sleep(FADE_STEP_MILLISECONDS);
+            try {
+                long now = System.currentTimeMillis();
+                long elapsed;
+                while ((elapsed = System.currentTimeMillis() - now) < fadeTimeMillis) {
+                    ALUtils.setVolume(source, playingVolume * (1f - (float) elapsed / fadeTimeMillis));
+                    //noinspection BusyWait
+                    Thread.sleep(20);
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
+        }
 
-            ALUtils.setVolume(source, 0f);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        finally {
-            isFading.set(false);
-        }
+        ALUtils.setVolume(source, 0f);
+        isFading.set(false);
     }
 
 

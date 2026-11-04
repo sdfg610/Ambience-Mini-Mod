@@ -49,6 +49,8 @@ A new update is upon us and it is huge!
 - Added support for `.wav` files.
 - Architectural improvements to music-configuration loading and execution.
 - Music metadata is now cached in a music pack to allow faster loading of such and to send metadata about server-music.
+- Added forge-config option to change the time it takes for music to fade in and out.
+- General attempt at making fading more "fluid" and stable.
 
 **Combat:**
 - The mod can now register when the Warden is targeting the player.

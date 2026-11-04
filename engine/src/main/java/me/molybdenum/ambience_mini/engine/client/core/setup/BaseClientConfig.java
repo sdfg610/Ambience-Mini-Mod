@@ -21,6 +21,7 @@ public abstract class BaseClientConfig {
     public final Supplier<Integer> updateInterval;
     public final Supplier<Integer> nextMusicDelay;
     public final Supplier<Boolean> meticulousPlaylistSelector;
+    public final Supplier<Integer> musicFadeTime;
 
     // Volume control
     public final Supplier<Boolean> fadeOnJukebox;
@@ -113,6 +114,12 @@ public abstract class BaseClientConfig {
                 "If enabled, the mod will double-check playlist selections before switching. This can be helpful to counteract unpredictable/sporadic effects from mod-interactions. Note that this option doubles the time it takes to change to a new playlist, but this can be corrected by decreasing the 'Update_Interval' if you feel the need. [Default: false]",
                 "Meticulous_Playlist_Selector",
                 false
+        );
+
+        musicFadeTime = registerIntOption(
+                "The time in milliseconds it takes to fade music in or out. Beware that fading blocks all other mod processes, meaning a fade has to finish before the mod can switch music again. [Default: 750]",
+                "Music_Fade_Time",
+                750, 250, 3000
         );
 
         // Volume control
