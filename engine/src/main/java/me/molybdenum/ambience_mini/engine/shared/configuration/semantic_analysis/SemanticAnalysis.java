@@ -472,7 +472,13 @@ public class SemanticAnalysis extends BaseInterpreter
             makeUnusedVariableWarnings(typEnv, messages);
             typEnv.closeScope();
 
-            return tryOptimizeExprOrNull(eoList, eoCondition, quanOp::withExprs, varEnv, BoolT.INSTANCE, messages.hasErrorOnNode());
+            Type outputType = switch (quanOp.quantifier()) {
+                case ANY, ALL -> BoolT.INSTANCE;
+                case COUNT -> IntT.INSTANCE;
+                case GET -> isList(typeList) ? typeList : null;
+            };
+
+            return tryOptimizeExprOrNull(eoList, eoCondition, quanOp::withExprs, varEnv, outputType, messages.hasErrorOnNode());
         }
         else if (expr instanceof Accessor accessor) {
             var eoBase = validateAndOptimizeExpression(accessor.base(), typEnv, varEnv, requireConst, messages.detatch());
@@ -646,12 +652,17 @@ public class SemanticAnalysis extends BaseInterpreter
         return type != null && !type.isString();
     }
 
-    private boolean isNotList(Type type) {
-        return type != null && !type.isList();
-    }
-
     private boolean isNotPlaylist(Type type) {
         return type != null && !type.isPlaylist();
+    }
+
+
+    private boolean isList(Type type) {
+        return type != null && type.isList();
+    }
+
+    private boolean isNotList(Type type) {
+        return type != null && !type.isList();
     }
 
 

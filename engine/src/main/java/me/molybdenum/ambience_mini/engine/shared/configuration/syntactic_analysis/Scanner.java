@@ -246,8 +246,8 @@ class StartStates {
 public class Scanner {
 	static final char EOL = '\n';
 	static final int  eofSym = 0;
-	static final int maxT = 62;
-	static final int noSym = 62;
+	static final int maxT = 65;
+	static final int noSym = 65;
 
 
 	public Buffer buffer; // scanner buffer
@@ -317,18 +317,21 @@ public class Scanner {
 		literals.put("any", 46);
 		literals.put("all", 47);
 		literals.put("has", 48);
-		literals.put("undefined", 50);
-		literals.put("true", 51);
-		literals.put("false", 52);
-		literals.put("bool", 53);
-		literals.put("int", 54);
-		literals.put("float", 55);
-		literals.put("string", 56);
-		literals.put("area", 57);
-		literals.put("combatant", 58);
-		literals.put("playlist", 59);
-		literals.put("list", 60);
-		literals.put("map", 61);
+		literals.put("get", 49);
+		literals.put("count", 50);
+		literals.put("where", 51);
+		literals.put("undefined", 53);
+		literals.put("true", 54);
+		literals.put("false", 55);
+		literals.put("bool", 56);
+		literals.put("int", 57);
+		literals.put("float", 58);
+		literals.put("string", 59);
+		literals.put("area", 60);
+		literals.put("combatant", 61);
+		literals.put("playlist", 62);
+		literals.put("list", 63);
+		literals.put("map", 64);
 
 	}
 	
@@ -542,7 +545,7 @@ public class Scanner {
 				case 31:
 					{t.kind = 45; break loop;}
 				case 32:
-					{t.kind = 49; break loop;}
+					{t.kind = 52; break loop;}
 				case 33:
 					recEnd = pos; recKind = 7;
 					if (ch == '=') {AddCh(); state = 17; break;}

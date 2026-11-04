@@ -243,17 +243,17 @@ public class BaseInterpreter {
 
     // -----------------------------------------------------------------------------------------------------------------
     // Quantifier operations
-    protected BoolVal evalQuantifierOp(QuantifierOp quanOp, VariableEnv env) {
+    protected Value<?> evalQuantifierOp(QuantifierOp quanOp, VariableEnv env) {
         String ident = quanOp.identifier().value();
         Predicate<Value<?>> evaluator = elem -> evalExpr(quanOp.condition(), env.enterScope().bind(ident, elem)).asBool().orElse(false);
 
-        return new BoolVal(
-                evalExpr(quanOp.list(), env).mapList(list ->
-                        switch (quanOp.quantifier()) {
-                            case ALL -> list.stream().allMatch(evaluator);
-                            case ANY -> list.stream().anyMatch(evaluator);
-                        }
-                )
+        return evalExpr(quanOp.list(), env).mapList(list ->
+                switch (quanOp.quantifier()) {
+                    case ALL -> new BoolVal(list.stream().allMatch(evaluator));
+                    case ANY -> new BoolVal(list.stream().anyMatch(evaluator));
+                    case COUNT -> new IntVal((int)list.stream().filter(evaluator).count());
+                    case GET -> new ListVal(list.stream().filter(evaluator).toList());
+                }
         );
     }
 }

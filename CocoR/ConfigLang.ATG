@@ -211,10 +211,18 @@ ExprTerm<out Expr expr> (. expr = null; Quantifiers quantifier = Quantifiers.ANY
     | Const<out expr>
     | '@' IDENT         (. expr = new GetEvent(new Ident(t.val, t.line));    .)
     | '$' IDENT         (. expr = new GetProperty(new Ident(t.val, t.line)); .)
-    | ("any" | "all"    (. quantifier = Quantifiers.ALL; .)
+    | ( "any"           (. quantifier = Quantifiers.ANY; .)
+      | "all"           (. quantifier = Quantifiers.ALL; .)
       ) IDENT           (. String identifier = t.val; int line = t.line; .)
       "in"                        (. int inLine = t.line; .)
-      Expr<out Expr list> "has" (. int whereLine = t.line; .)
+      Expr<out Expr list> "has" (. int hasLine = t.line; .)
+      Expr<out Expr cond> "end"
+                        (. expr = new QuantifierOp(quantifier, new Ident(identifier, line), list, cond, inLine, hasLine); .)
+    | ( "get"           (. quantifier = Quantifiers.GET; .)
+      | "count"         (. quantifier = Quantifiers.COUNT; .)
+      ) IDENT           (. String identifier = t.val; int line = t.line; .)
+      "in"                        (. int inLine = t.line; .)
+      Expr<out Expr list> "where" (. int whereLine = t.line; .)
       Expr<out Expr cond> "end"
                         (. expr = new QuantifierOp(quantifier, new Ident(identifier, line), list, cond, inLine, whereLine); .)
     | '(' Expr<out expr> ')'

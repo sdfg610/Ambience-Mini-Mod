@@ -158,6 +158,8 @@ public class PrettyPrinter {
         return switch (op) {
             case ANY -> "any";
             case ALL -> "all";
+            case GET -> "get";
+            case COUNT -> "count";
         };
     }
 
