@@ -23,6 +23,7 @@ import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.configuration.pretty_printer.PrettyPrinter;
 import me.molybdenum.ambience_mini.engine.client.core.music.decoders.AmDecoder;
+import me.molybdenum.ambience_mini.engine.shared.utils.TriFunction;
 import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Property;
@@ -452,6 +453,23 @@ public class SemanticAnalysis extends BaseInterpreter
 
             return tryOptimizeExprOrNull(eoLeft, eoRight, binOp::withExprs, varEnv, resType, messages.hasErrorOnNode());
         }
+        else if (expr instanceof TerneryOp ternOp) {
+            var eoExpr1 = validateAndOptimizeExpression(ternOp.expr1(), typEnv, varEnv, requireConst, messages.detatch());
+            var eoExpr2 = validateAndOptimizeExpression(ternOp.expr2(), typEnv, varEnv, requireConst, messages.detatch());
+            var eoExpr3 = validateAndOptimizeExpression(ternOp.expr3(), typEnv, varEnv, requireConst, messages.detatch());
+
+            Type type1 = eoExpr1.type();
+            if (isNotBool(type1))
+                messages.add(new SemError(ternOp.expr1().line(), "First operand of ternery operator ?: should be a boolean. Got '" + type1 + "'."));
+
+            Type type2 = eoExpr2.type();
+            Type type3 = eoExpr3.type();
+            Type resType = isNotEqual(type2, type3) ? null : type2;
+            if (resType == null)
+                messages.add(new SemError(ternOp.line(), "Second and third operands of ternery operator ?: should have the same type. Got '" + type2 + "' and '" + type3 + "'."));
+
+            return tryOptimizeExprOrNull(eoExpr1, eoExpr2, eoExpr3, ternOp::withExprs, varEnv, resType, messages.hasErrorOnNode());
+        }
         else if (expr instanceof QuantifierOp quanOp) {
             var eoList = validateAndOptimizeExpression(quanOp.list(), typEnv, varEnv, requireConst, messages.detatch());
 
@@ -605,6 +623,24 @@ public class SemanticAnalysis extends BaseInterpreter
             if (isConst)
                 newExpr = asExpr(evalExpr(newExpr, varEnv));
         }
+        return mkRes(newExpr, type, isConst);
+    }
+
+    public ExprOptimizeResult tryOptimizeExprOrNull(
+            ExprOptimizeResult res1,
+            ExprOptimizeResult res2,
+            ExprOptimizeResult res3,
+            TriFunction<Expr, Expr, Expr, Expr> onWellDefined,
+            VariableEnv varEnv,
+            Type type,
+            boolean hasError
+    ) {
+        Boolean isConst;
+        Expr newExpr = hasError ? null : res1.ifWellDefinedOrNull(expr1 -> res2.ifWellDefinedOrNull(expr2 -> res3.ifWellDefinedOrNull(expr3 -> onWellDefined.apply(expr1, expr2, expr3))));
+        if (newExpr == null)
+            isConst = null;
+        else if (isConst = res1.isConstant() && res2.isConstant() && res3.isConstant())
+            newExpr = asExpr(evalExpr(newExpr, varEnv));
         return mkRes(newExpr, type, isConst);
     }
 

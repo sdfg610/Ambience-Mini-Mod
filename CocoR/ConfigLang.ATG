@@ -128,7 +128,15 @@ Shed<out Schedule schedule>                  (. schedule = null; boolean instant
 /*------------------------------------------------------------------------*/
 // Expressions
 Expr<out Expr expr>
+    = ExprCond<out expr>
+.
+
+ExprCond<out Expr expr>
     = ExprNull<out expr>
+      [ "?"                           (. int line = t.line; .)
+            ExprNull<out Expr expr2>
+        ":" ExprNull<out Expr expr3>  (. expr = new TerneryOp(expr, expr2, expr3, line); .)
+      ]
 .
 
 ExprNull<out Expr expr>

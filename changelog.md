@@ -11,7 +11,7 @@ The biggest update yet is upon us!
   * This allows server maintainers to add new music (e.g., for areas) without redistributing the music pack.
 
 **Configuration language:**
-- **IMPORTANT:** `++` is now behaves such that `[...] ++ undefined == undefined` instead of being equal to `[...]`.
+- **IMPORTANT:** `++` now behaves such that `[...] ++ undefined == undefined` instead of being equal to `[...]`.
 - Added undefined-check operator `??`. E.g., `(undefined ?? other) == other`.
 - In addition to playlists in the beginning of `music_conig.txt`, you can now define global constants of any type, e.g. `int horde_fight_threshold = 5;`.
 - Right after the playlists and global constants, you can now configure the playlists that the server should make available using [the `serve_playlists` keyword](link to wiki).
@@ -20,8 +20,9 @@ The biggest update yet is upon us!
 - The "`+`" operator now works between strings (as well as numbers). Use "`++`" between playlists.
 - You can now manually specify loop intervals in the music config. For example `"music.wav"<loopstart=1000, loopend=9001>`. A `looplength` flag is also available.
 - All constant expressions/values in music configs are now pre-computed on load to improve performance.
-- Added list operation: `count ELEM in LIST where CONDITION end`
-- Added list operation: `get ELEM in LIST where CONDITION end`
+- Added list operation: `count ELEM in LIST where CONDITION end`.
+- Added list operation: `get ELEM in LIST where CONDITION end`.
+- Added ternery operator: `CONDITION ? VAL1 : VAL2`. If `CONDITION` is `true`, `VAL1` is output. Otherwise, `VAL2` is output.
 
 **Menus and keybindings:**
 - Removed keybindings for "play/pause" (default: `END`) and "reload music player" (default: `P`).

@@ -46,6 +46,8 @@ public class BaseInterpreter {
             return evalUnOp(unOp, env);
         else if (expr instanceof BinaryOp binOp)
             return evalBinOp(binOp, env);
+        else if (expr instanceof TerneryOp ternOp)
+            return evalTernOp(ternOp, env);
         else if (expr instanceof Accessor acc)
             return evalAccessor(acc, env);
         else if (expr instanceof QuantifierOp quanOp)
@@ -229,6 +231,15 @@ public class BaseInterpreter {
 
     protected Value<?> opNullCheck(Value<?> left, Supplier<Value<?>> right) {
         return left.isUndefined() ? right.get() : left;
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Ternery Operator
+    private Value<?> evalTernOp(TerneryOp ternOp, VariableEnv env) {
+        var cond = evalExpr(ternOp.expr1(), env);
+        var expr = cond.asBool().orElse(false) ? ternOp.expr2() : ternOp.expr3();
+        return evalExpr(expr, env);
     }
 
 

@@ -83,6 +83,8 @@ public class PrettyPrinter {
             return '$' + getProperty.propertyName().value();
         else if (expr instanceof BinaryOp binOp)
             return printBinaryOp(binOp.op(), binOp.left(), binOp.right());
+        else if (expr instanceof TerneryOp ternOp)
+            return printTerneryOp(ternOp.expr1(), ternOp.expr2(), ternOp.expr3());
         else if (expr instanceof Accessor acc)
             return printAccessor(acc);
         else if (expr instanceof QuantifierOp quanOp)
@@ -99,7 +101,7 @@ public class PrettyPrinter {
 
     private static String surround(Expr expr)
     {
-        if (expr instanceof BinaryOp)
+        if (expr instanceof BinaryOp || expr instanceof TerneryOp)
             return "(" + printExpr(expr) + ")";
         return printExpr(expr);
     }
@@ -152,6 +154,13 @@ public class PrettyPrinter {
             case APPEND -> "++";
             case NULL_CHECK -> "??";
         };
+    }
+
+    public static String printTerneryOp(Expr expr1, Expr expr2, Expr expr3) {
+        String e1 = surround(expr1);
+        String e2 = surround(expr2);
+        String e3 = surround(expr3);
+        return e1 + " ? " + e2 + " : " + e3;
     }
 
     public static String getQuantifierString(Quantifiers op) {
