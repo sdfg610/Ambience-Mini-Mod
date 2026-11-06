@@ -12,7 +12,7 @@ which will be explained when met first in context.  */
 
 /* Imports here are inserted at the top of the generated lexer and parser. */
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.*;
-import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.schedule.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.command.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.server_playlists.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.misc.*;
@@ -48,6 +48,8 @@ TOKENS
   FLOAT  = digit {digit} '.' digit {digit}  .
   STRING = '"' {stringChar} '"' .
 
+  MODIFIER = '#' ('_' | letter) {letter | digit | '_'} .
+
 COMMENTS FROM "/*" TO "*/" NESTED  /* Nested means: "There can be comments inside comments" */
 COMMENTS FROM "//" TO lf
 
@@ -62,11 +64,11 @@ PRODUCTIONS
 // Configurations
 File = Conf<out mainNode> .
 
-Conf<out Config conf>              (. var declarations = new ArrayList<GlobalDecl>(); ServerPlaylists serverPl = null; Schedule schedule = null; .)
+Conf<out Config conf>              (. var declarations = new ArrayList<GlobalDecl>(); ServerPlaylists serverPl = null; Command command = null; .)
     = { Decl<out GlobalDecl decl>  (. declarations.add(decl); .)
     } [ "serve_playlists" ':' ServerPlaylists<out serverPl>
-    ] [ Shed<out schedule>
-    ]                              (. conf = new Config(declarations, serverPl, schedule); .)
+    ] [ Shed<out command>
+    ]                              (. conf = new Config(declarations, serverPl, command); .)
 .
 /* | "preset" STRING [ "default" ] ':' */
 
@@ -96,32 +98,35 @@ ServerPlaylists<out ServerPlaylists serverPl>  (. serverPl = null; .)
 
 
 /*------------------------------------------------------------------------*/
-// Schedules / Client music selection strategy
-Shed<out Schedule schedule>                  (. schedule = null; boolean instant = false; boolean ifdef = false; .)
+// Commands / Client music selection strategy
+Shed<out Command command>                  (. command = null; boolean instant = false; boolean ifdef = false; .)
     = "play"                          (. int line = t.line; .)
       { "instant"                     (. instant = true; .)
       | "ifdef"                       (. ifdef = true; .)
       } Expr<out Expr expr>           (. IntLit priority = null; .)
       [ "priority" INT                (. priority = new IntLit(Integer.parseInt(t.val), t.line); .)
       ]
-      ';'                             (. schedule = new Play(expr, instant, ifdef, priority, line); .)
+      ';'                             (. command = new Play(expr, instant, ifdef, priority, line); .)
     | "use_vanilla_player"            (. int line = t.line; .)
-      ';'                             (. schedule = new Vanilla(line); .)
-    | "begin"                                (. ArrayList<Schedule> body = new ArrayList<>(); int line = t.line; .)
-      { Shed<out Schedule schedule2>         (. body.add(schedule2); .)
+      ';'                             (. command = new Vanilla(line); .)
+    | "begin"                                (. ArrayList<Command> body = new ArrayList<>(); int line = t.line; .)
+      { Shed<out Command command2>         (. body.add(command2); .)
       }
-      "end"                                  (. schedule = new Block(body, line); .)
+      "end"                                  (. command = new Block(body, line); .)
     | "when"                                   (. int line = t.line; .)
       '(' Expr<out Expr expr>
-      ')' Shed<out Schedule schedule2>         (. schedule = new When(expr, schedule2, line); .)
+      ')' Shed<out Command command2>         (. command = new When(expr, command2, line); .)
     | "let"                               (. int line = t.line; Type type = null; .)
       IDENT                               (. Ident ident = new Ident(t.val, t.line); .)
       [ ':' Type<out type> ]
       '=' Expr<out Expr expr>
-      "in" Shed<out Schedule shed>        (. schedule = new Let(type, ident, expr, shed, line); .)
-    | "default" Shed<out schedule>
+      "in" Shed<out Command shed>        (. command = new Let(type, ident, expr, shed, line); .)
+    | "default" Shed<out command>
     | "interrupt"                       (. int line = t.line; .)
-      Shed<out Schedule schedule2>      (. schedule = new Interrupt(schedule2, line); .)
+      Shed<out Command command2>      (. command = new Interrupt(command2, line); .)
+    | MODIFIER                  (. String mod = t.val.substring(1); int line = t.line; .)
+        Expr<out Expr expr>     (. command = new Modifier(mod, expr, line); .)
+        ';'
 .
 
 

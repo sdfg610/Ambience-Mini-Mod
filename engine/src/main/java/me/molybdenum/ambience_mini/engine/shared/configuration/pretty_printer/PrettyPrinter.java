@@ -1,9 +1,9 @@
 package me.molybdenum.ambience_mini.engine.shared.configuration.pretty_printer;
 
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.command.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.misc.ArgList;
-import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
 
 import java.util.ArrayList;
@@ -15,8 +15,8 @@ public class PrettyPrinter {
         for (var decl : config.declarations())
             items.add(printDeclaration(decl));
 
-        if (config.schedule() != null)
-            items.add(printSchedule(config.schedule()));
+        if (config.command() != null)
+            items.add(printSchedule(config.command()));
 
         return String.join("\n\n", items);
     }
@@ -27,34 +27,35 @@ public class PrettyPrinter {
     }
 
 
-    public static String printSchedule(Schedule schedule) {
-        return printSchedule(schedule, 0);
+    public static String printSchedule(Command command) {
+        return printSchedule(command, 0);
     }
 
-    private static String printSchedule(Schedule schedule, int depth) {
-        if (schedule instanceof Play play)
+    private static String printSchedule(Command command, int depth) {
+        if (command instanceof Play play)
             return indent(depth) + "play "
                     + (play.isInstant() ? "instant " : "")
                     + (play.ifdef() ? "ifdef " : "")
                     + printExpr(play.playlist())
                     + play.getPriorityOpt().map(p -> " priority " + p).orElse("") + ";\n";
-        else if (schedule instanceof Vanilla)
+        else if (command instanceof Vanilla)
             return indent(depth) + "use_vanilla_player;\n";
-        else if (schedule instanceof Interrupt interrupt)
+        else if (command instanceof Interrupt interrupt)
             return indent(depth) + "interrupt " +
                     printSchedule(interrupt.body(), interrupt.body() instanceof Block ? depth : 0);
-        else if (schedule instanceof Block block)
+        else if (command instanceof Block block)
             return "\n" + indent(depth) + "begin\n" +
                     String.join("", block.body().stream().map(sh -> printSchedule(sh, depth+1)).toList()) +
                     indent(depth) + "end\n";
-        else if (schedule instanceof When when)
+        else if (command instanceof When when)
             return indent(depth) + "when (" + printExpr(when.condition()) + ") " +
                     printSchedule(when.body(), when.body() instanceof Block ? depth : 0);
-        else if (schedule instanceof Let let)
+        else if (command instanceof Let let)
             return indent(depth) + "let " + let.ident().value() + (let.type() == null ? "" : ": " + let.type()) + " = " + printExpr(let.value()) + " in\n" +
                     printSchedule(let.body(), let.body() instanceof Block ? depth : 0);
+        // TODO: Print modifier
 
-        throw new RuntimeException("Unhandled Shed-type: " + schedule.getClass().getCanonicalName());
+        throw new RuntimeException("Unhandled Shed-type: " + command.getClass().getCanonicalName());
     }
 
     private static String indent(int depth) {
@@ -81,6 +82,7 @@ public class PrettyPrinter {
             return '@' + getEvent.eventName().value();
         else if (expr instanceof GetProperty getProperty)
             return '$' + getProperty.propertyName().value();
+        // TODO: Unary operators
         else if (expr instanceof BinaryOp binOp)
             return printBinaryOp(binOp.op(), binOp.left(), binOp.right());
         else if (expr instanceof TerneryOp ternOp)

@@ -1,7 +1,7 @@
 
 ### Version 2.8.0:
 
-The biggest update yet is upon us! 
+The wait is over and the biggest update yet is here! 
 
 **Server-located playlists and music:**
 - Added property `$server_playlists` to the configuration language which is a map from strings (playlist names) to playlists with music located on the server.
@@ -23,6 +23,8 @@ The biggest update yet is upon us!
 - Added list operation: `count ELEM in LIST where CONDITION end`.
 - Added list operation: `get ELEM in LIST where CONDITION end`.
 - Added ternery operator: `CONDITION ? VAL1 : VAL2`. If `CONDITION` is `true`, `VAL1` is output. Otherwise, `VAL2` is output.
+- Added a modifier `#volume SCALE;` to allow changing music volume in the configuration (`trueVolume = volume * SCALE`).
+  * Used similar to a play statement along other commands. See sample music pack for example.
 
 **Menus and keybindings:**
 - Removed keybindings for "play/pause" (default: `END`) and "reload music player" (default: `P`).
@@ -58,7 +60,7 @@ The biggest update yet is upon us!
 
 **Combat:**
 - The mod can now register when the Warden is targeting the player.
-- Fixed bug where mob un-targeting player is not registered, causing "@is_targeted" to stay active until mobs disappear.
+- Fixed bug where mob un-targeting player is not registered, causing `@is_targeted` to stay active until mobs disappear.
 
 **Miscellaneous:**
 - Minor improvements to output created by verbose mode.

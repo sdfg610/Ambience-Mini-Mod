@@ -246,8 +246,8 @@ class StartStates {
 public class Scanner {
 	static final char EOL = '\n';
 	static final int  eofSym = 0;
-	static final int maxT = 66;
-	static final int noSym = 66;
+	static final int maxT = 67;
+	static final int noSym = 67;
 
 
 	public Buffer buffer; // scanner buffer
@@ -275,63 +275,64 @@ public class Scanner {
 		for (int i = 65; i <= 90; ++i) start.set(i, 1);
 		for (int i = 95; i <= 95; ++i) start.set(i, 1);
 		for (int i = 97; i <= 122; ++i) start.set(i, 1);
-		for (int i = 48; i <= 57; ++i) start.set(i, 6);
+		for (int i = 48; i <= 57; ++i) start.set(i, 8);
 		start.set(34, 4); 
-		start.set(58, 7); 
-		start.set(61, 32); 
-		start.set(59, 8); 
-		start.set(40, 9); 
-		start.set(41, 10); 
-		start.set(63, 33); 
-		start.set(38, 12); 
-		start.set(124, 14); 
-		start.set(126, 17); 
-		start.set(42, 34); 
-		start.set(33, 35); 
-		start.set(60, 36); 
-		start.set(62, 37); 
-		start.set(43, 38); 
-		start.set(45, 23); 
-		start.set(47, 24); 
-		start.set(91, 26); 
-		start.set(93, 27); 
-		start.set(46, 28); 
-		start.set(64, 29); 
-		start.set(36, 30); 
-		start.set(44, 31); 
+		start.set(35, 6); 
+		start.set(58, 9); 
+		start.set(61, 34); 
+		start.set(59, 10); 
+		start.set(40, 11); 
+		start.set(41, 12); 
+		start.set(63, 35); 
+		start.set(38, 14); 
+		start.set(124, 16); 
+		start.set(126, 19); 
+		start.set(42, 36); 
+		start.set(33, 37); 
+		start.set(60, 38); 
+		start.set(62, 39); 
+		start.set(43, 40); 
+		start.set(45, 25); 
+		start.set(47, 26); 
+		start.set(91, 28); 
+		start.set(93, 29); 
+		start.set(46, 30); 
+		start.set(64, 31); 
+		start.set(36, 32); 
+		start.set(44, 33); 
 		start.set(Buffer.EOF, -1);
-		literals.put("serve_playlists", 5);
-		literals.put("group", 9);
-		literals.put("end", 10);
-		literals.put("play", 11);
-		literals.put("instant", 12);
-		literals.put("ifdef", 13);
-		literals.put("priority", 14);
-		literals.put("use_vanilla_player", 15);
-		literals.put("begin", 16);
-		literals.put("when", 17);
-		literals.put("let", 20);
-		literals.put("in", 21);
-		literals.put("default", 22);
-		literals.put("interrupt", 23);
-		literals.put("any", 47);
-		literals.put("all", 48);
-		literals.put("has", 49);
-		literals.put("get", 50);
-		literals.put("count", 51);
-		literals.put("where", 52);
-		literals.put("undefined", 54);
-		literals.put("true", 55);
-		literals.put("false", 56);
-		literals.put("bool", 57);
-		literals.put("int", 58);
-		literals.put("float", 59);
-		literals.put("string", 60);
-		literals.put("area", 61);
-		literals.put("combatant", 62);
-		literals.put("playlist", 63);
-		literals.put("list", 64);
-		literals.put("map", 65);
+		literals.put("serve_playlists", 6);
+		literals.put("group", 10);
+		literals.put("end", 11);
+		literals.put("play", 12);
+		literals.put("instant", 13);
+		literals.put("ifdef", 14);
+		literals.put("priority", 15);
+		literals.put("use_vanilla_player", 16);
+		literals.put("begin", 17);
+		literals.put("when", 18);
+		literals.put("let", 21);
+		literals.put("in", 22);
+		literals.put("default", 23);
+		literals.put("interrupt", 24);
+		literals.put("any", 48);
+		literals.put("all", 49);
+		literals.put("has", 50);
+		literals.put("get", 51);
+		literals.put("count", 52);
+		literals.put("where", 53);
+		literals.put("undefined", 55);
+		literals.put("true", 56);
+		literals.put("false", 57);
+		literals.put("bool", 58);
+		literals.put("int", 59);
+		literals.put("float", 60);
+		literals.put("string", 61);
+		literals.put("area", 62);
+		literals.put("combatant", 63);
+		literals.put("playlist", 64);
+		literals.put("list", 65);
+		literals.put("map", 66);
 
 	}
 	
@@ -486,91 +487,98 @@ public class Scanner {
 				case 5:
 					{t.kind = 4; break loop;}
 				case 6:
+					if (ch >= 'A' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); state = 7; break;}
+					else {state = 0; break;}
+				case 7:
+					recEnd = pos; recKind = 5;
+					if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch == '_' || ch >= 'a' && ch <= 'z') {AddCh(); state = 7; break;}
+					else {t.kind = 5; break loop;}
+				case 8:
 					recEnd = pos; recKind = 2;
-					if (ch >= '0' && ch <= '9') {AddCh(); state = 6; break;}
+					if (ch >= '0' && ch <= '9') {AddCh(); state = 8; break;}
 					else if (ch == '.') {AddCh(); state = 2; break;}
 					else {t.kind = 2; break loop;}
-				case 7:
-					{t.kind = 6; break loop;}
-				case 8:
-					{t.kind = 8; break loop;}
 				case 9:
-					{t.kind = 18; break loop;}
+					{t.kind = 7; break loop;}
 				case 10:
-					{t.kind = 19; break loop;}
+					{t.kind = 9; break loop;}
 				case 11:
-					{t.kind = 25; break loop;}
+					{t.kind = 19; break loop;}
 				case 12:
-					if (ch == '&') {AddCh(); state = 13; break;}
-					else {state = 0; break;}
+					{t.kind = 20; break loop;}
 				case 13:
 					{t.kind = 26; break loop;}
 				case 14:
-					if (ch == '|') {AddCh(); state = 15; break;}
+					if (ch == '&') {AddCh(); state = 15; break;}
 					else {state = 0; break;}
 				case 15:
 					{t.kind = 27; break loop;}
 				case 16:
-					{t.kind = 28; break loop;}
-				case 17:
-					if (ch == '~') {AddCh(); state = 18; break;}
+					if (ch == '|') {AddCh(); state = 17; break;}
 					else {state = 0; break;}
+				case 17:
+					{t.kind = 28; break loop;}
 				case 18:
 					{t.kind = 29; break loop;}
 				case 19:
-					{t.kind = 30; break loop;}
+					if (ch == '~') {AddCh(); state = 20; break;}
+					else {state = 0; break;}
 				case 20:
-					{t.kind = 31; break loop;}
+					{t.kind = 30; break loop;}
 				case 21:
-					{t.kind = 34; break loop;}
+					{t.kind = 31; break loop;}
 				case 22:
-					{t.kind = 35; break loop;}
+					{t.kind = 32; break loop;}
 				case 23:
-					{t.kind = 37; break loop;}
+					{t.kind = 35; break loop;}
 				case 24:
-					{t.kind = 39; break loop;}
+					{t.kind = 36; break loop;}
 				case 25:
-					{t.kind = 40; break loop;}
+					{t.kind = 38; break loop;}
 				case 26:
-					{t.kind = 42; break loop;}
+					{t.kind = 40; break loop;}
 				case 27:
-					{t.kind = 43; break loop;}
+					{t.kind = 41; break loop;}
 				case 28:
-					{t.kind = 44; break loop;}
+					{t.kind = 43; break loop;}
 				case 29:
-					{t.kind = 45; break loop;}
+					{t.kind = 44; break loop;}
 				case 30:
-					{t.kind = 46; break loop;}
+					{t.kind = 45; break loop;}
 				case 31:
-					{t.kind = 53; break loop;}
+					{t.kind = 46; break loop;}
 				case 32:
-					recEnd = pos; recKind = 7;
-					if (ch == '=') {AddCh(); state = 16; break;}
-					else {t.kind = 7; break loop;}
+					{t.kind = 47; break loop;}
 				case 33:
-					recEnd = pos; recKind = 24;
-					if (ch == '?') {AddCh(); state = 11; break;}
-					else {t.kind = 24; break loop;}
+					{t.kind = 54; break loop;}
 				case 34:
-					recEnd = pos; recKind = 38;
-					if (ch == '~') {AddCh(); state = 19; break;}
-					else {t.kind = 38; break loop;}
+					recEnd = pos; recKind = 8;
+					if (ch == '=') {AddCh(); state = 18; break;}
+					else {t.kind = 8; break loop;}
 				case 35:
-					recEnd = pos; recKind = 41;
-					if (ch == '=') {AddCh(); state = 20; break;}
-					else {t.kind = 41; break loop;}
+					recEnd = pos; recKind = 25;
+					if (ch == '?') {AddCh(); state = 13; break;}
+					else {t.kind = 25; break loop;}
 				case 36:
-					recEnd = pos; recKind = 32;
-					if (ch == '=') {AddCh(); state = 21; break;}
-					else {t.kind = 32; break loop;}
+					recEnd = pos; recKind = 39;
+					if (ch == '~') {AddCh(); state = 21; break;}
+					else {t.kind = 39; break loop;}
 				case 37:
-					recEnd = pos; recKind = 33;
+					recEnd = pos; recKind = 42;
 					if (ch == '=') {AddCh(); state = 22; break;}
-					else {t.kind = 33; break loop;}
+					else {t.kind = 42; break loop;}
 				case 38:
-					recEnd = pos; recKind = 36;
-					if (ch == '+') {AddCh(); state = 25; break;}
-					else {t.kind = 36; break loop;}
+					recEnd = pos; recKind = 33;
+					if (ch == '=') {AddCh(); state = 23; break;}
+					else {t.kind = 33; break loop;}
+				case 39:
+					recEnd = pos; recKind = 34;
+					if (ch == '=') {AddCh(); state = 24; break;}
+					else {t.kind = 34; break loop;}
+				case 40:
+					recEnd = pos; recKind = 37;
+					if (ch == '+') {AddCh(); state = 27; break;}
+					else {t.kind = 37; break loop;}
 
 			}
 		}

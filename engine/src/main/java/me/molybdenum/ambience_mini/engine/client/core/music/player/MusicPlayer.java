@@ -20,6 +20,7 @@ public class MusicPlayer
     private static final int BUFFER_UPDATE_INTERVAL_MS = 500;
 
     private final Stack<ChannelEntry> stack = new Stack<>(); // Priorities and channels
+    private ChannelEntry currentlyPlaying;
 
     private final BaseNotification<?> notification;
     private final ServerMusicCache musicCache;
@@ -29,7 +30,8 @@ public class MusicPlayer
 
     private final int musicFadeTime;
 
-    private float currentMusicVolume;
+    private float currentVolume;
+    private float currentVolumeScale;
 
     private final List<Consumer<PlayState>> nowPlayingListeners = new ArrayList<>();
 
@@ -126,12 +128,29 @@ public class MusicPlayer
     // -----------------------------------------------------------------------------------------------------------------
     // Control
     public void setVolume(float volume) {
-        if (Math.abs(currentMusicVolume - volume) >= 0.01f) {
-            currentMusicVolume = volume;
-            for (var entry : stack)
-                entry.ifPresent(ch -> ch.setVolume(volume));
+        if (Math.abs(currentVolume - volume) >= 0.01f) {
+            currentVolume = volume;
+            updateVolume();
         }
     }
+
+    public void setVolumeScale(float volumeScale) {
+        if (Math.abs(currentVolumeScale - volumeScale) >= 0.01f) {
+            currentVolumeScale = volumeScale;
+            updateVolume();
+        }
+    }
+
+    private float getTrueVolume() {
+        return Math.max(0f, Math.min(5f, currentVolume * currentVolumeScale));
+    }
+
+    private void updateVolume() {
+        var curr = currentlyPlaying;
+        if (curr != null)
+            curr.ifPresent(ch -> ch.setVolume(getTrueVolume()));
+    }
+
 
     public void silence(int priority, boolean doFade) {
         if (priority < 0)
@@ -140,7 +159,7 @@ public class MusicPlayer
         synchronized (stack) {
             stopGreaterThanEqual(priority, doFade);
             pause(doFade);
-            stack.push(new ChannelEntry(null, priority));
+            stack.push(currentlyPlaying = new ChannelEntry(null, priority));
         }
     }
 
@@ -148,11 +167,11 @@ public class MusicPlayer
         if (priority < 0)
             throw new RuntimeException("Priority of music cannot be negative!");
 
-        Channel channel = createChannel(music, currentMusicVolume);
+        Channel channel = createChannel(music, getTrueVolume());
         synchronized (stack) {
             stopGreaterThanEqual(priority, doFade);
             pause(doFade);
-            stack.push(new ChannelEntry(channel, priority));
+            stack.push(currentlyPlaying = new ChannelEntry(channel, priority));
             jobCenter.post(new InitMusicBufferJob(channel, doFade));
         }
     }
@@ -167,6 +186,7 @@ public class MusicPlayer
                 var entry = stack.peek();
                 if (entry.priority == priority) {
                     entry.ifPresent(ch -> bufferAndResumeAndNotify(ch, fadeIn));
+                    currentlyPlaying = entry;
                     return;
                 }
             }
@@ -183,8 +203,10 @@ public class MusicPlayer
 
     public void stopGreaterThanEqual(int priority, boolean fadeOut) {
         synchronized (stack) {
-            while (!stack.empty() && stack.peek().priority >= priority)
+            while (!stack.empty() && stack.peek().priority >= priority) {
                 stack.pop().ifPresent(ch -> ch.stopAndClose(fadeOut ? musicFadeTime : -1));
+                currentlyPlaying = null;
+            }
         }
     }
 
@@ -211,6 +233,7 @@ public class MusicPlayer
         bufferJob = jobCenter.schedule(new MusicBufferJob(channel), 0, BUFFER_UPDATE_INTERVAL_MS);
 
         currentChannel = channel;
+        channel.setVolume(getTrueVolume());
         channel.resume(doFade ? musicFadeTime : -1);
         notifyListeners(channel);
     }

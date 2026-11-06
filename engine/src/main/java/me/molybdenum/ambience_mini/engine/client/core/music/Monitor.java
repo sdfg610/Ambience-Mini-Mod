@@ -8,7 +8,6 @@ import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
 import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.MusicSelector;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.Value;
-import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
@@ -300,6 +299,9 @@ public class Monitor
 
             List<Music> nextPlaylist = nextChoice.playlist();
             int nextPriority = nextChoice.priority();
+
+            var volumeScale = nextChoice.volumeScale();
+            musicPlayer.setVolumeScale(volumeScale != null ? volumeScale : 1f);
 
             if (verboseMode) {
                 long selectTime = System.currentTimeMillis() - _benchmarkTime;

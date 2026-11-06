@@ -1,11 +1,11 @@
-package me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.schedule;
+package me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.command;
 
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.Expr;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.IntLit;
 
 import java.util.Optional;
 
-public record Play(Expr playlist, boolean isInstant, boolean ifdef, IntLit priority, int line) implements Schedule
+public record Play(Expr playlist, boolean isInstant, boolean ifdef, IntLit priority, int line) implements Command
 {
     public Play withPlaylistAndPriority(Expr newPlaylist, IntLit newPriority) {
         return new Play(newPlaylist, isInstant, ifdef, newPriority, line);

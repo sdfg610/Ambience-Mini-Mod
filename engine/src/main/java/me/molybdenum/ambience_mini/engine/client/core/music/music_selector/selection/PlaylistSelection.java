@@ -4,5 +4,10 @@ import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 
 import java.util.List;
 
-public record PlaylistSelection(List<Music> playlist, boolean isInstant, int priority, int line) implements Selection {
-}
+public record PlaylistSelection(
+        List<Music> playlist,
+        boolean isInstant,
+        int priority,
+        Float volumeScale,
+        int line
+) implements Selection { }

@@ -2,10 +2,10 @@ package me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysi
 
 import me.molybdenum.ambience_mini.engine.shared.configuration.LoadResult;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.command.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.expression.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.misc.Arg;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.misc.ArgList;
-import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.schedule.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.server_playlists.PlaylistGroup;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.server_playlists.PlaylistInstance;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.server_playlists.ServerPlaylists;
@@ -72,14 +72,14 @@ public class SemanticAnalysis extends BaseInterpreter
 
         validateDeclarations(config, typEnv, varEnv, messages);
         var newServerPlaylists = validateAndOptimizeServerPlaylists(config.serverPlaylists(), typEnv, varEnv, new MessageListBuilder(messages), "");
-        var newSchedule = validateAndOptimizeScheduleIfNecessary(config, typEnv, varEnv, new MessageListBuilder(messages));
+        var newCommand = validateAndOptimizeCommandIfNecessary(config, typEnv, varEnv, new MessageListBuilder(messages));
 
         makeUnusedVariableWarnings(typEnv, new MessageListBuilder(messages));
         makeUnusedMusicWarnings(messages);
 
         // Empty list for declarations since these are constant and are written into the rest of the config
         return messages.stream().anyMatch(Message::isError) ? null
-                : new Config(List.of(), newServerPlaylists, newSchedule);
+                : new Config(List.of(), newServerPlaylists, newCommand);
     }
 
 
@@ -170,25 +170,25 @@ public class SemanticAnalysis extends BaseInterpreter
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Schedules
-    private Schedule validateAndOptimizeScheduleIfNecessary(Config config, TypeEnv typEnv, VariableEnv varEnv, MessageListBuilder messages) {
-        var schedule = config.schedule();
+    // Commands
+    private Command validateAndOptimizeCommandIfNecessary(Config config, TypeEnv typEnv, VariableEnv varEnv, MessageListBuilder messages) {
+        var command = config.command();
         if (setup instanceof Setup.DedicatedServer) {
-            if (schedule != null)
-                messages.add(new Warning(schedule.line(), "Music pack on dedicated server has a music schedule, but this is ignored on dedicated servers."));
+            if (command != null)
+                messages.add(new Warning(command.line(), "Music pack on dedicated server has a music command, but this is ignored on dedicated servers."));
         }
         else if (setup instanceof Setup.Client) {
-            if (schedule == null)
-                messages.add(new SemError(-1, "This music pack does not have a music schedule and cannot be loaded on the client."));
+            if (command == null)
+                messages.add(new SemError(-1, "This music pack does not have a music command and cannot be loaded on the client."));
             else
-                return validateAndOptimizeSchedule(schedule, typEnv, varEnv, messages);
+                return validateAndOptimizeCommand(command, typEnv, varEnv, messages);
         }
 
         return null;
     }
 
-    private Schedule validateAndOptimizeSchedule(Schedule schedule, TypeEnv typEnv, VariableEnv varEnv, MessageListBuilder messages) {
-        if (schedule instanceof Play play) {
+    private Command validateAndOptimizeCommand(Command command, TypeEnv typEnv, VariableEnv varEnv, MessageListBuilder messages) {
+        if (command instanceof Play play) {
             var eoResult = validateAndOptimizeExpression(play.playlist(), typEnv, varEnv, false, messages.detatch());
 
             eoResult.ifTypeDefined(type -> {
@@ -203,14 +203,14 @@ public class SemanticAnalysis extends BaseInterpreter
                     newPlaylist -> messages.hasErrorOnNode() ? null : play.withPlaylistAndPriority(newPlaylist, play.computePriorityIfAbsent(nestedInterrupts))
             );
         }
-        else if (schedule instanceof Block block) {
+        else if (command instanceof Block block) {
             var newBody = block.body().stream()
-                    .map(child -> validateAndOptimizeSchedule(child, typEnv, varEnv, messages.detatch()))
+                    .map(child -> validateAndOptimizeCommand(child, typEnv, varEnv, messages.detatch()))
                     .toList();
 
             return newBody.contains(null) ? null : block.withBody(newBody);
         }
-        else if (schedule instanceof When when) {
+        else if (command instanceof When when) {
             var eoResult = validateAndOptimizeExpression(when.condition(), typEnv, varEnv, false, messages.detatch());
 
             eoResult.ifTypeDefined(type -> {
@@ -220,11 +220,11 @@ public class SemanticAnalysis extends BaseInterpreter
 
             // TODO: Optimize away when condition is constant
 
-            var newBody = validateAndOptimizeSchedule(when.body(), typEnv, varEnv, messages.detatch());
+            var newBody = validateAndOptimizeCommand(when.body(), typEnv, varEnv, messages.detatch());
             return newBody == null || messages.hasErrorOnNode() ? null
                     : new When(when.condition(), newBody, when.line());
         }
-        else if (schedule instanceof Let let) {
+        else if (command instanceof Let let) {
             var eoResult = validateAndOptimizeExpression(let.value(), typEnv, varEnv, false, messages.detatch());
 
             Type expectedType = let.type();
@@ -238,7 +238,7 @@ public class SemanticAnalysis extends BaseInterpreter
             var newVarEnv = varEnv.enterScope();
             if (binding.isPresent() && binding.get().isStaticallyEvaluable())
                 newVarEnv.bind(let.ident().value(), eoResult.getValue());
-            var newBody = validateAndOptimizeSchedule(let.body(), typEnv, newVarEnv, messages.detatch());
+            var newBody = validateAndOptimizeCommand(let.body(), typEnv, newVarEnv, messages.detatch());
 
             makeUnusedVariableWarnings(typEnv, messages);
             typEnv.closeScope();
@@ -248,18 +248,32 @@ public class SemanticAnalysis extends BaseInterpreter
             return newBody == null || !eoResult.isWellDefined() || messages.hasErrorOnNode() ? null
                     : let.withValueAndBody(eoResult.expr(), newBody);
         }
-        else if (schedule instanceof Interrupt interrupt) {
+        else if (command instanceof Interrupt interrupt) {
             ++nestedInterrupts;
-            var newBody = validateAndOptimizeSchedule(interrupt.body(), typEnv, varEnv, messages.detatch());
+            var newBody = validateAndOptimizeCommand(interrupt.body(), typEnv, varEnv, messages.detatch());
             --nestedInterrupts;
 
             return newBody;
         }
-        else if (schedule instanceof Vanilla || schedule == null) {
-            return schedule;
+        else if (command instanceof Modifier mod) {
+            var eoResult = validateAndOptimizeExpression(mod.arg(), typEnv, varEnv, false, messages.detatch());
+
+            Type type = eoResult.type();
+            switch (mod.modifier()) {
+                case VOLUME -> {
+                    if (isNotNumber(type))
+                        messages.add(new SemError(mod.line(), "The argument to #" + mod.name() + " must be a number. Got '" + type + "'"));
+                }
+            }
+
+            return !eoResult.isWellDefined() || messages.hasErrorOnNode() ? null
+                    : mod.withArg(eoResult.expr());
+        }
+        else if (command instanceof Vanilla || command == null) {
+            return command;
         }
         else
-            throw new RuntimeException("Unhandled Schedule-type: " + schedule.getClass().getCanonicalName());
+            throw new RuntimeException("Unhandled Command-type: " + command.getClass().getCanonicalName());
     }
 
 

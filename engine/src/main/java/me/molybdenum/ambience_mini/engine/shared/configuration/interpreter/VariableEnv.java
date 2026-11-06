@@ -1,11 +1,17 @@
 package me.molybdenum.ambience_mini.engine.shared.configuration.interpreter;
 
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.command.ModifierKinds;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.Value;
+
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Optional;
 
 public class VariableEnv
 {
     private final VariableEnv parent;
-    private final HashMap<String, Object> bindings = new HashMap<>();
+    private final HashMap<String, Value<?>> bindings = new HashMap<>();
+    private final EnumMap<ModifierKinds, Value<?>> modifiers = new EnumMap<>(ModifierKinds.class);
 
 
     public VariableEnv() {
@@ -21,25 +27,39 @@ public class VariableEnv
         return new VariableEnv(this);
     }
 
-    public VariableEnv bind(String ident, Object value) {
+
+    public VariableEnv bind(String ident, Value<?> value) {
         if (bindings.put(ident, value) != null)
             throw new RuntimeException("Rebound ident '" + ident + "' during evaluation. The semantic analysis should have prevented this...");
         return this;
     }
 
-    public <T> T lookup(String ident) {
-        Object val = bindings.get(ident);
+    public VariableEnv bind(ModifierKinds modifier, Value<?> value) {
+        modifiers.put(modifier, value);
+        return this;
+    }
+
+
+    public Value<?> lookup(String ident) {
+        Value<?> val = bindings.get(ident);
 
         if (val != null)
-            //noinspection unchecked
-            return (T)val;
+            return val;
         else if (parent != null)
             return parent.lookup(ident);
 
         throw new RuntimeException("Identifier '" + ident + "' could not be found during evaluation. The semantic analysis should have prevented this...");
     }
 
-    public boolean isBound(String ident) {
-        return bindings.get(ident) != null || (parent != null && parent.isBound(ident));
+
+    public Optional<Value<?>> lookup(ModifierKinds modifier) {
+        Value<?> val = modifiers.get(modifier);
+
+        if (val != null)
+            return Optional.of(val);
+        else if (parent != null)
+            return parent.lookup(modifier);
+
+        return Optional.empty();
     }
 }
