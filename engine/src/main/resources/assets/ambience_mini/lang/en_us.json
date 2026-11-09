@@ -84,6 +84,7 @@
   "string.clear_cache": "Clear Music Cache",
   "string.memory_use": "Memory Usage: %s / %s",
   "string.size_x": "Size: %s",
+  "string.presets": "Presets",
 
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
   "ambience_mini.configuration.Notify_Server_Support": "Notify server support",

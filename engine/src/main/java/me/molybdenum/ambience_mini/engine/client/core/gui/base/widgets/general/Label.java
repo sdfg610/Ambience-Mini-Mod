@@ -24,6 +24,16 @@ public class Label extends AmWidget
         setText(text);
     }
 
+    public Label(int x, int y, String text) {
+        this(x, y, 0, 0, text);
+        autoSize();
+    }
+
+
+    public String getText() {
+        return text;
+    }
+
     public void setText(String text) {
         this.text = text;
         this.textHeight = tools.getTextHeight(text);

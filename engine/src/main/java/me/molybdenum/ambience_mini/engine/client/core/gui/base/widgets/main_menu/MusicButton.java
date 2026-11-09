@@ -23,7 +23,7 @@ public class MusicButton extends AmWidget
 
 
     public MusicButton(int x, int y, int width, MusicInstance inst, Consumer<MusicInstance> onClick) {
-        super(x, y, width, getHeight());
+        super(x, y, width, computeHeight());
         this.inst = inst;
         this.onClick = onClick;
 
@@ -44,8 +44,8 @@ public class MusicButton extends AmWidget
         lblDuration.setText(AmLang.STRING_TIME_X.translate(info.getDurationString()));
 
         lblDuration.autoSize();
-        lblDuration.x = width - MARGIN - lblDuration.width;
-        lblAuthor.width = width - MARGIN*3 - lblDuration.width;
+        lblDuration.setX(width - MARGIN - lblDuration.getWidth());
+        lblAuthor.setWidth(width - MARGIN*3 - lblDuration.getWidth());
     }
 
 
@@ -74,7 +74,7 @@ public class MusicButton extends AmWidget
         return null;
     }
 
-    private static int getHeight() {
+    private static int computeHeight() {
         return tools.getLineHeight()*2 + MARGIN*2;
     }
 }

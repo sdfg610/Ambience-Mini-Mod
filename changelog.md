@@ -25,11 +25,16 @@ The wait is over and the biggest update yet is here!
 - Added ternery operator: `CONDITION ? VAL1 : VAL2`. If `CONDITION` is `true`, `VAL1` is output. Otherwise, `VAL2` is output.
 - Added a modifier `#volume SCALE;` to allow changing music volume in the configuration (`trueVolume = volume * SCALE`).
   * Used similar to a play statement along other commands. See sample music pack for example.
+- Added support for named music schedules, called presets, which can be switched between in-game.
+  * Configure using `preset "name" SCEDULE end` in `music_config.txt`.
 
 **Menus and keybindings:**
 - Removed keybindings for "play/pause" (default: `END`) and "reload music player" (default: `P`).
 - Added an "Ambience Mini Main Menu" for controlling the mod (opened by pressing `END` by default).
-  * Tab1: View current music and playlist. Control the music player (play/pause, reload, select music from current playlist, etc.).
+  * Tab1: 
+    * View current music and playlist. 
+    * Control the music player (play/pause, reload, select music from current playlist, etc.).
+    * Switch between music presets.
   * Tab2: View the currently cached server music including memory consumption.
 - You now need to click the "Delete" button twice (instead of only once) in the area-menu to actually delete the area.
 - Pressing the "Cancel" keybind when in "edit area bounds"-mode now returns you to the area menu instead of cancelling everything.

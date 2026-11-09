@@ -64,13 +64,13 @@ PRODUCTIONS
 // Configurations
 File = Conf<out mainNode> .
 
-Conf<out Config conf>              (. var declarations = new ArrayList<GlobalDecl>(); ServerPlaylists serverPl = null; Command command = null; .)
+Conf<out Config conf>              (. var declarations = new ArrayList<GlobalDecl>(); ServerPlaylists serverPl = null; Command command = null; var presets = new ArrayList<Preset>(); .)
     = { Decl<out GlobalDecl decl>  (. declarations.add(decl); .)
     } [ "serve_playlists" ':' ServerPlaylists<out serverPl>
-    ] [ Shed<out command>
-    ]                              (. conf = new Config(declarations, serverPl, command); .)
+    ] [ Shed<out command>          (. presets.add(new Preset(new StringLit("Default", command.line()), command.asBlock())); .)
+    ] { Preset<out Preset pres>    (. presets.add(pres); .)
+    }                              (. conf = new Config(declarations, serverPl, presets); .)
 .
-/* | "preset" STRING [ "default" ] ':' */
 
 
 /*------------------------------------------------------------------------*/
@@ -95,7 +95,12 @@ ServerPlaylists<out ServerPlaylists serverPl>  (. serverPl = null; .)
 
 /*------------------------------------------------------------------------*/
 // Preset configuration
-
+Preset<out Preset pres>        (. var body = new ArrayList<Command>(); .)
+    = "preset" STRING           (. int line = t.line; StringLit name = new StringLit(removeFirstAndLast(t.val), line); .)
+      { Shed<out Command cmd>  (. body.add(cmd); .)
+      }
+      "end"   (. pres = new Preset(name, new Block(body, line)); .)
+.
 
 /*------------------------------------------------------------------------*/
 // Commands / Client music selection strategy

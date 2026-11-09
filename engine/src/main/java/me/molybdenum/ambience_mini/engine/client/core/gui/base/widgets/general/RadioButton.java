@@ -7,6 +7,7 @@ import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class RadioButton extends AmWidget
 {
@@ -18,22 +19,50 @@ public class RadioButton extends AmWidget
     private final RadioGroup group;
     private boolean selected;
 
-    private String text;
-    private int textHeight;
+    private final Label lblText;
 
 
     public RadioButton(int x, int y, String text, RadioGroup group) {
         super(x, y, 0, OUTER_RADIUS*2);
-        setText(text);
+
+        lblText = new Label(
+                x + OUTER_RADIUS*2 + BTN_TEXT_SEP,
+                y + (height-tools.getLineHeight()+1)/2,
+                text
+        );
+        this.lblText.autoSize();
+        this.width = OUTER_RADIUS*2 + BTN_TEXT_SEP + lblText.getWidth();
 
         group.buttons.add(this);
         this.group = group;
     }
 
+
     public void setText(String text) {
-        this.text = text;
-        this.textHeight = tools.getTextHeight(text);
-        this.width = OUTER_RADIUS*2 + BTN_TEXT_SEP + tools.getTextWidth(text);
+        this.lblText.setText(text);
+    }
+
+    public String getText() {
+        return lblText.getText();
+    }
+
+
+    @Override
+    public void setX(int x) {
+        super.setX(x);
+        this.lblText.setX(x + OUTER_RADIUS*2 + BTN_TEXT_SEP);
+    }
+
+    @Override
+    public void setY(int y) {
+        super.setY(y);
+        this.lblText.setY(y + (height-tools.getLineHeight()+1)/2);
+    }
+
+    @Override
+    public void setWidth(int width) {
+        this.width = width;
+        this.lblText.setWidth(width - OUTER_RADIUS*2 - BTN_TEXT_SEP);
     }
 
 
@@ -56,12 +85,7 @@ public class RadioButton extends AmWidget
 
         if (selected)
             renderCircle(drawer, centerX, centerY, INNER_RADIUS-1, CORNERS, Color.WHITE);
-
-        drawer.drawText(textDrawer -> textDrawer.drawText(
-                text,
-                new Vector2i(x + OUTER_RADIUS*2 + BTN_TEXT_SEP, y + (height-textHeight+1)/2),
-                Color.WHITE
-        ));
+        this.lblText.render(drawer, mouseX, mouseY);
     }
 
     @Override
@@ -69,6 +93,8 @@ public class RadioButton extends AmWidget
         if (isMouseOver(mouseX, mouseY) && mouseKeyIndex == GuiConstants.MOUSE_LEFT) {
             tools.PlayMouseClick();
             group.resetAll();
+            if (!selected)
+                group.onChanged.accept(this);
             selected = true;
             return this;
         }
@@ -77,12 +103,23 @@ public class RadioButton extends AmWidget
 
 
     public static RadioGroup newGroup() {
-        return new RadioGroup();
+        return new RadioGroup(btn -> {});
+    }
+
+    public static RadioGroup newGroup(Consumer<RadioButton> onChanged) {
+        return new RadioGroup(onChanged);
     }
 
 
     public static class RadioGroup {
         private final ArrayList<RadioButton> buttons = new ArrayList<>();
+        private final Consumer<RadioButton> onChanged;
+
+
+        public RadioGroup(Consumer<RadioButton> onChanged) {
+            this.onChanged = onChanged;
+        }
+
 
         private void resetAll() {
             for (var btn : buttons)

@@ -16,7 +16,6 @@ import me.molybdenum.ambience_mini.engine.client.core.render.Color;
 import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
-import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 
 import java.util.List;
@@ -51,6 +50,7 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
 
     private PlayState currentPlaystate;
     private List<Music> currentPlaylist;
+    private List<String> currentPresets;
 
 
     // Server music tab
@@ -86,8 +86,8 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
         // Player tab
         Button btnReload = tabPlayer.addWidget(new Button(core.notification.translateFromKey(AmLang.STRING_RELOAD), this::onReloadClicked));
         btnReload.autoSize(5, 3);
-        btnReload.y = MENU_INNER_MARGIN/2;
-        btnReload.x = tabPanel.width-btnReload.width - MENU_INNER_MARGIN/2;
+        btnReload.setY(MENU_INNER_MARGIN/2);
+        btnReload.setX(tabPanel.getWidth()-btnReload.getWidth() - MENU_INNER_MARGIN/2);
 
         lblNotRunning = tabPlayer.addWidget(new Label(0, 0, 0, 0, notification.translateFromKey(AmLang.MSG_NOT_RUNNING)));
         lblNotRunning.autoSize();
@@ -98,8 +98,8 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
         playerPanel.backgroundColor = Color.TRANSPARENT;
         playerPanel.borderThickness = 0;
 
-        lblMusic = playerPanel.addWidget(new Label(MENU_INNER_MARGIN,MENU_INNER_MARGIN, INNER_WIDTH-btnReload.width, tools.getLineHeight()+1, "N/A"));
-        lblAuthor = playerPanel.addWidget(new Label(MENU_INNER_MARGIN, lblMusic.bottom(), INNER_WIDTH-btnReload.width,tools.getLineHeight()+1, "By: N/A"));
+        lblMusic = playerPanel.addWidget(new Label(MENU_INNER_MARGIN,MENU_INNER_MARGIN, INNER_WIDTH-btnReload.getWidth(), tools.getLineHeight()+1, "N/A"));
+        lblAuthor = playerPanel.addWidget(new Label(MENU_INNER_MARGIN, lblMusic.bottom(), INNER_WIDTH-btnReload.getWidth(),tools.getLineHeight()+1, "By: N/A"));
         musicBar = playerPanel.addWidget(new MusicBar(MENU_INNER_MARGIN, lblAuthor.bottom() + BASE_SEPARATION, INNER_WIDTH, tools.getLineHeight()+2));
 
         strPlay = notification.translateFromKey(AmLang.STRING_PLAY);
@@ -110,16 +110,15 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
         btnPlayPause.autoSize(10, 4);
         Button btnPickRandom = buttonPanel.addWidget(new Button(notification.translateFromKey(AmLang.STRING_PICK_RANDOM), this::onPickRandomClicked));
         btnPickRandom.autoSize(10, 4);
-        btnPickRandom.x = btnPlayPause.right()+BASE_SEPARATION;
+        btnPickRandom.setX(btnPlayPause.right()+BASE_SEPARATION);
         buttonPanel.autoSize();
-        buttonPanel.x = (MENU_WIDTH-buttonPanel.width)/2;
+        buttonPanel.setX((MENU_WIDTH-buttonPanel.getWidth())/2);
 
         var playlistY = buttonPanel.bottom() + BASE_SEPARATION;
         var playlistWidth = (MENU_WIDTH*2)/3;
         scrPlaylist = playerPanel.addWidget(new ScrollPanel(0, playlistY, playlistWidth, tabPanel.getUsableHeight()-playlistY));
 
         scrPresets = playerPanel.addWidget(new ScrollPanel(playlistWidth-1, playlistY, MENU_WIDTH - playlistWidth+1, tabPanel.getUsableHeight()-playlistY));
-        // TODO: Presets
 
         // Areas tab
 
@@ -131,8 +130,8 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
 
         Button btnClearCache = tabCache.addWidget(new Button(core.notification.translateFromKey(AmLang.STRING_CLEAR_CACHE), this::onClearClicked));
         btnClearCache.autoSize(5, 3);
-        btnClearCache.y = MENU_INNER_MARGIN/2;
-        btnClearCache.x = tabPanel.width-btnClearCache.width - MENU_INNER_MARGIN/2;
+        btnClearCache.setY(MENU_INNER_MARGIN/2);
+        btnClearCache.setX(tabPanel.getWidth()-btnClearCache.getWidth() - MENU_INNER_MARGIN/2);
 
         var scrollPanelY = btnClearCache.bottom() + MENU_INNER_MARGIN/2;
         scrCacheEntries = tabCache.addWidget(new ScrollPanel(
@@ -154,8 +153,8 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
     @Override
     public void onInit() {
         // Positioning of the menu
-        tabPanel.x = (screen.screenWidth() - tabPanel.width)/2;
-        tabPanel.y = (screen.screenHeight() - tabPanel.height - tabPanel.getMaxIdleTabButtonHeight())/2;
+        tabPanel.setX((screen.screenWidth() - tabPanel.getWidth())/2);
+        tabPanel.setY((screen.screenHeight() - tabPanel.getHeight() - tabPanel.getMaxIdleTabButtonHeight())/2);
 
         tick();
     }
@@ -182,20 +181,40 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
             wasPaused = isPaused;
         }
 
+        var presets = monitor.getPresetNames();
+        if (presets != currentPresets) {
+            currentPresets = presets;
+
+            if (currentPresets.size() <= 1) {
+                scrPresets.setVisible(false);
+                scrPlaylist.setWidth(MENU_WIDTH);
+            } else {
+                scrPresets.setVisible(true);
+                scrPlaylist.setWidth((MENU_WIDTH*2)/3);
+            }
+            refreshPlaylist();
+
+            scrPresets.clearWidgets();
+
+            var x = MENU_INNER_MARGIN/2;
+            var y = MENU_INNER_MARGIN/2;
+            var width = scrPresets.getUsableWidth() - MENU_INNER_MARGIN;
+            var group = RadioButton.newGroup(this::onPresetChanged);
+            y += scrPresets.addWidget(new Label(x, y, AmLang.STRING_PRESETS.translate() + ':')).getHeight() + BASE_SEPARATION;
+            for (var preset : currentPresets) {
+                var btn = new RadioButton(x, y, preset, group);
+                btn.setWidth(width);
+                y += scrPresets.addWidget(btn).getHeight() + BASE_SEPARATION;
+                btn.setSelected(preset.equals(monitor.getSelectedPreset()));
+            }
+
+            scrPresets.refreshScroll();
+        }
+
         var playlist = monitor.getSelectedPlaylist();
         if (playlist != currentPlaylist) {
             currentPlaylist = playlist;
-            scrPlaylist.clearWidgets();
-
-            if (currentPlaylist != null) {
-                var x = MENU_INNER_MARGIN/2;
-                var y = MENU_INNER_MARGIN/2;
-                var width = scrPlaylist.getUsableWidth() - MENU_INNER_MARGIN;
-                for (var music : currentPlaylist)
-                    y += scrPlaylist.addWidget(new MusicButton(x, y, width, instantiate.apply(music), this::onMusicButtonClicked)).height + BASE_SEPARATION;
-            }
-
-            scrPlaylist.refreshScroll();
+            refreshPlaylist();
         }
 
         var playState = monitor.getPlayState();
@@ -228,6 +247,20 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
         }
     }
 
+    private void refreshPlaylist() {
+        scrPlaylist.clearWidgets();
+
+        if (currentPlaylist != null) {
+            var x = MENU_INNER_MARGIN/2;
+            var y = MENU_INNER_MARGIN/2;
+            var width = scrPlaylist.getUsableWidth() - MENU_INNER_MARGIN;
+            for (var music : currentPlaylist)
+                y += scrPlaylist.addWidget(new MusicButton(x, y, width, instantiate.apply(music), this::onMusicButtonClicked)).getHeight() + BASE_SEPARATION;
+        }
+
+        scrPlaylist.refreshScroll();
+    }
+
     private void tickMusicCacheTab() {
         lblMemUsage.setText(AmLang.STRING_MEMORY_USE.translate(Utils.bytesToMB(musicCache.getMemoryUsage()), maxMemUsageStr));
 
@@ -242,7 +275,7 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
             for (var path : musicCache.getCachedMusicPaths())
                 y += scrCacheEntries.addWidget(new CacheDisplay(
                         x, y, width, instantiate.apply(new Music(path, true))
-                )).height + BASE_SEPARATION;
+                )).getHeight() + BASE_SEPARATION;
             scrCacheEntries.refreshScroll();
         }
     }
@@ -286,6 +319,10 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
             monitor.forceSelectNewMusic(inst.music);
             monitor.resume();
         }
+    }
+
+    private void onPresetChanged(RadioButton btn) {
+        monitor.setSelectedPreset(btn.getText());
     }
 
     // Server music tab

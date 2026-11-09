@@ -43,7 +43,7 @@ public class ScrollPanel extends AmWidget
 
     public void refreshScroll() {
         var bottom = widgets.stream().mapToInt(AmWidget::bottom).max().orElse(0);
-        var margin = widgets.stream().mapToInt(w -> w.y).min().orElse(0);
+        var margin = widgets.stream().mapToInt(AmWidget::getY).min().orElse(0);
         contentHeight = Math.max(contentHeight, bottom + margin);
         maxOffset = Math.max(0, contentHeight-height);
         barHeight = (int)((height-2) * Math.min(1, contentHeight == 0 ? 1 : height/(double)contentHeight));

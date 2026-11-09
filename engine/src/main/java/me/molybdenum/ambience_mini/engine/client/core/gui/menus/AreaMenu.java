@@ -126,16 +126,16 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
 
         // Final sizing
         panel.autoSize();
-        panel.width = Math.max(MENU_MIN_WIDTH, panel.width);
-        txtAreaName.width = panel.width - 2*MENU_INNER_MARGIN - lblAreaName.width - BASE_SEPARATION;
+        panel.setWidth(Math.max(MENU_MIN_WIDTH, panel.getWidth()));
+        txtAreaName.setWidth(panel.getWidth() - 2*MENU_INNER_MARGIN - lblAreaName.getWidth() - BASE_SEPARATION);
     }
 
 
     @Override
     public void onInit() {
         // Positioning of the menu
-        panel.x = (screen.screenWidth() - panel.width)/2;
-        panel.y = (screen.screenHeight() - panel.height)/2;
+        panel.setX((screen.screenWidth() - panel.getWidth())/2);
+        panel.setY((screen.screenHeight() - panel.getHeight())/2);
     }
 
     @Override

@@ -12,11 +12,14 @@ public class PrettyPrinter {
     public static String printConfig(Config config)
     {
         var items = new ArrayList<String>();
+
         for (var decl : config.declarations())
             items.add(printDeclaration(decl));
 
-        if (config.command() != null)
-            items.add(printSchedule(config.command()));
+        // TODO: Server playlists
+
+        for (var preset : config.presets())
+            items.add(printPreset(preset));
 
         return String.join("\n\n", items);
     }
@@ -27,11 +30,17 @@ public class PrettyPrinter {
     }
 
 
-    public static String printSchedule(Command command) {
-        return printSchedule(command, 0);
+    public static String printPreset(Preset preset) {
+        var cmdStr = printCommand(preset.body());
+
+        return preset.name().value().isEmpty() ? cmdStr : "preset " + preset.name().value() + "\n" + cmdStr + "\nend";
     }
 
-    private static String printSchedule(Command command, int depth) {
+    public static String printCommand(Command command) {
+        return printCommand(command, 0);
+    }
+
+    private static String printCommand(Command command, int depth) {
         if (command instanceof Play play)
             return indent(depth) + "play "
                     + (play.isInstant() ? "instant " : "")
@@ -42,17 +51,17 @@ public class PrettyPrinter {
             return indent(depth) + "use_vanilla_player;\n";
         else if (command instanceof Interrupt interrupt)
             return indent(depth) + "interrupt " +
-                    printSchedule(interrupt.body(), interrupt.body() instanceof Block ? depth : 0);
+                    printCommand(interrupt.body(), interrupt.body() instanceof Block ? depth : 0);
         else if (command instanceof Block block)
             return "\n" + indent(depth) + "begin\n" +
-                    String.join("", block.body().stream().map(sh -> printSchedule(sh, depth+1)).toList()) +
+                    String.join("", block.body().stream().map(sh -> printCommand(sh, depth+1)).toList()) +
                     indent(depth) + "end\n";
         else if (command instanceof When when)
             return indent(depth) + "when (" + printExpr(when.condition()) + ") " +
-                    printSchedule(when.body(), when.body() instanceof Block ? depth : 0);
+                    printCommand(when.body(), when.body() instanceof Block ? depth : 0);
         else if (command instanceof Let let)
             return indent(depth) + "let " + let.ident().value() + (let.type() == null ? "" : ": " + let.type()) + " = " + printExpr(let.value()) + " in\n" +
-                    printSchedule(let.body(), let.body() instanceof Block ? depth : 0);
+                    printCommand(let.body(), let.body() instanceof Block ? depth : 0);
         // TODO: Print modifier
 
         throw new RuntimeException("Unhandled Shed-type: " + command.getClass().getCanonicalName());

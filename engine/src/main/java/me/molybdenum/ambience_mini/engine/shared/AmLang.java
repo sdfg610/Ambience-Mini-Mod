@@ -95,6 +95,7 @@ public enum AmLang
     STRING_CLEAR_CACHE("string.clear_cache"),
     STRING_MEMORY_USE("string.memory_use", 2),  // Args: "current", "max"
     STRING_SIZE_X("string.size_x", 1),  // Arg: "size"
+    STRING_PRESETS("string.presets"),
 
     ;
 

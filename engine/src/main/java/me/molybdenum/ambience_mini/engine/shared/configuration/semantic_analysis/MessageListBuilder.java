@@ -24,7 +24,7 @@ public class MessageListBuilder {
             hasErrorOnNode = true;
     }
 
-    public MessageListBuilder detatch() {
+    public MessageListBuilder enterScope() {
         return new MessageListBuilder(elements);
     }
 

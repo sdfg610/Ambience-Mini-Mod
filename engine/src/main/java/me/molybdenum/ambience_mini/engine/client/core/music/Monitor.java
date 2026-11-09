@@ -173,6 +173,19 @@ public class Monitor
     }
 
 
+    public List<String> getPresetNames() {
+        return musicCycleJob.playlistSelector.getPresetNames();
+    }
+
+    public String getSelectedPreset() {
+        return musicCycleJob.playlistSelector.getSelectedPreset();
+    }
+
+    public void setSelectedPreset(String name) {
+        musicCycleJob.playlistSelector.setSelectedPreset(name);
+    }
+
+
     private class MusicCycleJob extends JobCenter.Job
     {
         private static final int NUM_MEASUREMENTS = 10;

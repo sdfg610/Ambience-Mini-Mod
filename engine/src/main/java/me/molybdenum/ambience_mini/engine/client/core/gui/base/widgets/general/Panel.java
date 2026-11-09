@@ -37,8 +37,8 @@ public class Panel extends AmWidget
         int maxBottom = Integer.MIN_VALUE;
 
         for (var widget : widgets) {
-            minX = Math.min(minX, widget.x);
-            minY = Math.min(minY, widget.y);
+            minX = Math.min(minX, widget.getX());
+            minY = Math.min(minY, widget.getY());
             maxRight = Math.max(maxRight, widget.right());
             maxBottom = Math.max(maxBottom, widget.bottom());
         }

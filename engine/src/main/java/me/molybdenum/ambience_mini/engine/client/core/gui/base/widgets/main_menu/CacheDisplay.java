@@ -21,7 +21,7 @@ public class CacheDisplay extends AmWidget
 
 
     public CacheDisplay(int x, int y, int width, MusicInstance inst) {
-        super(x, y, width, getHeight());
+        super(x, y, width, computeHeight());
         this.inst = inst;
 
         var h = tools.getLineHeight();
@@ -31,8 +31,8 @@ public class CacheDisplay extends AmWidget
         lblSize = new Label(0, MARGIN+h+1, 0, h, AmLang.STRING_SIZE_X.translate(tryGetSize(inst)));
 
         lblSize.autoSize();
-        lblSize.x = width - MARGIN - lblSize.width;
-        lblAuthor.width = width - MARGIN*3 - lblSize.width;
+        lblSize.setX(width - MARGIN - lblSize.getWidth());
+        lblAuthor.setWidth(width - MARGIN*3 - lblSize.getWidth());
 
         inst.getMusicInfo(this::setMusicInfo);
     }
@@ -69,7 +69,7 @@ public class CacheDisplay extends AmWidget
 
 
 
-    private static int getHeight() {
+    private static int computeHeight() {
         return MARGIN + tools.getLineHeight()*2 + MARGIN;
     }
 }

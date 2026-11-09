@@ -11,13 +11,15 @@ import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 public class MusicSelector extends BaseInterpreter
 {
-    private final Command command;
+    private final Map<String, Command> presets;
+    private final List<String> presetNames;
+    private Pair<String, Command> selectedPreset;
 
 
     public MusicSelector(
@@ -26,7 +28,27 @@ public class MusicSelector extends BaseInterpreter
     ) {
         super(gameStateProvider);
 
-        this.command = config.command();
+        this.presets = config.presets().stream().collect(Collectors.toMap(pres -> pres.name().value(), Preset::body));
+        this.presetNames = config.presets().stream().map(pres -> pres.name().value()).toList();
+
+        var first = config.presets().get(0);
+        this.selectedPreset = new Pair<>(first.name().value(), first.body());
+    }
+
+
+    public List<String> getPresetNames() {
+        return presetNames;
+    }
+
+    public String getSelectedPreset() {
+        return selectedPreset.left();
+    }
+
+    public void setSelectedPreset(String name) {
+        var cmd = presets.get(name);
+        if (cmd == null)
+            throw new RuntimeException("No preset with the name '" + name + "'");
+        selectedPreset = new Pair<>(name, cmd);
     }
 
 
@@ -41,7 +63,7 @@ public class MusicSelector extends BaseInterpreter
         try {
             if (tracer != null)
                 gameStateProvider.registerOnFiredListener(tracer);
-            var selection = evalSchedule(command, new VariableEnv());
+            var selection = evalSchedule(selectedPreset.right(), new VariableEnv());
             return selection == null ? new NoneSelection() : selection;
         } finally {
             if (tracer != null)

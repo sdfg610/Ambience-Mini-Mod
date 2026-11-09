@@ -28,10 +28,7 @@ import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Property;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -72,14 +69,14 @@ public class SemanticAnalysis extends BaseInterpreter
 
         validateDeclarations(config, typEnv, varEnv, messages);
         var newServerPlaylists = validateAndOptimizeServerPlaylists(config.serverPlaylists(), typEnv, varEnv, new MessageListBuilder(messages), "");
-        var newCommand = validateAndOptimizeCommandIfNecessary(config, typEnv, varEnv, new MessageListBuilder(messages));
+        var newPresets = validateAndOptimizePresetsIfNecessary(config.presets(), typEnv, varEnv, new MessageListBuilder(messages));
 
         makeUnusedVariableWarnings(typEnv, new MessageListBuilder(messages));
         makeUnusedMusicWarnings(messages);
 
         // Empty list for declarations since these are constant and are written into the rest of the config
         return messages.stream().anyMatch(Message::isError) ? null
-                : new Config(List.of(), newServerPlaylists, newCommand);
+                : new Config(List.of(), newServerPlaylists, newPresets);
     }
 
 
@@ -133,7 +130,7 @@ public class SemanticAnalysis extends BaseInterpreter
             var expr = inst.expr();
             var exprLine = inst.expr().line();
 
-            var eoValue = validateAndOptimizeExpression(expr, typEnv, varEnv, true, messages.detatch());
+            var eoValue = validateAndOptimizeExpression(expr, typEnv, varEnv, true, messages.enterScope());
 
             eoValue.ifTypeDefined(actualType -> {
                 if (!actualType.isPlaylist())
@@ -171,25 +168,41 @@ public class SemanticAnalysis extends BaseInterpreter
 
     // -----------------------------------------------------------------------------------------------------------------
     // Commands
-    private Command validateAndOptimizeCommandIfNecessary(Config config, TypeEnv typEnv, VariableEnv varEnv, MessageListBuilder messages) {
-        var command = config.command();
+    private List<Preset> validateAndOptimizePresetsIfNecessary(List<Preset> presets, TypeEnv typEnv, VariableEnv varEnv, MessageListBuilder messages) {
         if (setup instanceof Setup.DedicatedServer) {
-            if (command != null)
-                messages.add(new Warning(command.line(), "Music pack on dedicated server has a music command, but this is ignored on dedicated servers."));
+            if (!presets.isEmpty())
+                messages.add(new Warning(-1, "Music pack on dedicated server has one or more music schedules/presets, but this is ignored on dedicated servers."));
         }
         else if (setup instanceof Setup.Client) {
-            if (command == null)
-                messages.add(new SemError(-1, "This music pack does not have a music command and cannot be loaded on the client."));
+            if (presets.isEmpty())
+                messages.add(new SemError(-1, "This music pack does not have any music schedules/presets and cannot be loaded on the client."));
             else
-                return validateAndOptimizeCommand(command, typEnv, varEnv, messages);
+                return validateAndOptimizePresets(presets, typEnv, varEnv, messages);
         }
 
         return null;
     }
 
+    private List<Preset> validateAndOptimizePresets(List<Preset> presets, TypeEnv typEnv, VariableEnv varEnv, MessageListBuilder messages) {
+        var newPresets = new ArrayList<Preset>(presets.size());
+        var takenNames = new HashSet<String>(presets.size());
+        for (var pres : presets) {
+            var name = pres.name().value();
+            if (name == null || name.isBlank())
+                messages.add(new SemError(pres.name().line(), "The name of a preset may not be blank."));
+            else if (takenNames.contains(name))
+                messages.add(new SemError(pres.name().line(), "Duplicate preset name '" + name + "'"));
+
+            newPresets.add(pres.withBody(validateAndOptimizeCommand(pres.body(), typEnv, varEnv, messages.enterScope())));
+
+            takenNames.add(name);
+        }
+        return newPresets.contains(null) ? null : newPresets;
+    }
+
     private Command validateAndOptimizeCommand(Command command, TypeEnv typEnv, VariableEnv varEnv, MessageListBuilder messages) {
         if (command instanceof Play play) {
-            var eoResult = validateAndOptimizeExpression(play.playlist(), typEnv, varEnv, false, messages.detatch());
+            var eoResult = validateAndOptimizeExpression(play.playlist(), typEnv, varEnv, false, messages.enterScope());
 
             eoResult.ifTypeDefined(type -> {
                 if (type != null && !type.isPlaylist())
@@ -205,13 +218,13 @@ public class SemanticAnalysis extends BaseInterpreter
         }
         else if (command instanceof Block block) {
             var newBody = block.body().stream()
-                    .map(child -> validateAndOptimizeCommand(child, typEnv, varEnv, messages.detatch()))
+                    .map(child -> validateAndOptimizeCommand(child, typEnv, varEnv, messages.enterScope()))
                     .toList();
 
             return newBody.contains(null) ? null : block.withBody(newBody);
         }
         else if (command instanceof When when) {
-            var eoResult = validateAndOptimizeExpression(when.condition(), typEnv, varEnv, false, messages.detatch());
+            var eoResult = validateAndOptimizeExpression(when.condition(), typEnv, varEnv, false, messages.enterScope());
 
             eoResult.ifTypeDefined(type -> {
                 if (!type.isBool())
@@ -220,12 +233,12 @@ public class SemanticAnalysis extends BaseInterpreter
 
             // TODO: Optimize away when condition is constant
 
-            var newBody = validateAndOptimizeCommand(when.body(), typEnv, varEnv, messages.detatch());
+            var newBody = validateAndOptimizeCommand(when.body(), typEnv, varEnv, messages.enterScope());
             return newBody == null || messages.hasErrorOnNode() ? null
                     : new When(when.condition(), newBody, when.line());
         }
         else if (command instanceof Let let) {
-            var eoResult = validateAndOptimizeExpression(let.value(), typEnv, varEnv, false, messages.detatch());
+            var eoResult = validateAndOptimizeExpression(let.value(), typEnv, varEnv, false, messages.enterScope());
 
             Type expectedType = let.type();
             Type actualType = eoResult.type();
@@ -238,7 +251,7 @@ public class SemanticAnalysis extends BaseInterpreter
             var newVarEnv = varEnv.enterScope();
             if (binding.isPresent() && binding.get().isStaticallyEvaluable())
                 newVarEnv.bind(let.ident().value(), eoResult.getValue());
-            var newBody = validateAndOptimizeCommand(let.body(), typEnv, newVarEnv, messages.detatch());
+            var newBody = validateAndOptimizeCommand(let.body(), typEnv, newVarEnv, messages.enterScope());
 
             makeUnusedVariableWarnings(typEnv, messages);
             typEnv.closeScope();
@@ -250,13 +263,13 @@ public class SemanticAnalysis extends BaseInterpreter
         }
         else if (command instanceof Interrupt interrupt) {
             ++nestedInterrupts;
-            var newBody = validateAndOptimizeCommand(interrupt.body(), typEnv, varEnv, messages.detatch());
+            var newBody = validateAndOptimizeCommand(interrupt.body(), typEnv, varEnv, messages.enterScope());
             --nestedInterrupts;
 
             return newBody;
         }
         else if (command instanceof Modifier mod) {
-            var eoResult = validateAndOptimizeExpression(mod.arg(), typEnv, varEnv, false, messages.detatch());
+            var eoResult = validateAndOptimizeExpression(mod.arg(), typEnv, varEnv, false, messages.enterScope());
 
             Type type = eoResult.type();
             switch (mod.modifier()) {
@@ -318,7 +331,7 @@ public class SemanticAnalysis extends BaseInterpreter
             var loadList = new ArrayList<PlaylistLit.Load>();
             boolean hasError = false;
             for (var load : playlistLit.music()) {
-                var newLoad = validateAndOptimizeMusic(load, typEnv, varEnv, messages.detatch());
+                var newLoad = validateAndOptimizeMusic(load, typEnv, varEnv, messages.enterScope());
                 if (newLoad == null)
                     hasError = true;
                 else if (!hasError)
@@ -358,7 +371,7 @@ public class SemanticAnalysis extends BaseInterpreter
             return mkRes(wellDefined ? expr : null, type, false);
         }
         else if (expr instanceof UnaryOp unOp) {
-            var eoResult = validateAndOptimizeExpression(unOp.expr(), typEnv, varEnv, requireConst, messages.detatch());
+            var eoResult = validateAndOptimizeExpression(unOp.expr(), typEnv, varEnv, requireConst, messages.enterScope());
 
             var type = switch (unOp.op()) {
                 case NOT -> {
@@ -379,8 +392,8 @@ public class SemanticAnalysis extends BaseInterpreter
             return tryOptimizeExprOrNull(eoResult, unOp::withExpr, varEnv, type, messages.hasErrorOnNode());
         }
         else if (expr instanceof BinaryOp binOp) {
-            var eoLeft = validateAndOptimizeExpression(binOp.left(), typEnv, varEnv, requireConst, messages.detatch());
-            var eoRight = validateAndOptimizeExpression(binOp.right(), typEnv, varEnv, requireConst, messages.detatch());
+            var eoLeft = validateAndOptimizeExpression(binOp.left(), typEnv, varEnv, requireConst, messages.enterScope());
+            var eoRight = validateAndOptimizeExpression(binOp.right(), typEnv, varEnv, requireConst, messages.enterScope());
 
             Type typeLeft = eoLeft.type();
             Type typeRight = eoRight.type();
@@ -468,9 +481,9 @@ public class SemanticAnalysis extends BaseInterpreter
             return tryOptimizeExprOrNull(eoLeft, eoRight, binOp::withExprs, varEnv, resType, messages.hasErrorOnNode());
         }
         else if (expr instanceof TerneryOp ternOp) {
-            var eoExpr1 = validateAndOptimizeExpression(ternOp.expr1(), typEnv, varEnv, requireConst, messages.detatch());
-            var eoExpr2 = validateAndOptimizeExpression(ternOp.expr2(), typEnv, varEnv, requireConst, messages.detatch());
-            var eoExpr3 = validateAndOptimizeExpression(ternOp.expr3(), typEnv, varEnv, requireConst, messages.detatch());
+            var eoExpr1 = validateAndOptimizeExpression(ternOp.expr1(), typEnv, varEnv, requireConst, messages.enterScope());
+            var eoExpr2 = validateAndOptimizeExpression(ternOp.expr2(), typEnv, varEnv, requireConst, messages.enterScope());
+            var eoExpr3 = validateAndOptimizeExpression(ternOp.expr3(), typEnv, varEnv, requireConst, messages.enterScope());
 
             Type type1 = eoExpr1.type();
             if (isNotBool(type1))
@@ -485,7 +498,7 @@ public class SemanticAnalysis extends BaseInterpreter
             return tryOptimizeExprOrNull(eoExpr1, eoExpr2, eoExpr3, ternOp::withExprs, varEnv, resType, messages.hasErrorOnNode());
         }
         else if (expr instanceof QuantifierOp quanOp) {
-            var eoList = validateAndOptimizeExpression(quanOp.list(), typEnv, varEnv, requireConst, messages.detatch());
+            var eoList = validateAndOptimizeExpression(quanOp.list(), typEnv, varEnv, requireConst, messages.enterScope());
 
             Type typeList = eoList.type();
             if (isNotList(typeList))
@@ -495,7 +508,7 @@ public class SemanticAnalysis extends BaseInterpreter
             typEnv.openScope();
             typEnv.bind(quanOp.identifier().value(), elemType, quanOp.identifier().line()); // Bind in new scope cannot fail
 
-            var eoCondition = validateAndOptimizeExpression(quanOp.condition(), typEnv, varEnv, requireConst, messages.detatch());
+            var eoCondition = validateAndOptimizeExpression(quanOp.condition(), typEnv, varEnv, requireConst, messages.enterScope());
             eoCondition.ifTypeDefined(typeCondition -> {
                 if (!typeCondition.isBool())
                     messages.add(new SemError(quanOp.whereLine(), "The expression after 'where' in a list quantifier must have type 'bool', but got '" + typeCondition + "'"));
@@ -513,7 +526,7 @@ public class SemanticAnalysis extends BaseInterpreter
             return tryOptimizeExprOrNull(eoList, eoCondition, quanOp::withExprs, varEnv, outputType, messages.hasErrorOnNode());
         }
         else if (expr instanceof Accessor accessor) {
-            var eoBase = validateAndOptimizeExpression(accessor.base(), typEnv, varEnv, requireConst, messages.detatch());
+            var eoBase = validateAndOptimizeExpression(accessor.base(), typEnv, varEnv, requireConst, messages.enterScope());
             Type baseType = eoBase.type();
             Ident field = accessor.field();
 
@@ -557,10 +570,10 @@ public class SemanticAnalysis extends BaseInterpreter
             int line = load.line();
             ArgList newArgs = new ArgList();
             for (var arg : load.args()) {
-                MessageListBuilder argMessages = messages.detatch();
+                MessageListBuilder argMessages = messages.enterScope();
 
                 var expr = arg.expr();
-                var eoArg = validateAndOptimizeExpression(expr, typEnv, varEnv, true, argMessages.detatch());
+                var eoArg = validateAndOptimizeExpression(expr, typEnv, varEnv, true, argMessages.enterScope());
                 Type type = eoArg.type();
                 String argName = arg.ident().value();
 
