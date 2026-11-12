@@ -2,7 +2,7 @@ package me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.
 
 import java.util.List;
 
-public sealed interface Command permits Block, Interrupt, Let, Modifier, Play, Vanilla, When
+public sealed interface Command permits Block, Interrupt, Let, Modifier, Play, Skip, Vanilla, When
 {
     int line();
 

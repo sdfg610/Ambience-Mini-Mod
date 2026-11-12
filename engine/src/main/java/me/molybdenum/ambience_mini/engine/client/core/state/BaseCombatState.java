@@ -144,18 +144,20 @@ public abstract class BaseCombatState<TEntity, TVec3>
 
     private class Combatant {
         private final TEntity entity;
+        private final String resourceLocation;
+        private final Boolean isNeutral;
         private Boolean isTargetingPlayer = null;
         public long latestInteraction = 0;
-        private Boolean isNeutral;
 
         public Combatant(TEntity entity) {
             this.entity = entity;
+            this.resourceLocation = entity == null ? null : getEntityResourceLocation(entity);
             this.isNeutral = entity == null ? null : isEntityNeutral(entity);
         }
 
         public CombatantVal asCombatantVal(long now) {
             return new CombatantVal(
-                    entity == null ? null : getEntityResourceLocation(entity),
+                    resourceLocation,
                     entity == null ? null : getEntityHealth(entity),
                     entity == null ? null : getEntityMaxHealth(entity),
                     isTargetingPlayer,

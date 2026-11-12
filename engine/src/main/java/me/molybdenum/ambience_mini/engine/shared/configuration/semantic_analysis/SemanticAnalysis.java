@@ -231,11 +231,15 @@ public class SemanticAnalysis extends BaseInterpreter
                     messages.add(new SemError(when.line(), "The condition inside a 'when' must result in a boolean value. Got '" + type + "'"));
             });
 
-            // TODO: Optimize away when condition is constant
-
             var newBody = validateAndOptimizeCommand(when.body(), typEnv, varEnv, messages.enterScope());
-            return newBody == null || messages.hasErrorOnNode() ? null
-                    : new When(when.condition(), newBody, when.line());
+            if (newBody == null || !eoResult.isWellDefined() || messages.hasErrorOnNode())
+                return null;
+
+            if (eoResult.isStaticallyEvaluable() && eoResult.type() instanceof BoolT)
+                //noinspection OptionalGetWithoutIsPresent  (Since it is statically evaluable and type is bool, there must be a bool value)
+                return eoResult.getValue().asBool().get() ? newBody : new Skip(when.line());
+
+            return new When(eoResult.expr(), newBody, when.line());
         }
         else if (command instanceof Let let) {
             var eoResult = validateAndOptimizeExpression(let.value(), typEnv, varEnv, false, messages.enterScope());
@@ -256,7 +260,7 @@ public class SemanticAnalysis extends BaseInterpreter
             makeUnusedVariableWarnings(typEnv, messages);
             typEnv.closeScope();
 
-            // TODO: Optimize away when list is constant
+            // TODO: Optimize away when list is constant (2.8.1+)
 
             return newBody == null || !eoResult.isWellDefined() || messages.hasErrorOnNode() ? null
                     : let.withValueAndBody(eoResult.expr(), newBody);
@@ -282,7 +286,7 @@ public class SemanticAnalysis extends BaseInterpreter
             return !eoResult.isWellDefined() || messages.hasErrorOnNode() ? null
                     : mod.withArg(eoResult.expr());
         }
-        else if (command instanceof Vanilla || command == null) {
+        else if (command instanceof Vanilla || command instanceof Skip || command == null) {
             return command;
         }
         else

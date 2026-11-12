@@ -68,8 +68,6 @@ public class AmbienceMini extends BaseAmbienceMini
     // Common
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    private static final MusicInfoCache musicInfoCache = new MusicInfoCache();
-
     // Client
     private static ClientConfig clientConfig;
     private static KeyBindings keyBindings;
@@ -127,8 +125,7 @@ public class AmbienceMini extends BaseAmbienceMini
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
                     new FlagCache(), new ServerMusicCache(),
                     new ServerSetup(), clientConfig, keyBindings,
-                    new PlayerState(), new LevelState(), new ScreenState(), new CombatState(),
-                    musicInfoCache
+                    new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );
 
             fireClientCoreInit();
@@ -170,7 +167,6 @@ public class AmbienceMini extends BaseAmbienceMini
                 new StructureReader(event.getServer(), serverConfig),
                 new FlagManager(),
                 new ServerMusicManager(),
-                musicInfoCache,
                 new ServerNetworkManager()
         );
         serverCore.init();

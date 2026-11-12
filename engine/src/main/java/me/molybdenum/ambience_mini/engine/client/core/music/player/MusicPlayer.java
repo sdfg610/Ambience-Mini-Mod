@@ -35,7 +35,7 @@ public class MusicPlayer
 
     private final List<Consumer<PlayState>> nowPlayingListeners = new ArrayList<>();
 
-    private final JobCenter jobCenter = JobCenter.variable(3);
+    private final JobCenter jobCenter = JobCenter.variable(2);
     private MusicBufferJob bufferJob;
 
     private Channel currentChannel;
@@ -44,12 +44,13 @@ public class MusicPlayer
     @SuppressWarnings("rawtypes")
     public MusicPlayer(
             BaseClientCore core,
+            Function<Music, MusicInstance> makeInstance,
             Runnable onRanToEnd,
             Consumer<Exception> onBufferException
     ) {
         this.notification = core.notification;
         this.musicCache = core.musicCache;
-        this.instantiate = core::instantiate;
+        this.instantiate = makeInstance;
         this.onRanToEnd = onRanToEnd;
         this.onBufferException = onBufferException;
 

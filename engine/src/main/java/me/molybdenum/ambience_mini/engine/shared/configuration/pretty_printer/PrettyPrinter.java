@@ -41,7 +41,9 @@ public class PrettyPrinter {
     }
 
     private static String printCommand(Command command, int depth) {
-        if (command instanceof Play play)
+        if (command instanceof Skip)
+            return indent(depth) + "skip;\n";
+        else if (command instanceof Play play)
             return indent(depth) + "play "
                     + (play.isInstant() ? "instant " : "")
                     + (play.ifdef() ? "ifdef " : "")

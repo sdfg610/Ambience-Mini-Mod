@@ -47,6 +47,11 @@ public abstract class BaseKeyBindings<TKeyBinding>
     public abstract String getKeyString(TKeyBinding binding);
 
 
+    public String getMenuKeyString() {
+        return getKeyString(openAmMenu);
+    }
+
+
     public void handleKeyInput()
     {
         if (isClicked(openAmMenu))
@@ -56,7 +61,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
             BaseGameStateProvider provider = core.getGameStateProvider();
             core.notification.showToast(AmLang.MSG_PRINTING_ALL);
 
-            var monitor = core.getMonitor();
+            var monitor = core.getMusicEngine();
             if (monitor == null || !monitor.isRunning())
                 provider.prepare(null);
 

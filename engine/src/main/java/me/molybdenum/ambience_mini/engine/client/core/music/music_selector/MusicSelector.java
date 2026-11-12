@@ -1,16 +1,21 @@
 package me.molybdenum.ambience_mini.engine.client.core.music.music_selector;
 
 import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.selection.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.LoadResult;
+import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.command.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.BaseInterpreter;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.*;
 import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStateProvider;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.VariableEnv;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.Value;
+import me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysis.Setup;
+import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.InputStream;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -33,6 +38,19 @@ public class MusicSelector extends BaseInterpreter
 
         var first = config.presets().get(0);
         this.selectedPreset = new Pair<>(first.name().value(), first.body());
+    }
+
+
+    public static LoadResult<MusicSelector> tryOf(
+            InputStream configStream,
+            BaseMusicProvider musicProvider,
+            BaseGameStateProvider gameStateProvider
+    ) {
+        return Loader.loadAndValidateConfig(
+                configStream,
+                musicProvider,
+                new Setup.Client(gameStateProvider)
+        ).map(config -> new MusicSelector(config, gameStateProvider));
     }
 
 
@@ -75,7 +93,9 @@ public class MusicSelector extends BaseInterpreter
     // -----------------------------------------------------------------------------------------------------------------
     // Playlist selection
     private Selection evalSchedule(Command command, VariableEnv env) {
-        if (command instanceof Play play) {
+        if (command instanceof Skip)
+            return null;
+        else if (command instanceof Play play) {
             return evalExpr(play.playlist(), env)
                     .asMusicList()
                     .<Selection>map(musicList -> new PlaylistSelection(

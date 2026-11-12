@@ -8,18 +8,13 @@ public class Constants
     public static final String MOD_ID = "ambience_mini";
 
     // Configuration
-    public static final String AMBIENCE_MUSIC_DIRECTORY = "ambience_music";
-    public static final String MUSIC_DIRECTORY = "music";
-    public static final String MUSIC_CONFIG_FILE = "music_config.txt";
-
-    public static final Path musicPackPath = Path.of(AMBIENCE_MUSIC_DIRECTORY);
-    public static final Path musicDirPath = Path.of(AMBIENCE_MUSIC_DIRECTORY, MUSIC_DIRECTORY);
-    public static final Path musicConfigPath = Path.of(AMBIENCE_MUSIC_DIRECTORY, MUSIC_CONFIG_FILE);
+    public static final Path musicPackPath = Path.of("ambience_music");
+    public static final Path musicDirPath = musicPackPath.resolve("music");
+    public static final Path musicConfigPath = musicPackPath.resolve("music_config.txt");
 
     // Storage
     public static final String AM_STORAGE_DIRECTORY = "am_storage";
     public static final String AM_LOCAL_STORAGE_DIRECTORY = "am_local";
-    public static final String NAME_CACHE_FILE_NAME = "name_cache.json";
 
     // Areas
     public static final float AREA_SELECTION_RANGE = 48f;

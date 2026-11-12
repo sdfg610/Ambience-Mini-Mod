@@ -1,9 +1,12 @@
 package me.molybdenum.ambience_mini.engine.client.core.music;
 
 import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.selection.*;
+import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicPlayer;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.PlayState;
+import me.molybdenum.ambience_mini.engine.client.core.setup.BaseKeyBindings;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
 import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.MusicSelector;
@@ -22,7 +25,7 @@ import org.slf4j.Logger;
 import java.util.*;
 import java.util.function.Supplier;
 
-public class Monitor
+public class MusicEngine
 {
     public static final int JOB_STARTUP_DELAY_MS = 1000;
     public static final int AUTO_RESTART_GRACE_PERIOD = 10_000;
@@ -35,8 +38,10 @@ public class Monitor
     @SuppressWarnings("rawtypes")
     private final BaseClientCore _core;
     private final BaseNotification<?> _notification;
+    private final BaseKeyBindings<?> _keyBindings;
 
     // Music
+    public final MusicInfoCache musicInfoCache;
     private final MusicPlayer musicPlayer;
 
     // Tasks
@@ -48,14 +53,18 @@ public class Monitor
 
 
     @SuppressWarnings("rawtypes")
-    public Monitor(
+    public MusicEngine(
             BaseClientCore clientCore, // Raw use of BaseCore since we do not need to know the types used in implementation.
             MusicSelector playlistSelector
     ) {
         _core = clientCore;
         _notification = _core.notification;
+        _keyBindings = _core.keyBindings;
         _logger = _core.logger;
 
+        musicInfoCache = new MusicInfoCache(_core);
+        musicInfoCache.loadCache();
+        musicInfoCache.startPeriodicSave();
 
         // Setup scheduled tasks
         musicCycleJob = jobCenter.schedule(
@@ -66,6 +75,7 @@ public class Monitor
         // Setup music player and volume
         musicPlayer = new MusicPlayer(
                 _core,
+                this::makeInstance,
                 () -> musicCycleJob.selectNewMusic(_core.clientConfig.nextMusicDelay.get(), null),
                 ex -> {
                     _logger.error("Error in music buffering!", ex);
@@ -95,6 +105,10 @@ public class Monitor
         return musicPlayer.getActiveServerSoundtracks();
     }
 
+    public MusicInstance makeInstance(Music music) {
+        return new MusicInstance(music, _core.musicProvider, musicInfoCache);
+    }
+
 
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -112,9 +126,8 @@ public class Monitor
                 _core.tryReloadMusicEngine();
             }
             else {
-                // TODO: FIX HERE!!!!!
-                //_notification.printTranslatableToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
-                //_notification.showToast(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getReloadKeyString());
+                _notification.printTranslatableToChat(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getMenuKeyString());
+                _notification.showToast(AmLang.MSG_PLAYER_CRASHED, _keyBindings.getMenuKeyString());
             }
         } catch (Exception e) {
             throw new RuntimeException("En exception occurred while attempting to auto restart the music player.", e);
@@ -126,6 +139,7 @@ public class Monitor
             if (!jobCenter.isShutdown()) {
                 jobCenter.shutdown();
                 musicPlayer.shutdown();
+                musicInfoCache.shutdownAndSave();
             }
             VolumeState.unregisterVolumeListener(musicCycleJob::updateVolume);
         }

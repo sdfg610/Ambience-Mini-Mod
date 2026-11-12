@@ -8,7 +8,7 @@ import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.main_menu
 import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.main_menu.MusicBar;
 import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.main_menu.MusicButton;
 import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
-import me.molybdenum.ambience_mini.engine.client.core.music.Monitor;
+import me.molybdenum.ambience_mini.engine.client.core.music.MusicEngine;
 import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.PlayState;
@@ -31,7 +31,6 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
     @SuppressWarnings("rawtypes")
     private final BaseClientCore core;
     private final BaseNotification<?> notification;
-    private final Function<Music, MusicInstance> instantiate;
 
     private final TabPanel tabPanel;
 
@@ -45,7 +44,7 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
     private final Button btnPlayPause;
     private final ScrollPanel scrPlaylist, scrPresets;
 
-    private Monitor monitor;
+    private MusicEngine musicEngine;
     private boolean wasPaused;
 
     private PlayState currentPlaystate;
@@ -73,7 +72,6 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
 
         this.core = core;
         this.notification = core.notification;
-        this.instantiate = core::instantiate;
 
         tabPanel = addWidget(new TabPanel(MENU_WIDTH, MENU_HEIGHT));
         tabPanel.backgroundColor = Color.BLACK_128;
@@ -166,22 +164,22 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
     }
 
     private void tickPlayerTab() {
-        monitor = core.getMonitor();
-        var monitorRunning = monitor != null && monitor.isRunning();
+        musicEngine = core.getMusicEngine();
+        var monitorRunning = musicEngine != null && musicEngine.isRunning();
         playerPanel.setVisible(monitorRunning);
         lblNotRunning.setVisible(!monitorRunning);
         if (!monitorRunning) {
-            monitor = null;
+            musicEngine = null;
             return;
         }
 
-        boolean isPaused = monitor.isPaused();
+        boolean isPaused = musicEngine.isPaused();
         if (wasPaused != isPaused) {
             btnPlayPause.setText(isPaused ? strPlay : strPause);
             wasPaused = isPaused;
         }
 
-        var presets = monitor.getPresetNames();
+        var presets = musicEngine.getPresetNames();
         if (presets != currentPresets) {
             currentPresets = presets;
 
@@ -205,19 +203,19 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
                 var btn = new RadioButton(x, y, preset, group);
                 btn.setWidth(width);
                 y += scrPresets.addWidget(btn).getHeight() + BASE_SEPARATION;
-                btn.setSelected(preset.equals(monitor.getSelectedPreset()));
+                btn.setSelected(preset.equals(musicEngine.getSelectedPreset()));
             }
 
             scrPresets.refreshScroll();
         }
 
-        var playlist = monitor.getSelectedPlaylist();
+        var playlist = musicEngine.getSelectedPlaylist();
         if (playlist != currentPlaylist) {
             currentPlaylist = playlist;
             refreshPlaylist();
         }
 
-        var playState = monitor.getPlayState();
+        var playState = musicEngine.getPlayState();
         if (playState != null && currentPlaystate != playState) {
             currentPlaystate = playState;
             lblMusic.setText(playState.getTitleOrPath());
@@ -255,7 +253,7 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
             var y = MENU_INNER_MARGIN/2;
             var width = scrPlaylist.getUsableWidth() - MENU_INNER_MARGIN;
             for (var music : currentPlaylist)
-                y += scrPlaylist.addWidget(new MusicButton(x, y, width, instantiate.apply(music), this::onMusicButtonClicked)).getHeight() + BASE_SEPARATION;
+                y += scrPlaylist.addWidget(new MusicButton(x, y, width, musicEngine.makeInstance(music), this::onMusicButtonClicked)).getHeight() + BASE_SEPARATION;
         }
 
         scrPlaylist.refreshScroll();
@@ -274,7 +272,7 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
             var width = scrCacheEntries.getUsableWidth() - MENU_INNER_MARGIN;
             for (var path : musicCache.getCachedMusicPaths())
                 y += scrCacheEntries.addWidget(new CacheDisplay(
-                        x, y, width, instantiate.apply(new Music(path, true))
+                        x, y, width, musicEngine.makeInstance(new Music(path, true))
                 )).getHeight() + BASE_SEPARATION;
             scrCacheEntries.refreshScroll();
         }
@@ -292,44 +290,44 @@ public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
     // Player tab
     private void onReloadClicked() {
         core.notification.showToast(AmLang.MSG_RELOAD);
-        Monitor.enableAutoRestart();
+        MusicEngine.enableAutoRestart();
         core.tryReloadMusicEngine();
     }
 
     private void onPlayPauseClicked() {
-        if (monitor != null) {
-            if (monitor.isPaused())
-                monitor.resume();
+        if (musicEngine != null) {
+            if (musicEngine.isPaused())
+                musicEngine.resume();
             else
-                monitor.pause();
+                musicEngine.pause();
         }
     }
 
     private void onPickRandomClicked() {
-        if (monitor != null) {
+        if (musicEngine != null) {
             core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
-            monitor.forceSelectNewMusic();
-            monitor.resume();
+            musicEngine.forceSelectNewMusic();
+            musicEngine.resume();
         }
     }
 
     private void onMusicButtonClicked(MusicInstance inst) {
-        if (monitor != null) {
+        if (musicEngine != null) {
             core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
-            monitor.forceSelectNewMusic(inst.music);
-            monitor.resume();
+            musicEngine.forceSelectNewMusic(inst.music);
+            musicEngine.resume();
         }
     }
 
     private void onPresetChanged(RadioButton btn) {
-        monitor.setSelectedPreset(btn.getText());
+        musicEngine.setSelectedPreset(btn.getText());
     }
 
     // Server music tab
     private void onClearClicked() {
         core.notification.showToast(AmLang.MSG_RELOAD);
-        Monitor.enableAutoRestart();
-        var monitor = core.getMonitor();
+        MusicEngine.enableAutoRestart();
+        var monitor = core.getMusicEngine();
         if (monitor != null)
             monitor.stop();
         core.musicCache.clearOnlyCache();

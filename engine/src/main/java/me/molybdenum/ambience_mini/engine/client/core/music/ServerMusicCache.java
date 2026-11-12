@@ -82,7 +82,7 @@ public class ServerMusicCache
         notification = core.notification;
 
         this.getActiveSoundtracks = () -> {
-            var mon = core.getMonitor();
+            var mon = core.getMusicEngine();
             return mon == null ? List.of() : mon.getActiveSoundtracks();
         };
 
@@ -450,10 +450,9 @@ public class ServerMusicCache
             int loopLength = musicDTO.tryGetFlag(Music.ARG_LOOPLENGTH).map(ValueDTO::tryGetInt).orElse(-1);
 
             newMusicPathToSize.putIfAbsent(musicPath, musicSize);
-            // TODO: locatedOnServer == true only if not on integrated server
             return new Music(
                     musicPath,
-                    true || !serverSetup.isOnLocalServer,
+                    !serverSetup.isOnLocalServer,
                     gain,
                     loop, loopStart, loopEnd, loopLength
             );

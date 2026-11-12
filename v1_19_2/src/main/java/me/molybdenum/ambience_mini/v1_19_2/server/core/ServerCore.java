@@ -34,10 +34,9 @@ public class ServerCore extends BaseServerCore<
             StructureReader structureReader,
             FlagManager flagManager,
             ServerMusicManager musicManager,
-            MusicInfoCache musicInfoCache,
             ServerNetworkManager networkManager
     ) {
-        super(logger, nameCache, serverConfig, areaManager, structureReader, flagManager, musicManager, musicInfoCache, networkManager);
+        super(logger, nameCache, serverConfig, areaManager, structureReader, flagManager, musicManager, networkManager);
 
         this.server = server;
     }

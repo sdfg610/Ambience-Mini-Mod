@@ -13,10 +13,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
-import static me.molybdenum.ambience_mini.engine.shared.Constants.NAME_CACHE_FILE_NAME;
-
 
 public class ServerNameCache {
+    public static final String NAME_CACHE_FILE_NAME = "name_cache.json";
+
     private final HashMap<String, String> playerNameCache = new HashMap<>();
 
     private Path cacheFilePath;

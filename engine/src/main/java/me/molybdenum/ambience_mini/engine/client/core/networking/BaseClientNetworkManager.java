@@ -141,14 +141,14 @@ public abstract class BaseClientNetworkManager
 
     // Combat
     private void handleMobTargetMessage(MobTargetMessage msg) {
-        BaseAmbienceMini.executeAsync(
-                () -> core.combatState.handleTargeting(msg.entityID, msg.isTargetingPlayer)
+        jobCenter.post(
+                JobCenter.Job.of(() -> core.combatState.handleTargeting(msg.entityID, msg.isTargetingPlayer))
         );
     }
 
     private void handleMobCombatInteractionMessage(MobCombatInteractionMessage msg) {
-        BaseAmbienceMini.executeAsync(
-                () -> core.combatState.handleInteraction(msg.entityID)
+        jobCenter.post(
+                JobCenter.Job.of(() -> core.combatState.handleInteraction(msg.entityID))
         );
     }
 

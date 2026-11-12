@@ -5,6 +5,7 @@ import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.music.decoders.AmDecoder;
 import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
 import me.molybdenum.ambience_mini.engine.client.core.networking.BaseClientNetworkManager;
+import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
 import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerMusicInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.helper.HelperReader;
@@ -30,10 +31,13 @@ import java.util.function.Consumer;
 public class MusicInfoCache
 {
     private static final int TIMEOUT_MILLIS = 20_000;
-    private final Path cachePath = Constants.musicPackPath.resolve("musicInfoCache.json");
-    
-    private Logger logger;
+    private static final int SAVE_INTERVAL_MILLIS = 10_000;
 
+    private final Path cachePath;
+
+    private final Logger logger;
+
+    // Tasks
     private final JobCenter jobCenter = JobCenter.singleThreaded();
 
     // Client stuff
@@ -48,22 +52,46 @@ public class MusicInfoCache
 
     // Server stuff
     private final Object serverLock = new Object();
-    private BaseClientNetworkManager networkManager;
+    private final BaseClientNetworkManager networkManager;
 
     private final HashMap<String, MusicInfo> serverPathToInfo = new HashMap<>();
 
     private final HashMap<String, ArrayList<Consumer<MusicInfo>>> serverPathToCallbacks = new HashMap<>();
 
 
-    @SuppressWarnings("rawtypes")
-    public void init(
-            BaseClientCore core
-    ) {
-        if (this.networkManager != null)
-            throw new RuntimeException("Multiple calls to '" + this.getClass().getName() + ".init'!");
+    private MusicInfoCache(Logger logger, BaseClientNetworkManager networkManager, Path cachePath) {
+        this.logger = logger;
+        this.networkManager = networkManager;
+        this.cachePath = cachePath;
+    }
 
-        logger = core.logger;
-        networkManager = core.networkManager;
+
+    @SuppressWarnings("rawtypes")
+    public MusicInfoCache(BaseClientCore core) {
+        this(
+                core.logger,
+                core.networkManager,
+                Constants.musicPackPath.resolve("musicInfoCache.json")
+        );
+    }
+
+    @SuppressWarnings("rawtypes")
+    public MusicInfoCache(BaseServerCore core) {
+        this(
+                core.logger,
+                null,
+                Constants.musicPackPath.resolve("musicInfoCache-server.json")
+        );
+    }
+
+
+    public void startPeriodicSave() {
+        jobCenter.schedule(new PeriodicSaveJob(), SAVE_INTERVAL_MILLIS, SAVE_INTERVAL_MILLIS);
+    }
+
+    public void shutdownAndSave() {
+        if (jobCenter.shutdownAndAwaitTermination(10_000))
+            saveCache();
     }
 
 
@@ -158,6 +186,7 @@ public class MusicInfoCache
     /// Assumes clientLock acquired
     private List<Consumer<MusicInfo>> putInfo(String hash, MusicInfo musicInfo) {
         hashToInfo.put(hash, musicInfo);
+        cacheDirty = true;
         return hashToCallbacks.remove(hash);
     }
 
@@ -242,7 +271,6 @@ public class MusicInfoCache
     }
 
 
-    // TODO: Periodic save and load on music player reload
 
     public void loadCache() {
         synchronized (clientLock) {
@@ -252,23 +280,24 @@ public class MusicInfoCache
             pathToCallbacks.clear();
             hashToCallbacks.clear();
 
-            try {
-                JsonElement json = JsonParser.parseReader(Files.newBufferedReader(cachePath, StandardCharsets.UTF_8));
-                if (json.isJsonArray()) {
-                    AtomicBoolean hasErroneousElements = new AtomicBoolean(false);
-                    for (var elem : json.getAsJsonArray())
-                        MusicInfo.tryOfJson(elem).ifPresentOrElse(
-                                pair -> hashToInfo.put(pair.left(), pair.right()),
-                                () -> hasErroneousElements.set(true)
-                        );
+            if (cachePath.toFile().exists())
+                try {
+                    JsonElement json = JsonParser.parseReader(Files.newBufferedReader(cachePath, StandardCharsets.UTF_8));
+                    if (json.isJsonArray()) {
+                        AtomicBoolean hasErroneousElements = new AtomicBoolean(false);
+                        for (var elem : json.getAsJsonArray())
+                            MusicInfo.tryOfJson(elem).ifPresentOrElse(
+                                    pair -> hashToInfo.put(pair.left(), pair.right()),
+                                    () -> hasErroneousElements.set(true)
+                            );
 
-                    if (hasErroneousElements.get())
-                        logger.error("Malformed entries in duration-cache file '{}'", cachePath);
-                } else
-                    logger.error("Malformed duration-cache file '{}'", cachePath);
-            } catch (Exception e) {
-                logger.error("Failed to load duration-cache from file '{}'", cachePath);
-            }
+                        if (hasErroneousElements.get())
+                            logger.error("Malformed entries in duration-cache file '{}'", cachePath);
+                    } else
+                        logger.error("Malformed duration-cache file '{}'", cachePath);
+                } catch (Exception e) {
+                    logger.error("Failed to load duration-cache from file '{}'", cachePath);
+                }
 
             cacheDirty = false;
         }
@@ -399,6 +428,14 @@ public class MusicInfoCache
         @Override
         protected void onException(Exception e) {
             super.onException(e);
+        }
+    }
+
+
+    private class PeriodicSaveJob extends JobCenter.Job {
+        @Override
+        protected void body() {
+            saveCache();
         }
     }
 }

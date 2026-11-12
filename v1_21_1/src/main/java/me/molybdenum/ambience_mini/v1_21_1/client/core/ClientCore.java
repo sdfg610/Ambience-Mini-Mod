@@ -56,10 +56,9 @@ public class ClientCore extends BaseClientCore<
             PlayerState playerState,
             LevelState levelState,
             ScreenState screenState,
-            CombatState combatState,
-            MusicInfoCache musicInfoCache
+            CombatState combatState
     ) {
-        super(McVersion.V1_21, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, musicCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState, musicInfoCache);
+        super(McVersion.V1_21, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, musicCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
     }
 
 

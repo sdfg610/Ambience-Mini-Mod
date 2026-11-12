@@ -1,8 +1,7 @@
 package me.molybdenum.ambience_mini.engine;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.music.Monitor;
-import me.molybdenum.ambience_mini.engine.server.core.BaseServerCore;
+import me.molybdenum.ambience_mini.engine.client.core.music.MusicEngine;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -12,7 +11,6 @@ import java.util.function.Supplier;
 
 public class BaseAmbienceMini
 {
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static final ArrayList<Runnable> onClientCoreInitListeners = new ArrayList<>();
 
     @SuppressWarnings("rawtypes")
@@ -56,13 +54,7 @@ public class BaseAmbienceMini
         if (baseClientCore == null) // Until Ambience Mini is actually loaded, don't disable vanilla player.
             return true;
 
-        Monitor m = baseClientCore.getMonitor();
+        MusicEngine m = baseClientCore.getMusicEngine();
         return m == null || !m.isRunning() || m.isVanillaPlayerSelected();
-    }
-
-
-    // Task execution
-    public static void executeAsync(Runnable task) {  // TODO: Delete this function
-        executor.submit(task);
     }
 }

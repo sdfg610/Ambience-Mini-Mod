@@ -69,7 +69,6 @@ public abstract class BaseServerCore<
             TStructureReader structureReader,
             FlagManager flagManager,
             ServerMusicManager musicManager,
-            MusicInfoCache musicInfoCache,
             TNetworkManager networkManager
     ) {
         this.logger = logger;
@@ -80,8 +79,9 @@ public abstract class BaseServerCore<
         this.structureReader = structureReader;
         this.flagManager = flagManager;
         this.musicManager = musicManager;
-        this.musicInfoCache = musicInfoCache;
         this.networkManager = networkManager;
+
+        this.musicInfoCache = new MusicInfoCache(this);
     }
 
     // NOTE: Init must be separate from initializer since extenders of ServerCore have additional initialization logic
@@ -99,10 +99,13 @@ public abstract class BaseServerCore<
 
     private void loadMusicConfig() {
         File configFile = Constants.musicConfigPath.toFile();
-        try (InputStream configStream = new FileInputStream(configFile)) {
-            loadServerConfig(configStream)
-                    .match(this::loadServerPlaylists, this::printErrors);
-        } catch (IOException ignored) { }
+        if (configFile.exists())
+            try (InputStream configStream = new FileInputStream(configFile)) {
+                loadServerConfig(configStream)
+                        .match(this::loadServerPlaylists, this::printErrors);
+            } catch (IOException e) {
+                logger.error("Could not read music_config.txt", e);
+            }
     }
 
     private LoadResult<ServerConfigInterpreter> loadServerConfig(
@@ -151,6 +154,9 @@ public abstract class BaseServerCore<
 
         this.flagManager.registerPeriodicTasks(jobCenter);
         this.musicManager.registerPeriodicTasks(jobCenter);
+
+        this.musicInfoCache.loadCache();
+        this.musicInfoCache.startPeriodicSave();
     }
 
     public void onStopped() {
@@ -160,6 +166,8 @@ public abstract class BaseServerCore<
         this.nameCache.saveCache();
         this.areaManager.saveAllAreas();
         this.flagManager.saveFlags();
+
+        this.musicInfoCache.shutdownAndSave();
     }
 
 
