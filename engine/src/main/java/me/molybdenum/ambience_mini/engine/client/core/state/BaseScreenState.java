@@ -1,6 +1,9 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.gui.base.McScreen;
+import me.molybdenum.ambience_mini.engine.client.core.gui.menus.AreaMenu;
+import me.molybdenum.ambience_mini.engine.client.core.gui.menus.MainMenu;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import org.slf4j.Logger;
 
@@ -53,16 +56,18 @@ public abstract class BaseScreenState
         return currentScreenID;
     }
 
-    public void handleScreenChanged(Class<?> screenClass) {
-        if (screenClass == null) {
+
+    public void handleScreenChanged(Object screen) {
+        if (screen == null) {
             memorizedScreenType = ScreenType.NONE;
             currentScreenID = null;
         }
         else {
-            var newType = getScreenTypeOfClass(screenClass);
+            var clazz = screen instanceof McScreen mcScreen ? mcScreen.getAmMenu().getClass() : screen.getClass();
+            var newType = getScreenTypeOfClass(clazz);
             if (newType != ScreenType.UNKNOWN)
                 memorizedScreenType = newType;
-            currentScreenID = screenClass.getCanonicalName();
+            currentScreenID = clazz.getCanonicalName();
         }
 
         if (loaded && clientConfig.printScreenOnChange.get())
@@ -70,32 +75,39 @@ public abstract class BaseScreenState
     }
 
     private ScreenType getScreenTypeOfClass(Class<?> screenClass) {
-        return SCREEN_CLASS_TO_TYPE.computeIfAbsent(screenClass, clazz ->
-                switch (clazz.getCanonicalName()) {
-                    case "net.minecraft.client.gui.screens.TitleScreen",
-                         "net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen" ,
-                         "net.minecraft.client.gui.screens.DirectJoinServerScreen" ,
-                         "net.minecraft.client.gui.screens.worldselection.SelectWorldScreen" ,
-                         "net.minecraft.client.gui.screens.worldselection.CreateWorldScreen" -> ScreenType.MAIN_MENU;
+        return SCREEN_CLASS_TO_TYPE.computeIfAbsent(screenClass, clazz -> {
+                    if (AreaMenu.class == screenClass)
+                        return ScreenType.AREA_MENU;
+                    else if (MainMenu.class == screenClass)
+                        return ScreenType.AM_MENU;
 
-                    case "net.minecraft.client.gui.screens.ProgressScreen",
-                         "net.minecraft.client.gui.screens.ConnectScreen",
-                         "net.minecraft.client.gui.screens.LevelLoadingScreen",
-                         "net.minecraft.client.gui.screens.ReceivingLevelScreen" -> ScreenType.JOINING;
+                    return switch (clazz.getCanonicalName()) {
+                        case "net.minecraft.client.gui.screens.TitleScreen",
+                             "net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen",
+                             "net.minecraft.client.gui.screens.DirectJoinServerScreen",
+                             "net.minecraft.client.gui.screens.worldselection.SelectWorldScreen",
+                             "net.minecraft.client.gui.screens.worldselection.CreateWorldScreen" -> ScreenType.MAIN_MENU;
 
-                    case "net.minecraft.client.gui.screens.DisconnectedScreen",
-                         "net.minecraft.realms.DisconnectedRealmsScreen" -> ScreenType.DISCONNECTED;
+                        case "net.minecraft.client.gui.screens.ProgressScreen",
+                             "net.minecraft.client.gui.screens.ConnectScreen",
+                             "net.minecraft.client.gui.screens.LevelLoadingScreen",
+                             "net.minecraft.client.gui.screens.ReceivingLevelScreen" -> ScreenType.JOINING;
 
-                    case "net.minecraft.client.gui.screens.WinScreen" -> ScreenType.CREDITS;
+                        case "net.minecraft.client.gui.screens.DisconnectedScreen",
+                             "net.minecraft.realms.DisconnectedRealmsScreen" -> ScreenType.DISCONNECTED;
 
-                    case "net.minecraft.client.gui.screens.DeathScreen" -> ScreenType.DEATH;
+                        case "net.minecraft.client.gui.screens.WinScreen" -> ScreenType.CREDITS;
 
-                    case "net.minecraft.client.gui.screens.PauseScreen" -> ScreenType.PAUSE;
+                        case "net.minecraft.client.gui.screens.DeathScreen" -> ScreenType.DEATH;
 
-                    case "net.minecraft.client.gui.screens.inventory.InventoryScreen",
-                         "net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen"-> ScreenType.PLAYER_INVENTORY;
+                        case "net.minecraft.client.gui.screens.PauseScreen" -> ScreenType.PAUSE;
 
-                    default -> ScreenType.UNKNOWN;
+                        case "net.minecraft.client.gui.screens.inventory.InventoryScreen",
+                             "net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen" ->
+                                ScreenType.PLAYER_INVENTORY;
+
+                        default -> ScreenType.UNKNOWN;
+                    };
                 }
         );
     }

@@ -85,7 +85,7 @@ public class AmScreen extends Screen implements McScreen
 
 
     //------------------------------------------------------------------------------------------------------------------
-    // AmbienceMini.IScreen overrides
+    // AmbienceMini.McScreen overrides
     @Override
     public void open() {
         Minecraft.getInstance().setScreen(this);
@@ -104,5 +104,10 @@ public class AmScreen extends Screen implements McScreen
     @Override
     public int screenHeight() {
         return height;
+    }
+
+    @Override
+    public AmMenu<?> getAmMenu() {
+        return menu;
     }
 }

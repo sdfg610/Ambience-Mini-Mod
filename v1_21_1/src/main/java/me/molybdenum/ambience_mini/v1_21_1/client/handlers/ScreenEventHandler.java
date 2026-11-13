@@ -26,7 +26,6 @@ public class ScreenEventHandler
     // Client events
     @SubscribeEvent
     public static void onScreenChanged(final ScreenEvent.Opening event) {
-        Screen screen = event.getNewScreen();
-        screenState.handleScreenChanged(screen == null ? null : screen.getClass());
+        screenState.handleScreenChanged(event.getScreen());
     }
 }

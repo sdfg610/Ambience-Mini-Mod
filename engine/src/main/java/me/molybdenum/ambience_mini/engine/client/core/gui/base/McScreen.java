@@ -6,4 +6,6 @@ public interface McScreen {
 
     int screenWidth();
     int screenHeight();
+
+    AmMenu<?> getAmMenu();
 }
