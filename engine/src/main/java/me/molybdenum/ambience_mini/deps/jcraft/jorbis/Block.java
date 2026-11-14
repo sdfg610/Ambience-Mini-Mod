@@ -29,10 +29,13 @@ package me.molybdenum.ambience_mini.deps.jcraft.jorbis;
 import me.molybdenum.ambience_mini.deps.jcraft.jogg.Buffer;
 import me.molybdenum.ambience_mini.deps.jcraft.jogg.Packet;
 
-public class Block{
+import java.io.IOException;
+
+public class Block
+{
   ///necessary stream state for linking to the framing abstraction
   float[][] pcm=new float[0][]; // this is a pointer into local storage
-  Buffer opb=new Buffer();
+  final Buffer opb=new Buffer();
 
   int lW;
   int W;
@@ -45,11 +48,22 @@ public class Block{
   long sequence;
   DspState vd; // For read-only access of configuration
 
-  // bitmetrics for the frame
-  int glue_bits;
-  int time_bits;
-  int floor_bits;
-  int res_bits;
+
+  //
+  // Save state
+  //
+  float[][] saved_pcm; // this is a pointer into local storage
+
+  int saved_lW;
+  int saved_W;
+  int saved_nW;
+  int saved_pcmend;
+  int saved_mode;
+
+  int saved_eofflag;
+  long saved_granulepos;
+  long saved_sequence;
+
 
   public Block(DspState vd){
     this.vd=vd;
@@ -57,6 +71,48 @@ public class Block{
       opb.writeinit();
     }
   }
+
+
+  public void saveState() {
+    int len = pcm.length;
+    saved_pcm = new float[len][];
+    for (int i = 0; i < len; i++) {
+      float[] arr = pcm[i];
+      saved_pcm[i] = new float[arr.length];
+      System.arraycopy(arr, 0, saved_pcm[i], 0, arr.length);
+    }
+    opb.saveState();
+
+    saved_lW = lW;
+    saved_W = W;
+    saved_nW = nW;
+    saved_pcmend = pcmend;
+    saved_mode = mode;
+    saved_eofflag = eofflag;
+    saved_granulepos = granulepos;
+    saved_sequence = sequence;
+  }
+
+  public void restoreState() {
+    int len = saved_pcm.length;
+    pcm = new float[len][];
+    for (int i = 0; i < len; i++) {
+      float[] arr = saved_pcm[i];
+      pcm[i] = new float[arr.length];
+      System.arraycopy(arr, 0, pcm[i], 0, arr.length);
+    }
+    opb.restoreState();
+
+    lW = saved_lW;
+    W = saved_W;
+    nW = saved_nW;
+    pcmend = saved_pcmend;
+    mode = saved_mode;
+    eofflag = saved_eofflag;
+    granulepos = saved_granulepos;
+    sequence = saved_sequence;
+  }
+
 
   public void init(DspState vd){
     this.vd=vd;

@@ -42,8 +42,10 @@ package me.molybdenum.ambience_mini.deps.jcraft.jogg;
 // ogg_stream_state.  See the 'frame-prog.txt' docs for details and
 // example code.
 
-public class SyncState{
+import java.io.IOException;
 
+public class SyncState
+{
   public byte[] data;
   int storage;
   int fill;
@@ -52,6 +54,40 @@ public class SyncState{
   int unsynced;
   int headerbytes;
   int bodybytes;
+
+  // Save state
+  public byte[] saved_data;
+  int saved_storage;
+  int saved_fill;
+  int saved_returned;
+
+  int saved_unsynced;
+  int saved_headerbytes;
+  int saved_bodybytes;
+
+
+  public void saveState() {
+    saved_data = new byte[data.length];
+    System.arraycopy(data, 0, saved_data, 0, data.length);
+    saved_storage = storage;
+    saved_fill = fill;
+    saved_returned = returned;
+    saved_unsynced = unsynced;
+    saved_headerbytes = headerbytes;
+    saved_bodybytes = bodybytes;
+  }
+
+  public void restoreState() {
+    data = new byte[saved_data.length];
+    System.arraycopy(saved_data, 0, data, 0, saved_data.length);
+    storage = saved_storage;
+    fill = saved_fill;
+    returned = saved_returned;
+    unsynced = saved_unsynced;
+    headerbytes = saved_headerbytes;
+    bodybytes = saved_bodybytes;
+  }
+
 
   public int clear(){
     data=null;

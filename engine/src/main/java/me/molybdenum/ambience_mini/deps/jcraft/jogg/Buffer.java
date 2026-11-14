@@ -26,7 +26,10 @@
 
 package me.molybdenum.ambience_mini.deps.jcraft.jogg;
 
-public class Buffer{
+import java.io.IOException;
+
+public class Buffer
+{
   private static final int BUFFER_INCREMENT=256;
 
   private static final int[] mask= {0x00000000, 0x00000001, 0x00000003,
@@ -36,11 +39,42 @@ public class Buffer{
       0x001fffff, 0x003fffff, 0x007fffff, 0x00ffffff, 0x01ffffff, 0x03ffffff,
       0x07ffffff, 0x0fffffff, 0x1fffffff, 0x3fffffff, 0x7fffffff, 0xffffffff};
 
-  int ptr=0;
   byte[] buffer=null;
+
+  int ptr=0;
   int endbit=0;
   int endbyte=0;
   int storage=0;
+
+  //
+  // Save state
+  //
+  byte[] saved_buffer=null;
+
+  int saved_ptr=0;
+  int saved_endbit=0;
+  int saved_endbyte=0;
+  int saved_storage=0;
+
+
+  public void saveState() {
+    saved_buffer = new byte[buffer.length];
+    System.arraycopy(buffer, 0, saved_buffer, 0, buffer.length);
+    saved_ptr = ptr;
+    saved_endbit = endbit;
+    saved_endbyte = endbyte;
+    saved_storage = storage;
+  }
+
+  public void restoreState() {
+    buffer = new byte[saved_buffer.length];
+    System.arraycopy(saved_buffer, 0, buffer, 0, saved_buffer.length);
+    ptr = saved_ptr;
+    endbit = saved_endbit;
+    endbyte = saved_endbyte;
+    storage = saved_storage;
+  }
+
 
   public void writeinit(){
     buffer=new byte[BUFFER_INCREMENT];

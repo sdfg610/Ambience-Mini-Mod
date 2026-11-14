@@ -26,7 +26,11 @@
 
 package me.molybdenum.ambience_mini.deps.jcraft.jogg;
 
-public class StreamState{
+import java.io.IOException;
+import java.util.Arrays;
+
+public class StreamState
+{
   byte[] body_data; /* bytes from packet bodies */
   int body_storage; /* storage elements allocated */
   int body_fill; /* elements stored; fill mark */
@@ -44,10 +48,8 @@ public class StreamState{
   byte[] header=new byte[282]; /* working space for header encode */
   int header_fill;
 
-  public int e_o_s; /* set when we have buffered the last packet in the
-   	 logical bitstream */
-  int b_o_s; /* set after we've written the initial page
-   of a logical bitstream */
+  public int e_o_s; /* set when we have buffered the last packet in the logical bitstream */
+  int b_o_s; /* set after we've written the initial page of a logical bitstream */
   int serialno;
   int pageno;
   long packetno; /* sequence number for decode; the framing
@@ -56,6 +58,89 @@ public class StreamState{
                       (which is in a seperate abstraction
                       layer) also knows about the gap */
   long granulepos;
+
+  //
+  // Save state
+  //
+  byte[] saved_body_data;
+  int saved_body_storage;
+  int saved_body_fill;
+  private int saved_body_returned;
+
+  int[] saved_lacing_vals;
+  long[] saved_granule_vals;
+  int saved_lacing_storage;
+  int saved_lacing_fill;
+  int saved_lacing_packet;
+  int saved_lacing_returned;
+
+  byte[] saved_header=new byte[282];
+  int saved_header_fill;
+
+  public int saved_e_o_s;
+  int saved_b_o_s;
+  int saved_serialno;
+  int saved_pageno;
+  long saved_packetno;
+  long saved_granulepos;
+
+
+  public void saveState() {
+    saved_body_data = new byte[body_data.length];
+    System.arraycopy(body_data, 0, saved_body_data, 0, body_data.length);
+    saved_body_storage = body_storage;
+    saved_body_fill = body_fill;
+    saved_body_returned = body_returned;
+
+    saved_lacing_vals = new int[lacing_vals.length];
+    System.arraycopy(lacing_vals, 0, saved_lacing_vals, 0, lacing_vals.length);
+    saved_granule_vals = new long[granule_vals.length];
+    System.arraycopy(granule_vals, 0, saved_granule_vals, 0, granule_vals.length);
+    saved_lacing_storage = lacing_storage;
+    saved_lacing_fill = lacing_fill;
+    saved_lacing_packet = lacing_packet;
+    saved_lacing_returned = lacing_returned;
+
+    saved_header = new byte[header.length];
+    System.arraycopy(header, 0, saved_header, 0, header.length);
+    saved_header_fill = header_fill;
+
+    saved_e_o_s = e_o_s;
+    saved_b_o_s = b_o_s;
+    saved_serialno = serialno;
+    saved_pageno = pageno;
+    saved_packetno = packetno;
+    saved_granulepos = granulepos;
+  }
+
+  public void restoreState() {
+    body_data = new byte[saved_body_data.length];
+    System.arraycopy(saved_body_data, 0, body_data, 0, saved_body_data.length);
+    body_storage = saved_body_storage;
+    body_fill = saved_body_fill;
+    body_returned = saved_body_returned;
+
+    lacing_vals = new int[saved_lacing_vals.length];
+    System.arraycopy(saved_lacing_vals, 0, lacing_vals, 0, saved_lacing_vals.length);
+    granule_vals = new long[saved_granule_vals.length];
+    System.arraycopy(saved_granule_vals, 0, granule_vals, 0, saved_granule_vals.length);
+    lacing_storage = saved_lacing_storage;
+    lacing_fill = saved_lacing_fill;
+    lacing_packet = saved_lacing_packet;
+    lacing_returned = saved_lacing_returned;
+
+    header = new byte[saved_header.length];
+    System.arraycopy(saved_header, 0, header, 0, saved_header.length);
+    header_fill = saved_header_fill;
+
+    e_o_s = saved_e_o_s;
+    b_o_s = saved_b_o_s;
+    serialno = saved_serialno;
+    pageno = saved_pageno;
+    packetno = saved_packetno;
+    granulepos = saved_granulepos;
+  }
+
 
   public StreamState(){
     init();
@@ -79,12 +164,9 @@ public class StreamState{
       init();
     }
     else{
-      for(int i=0; i<body_data.length; i++)
-        body_data[i]=0;
-      for(int i=0; i<lacing_vals.length; i++)
-        lacing_vals[i]=0;
-      for(int i=0; i<granule_vals.length; i++)
-        granule_vals[i]=0;
+        Arrays.fill(body_data, (byte) 0);
+        Arrays.fill(lacing_vals, 0);
+        Arrays.fill(granule_vals, 0);
     }
     this.serialno=serialno;
   }

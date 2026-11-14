@@ -26,7 +26,10 @@
 
 package me.molybdenum.ambience_mini.deps.jcraft.jorbis;
 
-public class DspState{
+import java.io.IOException;
+
+public class DspState
+{
   static final float M_PI=3.1415926539f;
   static final int VI_TRANSFORMB=1;
   static final int VI_WINDOWB=1;
@@ -40,10 +43,6 @@ public class DspState{
   int pcm_current;
   int pcm_returned;
 
-  float[] multipliers;
-  int envelope_storage;
-  int envelope_current;
-
   int eofflag;
 
   int lW;
@@ -54,28 +53,93 @@ public class DspState{
   long granulepos;
   long sequence;
 
-  long glue_bits;
-  long time_bits;
-  long floor_bits;
-  long res_bits;
 
   // local lookup storage
   float[][][][][] window; // block, leadin, leadout, type
-  Object[][] transform;
+  Mdct[][] transform;
   CodeBook[] fullbooks;
   // backend lookups are tied to the mode, not the backend or naked mapping
   Object[] mode;
 
-  // local storage, only used on the encoding side.  This way the
-  // application does not need to worry about freeing some packets'
-  // memory and not others'; packet storage is always tracked.
-  // Cleared next call to a _dsp_ function
-  byte[] header;
-  byte[] header1;
-  byte[] header2;
+  //
+  // Save state
+  //
+  int saved_analysisp;
+  int saved_modebits;
+
+  float[][] saved_pcm;
+  int saved_pcm_storage;
+  int saved_pcm_current;
+  int saved_pcm_returned;
+
+  int saved_eofflag;
+
+  int saved_lW;
+  int saved_W;
+  int saved_nW;
+  int saved_centerW;
+
+  long saved_granulepos;
+  long saved_sequence;
+
+
+  public void saveState() {
+    saved_analysisp = analysisp;
+    saved_modebits = modebits;
+
+    int len = pcm.length;
+    saved_pcm = new float[len][];
+    for (int i = 0; i < len; i++) {
+      float[] arr = pcm[i];
+      saved_pcm[i] = new float[arr.length];
+      System.arraycopy(arr, 0, saved_pcm[i], 0, arr.length);
+    }
+
+    saved_pcm_storage = pcm_storage;
+    saved_pcm_current = pcm_current;
+    saved_pcm_returned = pcm_returned;
+
+    saved_eofflag = eofflag;
+
+    saved_lW = lW;
+    saved_W = W;
+    saved_nW = nW;
+    saved_centerW = centerW;
+
+    saved_granulepos = granulepos;
+    saved_sequence = sequence;
+  }
+
+  public void restoreState() {
+    analysisp = saved_analysisp;
+    modebits = saved_modebits;
+
+    int len = saved_pcm.length;
+    pcm = new float[len][];
+    for (int i = 0; i < len; i++) {
+      float[] arr = saved_pcm[i];
+      pcm[i] = new float[arr.length];
+      System.arraycopy(arr, 0, pcm[i], 0, arr.length);
+    }
+
+    pcm_storage = saved_pcm_storage;
+    pcm_current = saved_pcm_current;
+    pcm_returned = saved_pcm_returned;
+
+    eofflag = saved_eofflag;
+
+    lW = saved_lW;
+    W = saved_W;
+    nW = saved_nW;
+    centerW = saved_centerW;
+
+    granulepos = saved_granulepos;
+    sequence = saved_sequence;
+  }
+
 
   public DspState(){
-    transform=new Object[2][];
+    transform=new Mdct[2][];
     window=new float[2][][][][];
     window[0]=new float[2][][][];
     window[0][0]=new float[2][][];
@@ -140,8 +204,8 @@ public class DspState{
     this.vi=vi;
     modebits=Util.ilog2(vi.modes);
 
-    transform[0]=new Object[VI_TRANSFORMB];
-    transform[1]=new Object[VI_TRANSFORMB];
+    transform[0]=new Mdct[VI_TRANSFORMB];
+    transform[1]=new Mdct[VI_TRANSFORMB];
 
     // MDCT is tranform 0
 
@@ -206,8 +270,7 @@ public class DspState{
     for(int i=0; i<vi.modes; i++){
       int mapnum=vi.mode_param[i].mapping;
       int maptype=vi.map_type[mapnum];
-      mode[i]=FuncMapping.mapping_P[maptype].look(this, vi.mode_param[i],
-          vi.map_param[mapnum]);
+      mode[i]=FuncMapping.mapping_P[maptype].look(this, vi.mode_param[i], vi.map_param[mapnum]);
     }
     return (0);
   }
@@ -244,7 +307,7 @@ public class DspState{
       // 1/2 long block
 
       int shiftPCM=centerW-vi.blocksizes[1]/2;
-      shiftPCM=(pcm_returned<shiftPCM ? pcm_returned : shiftPCM);
+      shiftPCM=(Math.min(pcm_returned, shiftPCM));
 
       pcm_current-=shiftPCM;
       centerW-=shiftPCM;
@@ -259,11 +322,6 @@ public class DspState{
     lW=W;
     W=vb.W;
     nW=-1;
-
-    glue_bits+=vb.glue_bits;
-    time_bits+=vb.time_bits;
-    floor_bits+=vb.floor_bits;
-    res_bits+=vb.res_bits;
 
     if(sequence+1!=vb.sequence)
       granulepos=-1; // out of sequence; lose count
@@ -364,10 +422,10 @@ public class DspState{
     return (0);
   }
 
-  public int synthesis_read(int bytes){
-    if(bytes!=0&&pcm_returned+bytes>centerW)
+  public int synthesis_read(int samples){
+    if(samples!=0&&pcm_returned+samples>centerW)
       return (-1);
-    pcm_returned+=bytes;
+    pcm_returned+=samples;
     return (0);
   }
 

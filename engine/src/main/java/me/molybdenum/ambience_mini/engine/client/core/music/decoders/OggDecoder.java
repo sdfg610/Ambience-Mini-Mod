@@ -21,16 +21,20 @@ import java.nio.ByteBuffer;
 
 public class OggDecoder extends AmDecoder
 {
-    private static final int BUFFER_SIZE = 400_000;
+    private static final int SAMPLES_IN_MINI_BUFFER = 2_000; // Not a lot, no, but VorbisFile only reads at most 4096 bytes
+    private static final int SAMPLES_IN_BUFFER = 200_000;
 
-    private final byte[] miniBuffer = new byte[VorbisFile.CHUNKSIZE];
-    private final byte[] buffer = new byte[BUFFER_SIZE + VorbisFile.CHUNKSIZE];
+    private final byte[] miniBuffer;
+    private final byte[] buffer;
     private int currentLength = 0;
 
     private final VorbisFile file;
     private final AudioFormat format;
 
     private final int sampleByteSize;
+    private final int miniBufferSize;
+    private final int unpaddedBufferSize;
+
 
 
     public OggDecoder(MusicInstance inst) {
@@ -41,6 +45,12 @@ public class OggDecoder extends AmDecoder
             Info info = file.getInfo()[0];
             sampleByteSize = 2 * info.channels;
             format = new AudioFormat(info.rate, 16, info.channels, true, false);
+
+            miniBuffer = new byte[SAMPLES_IN_MINI_BUFFER * sampleByteSize];
+            miniBufferSize = miniBuffer.length;
+
+            buffer = new byte[(SAMPLES_IN_BUFFER+SAMPLES_IN_MINI_BUFFER) * sampleByteSize];
+            unpaddedBufferSize = SAMPLES_IN_BUFFER * sampleByteSize;
         } catch (IOException | JOrbisException e) {
             throw new RuntimeException(e);
         }
@@ -61,31 +71,40 @@ public class OggDecoder extends AmDecoder
 
     @Override
     public @Nullable ByteBuffer getFrame() {
-        while (currentLength < BUFFER_SIZE && loadFrameToBuffer()) {
-            long samples = file.pcm_tell();
-            if (samples >= loopEnd) {
-                currentLength -= (int)(samples - loopEnd)*sampleByteSize;
-                file.pcm_seek(loopStart);
-                loadFrameToBuffer();
-            }
+        try {
+            //noinspection StatementWithEmptyBody
+            while (currentLength < unpaddedBufferSize && loadFrameToBuffer()) { }
+            if (currentLength <= 0)
+                return null;
+
+            ByteBuffer buf = BufferUtils.createByteBuffer(currentLength);
+            buf.put(buffer, 0, currentLength);
+            buf.rewind();
+
+            currentLength = 0;
+
+            return buf;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        if (currentLength <= 0)
-            return null;
-
-        ByteBuffer buf = BufferUtils.createByteBuffer(currentLength);
-        buf.put(buffer, 0, currentLength);
-        buf.rewind();
-
-        currentLength = 0;
-
-        return buf;
     }
 
-    private boolean loadFrameToBuffer() {
-        int len = file.read(miniBuffer, VorbisFile.CHUNKSIZE);
+    private boolean loadFrameToBuffer() throws IOException {
+        int len;
+        if (isLooping && !file.isStateSaved() && file.pcm_tell()+SAMPLES_IN_MINI_BUFFER >= loopStart) {
+            len = file.read(miniBuffer, (int)(loopStart-file.pcm_tell()) * sampleByteSize);
+            if (file.pcm_tell() == loopStart)
+                file.saveState();
+        } else if (isLooping && file.isStateSaved() && file.pcm_tell()+SAMPLES_IN_MINI_BUFFER >= loopEnd) {
+            len = file.read(miniBuffer, (int)(loopEnd-file.pcm_tell()) * sampleByteSize);
+            if (file.pcm_tell() == loopEnd)
+                file.restoreState();
+        } else {
+            len = file.read(miniBuffer, miniBufferSize);
+        }
         System.arraycopy(miniBuffer, 0, buffer, currentLength, len);
         currentLength += len;
-        return len != 0;
+        return len != 0 || isLooping;
     }
 
 

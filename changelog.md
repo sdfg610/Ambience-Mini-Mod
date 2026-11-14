@@ -71,6 +71,7 @@ The wait is over and the biggest update yet is here!
 - Minor improvements to output created by verbose mode.
 - Minor improvements to volume change handling.
 - Architectural improvements to message passing and handling between client and server.
+- Changed OGG-reader such that it no longer needs to read the entire file before playing (much needed for streaming music from the server).
 - Various bug-fixes.
 
 ****

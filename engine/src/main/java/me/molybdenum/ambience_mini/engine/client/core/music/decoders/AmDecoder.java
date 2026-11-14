@@ -22,6 +22,7 @@ public abstract class AmDecoder {
     public final MusicInstance inst;
     public final MusicInfo info;
 
+    protected final boolean isLooping;
     protected final long loopStart;
     protected final long loopEnd;
 
@@ -30,7 +31,8 @@ public abstract class AmDecoder {
         this.inst = inst;
         this.info = inst.getMusicInfoBlocking();
 
-        if (inst.music.loop()) {
+        isLooping = inst.music.loop();
+        if (isLooping) {
             var startAndEnd = getLoopStartAndEnd();
             loopStart = startAndEnd.left();
             loopEnd = startAndEnd.right();

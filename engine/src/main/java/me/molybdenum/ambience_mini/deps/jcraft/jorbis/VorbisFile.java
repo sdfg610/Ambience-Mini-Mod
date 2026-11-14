@@ -61,9 +61,8 @@ public class VorbisFile{
   InputStream datasource;
   boolean seekable=false;
   long offset;
-  long end;
 
-  SyncState oy=new SyncState();
+  final SyncState oy=new SyncState();
 
   int links;
   long[] offsets;
@@ -83,13 +82,22 @@ public class VorbisFile{
   float bittrack;
   float samptrack;
 
-  StreamState os=new StreamState(); // take physical pages, weld into a logical
-  // stream of packets
-  DspState vd=new DspState(); // central working state for 
-  // the packet->PCM decoder
-  Block vb=new Block(vd); // local working space for packet->PCM decode
+  final StreamState os=new StreamState(); // take physical pages, weld into a logical stream of packets
+  final DspState vd=new DspState(); // central working state for the packet->PCM decoder
+  final Block vb=new Block(vd); // local working space for packet->PCM decode
 
-  //ov_callbacks callbacks;
+
+  // Save state
+  long saved_offset;
+  long saved_pcm_offset;
+
+  int saved_current_serialno;
+  int saved_current_link;
+
+  float saved_bittrack;
+  float saved_samptrack;
+
+  boolean isSaved;
 
 
   public VorbisFile(InputStream is) throws JOrbisException
@@ -103,6 +111,45 @@ public class VorbisFile{
       throw new JOrbisException("VorbisFile: open return -1");
     }
   }
+
+
+  public void saveState() {
+    saved_offset = offset;
+    saved_pcm_offset = pcm_offset;
+    saved_current_serialno = current_serialno;
+    saved_current_link = current_link;
+    saved_bittrack = bittrack;
+    saved_samptrack = samptrack;
+
+    oy.saveState();
+    os.saveState();
+    vd.saveState();
+    vb.saveState();
+
+    datasource.mark(Integer.MAX_VALUE);
+    isSaved = true;
+  }
+
+  public void restoreState() throws IOException {
+    offset = saved_offset;
+    pcm_offset = saved_pcm_offset;
+    current_serialno = saved_current_serialno;
+    current_link = saved_current_link;
+    bittrack = saved_bittrack;
+    samptrack = saved_samptrack;
+
+    oy.restoreState();
+    os.restoreState();
+    vd.restoreState();
+    vb.restoreState();
+
+    datasource.reset();
+  }
+
+  public boolean isStateSaved() {
+    return isSaved;
+  }
+
 
   private int get_data(){
     int index=oy.buffer(CHUNKSIZE);
@@ -671,13 +718,16 @@ public class VorbisFile{
       System.arraycopy(initial, 0, oy.data, index, ibytes);
       oy.wrote(ibytes);
     }
+
+    // Molybdenum: open_seekable() reads whole file first, which is bad for streaming from server.
+    //             I have modified jcraft to use another way of restoring to the start of a loop.
     // can we seek? Stevens suggests the seek test was portable
-    if(is instanceof FullyBufferedInputStream){
-      ret=open_seekable();
-    }
-    else{
-      ret=open_nonseekable();
-    }
+    //if(is instanceof FullyBufferedInputStream)
+    //  ret=open_seekable();
+    //else
+
+    ret=open_nonseekable();
+
     if(ret!=0){
       datasource=null;
       clear();
