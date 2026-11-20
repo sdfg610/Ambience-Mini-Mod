@@ -10,10 +10,7 @@ import me.molybdenum.ambience_mini.engine.server.core.networking.BaseServerNetwo
 import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
 import me.molybdenum.ambience_mini.engine.server.core.setup.BaseServerConfig;
 import me.molybdenum.ambience_mini.engine.shared.Constants;
-import me.molybdenum.ambience_mini.engine.shared.configuration.LoadResult;
-import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Message;
-import me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysis.Setup;
 import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
@@ -101,21 +98,11 @@ public abstract class BaseServerCore<
         File configFile = Constants.musicConfigPath.toFile();
         if (configFile.exists())
             try (InputStream configStream = new FileInputStream(configFile)) {
-                loadServerConfig(configStream)
+                ServerConfigInterpreter.tryOf(configStream, localOnlyMusicProvider, isDedicatedServer())
                         .match(this::loadServerPlaylists, this::printErrors);
             } catch (IOException e) {
                 logger.error("Could not read music_config.txt", e);
             }
-    }
-
-    private LoadResult<ServerConfigInterpreter> loadServerConfig(
-            InputStream configStream
-    ) {
-        return Loader.loadAndValidateConfig(
-                configStream,
-                localOnlyMusicProvider,
-                isDedicatedServer() ? new Setup.DedicatedServer() : new Setup.IntegratedServer()
-        ).map(config -> new ServerConfigInterpreter(config, localOnlyMusicProvider));
     }
 
     private void loadServerPlaylists(ServerConfigInterpreter serverConfig, List<Message> warnings) {

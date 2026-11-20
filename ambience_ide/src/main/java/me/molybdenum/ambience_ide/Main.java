@@ -1,8 +1,12 @@
 package me.molybdenum.ambience_ide;
 
-import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.selection.*;
-import me.molybdenum.ambience_mini.engine.shared.music.Music;
+import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderTemplate;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerConfigInterpreter;
+import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.Config;
+import me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysis.Setup;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.*;
 import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.MusicSelector;
@@ -19,10 +23,7 @@ import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.dom.html.HTMLInputElement;
 import org.teavm.jso.dom.xml.Node;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,11 @@ public class Main
         var row = doc.createElement("tr");
 
         row.appendChild(makeNameColumn(doc, propertyId));
-        var last = makeStringColumn(doc, propertyId, pr.type instanceof ListT);
+        HTMLElement last;
+        if (pr == gameStateProvider.getProperty(GameStateProviderTemplate.P_SERVER_PLAYLISTS.name()))
+            last = makeDefineInConfigColumn(doc);
+        else
+            last = makeStringColumn(doc, propertyId, pr.type instanceof ListT || pr.type instanceof MapT);
         row.appendChild(last);
         last.setClassName("absorbing-column");
 
@@ -89,6 +94,39 @@ public class Main
         nameElem.setClassName("name");
         nameElem.setInnerText(text);
         return nameElem;
+    }
+
+    private static HTMLElement makeStringColumn(HTMLDocument doc, String propertyId, boolean multiline) {
+        var value = gameStateProvider.getPropertyValueString(propertyId.substring(1));
+        var textBox = doc.createElement(multiline ? "textarea" : "input");
+        if (!multiline) {
+            textBox.setAttribute("type", "text");
+            textBox.setAttribute("value", value);
+        }
+        else {
+            textBox.setAttribute("rows", Integer.toString(countLines(value)));
+            textBox.setInnerText(value);
+        }
+        textBox.getStyle().setProperty("width", "100%");
+        textBox.getStyle().setProperty("min-width", "15em");
+        textBox.setAttribute("onchange", "handleStringPropertyUpdate('" + propertyId + "', this.value)");
+
+        var column = doc.createElement("td");
+        column.appendChild(textBox);
+
+        return column;
+    }
+
+    private static HTMLElement makeDefineInConfigColumn(HTMLDocument doc) {
+        var label = doc.createElement("i");
+        label.setTextContent("Configure this in the music_config to the left.");
+        label.getStyle().setProperty("width", "100%");
+        label.getStyle().setProperty("min-width", "15em");
+
+        var column = doc.createElement("td");
+        column.appendChild(label);
+
+        return column;
     }
 
 
@@ -123,27 +161,6 @@ public class Main
     }
 
 
-    private static HTMLElement makeStringColumn(HTMLDocument doc, String propertyId, boolean multiline) {
-        var value = gameStateProvider.getPropertyValueString(propertyId.substring(1));
-        var textBox = doc.createElement(multiline ? "textarea" : "input");
-        if (!multiline) {
-            textBox.setAttribute("type", "text");
-            textBox.setAttribute("value", value);
-        }
-        else {
-            textBox.setAttribute("rows", Integer.toString(countLines(value)));
-            textBox.setInnerText(value);
-        }
-        textBox.getStyle().setProperty("width", "100%");
-        textBox.getStyle().setProperty("min-width", "15em");
-        textBox.setAttribute("onchange", "handleStringPropertyUpdate('" + propertyId + "', this.value)");
-
-        var column = doc.createElement("td");
-        column.appendChild(textBox);
-
-        return column;
-    }
-
     @JSExport
     public static void handleStringPropertyUpdate(String propertyId, String value) {
         gameStateProvider.setPropertyValueString(propertyId.substring(1), value);
@@ -175,9 +192,17 @@ public class Main
             output.appendChild(makeParagraph(doc, message));
         }
 
-        InputStream stream = new ByteArrayInputStream(musicConfig.getBytes(StandardCharsets.UTF_8));
-        BaseClientCore.loadClientMusicSelector(stream, new FakeMusicProvider(), gameStateProvider).match(
-                Main::printResult,
+        Loader.loadAndValidateConfig(
+                new ByteArrayInputStream(musicConfig.getBytes(StandardCharsets.UTF_8)),
+                new FakeMusicProvider(),
+                new Setup.Client(gameStateProvider)
+        ).match(
+                (config, messages) -> {
+                    var musicSelector = new MusicSelector(config, gameStateProvider);
+                    var serverConfigInterpreter = new ServerConfigInterpreter(config, new FakeMusicProvider());
+                    gameStateProvider.setPlaylists(serverConfigInterpreter);
+                    printResult(musicSelector, messages);
+                },
                 Main::printErrors
         );
     }

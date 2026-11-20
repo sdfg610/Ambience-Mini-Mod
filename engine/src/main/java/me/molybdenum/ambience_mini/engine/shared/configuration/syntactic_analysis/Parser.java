@@ -23,7 +23,7 @@ public class Parser {
 	public static final int _FLOAT = 3;
 	public static final int _STRING = 4;
 	public static final int _MODIFIER = 5;
-	public static final int maxT = 68;
+	public static final int maxT = 70;
 
 	static final boolean _T = true;
 	static final boolean _x = false;
@@ -155,7 +155,7 @@ public class Parser {
 			}
 			Expect(11);
 			serverPl = new PlaylistGroup(groups); 
-		} else SynErr(69);
+		} else SynErr(71);
 		return serverPl;
 	}
 
@@ -250,7 +250,7 @@ public class Parser {
 			Expect(9);
 			break;
 		}
-		default: SynErr(70); break;
+		default: SynErr(72); break;
 		}
 		return command;
 	}
@@ -306,10 +306,20 @@ public class Parser {
 		}
 		case 65: {
 			Get();
-			type = PlaylistT.INSTANCE; 
+			type = BossT.INSTANCE; 
 			break;
 		}
 		case 66: {
+			Get();
+			type = LivingT.INSTANCE; 
+			break;
+		}
+		case 67: {
+			Get();
+			type = PlaylistT.INSTANCE; 
+			break;
+		}
+		case 68: {
 			Get();
 			Expect(34);
 			Type elemType = Type();
@@ -317,7 +327,7 @@ public class Parser {
 			type = new ListT(elemType); 
 			break;
 		}
-		case 67: {
+		case 69: {
 			Get();
 			Expect(34);
 			Type elemType1 = Type();
@@ -327,7 +337,7 @@ public class Parser {
 			type = new MapT(elemType1, elemType2); 
 			break;
 		}
-		default: SynErr(71); break;
+		default: SynErr(73); break;
 		}
 		return type;
 	}
@@ -495,7 +505,7 @@ public class Parser {
 			expr = new UnaryOp(op, expr, line); 
 		} else if (StartOf(6)) {
 			expr = ExprSuf();
-		} else SynErr(72);
+		} else SynErr(74);
 		return expr;
 	}
 
@@ -605,7 +615,7 @@ public class Parser {
 			Expect(45);
 			break;
 		}
-		default: SynErr(73); break;
+		default: SynErr(75); break;
 		}
 		return expr;
 	}
@@ -627,7 +637,7 @@ public class Parser {
 			expr = new StringLit(removeFirstAndLast(t.val), t.line); 
 		} else if (StartOf(7)) {
 			expr = Num();
-		} else SynErr(74);
+		} else SynErr(76);
 		return expr;
 	}
 
@@ -661,7 +671,7 @@ public class Parser {
 		} else if (la.kind == 3) {
 			Get();
 			expr = new FloatLit(Float.parseFloat(t.val) * sign, t.line);    
-		} else SynErr(75);
+		} else SynErr(77);
 		return expr;
 	}
 
@@ -693,10 +703,10 @@ public class Parser {
 					Get();
 					expr = Expr();
 					Expect(21);
-				} else SynErr(76);
+				} else SynErr(78);
 			}
 			arg = new Arg(ident, expr); 
-		} else SynErr(77);
+		} else SynErr(79);
 		return arg;
 	}
 
@@ -717,15 +727,15 @@ public class Parser {
 	}
 
 	private static final boolean[][] set = {
-		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_T,_T, _x,_x},
-		{_x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_T,_T,_T, _x,_x,_T,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_T, _T,_x,_x,_T, _T,_T,_T,_x, _T,_T,_x,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _T,_x,_x,_T, _T,_T,_T,_x, _T,_T,_x,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x}
+		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_T,_T, _T,_T,_x,_x},
+		{_x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_T,_T,_T, _x,_x,_T,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_T, _T,_x,_x,_T, _T,_T,_T,_x, _T,_T,_x,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _T,_x,_x,_T, _T,_T,_T,_x, _T,_T,_x,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x}
 
 	};
 } // end Parser
@@ -805,19 +815,21 @@ class Errors {
 			case 62: s = "\"string\" expected"; break;
 			case 63: s = "\"area\" expected"; break;
 			case 64: s = "\"combatant\" expected"; break;
-			case 65: s = "\"playlist\" expected"; break;
-			case 66: s = "\"list\" expected"; break;
-			case 67: s = "\"map\" expected"; break;
-			case 68: s = "??? expected"; break;
-			case 69: s = "invalid ServerPlaylists"; break;
-			case 70: s = "invalid Shed"; break;
-			case 71: s = "invalid Type"; break;
-			case 72: s = "invalid ExprPre"; break;
-			case 73: s = "invalid ExprTerm"; break;
-			case 74: s = "invalid Const"; break;
-			case 75: s = "invalid Num"; break;
-			case 76: s = "invalid MusicArg"; break;
-			case 77: s = "invalid MusicArg"; break;
+			case 65: s = "\"boss\" expected"; break;
+			case 66: s = "\"living\" expected"; break;
+			case 67: s = "\"playlist\" expected"; break;
+			case 68: s = "\"list\" expected"; break;
+			case 69: s = "\"map\" expected"; break;
+			case 70: s = "??? expected"; break;
+			case 71: s = "invalid ServerPlaylists"; break;
+			case 72: s = "invalid Shed"; break;
+			case 73: s = "invalid Type"; break;
+			case 74: s = "invalid ExprPre"; break;
+			case 75: s = "invalid ExprTerm"; break;
+			case 76: s = "invalid Const"; break;
+			case 77: s = "invalid Num"; break;
+			case 78: s = "invalid MusicArg"; break;
+			case 79: s = "invalid MusicArg"; break;
             default: s = "error " + n; break;
         }
         errors.add(new SynError(line, col, s));

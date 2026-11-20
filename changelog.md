@@ -27,6 +27,7 @@ The wait is over and the biggest update yet is here!
   * Used similar to a play statement along other commands. See sample music pack for example.
 - Added support for named music schedules, called presets, which can be switched between in-game.
   * Configure using `preset "name" SCEDULE end` in `music_config.txt`.
+- Fixed bug where the field `combatant.fighting_player` exists in combatant values but cannot be accessed.
 
 **Menus and keybindings:**
 - Removed keybindings for "play/pause" (default: `END`) and "reload music player" (default: `P`).

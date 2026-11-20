@@ -200,6 +200,10 @@ public class PrettyPrinter {
             return "area";
         else if (type instanceof CombatantT)
             return "combatant";
+        else if (type instanceof BossT)
+            return "boss";
+        else if (type instanceof LivingT)
+            return "living";
         else if (type instanceof PlaylistT)
             return "playlist";
         else if (type instanceof ListT listT)

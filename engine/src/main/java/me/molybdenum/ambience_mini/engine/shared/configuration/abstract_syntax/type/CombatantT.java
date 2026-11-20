@@ -23,6 +23,7 @@ public final class CombatantT extends Type implements AccessibleT
             FIELD_MAX_HEALTH, FloatT.INSTANCE,
             FIELD_HEALTH_PERCENT, FloatT.INSTANCE,
             FIELD_TARGETING_PLAYER, BoolT.INSTANCE,
+            FIELD_FIGHTING_PLAYER, BoolT.INSTANCE,
             FIELD_IS_NEUTRAL, BoolT.INSTANCE
     );
 

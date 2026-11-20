@@ -442,20 +442,9 @@ public class ServerMusicCache
                 skippedMusic.add(new Pair<>(musicPath, musicSize));
                 return null;
             }
-
-            var gain = musicDTO.tryGetFlag(Music.ARG_GAIN).map(ValueDTO::tryGetFloat).orElse(0f);
-            boolean loop = musicDTO.tryGetFlag(Music.ARG_LOOP).map(ValueDTO::tryGetBoolean).orElse(false);
-            int loopStart = musicDTO.tryGetFlag(Music.ARG_LOOPSTART).map(ValueDTO::tryGetInt).orElse(-1);
-            int loopEnd = musicDTO.tryGetFlag(Music.ARG_LOOPEND).map(ValueDTO::tryGetInt).orElse(-1);
-            int loopLength = musicDTO.tryGetFlag(Music.ARG_LOOPLENGTH).map(ValueDTO::tryGetInt).orElse(-1);
-
             newMusicPathToSize.putIfAbsent(musicPath, musicSize);
-            return new Music(
-                    musicPath,
-                    !serverSetup.isOnLocalServer,
-                    gain,
-                    loop, loopStart, loopEnd, loopLength
-            );
+
+            return musicDTO.toMusic(!serverSetup.isOnLocalServer);
         }
     }
 

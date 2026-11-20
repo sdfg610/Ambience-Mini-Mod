@@ -246,8 +246,8 @@ class StartStates {
 public class Scanner {
 	static final char EOL = '\n';
 	static final int  eofSym = 0;
-	static final int maxT = 68;
-	static final int noSym = 68;
+	static final int maxT = 70;
+	static final int noSym = 70;
 
 
 	public Buffer buffer; // scanner buffer
@@ -331,9 +331,11 @@ public class Scanner {
 		literals.put("string", 62);
 		literals.put("area", 63);
 		literals.put("combatant", 64);
-		literals.put("playlist", 65);
-		literals.put("list", 66);
-		literals.put("map", 67);
+		literals.put("boss", 65);
+		literals.put("living", 66);
+		literals.put("playlist", 67);
+		literals.put("list", 68);
+		literals.put("map", 69);
 
 	}
 	
