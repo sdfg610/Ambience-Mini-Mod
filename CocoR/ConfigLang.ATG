@@ -18,7 +18,9 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.t
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.misc.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Message;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.SemError;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.SynError;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -294,18 +296,14 @@ Num<out Expr expr>      (. expr = null; int sign = 1; .)
 
 /*------------------------------------------------------------------------*/
 // Types
-Type<out Type type>  (. type = null; .)
-    = "bool"         (. type = BoolT.INSTANCE; .)
-    | "int"          (. type = IntT.INSTANCE; .)
-    | "float"        (. type = FloatT.INSTANCE; .)
-    | "string"       (. type = StringT.INSTANCE; .)
-    | "area"         (. type = AreaT.INSTANCE; .)
-    | "combatant"    (. type = CombatantT.INSTANCE; .)
-    | "boss"         (. type = BossT.INSTANCE; .)
-    | "living"       (. type = LivingT.INSTANCE; .)
-    | "playlist"     (. type = PlaylistT.INSTANCE; .)
-    | "list" '<' Type<out Type elemType> '>' (. type = new ListT(elemType); .)
-    | "map" '<' Type<out Type elemType1> ',' Type<out Type elemType2> '>' (. type = new MapT(elemType1, elemType2); .)
+Type<out Type type>  (. int line; String name; Type temp; ArrayList<Type> args = new ArrayList<>(); .)
+    = IDENT           (. line = t.line; name = t.val; .)
+      [ '<'
+        Type<out temp>       (. args.add(temp); .)
+        { ',' Type<out temp> (. args.add(temp); .)
+        }
+        '>'
+      ] (. type = handleStrRes(line, Type.tryOf(name, args)); .)
 .
 
 END File. // Must refer to the same non-terminal as "COMPILER" at the top.

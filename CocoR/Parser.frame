@@ -49,6 +49,13 @@ public class Parser {
 		errDist = 0;
 	}
 
+	<T> T handleStrRes (int line, StrResult<T> res) {
+		if (res.isSuccess())
+			return res.value;
+		errors.SemErr(line, res.error);
+		return null;
+	}
+
 	void Get () {
 		for (;;) {
 			t = la;
@@ -125,4 +132,8 @@ class Errors {
         }
         errors.add(new SynError(line, col, s));
     }
+
+	public void SemErr(int line, String message) {
+		errors.add(new SemError(line, message));
+	}
 } // Errors

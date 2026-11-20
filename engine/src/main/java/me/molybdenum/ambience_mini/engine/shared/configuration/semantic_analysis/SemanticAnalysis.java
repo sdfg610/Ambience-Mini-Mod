@@ -15,10 +15,8 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.t
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.BaseInterpreter;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.VariableEnv;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.*;
-import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Message;
-import me.molybdenum.ambience_mini.engine.shared.configuration.messages.SemError;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.AnyT;
-import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Warning;
 import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
 import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
 import me.molybdenum.ambience_mini.engine.shared.configuration.pretty_printer.PrettyPrinter;
@@ -57,7 +55,7 @@ public class SemanticAnalysis extends BaseInterpreter
     {
         var sem = new SemanticAnalysis(setup, musicProvider);
         var newConfig = sem.validateAndOptimizeConfig(config, messages);
-        return newConfig == null || messages.stream().anyMatch(Message::isError)
+        return newConfig == null || messages.stream().anyMatch(m -> m instanceof ExcError || m instanceof SynError)
                 ? LoadResult.fail(messages)
                 : LoadResult.of(newConfig, messages);
     }
@@ -458,14 +456,14 @@ public class SemanticAnalysis extends BaseInterpreter
                     boolean rightInvalid = isNotNumber(typeRight) && isNotString(typeRight);
                     boolean notCompatible = typeLeft != null && typeRight != null
                             && !(isNumber(typeLeft) && isNumber(typeRight))
-                            && !(typeLeft.isString() && typeRight.isString());
+                            && !(isString(typeLeft) && isString(typeRight));
 
                     if (leftInvalid || rightInvalid || notCompatible)
                         messages.add(new SemError(binOp.line(), "Arguments of '+' must both be either numbers or strings. Got '" + typeLeft + "' and '" + typeRight + "'"));
 
                     if (isNumber(typeLeft) && isNumber(typeRight))
                         yield tryGetGetMaximalNumberType(typeLeft, typeRight);
-                    else if (typeLeft.isString() && typeRight.isString())
+                    else if (isString(typeLeft) && isString(typeRight))
                         yield StringT.INSTANCE;
                     else
                         yield null;
@@ -715,9 +713,15 @@ public class SemanticAnalysis extends BaseInterpreter
         return type != null && !type.isBool();
     }
 
+
+    private boolean isString(Type type) {
+        return type != null && type.isString();
+    }
+
     private boolean isNotString(Type type) {
         return type != null && !type.isString();
     }
+
 
     private boolean isNotPlaylist(Type type) {
         return type != null && !type.isPlaylist();

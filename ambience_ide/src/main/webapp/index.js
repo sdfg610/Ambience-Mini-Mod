@@ -80,11 +80,11 @@ begin
         when ($dimension ~~ "nether") play the_nether ++ $server_playlists["dimension.minecraft:the_nether"];
         when ($dimension ~~ "end") play the_end ++ $server_playlists["dimension.minecraft:the_nether"];
         
-        let _area = $areas[0] in
+        let area = $areas[0] in
         begin
-            when ( _area.name == "Home" && _area.owner == $uuid ) play home;
-            when ( _area.name == "Town" ) play $server_playlists["area.town"];
-            when ( _area.name == "Market" ) play $server_playlists["area.market"];
+            when ( area.name == "Home" && (area.owner == $uuid || area.isLocal) ) play home;
+            when ( area.name == "Town" ) play $server_playlists["area.town"];
+            when ( area.name == "Market" ) play $server_playlists["area.market"];
         end
 
         // All other dimensions, including overworld

@@ -360,15 +360,6 @@ public class GameStateProviderMock extends GameStateProviderTemplate
 
     // ------------------------------------------------------------------------------------------------
     // World properties
-    public StringVal getMenuID() {
-        return null; // return getAsStringVal(P_SCREEN_ID);
-    }
-
-    @Override
-    public StringVal getMenuType() {
-        return null; // return getAsStringVal(P_MENU);
-    }
-
     @Override
     public StringVal getDifficulty() {
         return StringParser.parseRaw(get(P_DIFFICULTY));  // TODO: Dropdown??????

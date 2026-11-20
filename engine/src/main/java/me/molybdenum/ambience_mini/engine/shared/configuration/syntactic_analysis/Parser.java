@@ -7,7 +7,9 @@ import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.t
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.misc.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.*;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Message;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.SemError;
 import me.molybdenum.ambience_mini.engine.shared.configuration.messages.SynError;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -23,7 +25,7 @@ public class Parser {
 	public static final int _FLOAT = 3;
 	public static final int _STRING = 4;
 	public static final int _MODIFIER = 5;
-	public static final int maxT = 70;
+	public static final int maxT = 59;
 
 	static final boolean _T = true;
 	static final boolean _x = false;
@@ -51,6 +53,13 @@ public class Parser {
 	void SynErr (int n) {
 		if (errDist >= minErrDist) errors.SynErr(la.line, la.col, n);
 		errDist = 0;
+	}
+
+	<T> T handleStrRes (int line, StrResult<T> res) {
+		if (res.isSuccess())
+			return res.value;
+		errors.SemErr(line, res.error);
+		return null;
 	}
 
 	void Get () {
@@ -103,7 +112,7 @@ public class Parser {
 	Config  Conf() {
 		Config  conf;
 		var declarations = new ArrayList<GlobalDecl>(); ServerPlaylists serverPl = null; Command command = null; var presets = new ArrayList<Preset>(); 
-		while (StartOf(1)) {
+		while (la.kind == 1) {
 			GlobalDecl decl = Decl();
 			declarations.add(decl); 
 		}
@@ -112,7 +121,7 @@ public class Parser {
 			Expect(7);
 			serverPl = ServerPlaylists();
 		}
-		if (StartOf(2)) {
+		if (StartOf(1)) {
 			command = Shed();
 			presets.add(new Preset(new StringLit("Default", command.line()), command.asBlock())); 
 		}
@@ -139,7 +148,7 @@ public class Parser {
 	ServerPlaylists  ServerPlaylists() {
 		ServerPlaylists  serverPl;
 		serverPl = null; 
-		if (StartOf(3)) {
+		if (StartOf(2)) {
 			Expr expr = Expr();
 			Expect(9);
 			serverPl = new PlaylistInstance(expr); 
@@ -155,7 +164,7 @@ public class Parser {
 			}
 			Expect(11);
 			serverPl = new PlaylistGroup(groups); 
-		} else SynErr(71);
+		} else SynErr(60);
 		return serverPl;
 	}
 
@@ -196,7 +205,7 @@ public class Parser {
 		case 18: {
 			Get();
 			ArrayList<Command> body = new ArrayList<>(); int line = t.line; 
-			while (StartOf(2)) {
+			while (StartOf(1)) {
 				Command command2 = Shed();
 				body.add(command2); 
 			}
@@ -250,7 +259,7 @@ public class Parser {
 			Expect(9);
 			break;
 		}
-		default: SynErr(72); break;
+		default: SynErr(61); break;
 		}
 		return command;
 	}
@@ -261,7 +270,7 @@ public class Parser {
 		Expect(12);
 		Expect(4);
 		int line = t.line; StringLit name = new StringLit(removeFirstAndLast(t.val), line); 
-		while (StartOf(2)) {
+		while (StartOf(1)) {
 			Command cmd = Shed();
 			body.add(cmd); 
 		}
@@ -272,73 +281,21 @@ public class Parser {
 
 	Type  Type() {
 		Type  type;
-		type = null; 
-		switch (la.kind) {
-		case 59: {
+		int line; String name; Type temp; ArrayList<Type> args = new ArrayList<>(); 
+		Expect(1);
+		line = t.line; name = t.val; 
+		if (la.kind == 34) {
 			Get();
-			type = BoolT.INSTANCE; 
-			break;
-		}
-		case 60: {
-			Get();
-			type = IntT.INSTANCE; 
-			break;
-		}
-		case 61: {
-			Get();
-			type = FloatT.INSTANCE; 
-			break;
-		}
-		case 62: {
-			Get();
-			type = StringT.INSTANCE; 
-			break;
-		}
-		case 63: {
-			Get();
-			type = AreaT.INSTANCE; 
-			break;
-		}
-		case 64: {
-			Get();
-			type = CombatantT.INSTANCE; 
-			break;
-		}
-		case 65: {
-			Get();
-			type = BossT.INSTANCE; 
-			break;
-		}
-		case 66: {
-			Get();
-			type = LivingT.INSTANCE; 
-			break;
-		}
-		case 67: {
-			Get();
-			type = PlaylistT.INSTANCE; 
-			break;
-		}
-		case 68: {
-			Get();
-			Expect(34);
-			Type elemType = Type();
+			temp = Type();
+			args.add(temp); 
+			while (la.kind == 55) {
+				Get();
+				temp = Type();
+				args.add(temp); 
+			}
 			Expect(35);
-			type = new ListT(elemType); 
-			break;
 		}
-		case 69: {
-			Get();
-			Expect(34);
-			Type elemType1 = Type();
-			Expect(55);
-			Type elemType2 = Type();
-			Expect(35);
-			type = new MapT(elemType1, elemType2); 
-			break;
-		}
-		default: SynErr(73); break;
-		}
+		type = handleStrRes(line, Type.tryOf(name, args)); 
 		return type;
 	}
 
@@ -396,7 +353,7 @@ public class Parser {
 		Expr  expr;
 		BinaryOperators op; int line = -1; 
 		expr = ExprRel();
-		while (StartOf(4)) {
+		while (StartOf(3)) {
 			if (la.kind == 30 || la.kind == 31 || la.kind == 32) {
 				if (la.kind == 30) {
 					Get();
@@ -424,7 +381,7 @@ public class Parser {
 		Expr  expr;
 		int line = -1; 
 		expr = ExprAdd();
-		while (StartOf(5)) {
+		while (StartOf(4)) {
 			if (la.kind == 34) {
 				Get();
 				line = t.line; 
@@ -503,9 +460,9 @@ public class Parser {
 			line = t.line; 
 			expr = ExprPre();
 			expr = new UnaryOp(op, expr, line); 
-		} else if (StartOf(6)) {
+		} else if (StartOf(5)) {
 			expr = ExprSuf();
-		} else SynErr(74);
+		} else SynErr(62);
 		return expr;
 	}
 
@@ -615,7 +572,7 @@ public class Parser {
 			Expect(45);
 			break;
 		}
-		default: SynErr(75); break;
+		default: SynErr(63); break;
 		}
 		return expr;
 	}
@@ -635,9 +592,9 @@ public class Parser {
 		} else if (la.kind == 4) {
 			Get();
 			expr = new StringLit(removeFirstAndLast(t.val), t.line); 
-		} else if (StartOf(7)) {
+		} else if (StartOf(6)) {
 			expr = Num();
-		} else SynErr(76);
+		} else SynErr(64);
 		return expr;
 	}
 
@@ -671,7 +628,7 @@ public class Parser {
 		} else if (la.kind == 3) {
 			Get();
 			expr = new FloatLit(Float.parseFloat(t.val) * sign, t.line);    
-		} else SynErr(77);
+		} else SynErr(65);
 		return expr;
 	}
 
@@ -688,7 +645,7 @@ public class Parser {
 	Arg  MusicArg() {
 		Arg  arg;
 		arg = null; 
-		if (StartOf(7)) {
+		if (StartOf(6)) {
 			Expr expr = Num();
 			arg = new Arg(new Ident("gain", t.line), expr); 
 		} else if (la.kind == 1) {
@@ -697,16 +654,16 @@ public class Parser {
 			if (la.kind == 8) {
 				Get();
 				expr = null; 
-				if (StartOf(8)) {
+				if (StartOf(7)) {
 					expr = Const();
 				} else if (la.kind == 20) {
 					Get();
 					expr = Expr();
 					Expect(21);
-				} else SynErr(78);
+				} else SynErr(66);
 			}
 			arg = new Arg(ident, expr); 
-		} else SynErr(79);
+		} else SynErr(67);
 		return arg;
 	}
 
@@ -727,15 +684,14 @@ public class Parser {
 	}
 
 	private static final boolean[][] set = {
-		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_T,_T, _T,_T,_x,_x},
-		{_x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_T,_T,_T, _x,_x,_T,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_T, _T,_x,_x,_T, _T,_T,_T,_x, _T,_T,_x,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _T,_x,_x,_T, _T,_T,_T,_x, _T,_T,_x,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
-		{_x,_x,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x}
+		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_T,_T,_T, _x,_x,_T,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_T, _T,_x,_x,_T, _T,_T,_T,_x, _T,_T,_x,_x, _T,_T,_T,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_T,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _T,_x,_x,_T, _T,_T,_T,_x, _T,_T,_x,_x, _T,_T,_T,_x, _x},
+		{_x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+		{_x,_x,_T,_T, _T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_T,_x, _x}
 
 	};
 } // end Parser
@@ -809,29 +765,21 @@ class Errors {
 			case 56: s = "\"undefined\" expected"; break;
 			case 57: s = "\"true\" expected"; break;
 			case 58: s = "\"false\" expected"; break;
-			case 59: s = "\"bool\" expected"; break;
-			case 60: s = "\"int\" expected"; break;
-			case 61: s = "\"float\" expected"; break;
-			case 62: s = "\"string\" expected"; break;
-			case 63: s = "\"area\" expected"; break;
-			case 64: s = "\"combatant\" expected"; break;
-			case 65: s = "\"boss\" expected"; break;
-			case 66: s = "\"living\" expected"; break;
-			case 67: s = "\"playlist\" expected"; break;
-			case 68: s = "\"list\" expected"; break;
-			case 69: s = "\"map\" expected"; break;
-			case 70: s = "??? expected"; break;
-			case 71: s = "invalid ServerPlaylists"; break;
-			case 72: s = "invalid Shed"; break;
-			case 73: s = "invalid Type"; break;
-			case 74: s = "invalid ExprPre"; break;
-			case 75: s = "invalid ExprTerm"; break;
-			case 76: s = "invalid Const"; break;
-			case 77: s = "invalid Num"; break;
-			case 78: s = "invalid MusicArg"; break;
-			case 79: s = "invalid MusicArg"; break;
+			case 59: s = "??? expected"; break;
+			case 60: s = "invalid ServerPlaylists"; break;
+			case 61: s = "invalid Shed"; break;
+			case 62: s = "invalid ExprPre"; break;
+			case 63: s = "invalid ExprTerm"; break;
+			case 64: s = "invalid Const"; break;
+			case 65: s = "invalid Num"; break;
+			case 66: s = "invalid MusicArg"; break;
+			case 67: s = "invalid MusicArg"; break;
             default: s = "error " + n; break;
         }
         errors.add(new SynError(line, col, s));
     }
+
+	public void SemErr(int line, String message) {
+		errors.add(new SemError(line, message));
+	}
 } // Errors
