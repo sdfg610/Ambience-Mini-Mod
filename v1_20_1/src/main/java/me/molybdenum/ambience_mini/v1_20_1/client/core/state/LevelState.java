@@ -113,7 +113,7 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
 
     @Override
     public Entity getEntityById(int id) {
-        return cachedLevel == null ? null : tryRunOnMainThread(() -> cachedLevel.getEntity(id));
+        return cachedLevel == null ? null : sync.syncToMain(() -> cachedLevel.getEntity(id));
     }
 
     @Override
@@ -244,18 +244,6 @@ public class LevelState extends BaseLevelState<BlockPos, Vec3, BlockState, Entit
                 center.getX() + horizontalRadius, center.getY() + verticalRadius, center.getZ() + horizontalRadius
         );
 
-        return tryRunOnMainThread(() -> cachedLevel.getEntitiesOfClass(clazz, area, ignore -> true));
-    }
-
-    @Override
-    @Nullable
-    public  <T> T tryRunOnMainThread(Supplier<T> task) {
-        try {
-            return mc.submit(task).get(MAIN_THREAD_TIMEOUT, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException ignored) {
-            return null;
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        return sync.syncToMain(() -> cachedLevel.getEntitiesOfClass(clazz, area, ignore -> true));
     }
 }

@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.v1_21_1;
 
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
+import me.molybdenum.ambience_mini.engine.client.core.BaseSynchroniser;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.gui.BaseGuiTools;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
@@ -16,6 +17,7 @@ import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.ClientCore;
+import me.molybdenum.ambience_mini.v1_21_1.client.core.Synchroniser;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.gui.GuiTools;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_21_1.client.core.render.area.AreaRenderer;
@@ -98,6 +100,7 @@ public class AmbienceMini extends BaseAmbienceMini
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             BaseGuiTools.init(GuiTools::new);
+            BaseSynchroniser.init(Synchroniser::new);
 
             clientConfig = new ClientConfig(modContainer);
             modEventBus.addListener(AmbienceMini::registerGuiOverlays);

@@ -1,9 +1,9 @@
-package me.molybdenum.ambience_mini.engine.client.core.caves;
+package me.molybdenum.ambience_mini.engine.client.core.detectors;
 
+import me.molybdenum.ambience_mini.engine.client.core.BaseSynchroniser;
 import me.molybdenum.ambience_mini.engine.client.core.setup.BaseClientConfig;
 import me.molybdenum.ambience_mini.engine.client.core.state.BaseLevelState;
 import me.molybdenum.ambience_mini.engine.client.core.state.BasePlayerState;
-import me.molybdenum.ambience_mini.engine.client.core.state.BlockReading;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.SableCompat;
 
 import java.util.ArrayList;
@@ -11,9 +11,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-public class CaveDetector<TBlockPos, TVec3, TBlockState>
+public class EnvironmentDetector<TBlockPos, TVec3, TBlockState>
 {
+    private static final BaseSynchroniser sync = BaseSynchroniser.get();
     private static final HashMap<Object, MaterialType> MATERIAL_CACHE = new HashMap<>();
 
     private static final double Y_ROT_SKYWARD_THRESHOLD = 45.0;
@@ -28,11 +30,29 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
     private final int _yGranularity;
 
 
-    public CaveDetector(BaseClientConfig config) {
+    public EnvironmentDetector(BaseClientConfig config) {
         _caveScoreRadius = config.caveScoreRadius.get();
         _measureDistance = config.caveMeasureDistance.get();
         _xGranularity = config.xAxisGranularity.get();
         _yGranularity = config.yAxisGranularity.get();
+    }
+
+
+    public Optional<Float> getSkylightPotential(
+            BaseLevelState<TBlockPos, TVec3, TBlockState, ?, ?> level,
+            BasePlayerState<TBlockPos, TVec3, ?> player
+    ) {
+        Supplier<List<BlockReading<TBlockPos, TBlockState>>> getReadings =
+                () -> level.readSurroundings(player.eyePosition(), 12, 7, 64);
+
+        List<BlockReading<TBlockPos, TBlockState>> readings = sync.syncToMainIf(SableCompat.isLoaded, getReadings);
+        if (readings != null && !readings.isEmpty())
+            return Optional.of(
+                    readings.stream()
+                            .collect(Collectors.averagingDouble(r -> level.getAverageSkyLightingAround(r.blockPos())))
+                            .floatValue()
+            );
+        return Optional.empty();
     }
 
 
@@ -50,21 +70,19 @@ public class CaveDetector<TBlockPos, TVec3, TBlockState>
                             TVec3 vOrigin = level.offsetVector(player.eyePosition(), xOff, yOff, zOff);
                             List<BlockReading<TBlockPos, TBlockState>> readings
                                     = level.readSurroundings(vOrigin, _xGranularity, _yGranularity, _measureDistance);
-                            scores.add(computeScore(level, readings));
+                            scores.add(computeCaveScore(level, readings));
                         }
                     }
             return scores;
         };
 
-        List<Double> scores = SableCompat.isLoaded ? level.tryRunOnMainThread(getScores) : getScores.get();
-
+        List<Double> scores = sync.syncToMainIf(SableCompat.isLoaded, getScores);
         if (scores == null || scores.isEmpty())
             return Optional.empty();
-
         return Optional.of(scores.stream().reduce(0.0, Double::sum) / scores.size());
     }
 
-    protected double computeScore(
+    private double computeCaveScore(
             BaseLevelState<TBlockPos, TVec3, TBlockState, ?, ?> level,
             List<BlockReading<TBlockPos, TBlockState>> readings
     ){

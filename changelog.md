@@ -48,7 +48,6 @@ The wait is over and the biggest update yet is here!
   * Current possible values are: `none` (current screen if any is not part of a menu collection), `main_menu`, `joining`, `disconnected`, `credits`, `death`, `pause` (distinct from `@paused` when the game is halted in singleplayer), `player_inventory`.
   * This is similar to the events `@main_menu`, `@joining`, and so on, but easier to extend with new menu types without adding new events.
 - Added `Print_Screen_On_Change` mod-config option. When enabled, the mod prints out the screen ID (and menu type if any) whenever the menu changes. Use for music pack creation and debugging.
-- Improved startup and auto-reload stability.
 
 **Server-side mod config:**
 - Added server-side mod options for auto-save interval for flags.
@@ -74,6 +73,7 @@ The wait is over and the biggest update yet is here!
 - Minor improvements to volume change handling.
 - Architectural improvements to message passing and handling between client and server.
 - Changed OGG-reader such that it no longer needs to read the entire file before playing (much needed for streaming music from the server).
+- Improved startup and auto-reload stability.
 - Various bug-fixes.
 
 ****

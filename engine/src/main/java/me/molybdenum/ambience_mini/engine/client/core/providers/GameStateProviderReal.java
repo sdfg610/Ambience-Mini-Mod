@@ -1,14 +1,12 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
-import me.molybdenum.ambience_mini.engine.client.core.caves.BlockReading;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
-import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
+import me.molybdenum.ambience_mini.engine.client.core.detectors.EnvironmentDetector;
 import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.engine.client.core.state.*;
-import me.molybdenum.ambience_mini.engine.shared.compatibility.SableCompat;
 import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
@@ -18,9 +16,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> extends GameStateProviderTemplate
 {
@@ -28,7 +23,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private final BasePlayerState<TBlockPos, TVec3, ?> _player;
     private final BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, ?> _level;
     private final BaseCombatState<TEntity, TVec3> _combat;
-    private final CaveDetector<TBlockPos, TVec3, TBlockState> _caveDetector;
+    private final EnvironmentDetector<TBlockPos, TVec3, TBlockState> _environmentDetector;
 
     private final BaseScreenState _screen;
     private final ClientAreaManager _areaManager;
@@ -84,7 +79,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         _player = player;
         _level = level;
         _combat = combatMonitor;
-        _caveDetector = new CaveDetector<>(core.clientConfig);
+        _environmentDetector = new EnvironmentDetector<>(core.clientConfig);
 
         _screen = core.screenState;
         _areaManager = core.areaManager;
@@ -439,7 +434,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         if (_player.isNull() || _level.isNull())
             return FloatVal.UNDEFINED;
 
-        _latestCaveScore = _caveDetector.getAveragedCaveScore(_level, _player).orElse(_latestCaveScore);
+        _latestCaveScore = _environmentDetector.getAveragedCaveScore(_level, _player).orElse(_latestCaveScore);
         return new FloatVal((float)(_latestCaveScore));
     }
 
@@ -448,11 +443,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         if (_player.isNull() || _level.isNull())
             return FloatVal.UNDEFINED;
 
-        Supplier<List<BlockReading<TBlockPos, TBlockState>>> getReadings = () -> _level.readSurroundings(_player.eyePosition(), 12, 7, 64);
-        List<BlockReading<TBlockPos, TBlockState>> readings = SableCompat.isLoaded ? _level.tryRunOnMainThread(getReadings) : getReadings.get();
-        if (readings != null)
-            _latestSkylightPotential = readings.stream().collect(Collectors.averagingDouble(r -> _level.getAverageSkyLightingAround(r.blockPos()))).floatValue();
-
+        _latestSkylightPotential = _environmentDetector.getSkylightPotential(_level, _player).orElse(_latestSkylightPotential);
         return new FloatVal(_latestSkylightPotential);
     }
 

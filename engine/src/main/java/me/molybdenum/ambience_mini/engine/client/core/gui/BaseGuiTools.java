@@ -12,9 +12,9 @@ public abstract class BaseGuiTools {
         return INSTANCE;
     }
 
-    public static void init(Supplier<BaseGuiTools> soundBuilder) {
+    public static void init(Supplier<BaseGuiTools> builder) {
         if (INSTANCE == null)
-            INSTANCE = soundBuilder.get();
+            INSTANCE = builder.get();
     }
 
 

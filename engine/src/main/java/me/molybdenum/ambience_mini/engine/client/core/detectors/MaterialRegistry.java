@@ -1,4 +1,4 @@
-package me.molybdenum.ambience_mini.engine.client.core.caves;
+package me.molybdenum.ambience_mini.engine.client.core.detectors;
 
 import java.util.HashMap;
 import java.util.Objects;

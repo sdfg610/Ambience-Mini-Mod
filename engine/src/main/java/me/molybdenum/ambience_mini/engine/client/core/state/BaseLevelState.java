@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
-import me.molybdenum.ambience_mini.engine.client.core.caves.BlockReading;
-import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.LivingVal;
+import me.molybdenum.ambience_mini.engine.client.core.BaseSynchroniser;
+import me.molybdenum.ambience_mini.engine.client.core.detectors.BlockReading;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3d;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector3i;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.EssentialCompat;
@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TClientLevel>
 {
-    protected static final int MAIN_THREAD_TIMEOUT = 1000;
+    protected static final BaseSynchroniser sync = BaseSynchroniser.get();
 
     private final ArrayList<Consumer<String>> levelChangedListeners = new ArrayList<>();
 
@@ -104,8 +104,6 @@ public abstract class BaseLevelState<TBlockPos, TVec3, TBlockState, TEntity, TCl
     public abstract TVec3 offsetVector(TVec3 position, double x, double y, double z);
     @Nullable public abstract Vector3i toAmVector3i(@Nullable TBlockPos blockPos);
     @Nullable public abstract Vector3d toAmVector3d(@Nullable TVec3 position);
-
-    @Nullable public abstract <T> T tryRunOnMainThread(Supplier<T> task);
 
 
     // ------------------------------------------------------------------------------------------------
