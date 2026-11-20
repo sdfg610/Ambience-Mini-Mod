@@ -21,9 +21,10 @@ public abstract class BaseClientConfig {
     public final Supplier<Integer> updateInterval;
     public final Supplier<Integer> nextMusicDelay;
     public final Supplier<Boolean> meticulousPlaylistSelector;
+    public final Supplier<Integer> musicFadeTime;
 
     // Volume control
-    public final Supplier<Boolean> fadeOnJukeBox;
+    public final Supplier<Boolean> fadeOnJukebox;
     public final Supplier<Boolean> lostFocusEnabled;
 
     // Village detection
@@ -35,6 +36,10 @@ public abstract class BaseClientConfig {
     public final Supplier<Integer> ranchScanHorizontalRadius;
     public final Supplier<Integer> ranchScanVerticalRadius;
     public final Supplier<Integer> animalCountThreshold;
+
+    // Nearby Living
+    public final Supplier<Integer> livingScanHorizontalRadius;
+    public final Supplier<Integer> livingScanVerticalRadius;
 
     // Fishing
     public final Supplier<Integer> fishingTimeout;
@@ -49,6 +54,14 @@ public abstract class BaseClientConfig {
     // Combat detection
     public final Supplier<Integer> combatGracePeriod;
     public final Supplier<Integer> combatantTimeout;
+
+    // Server-located music
+    public final Supplier<Integer> maxMusicCacheSize;
+    public final Supplier<Integer> maxPlaylistsSize;
+    public final Supplier<Integer> playlistChunkTimeout;
+    public final Supplier<Integer> maxMusicSize;
+    public final Supplier<Integer> musicChunkTimeout;
+
 
 
     protected BaseClientConfig() {
@@ -105,8 +118,14 @@ public abstract class BaseClientConfig {
                 false
         );
 
+        musicFadeTime = registerIntOption(
+                "The time in milliseconds it takes to fade music in or out. Beware that fading blocks all other mod processes, meaning a fade has to finish before the mod can switch music again. [Default: 750]",
+                "Music_Fade_Time",
+                750, 250, 3000
+        );
+
         // Volume control
-        fadeOnJukeBox = registerBoolOption(
+        fadeOnJukebox = registerBoolOption(
                 "Fade out Ambience Mini's music when a jukebox is playing music nearby. [Default true]",
                 "Fade_On_Jukebox",
                 true
@@ -136,7 +155,7 @@ public abstract class BaseClientConfig {
 
         // Ranch detection
         ranchScanHorizontalRadius = registerIntOption(
-                "The horizontal radius/distance to scan for villagers. [Default: 30]",
+                "The horizontal radius/distance to scan for animals. [Default: 30]",
                 "Ranch_Scan_Horizontal_Radius",
                 30, 10, 100
         );
@@ -149,6 +168,18 @@ public abstract class BaseClientConfig {
                 "The minimum number of animals needed within the search box to count as a ranch. [Default: 15]",
                 "Animal_Count_Threshold",
                 15, 5, Integer.MAX_VALUE
+        );
+
+        // Nearby living
+        livingScanHorizontalRadius = registerIntOption(
+                "The horizontal radius/distance to scan for living entities in $nearby_living. [Default: 30]",
+                "Living_Scan_Horizontal_Radius",
+                30, 5, 100
+        );
+        livingScanVerticalRadius = registerIntOption(
+                "The vertical radius/distance to scan for living entities in $nearby_living. [Default: 30]",
+                "Living_Scan_Vertical_Radius",
+                30, 5, 100
         );
 
         // Fishing
@@ -196,6 +227,37 @@ public abstract class BaseClientConfig {
                 "If no interaction has been made between a player and a mob for the time given here (in milliseconds), these will no longer be considered 'in combat'. [Default: 5000]",
                 "Combatant_Timeout",
                 5000, 2500, 15000
+        );
+
+        // Server-located music
+        maxMusicCacheSize = registerIntOption(
+                "The maximal amount of memory, in megabytes, that the mod will spend caching server-located music. [Default: 500]",
+                "Max_Music_Cache_Memory",
+                500, 100, 10_000
+        );
+
+        maxPlaylistsSize = registerIntOption(
+                "The maximal size, in megabytes, of the server playlists. This is mostly a safeguard - the playlists should not be that big. [Default: 100]",
+                "Max_Server_Playlists_Size",
+                100, 10, 100
+        );
+
+        playlistChunkTimeout = registerIntOption(
+                "If more than the given amount of milliseconds passes without receiving playlist-data from the server, the client gives up fetching the server playlists. [Default: 500]",
+                "Playlists_Fetch_Timeout",
+                500, 250, 5000
+        );
+
+        maxMusicSize = registerIntOption(
+                "The maximal size, in megabytes, of any single piece of server-located music. Music exceeding the size limit will not be fetched. [Default: 50]",
+                "Max_Server_Music_Size",
+                50, 5, 1000
+        );
+
+        musicChunkTimeout = registerIntOption(
+                "If more than the given amount of milliseconds passes without receiving music-data from the server, the client gives up fetching a server-located music. [Default: 500]",
+                "Music_Fetch_Timeout",
+                500, 250, 5000
         );
 
         postSetup();

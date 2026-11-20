@@ -4,9 +4,7 @@ import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmReader;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmSerializable;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.AmWriter;
-
-import java.util.Arrays;
-import java.util.List;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.helper.HelperReader;
 
 public class Text implements AmSerializable {
     public boolean isLiteral;

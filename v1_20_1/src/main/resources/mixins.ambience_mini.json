@@ -13,5 +13,8 @@
   "injectors": {
     "defaultRequire": 1
   },
-  "refmap": "mixins.ambience_mini.refmap.json"
+  "refmap": "mixins.ambience_mini.refmap.json",
+  "mixins": [
+    "WardenMixin"
+  ]
 }

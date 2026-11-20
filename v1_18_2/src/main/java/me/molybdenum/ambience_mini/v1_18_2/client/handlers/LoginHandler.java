@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_18_2.client.handlers;
 
 import me.molybdenum.ambience_mini.v1_18_2.AmbienceMini;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.Connection;
@@ -13,7 +13,7 @@ import net.minecraftforge.network.NetworkHooks;
 import org.apache.commons.lang3.tuple.Pair;
 
 
-@Mod.EventBusSubscriber(modid = Common.MOD_ID, value={Dist.CLIENT})
+@Mod.EventBusSubscriber(modid = Constants.MOD_ID, value={Dist.CLIENT})
 public class LoginHandler
 {
     @SubscribeEvent
@@ -36,7 +36,7 @@ public class LoginHandler
     private static AmVersion extractModVersion(Connection connection) {
         var data = NetworkHooks.getConnectionData(connection);
         if (data != null) {
-            Pair<String, String> modInfo = data.getModData().getOrDefault(Common.MOD_ID, null);
+            Pair<String, String> modInfo = data.getModData().getOrDefault(Constants.MOD_ID, null);
             if (modInfo != null)
                 return AmVersion.tryOfString(modInfo.getValue()).orElse(AmVersion.ZERO);
         }

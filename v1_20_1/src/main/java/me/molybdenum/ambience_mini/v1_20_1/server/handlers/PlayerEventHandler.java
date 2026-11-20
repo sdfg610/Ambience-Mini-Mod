@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_20_1.server.handlers;
 
 import me.molybdenum.ambience_mini.v1_20_1.AmbienceMini;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -9,7 +9,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 
-@Mod.EventBusSubscriber(modid = Common.MOD_ID)
+@Mod.EventBusSubscriber(modid = Constants.MOD_ID)
 public class PlayerEventHandler
 {
     @SubscribeEvent(priority = EventPriority.LOWEST)

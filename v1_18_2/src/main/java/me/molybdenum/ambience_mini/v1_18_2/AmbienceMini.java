@@ -2,9 +2,14 @@ package me.molybdenum.ambience_mini.v1_18_2;
 
 import com.mojang.logging.LogUtils;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
+import me.molybdenum.ambience_mini.engine.client.core.gui.BaseGuiTools;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.engine.server.core.command.CommandRegistry;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.ClientCore;
+import me.molybdenum.ambience_mini.v1_18_2.client.core.gui.GuiTools;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.networking.ClientNetworkManager;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.render.area.AreaRenderer;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.render.drawer.Drawer;
@@ -12,10 +17,10 @@ import me.molybdenum.ambience_mini.v1_18_2.client.core.util.Notification;
 import me.molybdenum.ambience_mini.engine.BaseAmbienceMini;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
-import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
-import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.CompatManager;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
 import me.molybdenum.ambience_mini.engine.client.core.state.VolumeState;
@@ -31,8 +36,8 @@ import me.molybdenum.ambience_mini.v1_18_2.server.core.ServerCore;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.command.CommandNodeFactory;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.locations.StructureReader;
 import me.molybdenum.ambience_mini.v1_18_2.server.core.networking.ServerNetworkManager;
+import me.molybdenum.ambience_mini.v1_18_2.server.core.setup.ServerConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
@@ -47,12 +52,11 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.slf4j.Logger;
 
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(Common.MOD_ID)
+@Mod(Constants.MOD_ID)
 public class AmbienceMini extends BaseAmbienceMini
 {
     // Common
@@ -63,6 +67,7 @@ public class AmbienceMini extends BaseAmbienceMini
     public static ClientCore clientCore = null;
 
     // Server
+    private static ServerConfig serverConfig;
     public static ServerCore serverCore = null;
 
 
@@ -77,16 +82,19 @@ public class AmbienceMini extends BaseAmbienceMini
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStarting);
         MinecraftForge.EVENT_BUS.addListener(AmbienceMini::onServerStopping);
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            clientConfig = new ClientConfig();
+        serverConfig = new ServerConfig();
 
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            BaseGuiTools.init(GuiTools::new);
+
+            clientConfig = new ClientConfig();
             OverlayRegistry.registerOverlayTop("Area Overlay", RenderHandler::renderAreaOverlay);
         }
     }
 
 
     public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(Common.MOD_ID, path);
+        return ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, path);
     }
 
 
@@ -98,17 +106,16 @@ public class AmbienceMini extends BaseAmbienceMini
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             VolumeState.init(
-                    clientConfig,
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER),
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MUSIC),
                     Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS)
             );
 
-            baseCore = clientCore = new ClientCore(
+            baseClientCore = clientCore = new ClientCore(
                     LOGGER, new ClientNameCache(), new StructureCache(),
                     new Notification(), new ClientNetworkManager(),
                     new ClientAreaManager(), new AreaRenderer(new Drawer()),
-                    new FlagCache(),
+                    new FlagCache(), new ServerMusicCache(),
                     new ServerSetup(), clientConfig, new KeyBindings(),
                     new PlayerState(), new LevelState(), new ScreenState(), new CombatState()
             );
@@ -120,7 +127,7 @@ public class AmbienceMini extends BaseAmbienceMini
 
 
     // -----------------------------------------------------------------------------------------------------------------
-    // Common
+    // Client
     /// Called from a Mixin instead of through the event bus since a bug in MC 1.18.2 causes the "MinecraftForge.EVENT_BUS" to shut down somehow...
     public static void onSoundEngineLoaded() {
         if (clientCore != null)
@@ -141,19 +148,21 @@ public class AmbienceMini extends BaseAmbienceMini
         serverCore = new ServerCore(
                 event.getServer(),
                 LOGGER,
+                serverConfig,
                 new ServerNameCache(),
                 new ServerAreaManager(),
-                new StructureReader(event.getServer()),
+                new StructureReader(event.getServer(), serverConfig),
                 new FlagManager(),
+                new ServerMusicManager(),
                 new ServerNetworkManager()
         );
         serverCore.init();
-        serverCore.onStarted();
+        serverCore.onStarting();
     }
 
     private static void onServerStopping(final ServerStoppedEvent ignored) {
         if (serverCore != null) {
-            serverCore.onStopping();
+            serverCore.onStopped();
             serverCore = null;
         }
     }

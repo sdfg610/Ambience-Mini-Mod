@@ -9,6 +9,8 @@ public enum ScreenType {
     DEATH("death"),
     PAUSE("pause"),
     PLAYER_INVENTORY("player_inventory"),
+    AREA_MENU("area_menu"),
+    AM_MENU("am_menu"),
     UNKNOWN("unknown")
 
     ;

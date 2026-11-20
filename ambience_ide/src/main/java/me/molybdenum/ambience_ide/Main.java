@@ -1,16 +1,17 @@
 package me.molybdenum.ambience_ide;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.Loader;
-import me.molybdenum.ambience_mini.engine.client.configuration.Music;
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.Selection;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.VanillaSelection;
-import me.molybdenum.ambience_mini.engine.client.configuration.messages.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.Interpreter;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.selection.PlaylistSelection;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.BoolVal;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.Value;
-import me.molybdenum.ambience_mini.engine.client.configuration.music_provider.FakeMusicProvider;
+import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.selection.*;
+import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderTemplate;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerConfigInterpreter;
+import me.molybdenum.ambience_mini.engine.shared.configuration.Loader;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.Config;
+import me.molybdenum.ambience_mini.engine.shared.configuration.semantic_analysis.Setup;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.*;
+import me.molybdenum.ambience_mini.engine.client.core.music.music_selector.MusicSelector;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.BoolVal;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.Value;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Event;
 import me.molybdenum.ambience_mini.engine.client.core.providers.Property;
 import me.molybdenum.ambience_mini.engine.shared.BuildConfig;
@@ -22,10 +23,7 @@ import org.teavm.jso.dom.html.HTMLElement;
 import org.teavm.jso.dom.html.HTMLInputElement;
 import org.teavm.jso.dom.xml.Node;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +32,7 @@ import java.util.stream.Collectors;
 
 public class Main
 {
-    private static final GameStateProviderMock provider = new GameStateProviderMock();
+    private static final GameStateProviderMock gameStateProvider = new GameStateProviderMock();
 
 
     @JSExport
@@ -48,11 +46,11 @@ public class Main
         HTMLDocument doc = HTMLDocument.current();
 
         var elemEvents = doc.getElementById("events");
-        for (var ev : provider.getEvents())
+        for (var ev : gameStateProvider.getEvents())
             elemEvents.appendChild(createEventRow(doc, ev));
 
         var elemProperties = doc.getElementById("properties");
-        for (var pr : provider.getProperties())
+        for (var pr : gameStateProvider.getProperties())
             elemProperties.appendChild(createPropertyRow(doc, pr));
     }
 
@@ -79,7 +77,11 @@ public class Main
         var row = doc.createElement("tr");
 
         row.appendChild(makeNameColumn(doc, propertyId));
-        var last = makeStringColumn(doc, propertyId, pr.type instanceof ListT);
+        HTMLElement last;
+        if (pr == gameStateProvider.getProperty(GameStateProviderTemplate.P_SERVER_PLAYLISTS.name()))
+            last = makeDefineInConfigColumn(doc);
+        else
+            last = makeStringColumn(doc, propertyId, pr.type instanceof ListT || pr.type instanceof MapT);
         row.appendChild(last);
         last.setClassName("absorbing-column");
 
@@ -92,6 +94,39 @@ public class Main
         nameElem.setClassName("name");
         nameElem.setInnerText(text);
         return nameElem;
+    }
+
+    private static HTMLElement makeStringColumn(HTMLDocument doc, String propertyId, boolean multiline) {
+        var value = gameStateProvider.getPropertyValueString(propertyId.substring(1));
+        var textBox = doc.createElement(multiline ? "textarea" : "input");
+        if (!multiline) {
+            textBox.setAttribute("type", "text");
+            textBox.setAttribute("value", value);
+        }
+        else {
+            textBox.setAttribute("rows", Integer.toString(countLines(value)));
+            textBox.setInnerText(value);
+        }
+        textBox.getStyle().setProperty("width", "100%");
+        textBox.getStyle().setProperty("min-width", "15em");
+        textBox.setAttribute("onchange", "handleStringPropertyUpdate('" + propertyId + "', this.value)");
+
+        var column = doc.createElement("td");
+        column.appendChild(textBox);
+
+        return column;
+    }
+
+    private static HTMLElement makeDefineInConfigColumn(HTMLDocument doc) {
+        var label = doc.createElement("i");
+        label.setTextContent("Configure this in the music_config to the left.");
+        label.getStyle().setProperty("width", "100%");
+        label.getStyle().setProperty("min-width", "15em");
+
+        var column = doc.createElement("td");
+        column.appendChild(label);
+
+        return column;
     }
 
 
@@ -118,38 +153,17 @@ public class Main
         HTMLDocument doc = HTMLDocument.current();
 
         if (((HTMLInputElement)doc.getElementById(eventId + "-true")).isChecked())
-            provider.setEventValue(eventId.substring(1), BoolVal.TRUE);
+            gameStateProvider.setEventValue(eventId.substring(1), BoolVal.TRUE);
         else if (((HTMLInputElement)doc.getElementById(eventId + "-false")).isChecked())
-            provider.setEventValue(eventId.substring(1), BoolVal.FALSE);
+            gameStateProvider.setEventValue(eventId.substring(1), BoolVal.FALSE);
         else if (((HTMLInputElement)doc.getElementById(eventId + "-undefined")).isChecked())
-            provider.setEventValue(eventId.substring(1), BoolVal.UNDEFINED);
+            gameStateProvider.setEventValue(eventId.substring(1), BoolVal.UNDEFINED);
     }
 
-
-    private static HTMLElement makeStringColumn(HTMLDocument doc, String propertyId, boolean multiline) {
-        var value = provider.getPropertyValueString(propertyId.substring(1));
-        var textBox = doc.createElement(multiline ? "textarea" : "input");
-        if (!multiline) {
-            textBox.setAttribute("type", "text");
-            textBox.setAttribute("value", value);
-        }
-        else {
-            textBox.setAttribute("rows", Integer.toString(countLines(value)));
-            textBox.setInnerText(value);
-        }
-        textBox.getStyle().setProperty("width", "100%");
-        textBox.getStyle().setProperty("min-width", "15em");
-        textBox.setAttribute("onchange", "handleStringPropertyUpdate('" + propertyId + "', this.value)");
-
-        var column = doc.createElement("td");
-        column.appendChild(textBox);
-
-        return column;
-    }
 
     @JSExport
     public static void handleStringPropertyUpdate(String propertyId, String value) {
-        provider.setPropertyValueString(propertyId.substring(1), value);
+        gameStateProvider.setPropertyValueString(propertyId.substring(1), value);
     }
 
     public static int countLines(String str) {
@@ -171,21 +185,29 @@ public class Main
         output.setInnerHTML("");
 
         var parseErrors = new ArrayList<String>();
-        provider.prepare(parseErrors);
+        gameStateProvider.prepare(parseErrors);
         if (!parseErrors.isEmpty()) {
             String message = "Found invalid values for some properties! Treating as 'undefined'. The errors are:\n";
             message += parseErrors.stream().map(err -> "  - " + err).collect(Collectors.joining("\n"));
             output.appendChild(makeParagraph(doc, message));
         }
 
-        InputStream stream = new ByteArrayInputStream(musicConfig.getBytes(StandardCharsets.UTF_8));
-        Loader.loadFrom(stream, new FakeMusicProvider(), provider).match(
-                Main::printResult,
+        Loader.loadAndValidateConfig(
+                new ByteArrayInputStream(musicConfig.getBytes(StandardCharsets.UTF_8)),
+                new FakeMusicProvider(),
+                new Setup.Client(gameStateProvider)
+        ).match(
+                (config, messages) -> {
+                    var musicSelector = new MusicSelector(config, gameStateProvider);
+                    var serverConfigInterpreter = new ServerConfigInterpreter(config, new FakeMusicProvider());
+                    gameStateProvider.setPlaylists(serverConfigInterpreter);
+                    printResult(musicSelector, messages);
+                },
                 Main::printErrors
         );
     }
 
-    private static void printResult(Interpreter interpreter, List<Message> warnings) {
+    private static void printResult(MusicSelector musicSelector, List<Message> warnings) {
         HTMLDocument doc = HTMLDocument.current();
         var output = doc.getElementById("output");
         output.appendChild(makeParagraph(doc, "Configuration is valid and ran to completion!"));
@@ -193,14 +215,17 @@ public class Main
         printMessages(warnings, output, doc);
 
         ArrayList<Pair<String, Value<?>>> trace = new ArrayList<>();
-        Selection choice = interpreter.selectPlaylist(trace);
-        if (choice == null)
+        Selection choice = musicSelector.selectPlaylist(trace);
+        if (choice instanceof NoneSelection)
             output.appendChild(makeParagraph(doc, "No playlist could be selected, which means the currently playing music (if any) will continue. If you want the music to stop, make sure that the empty playlist (play [ ];) is selected."));
-        else if (choice instanceof PlaylistSelection plSelection) {
-            output.appendChild(makeParagraph(doc, String.format("Selected new playlist at priority %d: [ %s ]", plSelection.priority(), String.join(", ", plSelection.playlist().stream().map(Music::path).toList()))));
-        }
-        else if (choice instanceof VanillaSelection)
-            output.appendChild(makeParagraph(doc, "Enabled the vanilla music player."));
+        else if (choice instanceof PlaylistSelection plSelection)
+            output.appendChild(makeParagraph(doc,
+                    String.format("On line %d. Selected new playlist at priority %d: [ %s ]", plSelection.line(), plSelection.priority(), String.join(", ", plSelection.playlist().stream().map(Music::path).toList()))
+            ));
+        else if (choice instanceof VanillaSelection vanilla)
+            output.appendChild(makeParagraph(doc, String.format("On line %d. Enabled the vanilla music player.", vanilla.line())));
+        else if (choice instanceof UndefinedSelection undef)
+            output.appendChild(makeParagraph(doc, String.format("On line %d. Current music continues after selecting undefined playlist.", undef.line())));
         else
             output.appendChild(makeParagraph(doc, "The music selector returned an unexpected result!"));
 
@@ -225,7 +250,7 @@ public class Main
                 text = String.format("Syntactic error [line %d, column %d]: %s", err.line(), err.column(), err.message());
             else if (error instanceof SemError err)
                 text = String.format("Semantic error [line %d]: %s", err.line(), err.message());
-            else if (error instanceof SemWarning wrn)
+            else if (error instanceof Warning wrn)
                 text = String.format("Warning [line %d]: %s", wrn.line(), wrn.message());
             else if (error instanceof ExcError err) {
                 StringWriter sw = new StringWriter();

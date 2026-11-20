@@ -5,21 +5,36 @@ import me.molybdenum.ambience_mini.engine.server.core.flags.FlagOperation;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.AreaOperation;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.CreateAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.DeleteAreaMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.GetAreasMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.areas.PutAreaMessage;
-import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.ClientInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.client.ClientInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.features.RequestFeatureFlagsMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.base.responses.ResponseMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.combat.MobTargetMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.DeleteFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.GetFlagsMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.flags.PutFlagMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.GetNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.NeoGetNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestMusicChunkMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerMusicInfoMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerPlaylistChunkMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.server_music.RequestServerPlaylistInfoMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.GetStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.name_cache.PutNameCacheMessage;
+import me.molybdenum.ambience_mini.engine.shared.core.features.Feature;
+import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.BaseMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.core.networking.serialization.helper.HelperWriter;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
-import me.molybdenum.ambience_mini.engine.shared.utils.Result;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseServerNetworkManager<TServerPlayer>
@@ -51,7 +66,7 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
 
     // -----------------------------------------------------------------------------------------------------------------
     // Message handling
-    public void handleMessage(Result<AmMessage> msgRes, TServerPlayer sender) {
+    public void handleMessage(StrResult<AmMessage> msgRes, TServerPlayer sender) {
         if (!msgRes.isSuccess()) {
             core.logger.error("Error during retrieval of message: {}", msgRes.error);
             return;
@@ -62,6 +77,8 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         try {
             if (message instanceof ClientInfoMessage msg)
                 response = handleModVersionMessage(msg, sender);
+            else if (message instanceof RequestFeatureFlagsMessage msg)
+                response = handleRequestFeatureFlagsMessage(msg);
 
             else if (message instanceof CreateAreaMessage msg)
                 response = handleCreateAreaMessage(msg, sender);
@@ -77,9 +94,22 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
 
             else if (message instanceof GetNameCacheMessage msg)
                 response = handleGetNameCacheMessage(msg, sender);
+            else if (message instanceof NeoGetNameCacheMessage msg)
+                response = handleNeoGetNameCacheMessage(msg);
 
             else if (message instanceof GetFlagsMessage msg)
-                response = handleGetFlagMessage(msg, sender);
+                response = handleGetFlagsMessage(msg, sender);
+
+            else if (message instanceof RequestServerPlaylistInfoMessage msg)
+                response = handleRequestServerPlaylistInfoMessage(msg);
+            else if (message instanceof RequestServerPlaylistChunkMessage msg)
+                response = handleRequestServerPlaylistsChunkMessage(msg);
+            else if (message instanceof RequestMusicChunkMessage msg)
+                response = handleRequestMusicChunkMessage(msg);
+            else if (message instanceof RequestServerMusicInfoMessage msg) {
+                handleRequestServerMusicInfoMessage(msg, sender);
+                response = null; // Delayed response.
+            }
 
             else {
                 core.logger.error("Server could not handle message of type '{}'", message.getClass().getName());
@@ -98,19 +128,30 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
 
     // Basic info
     private AmMessage handleModVersionMessage(ClientInfoMessage msg, TServerPlayer sender) {
-        setPlayerModVersion(sender, AmVersion.ofString(msg.modVersion));
+        var modVersion = AmVersion.ofString(msg.modVersion);
+        setPlayerModVersion(sender, modVersion);
         core.nameCache.putPlayerName(msg.playerUUID, msg.playerName);
         return msg.success();
+    }
+
+    private AmMessage handleRequestFeatureFlagsMessage(RequestFeatureFlagsMessage msg) {
+        var config = core.serverConfig;
+        return msg.succeedWith(
+                Arrays.stream(Feature.values())
+                        .map(feature -> feature.init(config))
+                        .toList()
+        );
     }
 
 
     // Areas
     private AmMessage handleCreateAreaMessage(CreateAreaMessage msg, TServerPlayer sender) {
+        if (core.areaManager.areasDisabled())
+            return msg.failure(AmLang.MSG_AREAS_DISABLED.text());
+
         String owner = msg.area.owner.getOwnerIdIfOwned();
-        if (owner != null && !owner.equals(getServerPlayerUUID(sender))) {
-            core.logger.error("A player cannot create an area to be owned by another player!");
-            return msg.failure(AmLang.MSG_MESSAGE_CAUSED_SERVER_ERROR);
-        }
+        if (owner != null && !owner.equals(getServerPlayerUUID(sender)))
+            return msg.failure(AmLang.MSG_AREA_CANNOT_EDIT);
 
         var error = core.areaManager.createArea(msg.area);
         if (error.isPresent()) {
@@ -122,15 +163,12 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     }
 
     private AmMessage handlePutAreaMessage(PutAreaMessage msg, TServerPlayer sender) {
+        if (core.areaManager.areasDisabled())
+            return msg.failure(AmLang.MSG_AREAS_DISABLED.text());
+
         String senderID = getServerPlayerUUID(sender);
         if (!msg.area.canBeEditedBy(senderID))
             return msg.failure(AmLang.MSG_AREA_CANNOT_EDIT);
-
-        String owner = msg.area.owner.getOwnerIdIfOwned();
-        if (owner != null && !owner.equals(senderID)) {
-            core.logger.error("A player cannot update an area to be owned by another player!");
-            return msg.failure(AmLang.MSG_MESSAGE_CAUSED_SERVER_ERROR);
-        }
 
         var error = core.areaManager.putArea(msg.area);
         if (error.isPresent()) {
@@ -142,7 +180,14 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     }
 
     private AmMessage handleDeleteAreaMessage(DeleteAreaMessage msg, TServerPlayer sender) {
-        Area area = core.areaManager.getAreaById(msg.areaId);
+        if (core.areaManager.areasDisabled())
+            return msg.failure(AmLang.MSG_AREAS_DISABLED.text());
+
+        var result = core.areaManager.getAreaById(msg.areaId);
+        if (result.isFailure())
+            return msg.failure(result.error);
+
+        var area = result.value;
         if (!area.canBeEditedBy(getServerPlayerUUID(sender)))
             return msg.failure(AmLang.MSG_AREA_CANNOT_EDIT);
 
@@ -151,7 +196,14 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
     }
 
     private AmMessage handleGetAreasMessage(GetAreasMessage msg, TServerPlayer sender) {
-        core.areaManager.getAreasVisibleTo(getServerPlayerUUID(sender)).forEach(
+        if (core.areaManager.areasDisabled())
+            return msg.failure(AmLang.MSG_AREAS_DISABLED.text());
+
+        var res = core.areaManager.getAreasVisibleTo(getServerPlayerUUID(sender));
+        if (res.isFailure())
+            return msg.failWith(res.error);
+
+        res.value.forEach(
                 area -> sendToPlayer(new PutAreaMessage(area, false), sender)
         );
 
@@ -179,12 +231,65 @@ public abstract class BaseServerNetworkManager<TServerPlayer>
         return msg.success();
     }
 
+    private AmMessage handleNeoGetNameCacheMessage(NeoGetNameCacheMessage msg) {
+        return msg.succeedWith(core.nameCache.getPlayerName(msg.playerUuid).getBytes(StandardCharsets.UTF_8));
+    }
+
 
     // Flags
-    private AmMessage handleGetFlagMessage(GetFlagsMessage msg, TServerPlayer sender) {
-        for (var elem : core.flagManager.getFlags())
+    private AmMessage handleGetFlagsMessage(GetFlagsMessage msg, TServerPlayer sender) {
+        var res = core.flagManager.getFlags();
+        if (res.isFailure())
+            return msg.failure(res.error);
+
+        for (var elem : res.value)
             sendToPlayer(new PutFlagMessage(elem.getKey(), elem.getValue().asString().orElse(null), false), sender);
         return msg.success();
+    }
+
+
+    // Remote music
+    private ResponseMessage handleRequestServerPlaylistInfoMessage(RequestServerPlaylistInfoMessage msg) {
+        var manager = core.musicManager;
+        return msg.succeedWith(
+                manager.hasServerPlaylists()
+                        ? msg.hasPlaylists(manager.getServerPlaylistByteSize(), manager.getServerPlaylistCount())
+                        : msg.noPlaylists()
+        );
+    }
+
+    private ResponseMessage handleRequestServerPlaylistsChunkMessage(RequestServerPlaylistChunkMessage msg) {
+        return msg.succeedWith(core.musicManager.getServerPlaylistChunk(msg.offset, msg.byteLength));
+    }
+
+    private ResponseMessage handleRequestMusicChunkMessage(RequestMusicChunkMessage msg) {
+        var res = BaseMusicProvider.validatePath(msg.musicPath);
+        if (res.isFailure())
+            return msg.failWith("Got request for music on invalid path '" + msg.musicPath + "'! This should not be possible!");
+
+        var chunkRes = core.musicManager.getMusicData(msg.musicPath, msg.offset, msg.length);
+        return chunkRes.match(msg::succeedWith, msg::failWith);
+    }
+
+    private void handleRequestServerMusicInfoMessage(RequestServerMusicInfoMessage msg, TServerPlayer sender) {
+        core.musicInfoCache.getLocalMusicInfo(
+                core.instantiate(new Music(msg.path, false)),
+                musicInfo -> {
+                    var writer = new HelperWriter();
+                    writer.writeString(musicInfo.toJson("").toString());
+                    sendToPlayer(msg.succeedWith(writer.getBytes()), sender);
+                }
+        );
+    }
+
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Message helpers
+    public void sendTargetMessage(int entityId, boolean isTargetingPlayer, TServerPlayer player) {
+        // Only send packet if client has compatible version Ambience Mini installed.
+        if (getPlayerModVersion(player).isGreaterThanOrEqual(AmVersion.V_2_5_0))
+            sendToPlayer(new MobTargetMessage(entityId, isTargetingPlayer), player);
     }
 
 

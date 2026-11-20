@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_19_2.client.handlers;
 
 import me.molybdenum.ambience_mini.v1_19_2.AmbienceMini;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.v1_19_2.client.core.state.ScreenState;
 import net.minecraft.client.gui.screens.*;
 import net.minecraftforge.api.distmarker.Dist;
@@ -10,7 +10,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = Common.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = Constants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ScreenEventHandler
 {
     public static volatile ScreenState screenState;
@@ -27,10 +27,6 @@ public class ScreenEventHandler
     // Client events
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onScreenOpened(final ScreenEvent.Opening event) {
-        ScreenState state = screenState;
-        if (state == null) return;   // client core not init, continue
-
-        Screen screen = event.getNewScreen();
-        state.handleScreenChanged(screen == null ? null : screen.getClass());
+        screenState.handleScreenChanged(event.getScreen());
     }
 }

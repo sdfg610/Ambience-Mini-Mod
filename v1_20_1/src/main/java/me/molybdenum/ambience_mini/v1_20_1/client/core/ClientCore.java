@@ -2,7 +2,12 @@ package me.molybdenum.ambience_mini.v1_20_1.client.core;
 
 
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
+import me.molybdenum.ambience_mini.engine.client.core.gui.menus.MainMenu;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
+import me.molybdenum.ambience_mini.v1_20_1.client.core.gui.AmScreen;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.networking.ClientNetworkManager;
+import me.molybdenum.ambience_mini.v1_20_1.client.core.render.drawer.Drawer;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.setup.ClientConfig;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.setup.KeyBindings;
 import me.molybdenum.ambience_mini.v1_20_1.client.core.state.CombatState;
@@ -15,7 +20,7 @@ import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.client.core.util.ClientNameCache;
+import me.molybdenum.ambience_mini.engine.client.core.misc.ClientNameCache;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 import net.minecraft.client.KeyMapping;
@@ -32,7 +37,6 @@ public class ClientCore extends BaseClientCore<
         BlockPos, Vec3, BlockState, Entity, KeyMapping, Component,
         Notification, ClientNetworkManager, AreaRenderer, ClientConfig, KeyBindings, PlayerState, LevelState, ScreenState, CombatState>
 {
-    private static final String OBF_MC_MUSIC_MANAGER = "f_91044_";
     private static final Minecraft mc = Minecraft.getInstance();
 
 
@@ -45,6 +49,7 @@ public class ClientCore extends BaseClientCore<
             ClientAreaManager areaManager,
             AreaRenderer renderer,
             FlagCache flagCache,
+            ServerMusicCache musicCache,
             ServerSetup serverSetup,
             ClientConfig clientConfig,
             KeyBindings keyBindings,
@@ -53,7 +58,7 @@ public class ClientCore extends BaseClientCore<
             ScreenState screenState,
             CombatState combatState
     ) {
-        super(McVersion.V1_20, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
+        super(McVersion.V1_20, logger, nameCache, structureCache, notification, networkManager, areaManager, renderer, flagCache, musicCache, serverSetup, clientConfig, keyBindings, playerState, levelState, screenState, combatState);
     }
 
 
@@ -79,5 +84,10 @@ public class ClientCore extends BaseClientCore<
         }
 
         return name == null ? null : Utils.removeIllegalCharacters(name);
+    }
+
+    @Override
+    protected MainMenu<?> createMainMenu() {
+        return new MainMenu<>(new Drawer(), AmScreen::new, this);
     }
 }

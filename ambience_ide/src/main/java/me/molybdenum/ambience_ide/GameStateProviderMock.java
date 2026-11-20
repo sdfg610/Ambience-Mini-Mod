@@ -1,37 +1,37 @@
 package me.molybdenum.ambience_ide;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.abstract_syntax.type.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueList;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.helpers.ValueMap;
-import me.molybdenum.ambience_mini.engine.client.configuration.pretty_printer.PrettyPrinter;
+import me.molybdenum.ambience_ide.parsers.*;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerConfigInterpreter;
+import me.molybdenum.ambience_mini.engine.shared.configuration.abstract_syntax.type.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.*;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.helpers.ValueMap;
+import me.molybdenum.ambience_mini.engine.shared.configuration.pretty_printer.PrettyPrinter;
 import me.molybdenum.ambience_mini.engine.client.core.providers.GameStateProviderTemplate;
-import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.regex.Pattern;
+import java.util.Optional;
 
 public class GameStateProviderMock extends GameStateProviderTemplate
 {
     public HashMap<String, BoolVal> eventValues = new HashMap<>();
     public HashMap<String, String> propertyValues = new HashMap<>() {{
-        //put(P_SCREEN_ID.name(), "undefined");
-        //put(P_MENU.name(), "undefined");
+        put(P_SCREEN_ID.name(), "net.minecraft.client.gui.screens.TitleScreen");
+        put(P_MENU.name(), "main_menu");
 
         put(P_DIFFICULTY.name(), "peaceful");
         put(P_DIMENSION.name(), "minecraft:overworld");
         put(P_BIOME.name(), "minecraft:forest");
-        put(P_BIOME_TAGS.name(), "minecraft:is_beach, minecraft:is_ocean");
+        put(P_BIOME_TAGS.name(), "[ \"minecraft:is_beach\", \"minecraft:is_ocean\" ]");
         put(P_TIME.name(), "0");
         put(P_CAVE_SCORE.name(), "0.0");
         put(P_SKYLIGHT_SCORE.name(), "0.0");
 
-        put(P_AREAS.name(), "{ name=\"Home\", dimension=\"minecraft:overworld\", owner=\"some_uuid\", isShared=true, isLocal=false } ,\n { name=\"Safe spot\", dimension=\"minecraft:the_end\", owner=undefined, isShared=false, isLocal=true }\n");
-        put(P_STRUCTURES.name(), "minecraft:village_plains");
+        put(P_AREAS.name(), "[ { name=\"Home\", dimension=\"minecraft:overworld\", owner=\"some_uuid\", isShared=true, isLocal=false } ,\n { name=\"Safe spot\", dimension=\"minecraft:the_end\", owner=undefined, isShared=false, isLocal=true } ]\n");
+        put(P_STRUCTURES.name(), "[ \"minecraft:village_plains\" ]");
 
         put(P_UUID.name(), "some_uuid");
         put(P_GAME_MODE.name(), "survival");
@@ -39,15 +39,20 @@ public class GameStateProviderMock extends GameStateProviderTemplate
         put(P_MAX_HEALTH.name(), "20.0");
         put(P_ELEVATION.name(), "80.0");
         put(P_VEHICLE.name(), "minecraft:minecart");
-        put(P_EFFECTS.name(), "minecraft:absorption, minecraft:regeneration");
+        put(P_EFFECTS.name(), "[ \"minecraft:absorption\", \"minecraft:regeneration\" ]");
 
         put(P_COMBATANT_COUNT.name(), "0");
-        put(P_COMBATANTS.name(), "{ type_id=\"minecraft:skeleton\", health=10.0, max_health=20.0, targeting_player=true, fighting_player=true } ,\n { type_id=\"minecraft:creeper\", health=7.0, max_health=10.0, targeting_player=true, fighting_player=false }");
+        put(P_COMBATANTS.name(), "[ { type_id=\"minecraft:skeleton\", health=10.0, max_health=20.0, targeting_player=true, fighting_player=true } ,\n { type_id=\"minecraft:creeper\", health=7.0, max_health=10.0, targeting_player=true, fighting_player=false } ]\n");
         put(P_BOSS.name(), "entity.minecraft.ender_dragon");
-        put(P_BOSSES.name(), "entity.minecraft.ender_dragon, entity.minecraft.wither");
+        put(P_BOSSES.name(), "[ \"entity.minecraft.ender_dragon\", \"entity.minecraft.wither\" ]");
+        put(P_BOSS_INFOS.name(), "[ { id=\"entity.minecraft.ender_dragon\", health_percent=100.0 } ]");
+
+        put(P_LIVING.name(), "[ { type_id=\"minecraft:bat\", health=6.0, max_health=6.0 }, { type_id=\"minecraft:sheep\", health=8.0, max_health=8.0 } ]");
 
         put(P_FLAGS.name(), "{ \"flag_1\": \"value 1\", \"flag_2\": \"value 2\" }");
     }};
+
+    private MapVal serverPlaylists = MapVal.UNDEFINED;
 
 
     public GameStateProviderMock() {
@@ -71,234 +76,77 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     }
 
 
+    public void setPlaylists(ServerConfigInterpreter serverConfigInterpreter) {
+        ValueMap map = new ValueMap();
+        if (serverConfigInterpreter.hasServerPlaylists()) {
+            try {
+                for (var playlistDTO : serverConfigInterpreter.loadServerPlaylists()) {
+                    var list = playlistDTO.music().stream()
+                            .map(music -> music.toMusic(true))
+                            .toList();
+                    map.put(
+                            new StringVal(playlistDTO.key()),
+                            new PlaylistVal(list)
+                    );
+                }
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+            serverPlaylists = new MapVal(map);
+        }
+        else
+            serverPlaylists = MapVal.UNDEFINED;
+    }
+
+
+    private String get(PropertyTemplate prop) {
+        return propertyValues.get(prop.name()).trim();
+    }
+
+
     // ------------------------------------------------------------------------------------------------
-    // Parsing of values
+    // Validation
     @Override
     public void prepare(@Nullable ArrayList<String> messages) {
         assert messages != null;
-        for (var property : PROPERTIES)
-            if (!isValidPropertyValue(property))
-                messages.add("Value given for property '$" + property.name() + "' is not a valid value of type '" + PrettyPrinter.getTypeString(property.type()) + "'!");
+        for (var property : PROPERTIES) {
+            validateProperty(property).ifPresent(msg ->
+                    messages.add("Invalid value for '$" + property.name() + "': " + msg)
+            );
+        }
     }
 
-    private boolean isValidPropertyValue(PropertyTemplateV1 property) {
+    private Optional<String> validateProperty(PropertyTemplate property) {
         var value = propertyValues.get(property.name());
         if (property.type() instanceof IntT)
-            return isValidIntVal(value);
+            return IntParser.validate(value);
         else if (property.type() instanceof FloatT)
-            return isValidFloatVal(value);
+            return FloatParser.validate(value);
         else if (property.type() instanceof StringT)
-            return true;
+            return Optional.empty();
         else if (property.type() instanceof ListT lst) {
-            if (lst.elementType instanceof StringT)
-                return true;
+            if (value == null || value.isBlank())
+                return Optional.empty();
+            else if (lst.elementType instanceof StringT)
+                return ListParser.validateStringList(value);
             else if (lst.elementType instanceof AreaT)
-                return isValidAreaListVal(value);
+                return ListParser.validateAreaList(value);
             else if (lst.elementType instanceof CombatantT)
-                return isValidCombatantListVal(value);
+                return ListParser.validateCombatantList(value);
+            else if (lst.elementType instanceof BossT)
+                return ListParser.validateBossList(value);
+            else if (lst.elementType instanceof LivingT)
+                return ListParser.validateLivingList(value);
         }
         else if (property.type() instanceof MapT map) {
             if (map.keyType instanceof StringT && map.valueType instanceof StringT)
-                return isValidStringStringMapVal(value);
+                return MapParser.validateFlagMap(value);
+            if (map.keyType instanceof StringT && map.valueType instanceof PlaylistT)
+                return Optional.empty();
         }
 
-        throw new RuntimeException("Unhandled type in check for valid values! Type: '" + PrettyPrinter.getTypeString(property.type()) + "'");
+        throw new RuntimeException("Unhandled type in value validation! Type: '" + PrettyPrinter.getTypeString(property.type()) + "'");
     }
-
-
-    // Int
-    private boolean isValidIntVal(String value) {
-        var trim = value.trim();
-        return trim.matches("^[0-9]+$") || trim.equalsIgnoreCase("undefined");
-    }
-
-    private IntVal getAsIntVal(PropertyTemplateV1 property) {
-        try {
-            return new IntVal(Integer.parseInt(propertyValues.get(property.name()).trim()));
-        } catch (NumberFormatException e) {
-            return IntVal.UNDEFINED;
-        }
-    }
-
-    // Float
-    private boolean isValidFloatVal(String value) {
-        var trim = value.trim();
-        return trim.matches("[0-9]+(\\.[0-9]*)?") || trim.equalsIgnoreCase("undefined");
-    }
-
-    private FloatVal getAsFloatVal(PropertyTemplateV1 property) {
-        try {
-            return new FloatVal(Float.parseFloat(propertyValues.get(property.name()).trim()));
-        } catch (NumberFormatException e) {
-            return FloatVal.UNDEFINED;
-        }
-    }
-
-    // String
-    private StringVal getAsStringVal(PropertyTemplateV1 property) {
-        return new StringVal(propertyValues.get(property.name()));
-    }
-
-    // String List
-    private ListVal getAsStringListVal(PropertyTemplateV1 property) {
-        return ListVal.ofStringList(
-                Arrays.stream(propertyValues.get(property.name()).split(",")).map(String::trim).toList()
-        );
-    }
-
-    // Area List
-    private static final Pattern fieldPattern = Pattern.compile(
-            "([_a-zA-Z][_a-zA-Z0-9]*)\\s*=\\s*((?i)\"[^\\n\\r\"]*\"|[0-9]+|[0-9]+\\.[0-9]+|true|false|undefined)"
-    );
-    private static final Pattern recordPattern = Pattern.compile(
-            "\\{\\s*(" + fieldPattern.pattern() + ")?(?:\\s*,\\s*(" + fieldPattern.pattern() + "))*\\s*}"
-    );
-    private static final Pattern recordListPattern = Pattern.compile(
-            "(" + recordPattern.pattern() + "\\s*(?:\\s*,\\s*" + recordPattern.pattern() + ")*)?"
-    );
-
-    private boolean isValidAreaListVal(String value) {
-        var trim = value.trim();
-        return recordListPattern.matcher(trim).matches()
-                && getAsAreaListVal(trim) != null;
-    }
-
-    private ListVal getAsAreaListVal(PropertyTemplateV1 property) {
-        return getAsAreaListVal(propertyValues.get(property.name()));
-    }
-
-    private ListVal getAsAreaListVal(String value) {
-        var values = new ValueList();
-        var areaMatcher = recordPattern.matcher(value);
-        while (areaMatcher.find()) {
-            var fieldMatcher = fieldPattern.matcher(areaMatcher.group());
-
-            String name = null;
-            String dimension = null;
-            String owner = null;
-            Boolean isShared = null;
-            Boolean isLocal = null;
-
-            while (fieldMatcher.find()) {
-                var nameAndValue = fieldMatcher.group().split("=");
-                switch (nameAndValue[0]) {
-                    case "name" -> name = fieldAsString(nameAndValue[1]);
-                    case "dimension" -> dimension = fieldAsString(nameAndValue[1]);
-                    case "owner" -> owner = fieldAsString(nameAndValue[1]);
-                    case "isShared" -> isShared = fieldAsBoolean(nameAndValue[1]);
-                    case "isLocal" -> isLocal = fieldAsBoolean(nameAndValue[1]);
-                    default -> {
-                        return null;
-                    }
-                }
-            }
-
-            values.add(new AreaVal(new AreaVal.AreaDescriptor(name, dimension, owner, isShared, isLocal)));
-        }
-
-        return new ListVal(values);
-    }
-
-    private String fieldAsString(String val) {
-        if (val.startsWith("\""))
-            return val.substring(1, val.length()-1);
-        return null;
-    }
-
-    private Float fieldAsFloat(String val) {
-        try {
-            return Float.parseFloat(val);
-        } catch (NumberFormatException ignored) {
-            return null;
-        }
-    }
-
-    private Boolean fieldAsBoolean(String val) {
-        return switch (val.toLowerCase()) {
-            case "true" -> true;
-            case "false" -> false;
-            default -> null;
-        };
-    }
-
-    // String String Map
-    private static final Pattern elementPattern = Pattern.compile(
-            "\"([^\"\\n\\r]*)\"\\s*:\\s*\"([^\"\\n\\r]*)\""
-    );
-
-    private static final Pattern strStrMapPattern = Pattern.compile(
-            "(\\{\\s*(" + elementPattern + "\\s*(,\\s*" + elementPattern + "\\s*)*)?})?"
-    );
-
-    private boolean isValidStringStringMapVal(String value) {
-        var trim = value.trim();
-        if (!strStrMapPattern.matcher(trim).matches())
-            return false;
-
-        var elementMatcher = elementPattern.matcher(value);
-        while (elementMatcher.find())
-            if (!FlagManager.validateId(elementMatcher.group(1)) || !FlagManager.validateValue(elementMatcher.group(2)))
-                return false;
-
-        return true;
-    }
-
-    private MapVal getAsStringStringMapVal(PropertyTemplateV1 property) {
-        var map = new ValueMap();
-        var elementMatcher = elementPattern.matcher(propertyValues.get(property.name()));
-        while (elementMatcher.find()) {
-            String key = elementMatcher.group(1);
-            String val = elementMatcher.group(2);
-            map.put(new StringVal(key), new StringVal(val));
-        }
-        return new MapVal(map);
-    }
-
-
-    // Combatant List
-    private boolean isValidCombatantListVal(String value) {
-        var trim = value.trim();
-        return
-                recordListPattern.matcher(trim).matches()
-                        && getAsCombatantListVal(trim) != null;
-    }
-
-    private ListVal getAsCombatantListVal(PropertyTemplateV1 property) {
-        return getAsCombatantListVal(propertyValues.get(property.name()));
-    }
-
-    private ListVal getAsCombatantListVal(String value) {
-        var values = new ValueList();
-        var areaMatcher = recordPattern.matcher(value);
-        while (areaMatcher.find()) {
-            var fieldMatcher = fieldPattern.matcher(areaMatcher.group());
-
-            String type_id = null;
-            Float health = null;
-            Float max_health = null;
-            Boolean isTargetingPlayer = null;
-            boolean isFightingPlayer = false;
-
-            while (fieldMatcher.find()) {
-                var nameAndValue = fieldMatcher.group().split("=");
-                switch (nameAndValue[0]) {
-                    case CombatantT.FIELD_TYPE_ID -> type_id = fieldAsString(nameAndValue[1]);
-                    case CombatantT.FIELD_HEALTH -> health = fieldAsFloat(nameAndValue[1]);
-                    case CombatantT.FIELD_MAX_HEALTH -> max_health = fieldAsFloat(nameAndValue[1]);
-                    case CombatantT.FIELD_TARGETING_PLAYER -> isTargetingPlayer = fieldAsBoolean(nameAndValue[1]);
-                    case CombatantT.FIELD_FIGHTING_PLAYER -> isFightingPlayer = Boolean.TRUE.equals(fieldAsBoolean(nameAndValue[1]));
-                    default -> {
-                        return null;
-                    }
-                }
-            }
-
-            values.add(new CombatantVal(new CombatantVal.CombatantDescriptor(type_id, health, max_health, isTargetingPlayer, isFightingPlayer)));
-        }
-
-        return new ListVal(values);
-    }
-
 
 
     // ------------------------------------------------------------------------------------------------
@@ -497,6 +345,18 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     }
 
 
+    // ------------------------------------------------------------------------------------------------
+    // Global properties
+    @Override
+    public StringVal getMenuID() {
+        return StringParser.parseRaw(get(P_SCREEN_ID));
+    }
+
+    @Override
+    public StringVal getMenuType() {
+        return StringParser.parseRaw(get(P_MENU));  // TODO: Dropdown??????
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // World properties
@@ -511,37 +371,37 @@ public class GameStateProviderMock extends GameStateProviderTemplate
 
     @Override
     public StringVal getDifficulty() {
-        return getAsStringVal(P_DIFFICULTY);
+        return StringParser.parseRaw(get(P_DIFFICULTY));  // TODO: Dropdown??????
     }
 
     @Override
     public StringVal getDimensionId() {
-        return getAsStringVal(P_DIMENSION);
+        return StringParser.parseRaw(get(P_DIMENSION));
     }
 
     @Override
     public StringVal getBiomeId() {
-        return getAsStringVal(P_BIOME);
+        return StringParser.parseRaw(get(P_BIOME));
     }
 
     @Override
     public ListVal getBiomeTagIDs() {
-        return getAsStringListVal(P_BIOME_TAGS);
+        return ListParser.parseStringList(get(P_BIOME_TAGS));
     }
 
     @Override
     public IntVal getTime() {
-        return getAsIntVal(P_TIME);
+        return IntParser.parse(get(P_TIME));
     }
 
     @Override
     public FloatVal getCaveScore() {
-        return getAsFloatVal(P_CAVE_SCORE);
+        return FloatParser.parse(get(P_CAVE_SCORE)); // TODO: Slider??????
     }
 
     @Override
     public FloatVal getSkylightScore() {
-        return getAsFloatVal(P_SKYLIGHT_SCORE);
+        return FloatParser.parse(get(P_SKYLIGHT_SCORE)); // TODO: Slider??????
     }
 
 
@@ -549,12 +409,12 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     // Location properties
     @Override
     public ListVal getIntersectingAreas() {
-        return getAsAreaListVal(P_AREAS);
+        return ListParser.parseAreaList(get(P_AREAS));
     }
 
     @Override
     public ListVal getIntersectingStructures() {
-        return getAsStringListVal(P_STRUCTURES);
+        return ListParser.parseStringList(get(P_STRUCTURES));
     }
 
 
@@ -562,37 +422,37 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     // Player properties
     @Override
     public StringVal getPlayerUUID() {
-        return getAsStringVal(P_UUID);
+        return StringParser.parseRaw(get(P_UUID));
     }
 
     @Override
     public StringVal getGameMode() {
-        return getAsStringVal(P_GAME_MODE);
+        return StringParser.parseRaw(get(P_GAME_MODE)); // TODO: Dropdown??????
     }
 
     @Override
     public FloatVal getPlayerHealth() {
-        return getAsFloatVal(P_HEALTH);
+        return FloatParser.parse(get(P_HEALTH));
     }
 
     @Override
     public FloatVal getPlayerMaxHealth() {
-        return getAsFloatVal(P_MAX_HEALTH);
+        return FloatParser.parse(get(P_MAX_HEALTH));
     }
 
     @Override
     public FloatVal getPlayerElevation() {
-        return getAsFloatVal(P_ELEVATION);
+        return FloatParser.parse(get(P_ELEVATION));
     }
 
     @Override
     public StringVal getVehicleId() {
-        return getAsStringVal(P_VEHICLE);
+        return StringParser.parseRaw(get(P_VEHICLE));
     }
 
     @Override
     public ListVal getActiveEffects() {
-        return getAsStringListVal(P_EFFECTS);
+        return ListParser.parseStringList(get(P_EFFECTS));
     }
 
 
@@ -600,26 +460,50 @@ public class GameStateProviderMock extends GameStateProviderTemplate
     // Combat properties
     @Override
     public IntVal countCombatants() {
-        return getAsIntVal(P_COMBATANT_COUNT);
+        return IntParser.parse(get(P_COMBATANT_COUNT));
     }
 
     @Override
     public ListVal getCombatants() {
-        return getAsCombatantListVal(P_COMBATANTS);
+        return ListParser.parseCombatantList(get(P_COMBATANTS));
     }
 
     @Override
     public StringVal getBoss() {
-        return getAsStringVal(P_BOSS);
+        return StringParser.parseRaw(get(P_BOSS));
     }
 
     @Override
     public ListVal getBosses() {
-        return getAsStringListVal(P_BOSSES);
+        return ListParser.parseStringList(get(P_BOSSES));
     }
 
     @Override
+    public ListVal getBossInfos() {
+        return ListParser.parseBossList(get(P_BOSS_INFOS));
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Entity properties
+    @Override
+    public Value<?> getNearbyLiving() {
+        return ListParser.parseLivingList(get(P_LIVING));
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Flag properties
+    @Override
     public MapVal getFlags() {
-        return getAsStringStringMapVal(P_FLAGS);
+        return MapParser.parseStringStringMap(get(P_FLAGS));
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Server playlists properties
+    @Override
+    public Value<?> getServerPlaylists() {
+        return serverPlaylists;
     }
 }

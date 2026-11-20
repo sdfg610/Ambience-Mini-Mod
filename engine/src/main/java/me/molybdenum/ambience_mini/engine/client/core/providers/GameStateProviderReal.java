@@ -1,14 +1,16 @@
 package me.molybdenum.ambience_mini.engine.client.core.providers;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.caves.BlockReading;
 import me.molybdenum.ambience_mini.engine.client.core.flags.FlagCache;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.ClientAreaManager;
 import me.molybdenum.ambience_mini.engine.client.core.locations.structures.StructureCache;
 import me.molybdenum.ambience_mini.engine.client.core.caves.CaveDetector;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
 import me.molybdenum.ambience_mini.engine.client.core.state.*;
-import me.molybdenum.ambience_mini.engine.shared.Common;
 import me.molybdenum.ambience_mini.engine.shared.compatibility.SableCompat;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.*;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.McVersion;
@@ -32,6 +34,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private final ClientAreaManager _areaManager;
     private final StructureCache _structureCache;
     private final FlagCache _flagCache;
+    private final ServerMusicCache _musicCache;
 
     // Config
     private final int _villageScanHorizontalRadius;
@@ -41,6 +44,9 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     private final int _ranchScanHorizontalRadius;
     private final int _ranchScanVerticalRadius;
     private final int _animalCountThreshold;
+
+    private final int _livingScanHorizontalRadius;
+    private final int _livingScanVerticalRadius;
 
     private final int _fishingTimeout;
     private final int _fishingMoveThreshold;
@@ -59,15 +65,6 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
 
     private double _latestCaveScore = 0;
     private float _latestSkylightPotential = 0;
-
-    private Double latestWardenDistance;
-    private long latestWardenCheckTime;
-
-    private boolean latestVillageValue;
-    private long latestVillageTime;
-
-    private boolean latestRanchValue;
-    private long latestRanchTime;
 
     // Properties used by other properties
     private final Property timeProp;
@@ -93,6 +90,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         _areaManager = core.areaManager;
         _structureCache = core.structureCache;
         _flagCache = core.flagCache;
+        _musicCache = core.musicCache;
 
         var config = core.clientConfig;
         _villageScanHorizontalRadius = config.villageScanHorizontalRadius.get();
@@ -102,6 +100,9 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         _ranchScanHorizontalRadius = config.ranchScanHorizontalRadius.get();
         _ranchScanVerticalRadius = config.ranchScanVerticalRadius.get();
         _animalCountThreshold = config.animalCountThreshold.get();
+
+        _livingScanHorizontalRadius = config.livingScanHorizontalRadius.get();
+        _livingScanVerticalRadius = config.livingScanHorizontalRadius.get();
 
         _fishingTimeout = config.fishingTimeout.get();
         _fishingMoveThreshold = config.fishingMoveThreshold.get();
@@ -225,22 +226,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     public BoolVal inVillage() {
         if (_player.isNull() || _level.isNull())
             return BoolVal.UNDEFINED;
-
-        if (now - latestVillageTime > 1000) {
-            Integer villagers = _level.countNearbyVillagers(
-                    _player.blockPos(),
-                    _villageScanHorizontalRadius,
-                    _villageScanVerticalRadius
-            );
-
-            // Data temporarily unavailable (world/chunk not ready): do not update cache time, retry next cycle.
-            if (villagers == null) return new BoolVal(latestVillageValue);
-
-            latestVillageValue = villagers >= _villagerCountThreshold;
-            latestVillageTime = now;
-        }
-
-        return new BoolVal(latestVillageValue);
+        return new BoolVal(_level.countNearbyVillagers(_player.blockPos(), _villageScanHorizontalRadius, _villageScanVerticalRadius) >= _villagerCountThreshold);
     }
 
 
@@ -248,21 +234,7 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     public BoolVal inRanch() {
         if (_player.isNull() || _level.isNull())
             return BoolVal.UNDEFINED;
-
-        if (now - latestRanchTime > 1000) {
-            Integer animals = _level.countNearbyAnimals(
-                    _player.blockPos(),
-                    _ranchScanHorizontalRadius,
-                    _ranchScanVerticalRadius
-            );
-
-            if (animals == null) return new BoolVal(latestRanchValue);
-
-            latestRanchValue = animals >= _animalCountThreshold;
-            latestRanchTime = now;
-        }
-
-        return new BoolVal(latestRanchValue);
+        return new BoolVal(_level.countNearbyAnimals(_player.blockPos(), _ranchScanHorizontalRadius, _ranchScanVerticalRadius) >= _animalCountThreshold);
     }
 
 
@@ -368,13 +340,8 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
     public BoolVal wardenNearby() {
         if (_player.isNull() || _level.isNull())
             return BoolVal.UNDEFINED;
-
-        if (now - latestWardenCheckTime > 1000) {
-            latestWardenDistance = _level.shortestDistanceToWarden(_player.eyePosition(), Common.WARDEN_SEARCH_RADIUS);
-            latestWardenCheckTime = now;
-        }
-
-        return latestWardenDistance == null ? BoolVal.FALSE : new BoolVal(latestWardenDistance <= Common.WARDEN_SEARCH_RADIUS);
+        var distance = _level.shortestDistanceToWarden(_player.eyePosition(), Constants.WARDEN_SEARCH_RADIUS);
+        return new BoolVal(distance != null && distance <= Constants.WARDEN_SEARCH_RADIUS);
     }
 
     @Override
@@ -582,11 +549,42 @@ public class GameStateProviderReal<TBlockPos, TVec3, TBlockState, TEntity> exten
         return ListVal.ofStringList(_combat.getBosses());
     }
 
+    @Override
+    public ListVal getBossInfos() {
+        return new ListVal(_combat.getBossInfos());
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Entity properties
+    @Override
+    public Value<?> getNearbyLiving() {
+        if (_player.isNull() || _level.isNull())
+            return UndefinedVal.INSTANCE;
+
+        return new ListVal(
+                _level.getNearbyLiving(_player.eyeBlockPos(), _livingScanHorizontalRadius, _livingScanVerticalRadius)
+                        .map(entity -> new LivingVal(
+                                _combat.getEntityResourceLocation(entity),
+                                _combat.getEntityHealth(entity),
+                                _combat.getEntityMaxHealth(entity)
+                        ))
+        );
+    }
+
 
     // ------------------------------------------------------------------------------------------------
     // Flag properties
     @Override
     public MapVal getFlags() {
         return new MapVal(_flagCache.getFlags());
+    }
+
+
+    // ------------------------------------------------------------------------------------------------
+    // Server playlists properties
+    @Override
+    public Value<?> getServerPlaylists() {
+        return _musicCache.getServerPlaylists();
     }
 }

@@ -1,15 +1,13 @@
 {
   "mod_name": "Ambience Mini",
 
-  "key.reload": "Music: Reload player",
-  "key.play_pause": "Music: Pause/resume",
-  "key.next_music": "Music: Change soundtrack",
+  "key.open_am_menu": "Open AM Menu",
   "key.print_all": "Debug: Print all readings",
   "key.toggle_areas": "Area: Toggle view",
   "key.area_confirm": "Area: Confirm",
   "key.area_cancel": "Area: Cancel",
 
-  "message.player_crashed": "Music player crashed! Press '%s' in-game to reload Ambience Mini. See logs for details.",
+  "message.player_crashed": "Music player crashed! You can reload it in the music player menu (open by pressing '%s').",
   "message.player_auto_restarting": "Music player crashed! Auto-reloading once...",
   "message.reload_description": "Trying to reload music player...",
   "message.next_music_description": "Selecting new music...",
@@ -20,7 +18,7 @@
   "message.partial_server_support": "Detected partial server support for Ambience Mini! Some server-dependent features might be enabled.",
   "message.no_server_support": "No server support for Ambience Mini detected! All server-dependent features are disabled.",
 
-  "message.basic_controls": "Ambience Mini basic controls: reload '%s', pause/play '%s', change music '%s', print events/properties to logs '%s'. You can disable this message in the mod config.",
+  "message.basic_controls": "Ambience Mini basic controls: open AM menu '%s', print events/properties to logs '%s'. You can disable this message in the mod config.",
 
   "message.pausing_music": "Pausing music...",
   "message.resuming_music": "Resuming music...",
@@ -35,6 +33,8 @@
   "message.area_look_at_destination": "Please look at the point you would like to extend or constrict the area to.",
   "message.area_cannot_edit": "You cannot edit areas owned by other players.",
   "message.area_name_requirements": "The area name must contain non-blank symbols and be no more than %s characters.",
+  "message.areas_disabled": "Server-located areas are disabled on this server.",
+  "message.no_such_area_id": "There is no area with the id '%s'.",
 
   "message.flag_already_exists": "There is already a flag with id '%s'.",
   "message.flag_not_exists": "There is no such flag with id '%s'.",
@@ -45,10 +45,22 @@
   "message.flag_value_invalid": "Invalid flag value '%s'. Flag values must be at most %s characters.",
   "message.flag_name_requirements": "The flag id must contain non-blank symbols, may not contain whitespaces, and must be no more than %s characters.",
   "message.flag_value_requirements": "The area value must contain non-blank symbols and be no more than %s characters.",
+  "message.flags_disabled": "Flags are disabled on this server.",
 
-  "message.unhandled_message": "Received an unknown type of message from server! This should not happen, see server logs.",
-  "message.unhandled_client_message": "The server could not handle a message from the client! This should not happen, see server logs.",
-  "message.message_caused_server_error": "A message from this client caused an error on the server! This should not happen, see server logs.",
+  "message.server_playlist_timeout": "[Ambience Mini] Fetching of server playlists timed out. Server playlist loading aborted.",
+  "message.server_playlist_fetch_error": "[Ambience Mini] An error happened while fetching playlist data from the server.",
+  "message.server_playlists_skipped": "[Ambience Mini] Server playlists will not be loaded due to size constraints (see logs).",
+  "message.server_music_skipped": "[Ambience Mini] Some server-located music will not be loaded due to size constraints (see logs).",
+  "message.server_music_read_fail": "[Ambience Mini] The server could not read the music file '%s'. Cannot load music.",
+  "message.server_music_timeout": "[Ambience Mini] Fetching of server-music timed out. Server-music loading aborted.",
+  "message.music_cache_out_of_memory": "[Ambience Mini] The server-sided music cache ran out of memory. Cannot serve requested music.",
+  "message.server_music_cache_out_of_memory": "[Ambience Mini] The client-sided server-music cache ran out of memory.",
+  "message.server_music_fetch_error": "[Ambience Mini] An error happened while fetching music data from the server. See logs for details if nothing else shows.",
+
+  "message.unhandled_message": "[Ambience Mini] Received an unknown type of message from server! This should not happen, see server logs.",
+  "message.unhandled_client_message": "[Ambience Mini] The server could not handle a message from the client! This should not happen, see server logs.",
+  "message.message_caused_server_error": "[Ambience Mini] A message from this client caused an error on the server! This should not happen, see server logs.",
+  "message.message.message_timed_out": "[Ambience Mini] A message timed out. Is the server not responding?",
 
   "string.area_name": "Area name",
   "string.ownership_and_sharing": "Ownership and sharing",
@@ -60,6 +72,19 @@
   "string.cancel": "Cancel",
   "string.edit_bounds": "Edit Bounds",
   "string.delete": "Delete",
+  "string.confirm_delete": "Confirm Delete?",
+  "string.reload": "Reload",
+  "string.none": "None",
+  "string.play": "Play",
+  "string.pause": "Pause",
+  "string.pick_random": "Pick Random",
+  "string.by_x": "By: %s",
+  "string.loading": "... Loading info ...",
+  "string.time_x": "Time: %s",
+  "string.clear_cache": "Clear Music Cache",
+  "string.memory_use": "Memory Usage: %s / %s",
+  "string.size_x": "Size: %s",
+  "string.presets": "Presets",
 
   "ambience_mini.configuration.AmbienceMini": "Ambience Mini",
   "ambience_mini.configuration.Notify_Server_Support": "Notify server support",
@@ -79,6 +104,8 @@
   "ambience_mini.configuration.Ranch_Scan_Horizontal_Radius": "Ranch scan: horizontal radius",
   "ambience_mini.configuration.Ranch_Scan_Vertical_Radius": "Ranch scan: vertical radius",
   "ambience_mini.configuration.Animal_Count_Threshold": "Animal count threshold",
+  "ambience_mini.configuration.Living_Scan_Horizontal_Radius": "Living scan: horizontal radius",
+  "ambience_mini.configuration.Living_Scan_Vertical_Radius": "Living scan: vertical radius",
   "ambience_mini.configuration.Fishing_Timeout": "Fishing timeout",
   "ambience_mini.configuration.Fishing_Move_Threshold": "Fishing move threshold",
   "ambience_mini.configuration.Cave_Score_Radius": "Cave score radius",
@@ -86,5 +113,10 @@
   "ambience_mini.configuration.Y_Axis_Granularity": "Y-axis granularity",
   "ambience_mini.configuration.X_Axis_Granularity": "X-axis granularity",
   "ambience_mini.configuration.Combat_Grace_Period": "Combat grace period",
-  "ambience_mini.configuration.Combatant_Timeout": "Combatant timeout"
+  "ambience_mini.configuration.Combatant_Timeout": "Combatant timeout",
+  "ambience_mini.configuration.Max_Music_Cache_Memory": "Max music cache size",
+  "ambience_mini.configuration.Max_Server_Playlists_Size": "Max server playlists size",
+  "ambience_mini.configuration.Playlists_Fetch_Timeout": "Playlists fetch timeout",
+  "ambience_mini.configuration.Max_Server_Music_Size": "Max server music size",
+  "ambience_mini.configuration.Music_Fetch_Timeout": "Music fetch timeout"
 }

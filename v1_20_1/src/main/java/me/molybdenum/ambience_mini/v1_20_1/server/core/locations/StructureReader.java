@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.v1_20_1.server.core.locations;
 
 import me.molybdenum.ambience_mini.engine.server.core.locations.BaseStructureReader;
+import me.molybdenum.ambience_mini.engine.server.core.setup.BaseServerConfig;
 import me.molybdenum.ambience_mini.engine.shared.core.structures.AmStructure;
 import me.molybdenum.ambience_mini.engine.shared.utils.Pair;
 import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
@@ -25,7 +26,8 @@ public class StructureReader extends BaseStructureReader<ServerPlayer, Level, St
     private final Registry<Structure> registry;
 
 
-    public StructureReader(MinecraftServer server) {
+    public StructureReader(MinecraftServer server, BaseServerConfig config) {
+        super(config);
         this.registry = server.registryAccess().registryOrThrow(Registries.STRUCTURE);
     }
 

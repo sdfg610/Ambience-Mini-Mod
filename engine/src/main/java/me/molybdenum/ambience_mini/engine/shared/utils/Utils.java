@@ -2,9 +2,13 @@ package me.molybdenum.ambience_mini.engine.shared.utils;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.*;
+import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static me.molybdenum.ambience_mini.engine.shared.Constants.BYTES_IN_MEGABYTE;
 
 public class Utils {
     public static String padToLength(String str, int length) {
@@ -86,5 +90,49 @@ public class Utils {
         try {
             task.run();
         } catch (Exception ignored) { }
+    }
+
+
+    public static void printMessages(Logger logger, List<Message> messages) {
+        for (var error : messages) {
+            if (error instanceof SynError err)
+                logger.error("Syntactic error [line {}, column {}]: {}", err.line(), err.column(), err.message());
+            else if (error instanceof SemError err)
+                logger.error("Semantic error [line {}]: {}", err.line(), err.message());
+            else if (error instanceof Warning wrn)
+                logger.warn("Warning [line {}]: {}", wrn.line(), wrn.message());
+            else if (error instanceof ExcError err)
+                logger.error("An exception occurred while loading the music configuration:\n", err.exception());
+            else
+                throw new RuntimeException("Could not print error of type: " + error.getClass().getName());
+        }
+    }
+
+
+    public static int clamp(int value, int min, int max) {
+        if (value < min) {
+            return min;
+        } else {
+            return Math.min(value, max);
+        }
+    }
+
+    public static int floor(double value) {
+        int i = (int)value;
+        return value < (double)i ? i - 1 : i;
+    }
+
+
+    public static String bytesToMB(int bytes) {
+        return String.format("%.2f MB", (double)bytes / BYTES_IN_MEGABYTE);
+    }
+
+
+    public static Long tryParseLong(String str) {
+        try {
+            return str == null ? null : Long.parseLong(str);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 }

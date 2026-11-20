@@ -1,10 +1,10 @@
 package me.molybdenum.ambience_mini.engine.client.core.state;
 
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.CombatantVal;
-import me.molybdenum.ambience_mini.engine.client.configuration.interpreter.values.ListVal;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.BossVal;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.CombatantVal;
+import me.molybdenum.ambience_mini.engine.shared.configuration.interpreter.values.ListVal;
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
 import me.molybdenum.ambience_mini.engine.client.core.setup.ServerSetup;
-import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import me.molybdenum.ambience_mini.engine.shared.utils.versions.AmVersion;
 
 import java.util.ArrayList;
@@ -48,11 +48,13 @@ public abstract class BaseCombatState<TEntity, TVec3>
     public abstract String getEntityResourceLocation(TEntity entity);
     public abstract Float getEntityHealth(TEntity entity);
     public abstract Float getEntityMaxHealth(TEntity entity);
+    public abstract boolean isEntityNeutral(TEntity entity);
 
     public abstract boolean isCombatableEntity(TEntity entity, TEntity player);
 
     public abstract boolean inBossFight();
     public abstract List<String> getBosses();
+    public abstract List<BossVal> getBossInfos();
 
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -99,7 +101,7 @@ public abstract class BaseCombatState<TEntity, TVec3>
         handleInteraction(_levelState.getEntityById(id));
     }
 
-    public void handleInteraction(TEntity entity) {
+    private void handleInteraction(TEntity entity) {
         var combatant = combatants.computeIfAbsent(getEntityId(entity), ignored ->
                 new Combatant(entity)
         );
@@ -130,32 +132,37 @@ public abstract class BaseCombatState<TEntity, TVec3>
     }
 
 
-    public void clearCombatants() {
+    public void clear() {
         combatants.clear();
     }
 
     public void handlePlayerDeath(TEntity player) {
         if (_playerState.isCachedPlayer(player))
-            clearCombatants();
+            clear();
     }
 
 
-    class Combatant {
+    private class Combatant {
         private final TEntity entity;
+        private final String resourceLocation;
+        private final Boolean isNeutral;
         private Boolean isTargetingPlayer = null;
         public long latestInteraction = 0;
 
         public Combatant(TEntity entity) {
             this.entity = entity;
+            this.resourceLocation = entity == null ? null : getEntityResourceLocation(entity);
+            this.isNeutral = entity == null ? null : isEntityNeutral(entity);
         }
 
         public CombatantVal asCombatantVal(long now) {
             return new CombatantVal(
-                    entity == null ? null : getEntityResourceLocation(entity),
+                    resourceLocation,
                     entity == null ? null : getEntityHealth(entity),
                     entity == null ? null : getEntityMaxHealth(entity),
                     isTargetingPlayer,
-                    isFightingPlayer(now)
+                    isFightingPlayer(now),
+                    isNeutral
             );
         }
 

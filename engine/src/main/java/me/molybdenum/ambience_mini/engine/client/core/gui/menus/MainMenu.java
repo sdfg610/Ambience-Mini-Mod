@@ -1,0 +1,336 @@
+package me.molybdenum.ambience_mini.engine.client.core.gui.menus;
+
+import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.gui.base.AmMenu;
+import me.molybdenum.ambience_mini.engine.client.core.gui.base.McScreenBuilder;
+import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.general.*;
+import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.main_menu.CacheDisplay;
+import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.main_menu.MusicBar;
+import me.molybdenum.ambience_mini.engine.client.core.gui.base.widgets.main_menu.MusicButton;
+import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
+import me.molybdenum.ambience_mini.engine.client.core.music.MusicEngine;
+import me.molybdenum.ambience_mini.engine.client.core.music.ServerMusicCache;
+import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
+import me.molybdenum.ambience_mini.engine.client.core.music.player.PlayState;
+import me.molybdenum.ambience_mini.engine.client.core.render.Color;
+import me.molybdenum.ambience_mini.engine.client.core.render.drawer.BaseDrawer;
+import me.molybdenum.ambience_mini.engine.shared.AmLang;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
+
+import java.util.List;
+import java.util.function.Function;
+
+public class MainMenu<TPoseStack> extends AmMenu<TPoseStack>
+{
+    private static final int MENU_WIDTH = 380;
+    private static final int MENU_HEIGHT = 220;
+
+    private static final int INNER_WIDTH = MENU_WIDTH-MENU_INNER_MARGIN*2;
+
+    @SuppressWarnings("rawtypes")
+    private final BaseClientCore core;
+    private final BaseNotification<?> notification;
+
+    private final TabPanel tabPanel;
+
+
+    // Player tab
+    private final String strPlay, strPause;
+    private final Label lblNotRunning;
+    private final Panel playerPanel;
+    private final Label lblMusic, lblAuthor;
+    private final MusicBar musicBar;
+    private final Button btnPlayPause;
+    private final ScrollPanel scrPlaylist, scrPresets;
+
+    private MusicEngine musicEngine;
+    private boolean wasPaused;
+
+    private PlayState currentPlaystate;
+    private List<Music> currentPlaylist;
+    private List<String> currentPresets;
+
+
+    // Server music tab
+    private final Label lblMemUsage;
+    private final ScrollPanel scrCacheEntries;
+
+    private long latestCacheUpdate;
+
+    private final ServerMusicCache musicCache;
+    private final String maxMemUsageStr;
+
+
+
+    public MainMenu(
+            BaseDrawer<TPoseStack> drawer,
+            McScreenBuilder<TPoseStack> builder,
+            @SuppressWarnings("rawtypes") BaseClientCore core
+    ) {
+        super(drawer, "AM menu", builder);
+
+        this.core = core;
+        this.notification = core.notification;
+
+        tabPanel = addWidget(new TabPanel(MENU_WIDTH, MENU_HEIGHT));
+        tabPanel.backgroundColor = Color.BLACK_128;
+
+        var tabPlayer = tabPanel.createTab("Player");
+        //var tabAreas = tabPanel.createTab("Areas");   // TODO: Area and flags tab. 2.8.1+
+        //var tabFlags = tabPanel.createTab("Flags");
+        var tabCache = tabPanel.createTab("Server music");
+
+        // Player tab
+        Button btnReload = tabPlayer.addWidget(new Button(core.notification.translateFromKey(AmLang.STRING_RELOAD), this::onReloadClicked));
+        btnReload.autoSize(5, 3);
+        btnReload.setY(MENU_INNER_MARGIN/2);
+        btnReload.setX(tabPanel.getWidth()-btnReload.getWidth() - MENU_INNER_MARGIN/2);
+
+        lblNotRunning = tabPlayer.addWidget(new Label(0, 0, 0, 0, notification.translateFromKey(AmLang.MSG_NOT_RUNNING)));
+        lblNotRunning.autoSize();
+        lblNotRunning.autoCenter(MENU_WIDTH, tabPanel.getUsableHeight());
+        lblNotRunning.setVisible(false);
+
+        playerPanel = tabPlayer.addWidget(new Panel(0, 0, MENU_WIDTH, tabPanel.getUsableHeight()));
+        playerPanel.backgroundColor = Color.TRANSPARENT;
+        playerPanel.borderThickness = 0;
+
+        lblMusic = playerPanel.addWidget(new Label(MENU_INNER_MARGIN,MENU_INNER_MARGIN, INNER_WIDTH-btnReload.getWidth(), tools.getLineHeight()+1, "N/A"));
+        lblAuthor = playerPanel.addWidget(new Label(MENU_INNER_MARGIN, lblMusic.bottom(), INNER_WIDTH-btnReload.getWidth(),tools.getLineHeight()+1, "By: N/A"));
+        musicBar = playerPanel.addWidget(new MusicBar(MENU_INNER_MARGIN, lblAuthor.bottom() + BASE_SEPARATION, INNER_WIDTH, tools.getLineHeight()+2));
+
+        strPlay = notification.translateFromKey(AmLang.STRING_PLAY);
+        strPause = notification.translateFromKey(AmLang.STRING_PAUSE);
+        Panel buttonPanel = playerPanel.addWidget(new Panel(0, musicBar.bottom()+BASE_SEPARATION, 0,0));
+        buttonPanel.borderThickness = 0;
+        btnPlayPause = buttonPanel.addWidget(new Button(strPause, this::onPlayPauseClicked));
+        btnPlayPause.autoSize(10, 4);
+        Button btnPickRandom = buttonPanel.addWidget(new Button(notification.translateFromKey(AmLang.STRING_PICK_RANDOM), this::onPickRandomClicked));
+        btnPickRandom.autoSize(10, 4);
+        btnPickRandom.setX(btnPlayPause.right()+BASE_SEPARATION);
+        buttonPanel.autoSize();
+        buttonPanel.setX((MENU_WIDTH-buttonPanel.getWidth())/2);
+
+        var playlistY = buttonPanel.bottom() + BASE_SEPARATION;
+        var playlistWidth = (MENU_WIDTH*2)/3;
+        scrPlaylist = playerPanel.addWidget(new ScrollPanel(0, playlistY, playlistWidth, tabPanel.getUsableHeight()-playlistY));
+
+        scrPresets = playerPanel.addWidget(new ScrollPanel(playlistWidth-1, playlistY, MENU_WIDTH - playlistWidth+1, tabPanel.getUsableHeight()-playlistY));
+
+        // Areas tab
+
+        // Flags tab
+
+        // Server music cache tab
+        musicCache = core.musicCache;
+        maxMemUsageStr = Utils.bytesToMB(musicCache.getMaxMemoryUsage());
+
+        Button btnClearCache = tabCache.addWidget(new Button(core.notification.translateFromKey(AmLang.STRING_CLEAR_CACHE), this::onClearClicked));
+        btnClearCache.autoSize(5, 3);
+        btnClearCache.setY(MENU_INNER_MARGIN/2);
+        btnClearCache.setX(tabPanel.getWidth()-btnClearCache.getWidth() - MENU_INNER_MARGIN/2);
+
+        var scrollPanelY = btnClearCache.bottom() + MENU_INNER_MARGIN/2;
+        scrCacheEntries = tabCache.addWidget(new ScrollPanel(
+                0, scrollPanelY,
+                MENU_WIDTH, tabPanel.getUsableHeight()-scrollPanelY
+        ));
+
+        var labelH = tools.getLineHeight() + 2;
+        var spacing = (scrollPanelY-labelH)/2+1;
+        lblMemUsage = tabCache.addWidget(new Label(
+                spacing, spacing,
+                INNER_WIDTH, labelH,
+                ""
+        ));
+    }
+
+
+
+    @Override
+    public void onInit() {
+        // Positioning of the menu
+        tabPanel.setX((screen.screenWidth() - tabPanel.getWidth())/2);
+        tabPanel.setY((screen.screenHeight() - tabPanel.getHeight() - tabPanel.getMaxIdleTabButtonHeight())/2);
+
+        tick();
+    }
+
+    @Override
+    public void tick() {
+        tickPlayerTab();
+        tickMusicCacheTab();
+    }
+
+    private void tickPlayerTab() {
+        musicEngine = core.getMusicEngine();
+        var monitorRunning = musicEngine != null && musicEngine.isRunning();
+        playerPanel.setVisible(monitorRunning);
+        lblNotRunning.setVisible(!monitorRunning);
+        if (!monitorRunning) {
+            musicEngine = null;
+            return;
+        }
+
+        boolean isPaused = musicEngine.isPaused();
+        if (wasPaused != isPaused) {
+            btnPlayPause.setText(isPaused ? strPlay : strPause);
+            wasPaused = isPaused;
+        }
+
+        var presets = musicEngine.getPresetNames();
+        if (presets != currentPresets) {
+            currentPresets = presets;
+
+            if (currentPresets.size() <= 1) {
+                scrPresets.setVisible(false);
+                scrPlaylist.setWidth(MENU_WIDTH);
+            } else {
+                scrPresets.setVisible(true);
+                scrPlaylist.setWidth((MENU_WIDTH*2)/3);
+            }
+            refreshPlaylist();
+
+            scrPresets.clearWidgets();
+
+            var x = MENU_INNER_MARGIN/2;
+            var y = MENU_INNER_MARGIN/2;
+            var width = scrPresets.getUsableWidth() - MENU_INNER_MARGIN;
+            var group = RadioButton.newGroup(this::onPresetChanged);
+            y += scrPresets.addWidget(new Label(x, y, AmLang.STRING_PRESETS.translate() + ':')).getHeight() + BASE_SEPARATION;
+            for (var preset : currentPresets) {
+                var btn = new RadioButton(x, y, preset, group);
+                btn.setWidth(width);
+                y += scrPresets.addWidget(btn).getHeight() + BASE_SEPARATION;
+                btn.setSelected(preset.equals(musicEngine.getSelectedPreset()));
+            }
+
+            scrPresets.refreshScroll();
+        }
+
+        var playlist = musicEngine.getSelectedPlaylist();
+        if (playlist != currentPlaylist) {
+            currentPlaylist = playlist;
+            refreshPlaylist();
+        }
+
+        var playState = musicEngine.getPlayState();
+        if (playState != null && currentPlaystate != playState) {
+            currentPlaystate = playState;
+            lblMusic.setText(playState.getTitleOrPath());
+            String author = playState.getAuthorOrNull();
+            lblAuthor.setText(notification.translateFromKeyAndArgs(AmLang.STRING_BY_X, author == null ? "N/A" : author));
+
+            musicBar.reset();
+            musicBar.setSampleRate(playState.getSamplesPerSecond());
+
+            if (playState.isPlaying())
+                musicBar.setLoopPoints(playState.getLoopStart(), playState.getLoopEnd());
+        }
+        else if (playState == null && currentPlaystate != null) {
+            currentPlaystate = null;
+            String none = notification.translateFromKey(AmLang.STRING_NONE);
+            lblMusic.setText(none);
+            lblAuthor.setText(notification.translateFromKeyAndArgs(AmLang.STRING_BY_X, none));
+
+            musicBar.reset();
+        }
+
+        if (playState != null) {
+            musicBar.setCurrentTime(playState.getSamplePosition());
+
+            if (musicBar.getTotalTimeSeconds() < 0)
+                musicBar.setTotalTime(playState.getTotalSamples());
+        }
+    }
+
+    private void refreshPlaylist() {
+        scrPlaylist.clearWidgets();
+
+        if (currentPlaylist != null) {
+            var x = MENU_INNER_MARGIN/2;
+            var y = MENU_INNER_MARGIN/2;
+            var width = scrPlaylist.getUsableWidth() - MENU_INNER_MARGIN;
+            for (var music : currentPlaylist)
+                y += scrPlaylist.addWidget(new MusicButton(x, y, width, musicEngine.makeInstance(music), this::onMusicButtonClicked)).getHeight() + BASE_SEPARATION;
+        }
+
+        scrPlaylist.refreshScroll();
+    }
+
+    private void tickMusicCacheTab() {
+        lblMemUsage.setText(AmLang.STRING_MEMORY_USE.translate(Utils.bytesToMB(musicCache.getMemoryUsage()), maxMemUsageStr));
+
+        var newCacheTime = musicCache.getLatestCacheUpdate();
+        if (newCacheTime > latestCacheUpdate) {
+            latestCacheUpdate = newCacheTime;
+
+            scrCacheEntries.clearWidgets();
+            var x = MENU_INNER_MARGIN/2;
+            var y = MENU_INNER_MARGIN/2;
+            var width = scrCacheEntries.getUsableWidth() - MENU_INNER_MARGIN;
+            for (var path : musicCache.getCachedMusicPaths())
+                y += scrCacheEntries.addWidget(new CacheDisplay(
+                        x, y, width, musicEngine.makeInstance(new Music(path, true))
+                )).getHeight() + BASE_SEPARATION;
+            scrCacheEntries.refreshScroll();
+        }
+    }
+
+    @Override
+    public void onClose() {
+
+    }
+
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Button actions
+
+    // Player tab
+    private void onReloadClicked() {
+        core.notification.showToast(AmLang.MSG_RELOAD);
+        MusicEngine.enableAutoRestart();
+        core.tryReloadMusicEngine();
+    }
+
+    private void onPlayPauseClicked() {
+        if (musicEngine != null) {
+            if (musicEngine.isPaused())
+                musicEngine.resume();
+            else
+                musicEngine.pause();
+        }
+    }
+
+    private void onPickRandomClicked() {
+        if (musicEngine != null) {
+            core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
+            musicEngine.forceSelectNewMusic();
+            musicEngine.resume();
+        }
+    }
+
+    private void onMusicButtonClicked(MusicInstance inst) {
+        if (musicEngine != null) {
+            core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
+            musicEngine.forceSelectNewMusic(inst.music);
+            musicEngine.resume();
+        }
+    }
+
+    private void onPresetChanged(RadioButton btn) {
+        musicEngine.setSelectedPreset(btn.getText());
+    }
+
+    // Server music tab
+    private void onClearClicked() {
+        core.notification.showToast(AmLang.MSG_RELOAD);
+        MusicEngine.enableAutoRestart();
+        var monitor = core.getMusicEngine();
+        if (monitor != null)
+            monitor.stop();
+        core.musicCache.clearOnlyCache();
+        core.tryReloadMusicEngine();
+    }
+}

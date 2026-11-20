@@ -1,5 +1,6 @@
 package me.molybdenum.ambience_mini.engine.server.core.locations;
 
+import me.molybdenum.ambience_mini.engine.server.core.setup.BaseServerConfig;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkReferencesMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.structures.PutChunkStructuresMessage;
 import me.molybdenum.ambience_mini.engine.shared.core.structures.AmStructure;
@@ -9,10 +10,19 @@ import me.molybdenum.ambience_mini.engine.shared.utils.vectors.Vector2i;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public abstract class BaseStructureReader<TServerPlayer, TLevel, TStructureStart>
 {
+    protected final boolean isDisabled;
+
+
+    public BaseStructureReader(BaseServerConfig config) {
+        isDisabled = !config.enableStructures.get();
+    }
+
+
     // -----------------------------------------------------------------------------------------------------------------
     // Abstract API
     protected abstract Pair<TLevel, Vector2i> getLevelAndChunkPos(TServerPlayer player);
@@ -33,6 +43,9 @@ public abstract class BaseStructureReader<TServerPlayer, TLevel, TStructureStart
         var level = pair.left();
         var serverChunkPos = pair.right();
 
+        if (isDisabled)
+            return new PutChunkReferencesMessage(getDimensionId(level), Map.of());
+
         HashMap<Vector2i, List<Vector2i>> chunksToReferences = new HashMap<>();
         for (var chunkPos : chunksToFetch)
             if (chunkPos.distanceTo(serverChunkPos) <= 10) // Ensure one cannot just probe the entire world.
@@ -45,6 +58,9 @@ public abstract class BaseStructureReader<TServerPlayer, TLevel, TStructureStart
         var pair = getLevelAndChunkPos(player);
         var level = pair.left();
         var serverChunkPos = pair.right();
+
+        if (isDisabled)
+            return new PutChunkStructuresMessage(getDimensionId(level), Map.of());
 
         HashMap<Vector2i, List<AmStructure>> chunksToStructures = new HashMap<>();
         for (var chunkPos : chunksToFetch)

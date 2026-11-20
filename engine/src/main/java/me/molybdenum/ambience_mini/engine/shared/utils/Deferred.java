@@ -4,6 +4,15 @@ public class Deferred<T> {
     private boolean isSet = false;
     private T value;
 
+
+    public Deferred(T value) {
+        this.isSet = true;
+        this.value = value;
+    }
+
+    public Deferred() { }
+
+
     public T get() {
         if (isSet)
             return value;

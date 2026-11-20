@@ -1,75 +1,128 @@
 package me.molybdenum.ambience_mini.engine.server.core;
 
+import me.molybdenum.ambience_mini.engine.client.core.music.player.MusicInstance;
 import me.molybdenum.ambience_mini.engine.server.core.flags.FlagManager;
 import me.molybdenum.ambience_mini.engine.server.core.locations.BaseStructureReader;
 import me.molybdenum.ambience_mini.engine.server.core.locations.ServerAreaManager;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerConfigInterpreter;
+import me.molybdenum.ambience_mini.engine.server.core.music.ServerMusicManager;
 import me.molybdenum.ambience_mini.engine.server.core.networking.BaseServerNetworkManager;
-import me.molybdenum.ambience_mini.engine.server.core.util.ServerNameCache;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.server.core.misc.ServerNameCache;
+import me.molybdenum.ambience_mini.engine.server.core.setup.BaseServerConfig;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
+import me.molybdenum.ambience_mini.engine.shared.configuration.messages.Message;
+import me.molybdenum.ambience_mini.engine.shared.core.music.Music;
+import me.molybdenum.ambience_mini.engine.shared.core.music.info.MusicInfoCache;
+import me.molybdenum.ambience_mini.engine.shared.jobs.JobCenter;
+import me.molybdenum.ambience_mini.engine.shared.core.music.music_provider.RealMusicProvider;
+import me.molybdenum.ambience_mini.engine.shared.utils.Utils;
 import org.slf4j.Logger;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 public abstract class BaseServerCore<
         TServerPlayer,
+        TServerConfig extends BaseServerConfig,
         TNetworkManager extends BaseServerNetworkManager<TServerPlayer>,
-        TStructureReader extends BaseStructureReader<TServerPlayer, ?, ?>,
-        TAreaManager extends ServerAreaManager
+        TStructureReader extends BaseStructureReader<TServerPlayer, ?, ?>
 > {
+    public static final RealMusicProvider localOnlyMusicProvider = new RealMusicProvider(Constants.musicDirPath.toString(), null);
+
     // Utils
     public final Logger logger;
+    private final JobCenter jobCenter = JobCenter.singleThreaded();
+
     public final ServerNameCache nameCache;
 
+    // Setup
+    public final TServerConfig serverConfig;
+
+    // Networking
+    public final TNetworkManager networkManager;
+
     // Locations
-    public final TAreaManager areaManager;
+    public final ServerAreaManager areaManager;
     public final TStructureReader structureReader;
 
     // Flags
     public final FlagManager flagManager;
 
-    // Networking
-    public final TNetworkManager networkManager;
-
-
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?> saveAreasFuture;
+    // Music
+    public final ServerMusicManager musicManager;
+    public final MusicInfoCache musicInfoCache;
 
 
     public BaseServerCore(
             Logger logger,
             ServerNameCache nameCache,
-            TAreaManager areaManager,
+            TServerConfig serverConfig,
+            ServerAreaManager areaManager,
             TStructureReader structureReader,
             FlagManager flagManager,
+            ServerMusicManager musicManager,
             TNetworkManager networkManager
     ) {
         this.logger = logger;
 
         this.nameCache = nameCache;
+        this.serverConfig = serverConfig;
         this.areaManager = areaManager;
         this.structureReader = structureReader;
         this.flagManager = flagManager;
+        this.musicManager = musicManager;
         this.networkManager = networkManager;
+
+        this.musicInfoCache = new MusicInfoCache(this);
     }
 
+    // NOTE: Init must be separate from initializer since extenders of ServerCore have additional initialization logic
+    // in their own constructors and which some components depend on.
     public void init() {
         this.nameCache.init(this);
         this.areaManager.init(this);
         this.networkManager.init(this);
         this.flagManager.init(this);
+        this.musicManager.init(this);
+        // Do not init "musicInfoCache" here. It is shared, but only initialized from client (only client depends on initialization).
+
+        loadMusicConfig();
+    }
+
+    private void loadMusicConfig() {
+        File configFile = Constants.musicConfigPath.toFile();
+        if (configFile.exists())
+            try (InputStream configStream = new FileInputStream(configFile)) {
+                ServerConfigInterpreter.tryOf(configStream, localOnlyMusicProvider, isDedicatedServer())
+                        .match(this::loadServerPlaylists, this::printErrors);
+            } catch (IOException e) {
+                logger.error("Could not read music_config.txt", e);
+            }
+    }
+
+    private void loadServerPlaylists(ServerConfigInterpreter serverConfig, List<Message> warnings) {
+        Utils.printMessages(logger, warnings);
+
+        this.musicManager.loadServerPlaylists(serverConfig, localOnlyMusicProvider);
+
+        logger.info("Successfully loaded server-sided Ambience Mini configuration");
+    }
+
+    private void printErrors(List<Message> messages) {
+        logger.warn("Ambience Mini failed to load server-sided Ambience Mini configuration!");
+        Utils.printMessages(logger, messages);
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
     // Concrete API
     public Path getAmStoragePath() {
-        Path storagePath = getWorldRootPath().resolve(Common.AM_STORAGE_DIRECTORY);
+        Path storagePath = getWorldRootPath().resolve(Constants.AM_STORAGE_DIRECTORY);
         if (!storagePath.toFile().exists()) {
             try {
                 Files.createDirectory(storagePath);
@@ -81,30 +134,40 @@ public abstract class BaseServerCore<
     }
 
 
-    public void onStarted() {
+    public void onStarting() {
         this.nameCache.loadCache();
         this.areaManager.loadAllAreas();
         this.flagManager.loadFlags();
 
-        saveAreasFuture = executor.scheduleAtFixedRate(
-                flagManager::saveFlags,
-                0,
-                60,
-                TimeUnit.SECONDS
-        );
+        this.flagManager.registerPeriodicTasks(jobCenter);
+        this.musicManager.registerPeriodicTasks(jobCenter);
+
+        this.musicInfoCache.loadCache();
+        this.musicInfoCache.startPeriodicSave();
     }
 
-    public void onStopping() {
-        saveAreasFuture.cancel(false);
-        executor.shutdown();
+    public void onStopped() {
+        if (!jobCenter.shutdownAndAwaitTermination(10000))
+            logger.warn("Background task executor refuses to shut down. Data might be lost!");
 
         this.nameCache.saveCache();
         this.areaManager.saveAllAreas();
         this.flagManager.saveFlags();
+
+        this.musicInfoCache.shutdownAndSave();
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Utilities
+    public MusicInstance instantiate(Music music) {
+        return new MusicInstance(music, localOnlyMusicProvider, musicInfoCache);
     }
 
 
     // -----------------------------------------------------------------------------------------------------------------
     // Abstract API
+    public abstract boolean isDedicatedServer();
+
     public abstract Path getWorldRootPath();
 }

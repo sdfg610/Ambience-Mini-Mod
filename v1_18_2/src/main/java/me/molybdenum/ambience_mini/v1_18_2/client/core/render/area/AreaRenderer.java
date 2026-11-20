@@ -1,14 +1,15 @@
 package me.molybdenum.ambience_mini.v1_18_2.client.core.render.area;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.molybdenum.ambience_mini.engine.client.core.gui.menus.AreaMenu;
+import me.molybdenum.ambience_mini.v1_18_2.client.core.gui.AmScreen;
 import me.molybdenum.ambience_mini.v1_18_2.client.core.render.drawer.Drawer;
 import me.molybdenum.ambience_mini.engine.client.core.locations.areas.AreaHelper;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.BaseAreaRenderer;
 import me.molybdenum.ambience_mini.engine.client.core.render.areas.Cube;
-import me.molybdenum.ambience_mini.engine.client.core.util.BaseNotification;
+import me.molybdenum.ambience_mini.engine.client.core.misc.BaseNotification;
 import me.molybdenum.ambience_mini.engine.shared.core.areas.Area;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ClipContext;
@@ -18,7 +19,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 
-public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos, Screen>
+public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos>
 {
     private final Minecraft mc = Minecraft.getInstance();
     private final Drawer drawer;
@@ -30,8 +31,8 @@ public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos, Screen>
         this.drawer = drawer;
     }
 
-    public void setup(PoseStack.Pose pose, Frustum frustum) {
-        this.drawer.setup(pose);
+    public void setup(PoseStack poseStack, Frustum frustum) {
+        this.drawer.setup(poseStack);
         this.frustum = frustum;
     }
 
@@ -63,14 +64,9 @@ public class AreaRenderer extends BaseAreaRenderer<Vec3, BlockPos, Screen>
 
 
     @Override
-    protected Screen createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper) {
-        return new AreaScreen(new AreaScreenSymbiote(
-                selectedArea, drawer, notification, this, areaHelper
-        ));
-    }
-
-    @Override
-    protected void openScreen(Screen screen) {
-        Minecraft.getInstance().setScreen(screen);
+    protected AreaMenu<?> createAreaScreen(Area selectedArea, BaseNotification<?> notification, AreaHelper areaHelper) {
+        return new AreaMenu<>(
+                drawer, AmScreen::new, selectedArea, notification, this, areaHelper
+        );
     }
 }

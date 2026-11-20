@@ -1,17 +1,17 @@
 package me.molybdenum.ambience_mini.v1_19_2.network;
 
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
-import me.molybdenum.ambience_mini.engine.shared.utils.Result;
+import me.molybdenum.ambience_mini.engine.shared.utils.results.StrResult;
 import me.molybdenum.ambience_mini.v1_19_2.AmbienceMini;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record ToServerMessage(Result<AmMessage> message)
+public record ToServerMessage(StrResult<AmMessage> message)
 {
     public ToServerMessage(AmMessage message) {
-        this(Result.of(message));
+        this(StrResult.of(message));
     }
 
     public void encode(FriendlyByteBuf buffer) {

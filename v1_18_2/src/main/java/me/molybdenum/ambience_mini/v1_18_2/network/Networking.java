@@ -1,7 +1,7 @@
 package me.molybdenum.ambience_mini.v1_18_2.network;
 
 import me.molybdenum.ambience_mini.v1_18_2.AmbienceMini;
-import me.molybdenum.ambience_mini.engine.shared.Common;
+import me.molybdenum.ambience_mini.engine.shared.Constants;
 import me.molybdenum.ambience_mini.engine.shared.core.networking.messages.AmMessage;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
@@ -14,10 +14,10 @@ import java.util.Optional;
 
 public class Networking {
     private static final SimpleChannel INSTANCE = NetworkRegistry.ChannelBuilder.
-            named(AmbienceMini.rl(Common.MOD_ID))
-            .clientAcceptedVersions(NetworkRegistry.acceptMissingOr(Common.PROTOCOL_VERSION))
-            .serverAcceptedVersions(NetworkRegistry.acceptMissingOr(Common.PROTOCOL_VERSION))
-            .networkProtocolVersion(() -> Common.PROTOCOL_VERSION)
+            named(AmbienceMini.rl(Constants.MOD_ID))
+            .clientAcceptedVersions(NetworkRegistry.acceptMissingOr(Constants.PROTOCOL_VERSION))
+            .serverAcceptedVersions(NetworkRegistry.acceptMissingOr(Constants.PROTOCOL_VERSION))
+            .networkProtocolVersion(() -> Constants.PROTOCOL_VERSION)
             .simpleChannel();
 
 
