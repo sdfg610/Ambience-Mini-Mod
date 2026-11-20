@@ -2,6 +2,9 @@
   "mod_name": "Ambience Mini",
 
   "key.open_am_menu": "Open AM Menu",
+  "key.reload": "Music: Reload player",
+  "key.play_pause": "Music: Pause/resume",
+  "key.next_music": "Music: Change soundtrack",
   "key.print_all": "Debug: Print all readings",
   "key.toggle_areas": "Area: Toggle view",
   "key.area_confirm": "Area: Confirm",

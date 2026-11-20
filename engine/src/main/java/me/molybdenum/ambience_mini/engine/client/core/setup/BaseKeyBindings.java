@@ -1,6 +1,7 @@
 package me.molybdenum.ambience_mini.engine.client.core.setup;
 
 import me.molybdenum.ambience_mini.engine.client.core.BaseClientCore;
+import me.molybdenum.ambience_mini.engine.client.core.music.MusicEngine;
 import me.molybdenum.ambience_mini.engine.shared.AmLang;
 import me.molybdenum.ambience_mini.engine.client.core.providers.BaseGameStateProvider;
 
@@ -10,8 +11,14 @@ public abstract class BaseKeyBindings<TKeyBinding>
     @SuppressWarnings("rawtypes")
     private BaseClientCore core = null;
 
-    public TKeyBinding openAmMenu;
+    public TKeyBinding openAmMenuKey;
+
+    public TKeyBinding reloadKey;
+    public TKeyBinding playPauseKey;
+    public TKeyBinding nextMusicKey;
+
     public TKeyBinding printAllKey;
+
     public TKeyBinding toggleAreasKey;
     public TKeyBinding areaConfirmKey;
     public TKeyBinding areaCancelKey;
@@ -26,8 +33,14 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
 
     public void registerKeys() {
-        openAmMenu = createAndRegister(AmLang.KEY_OPEN_AM_MENU, keyEnd());
+        openAmMenuKey = createAndRegister(AmLang.KEY_OPEN_AM_MENU, keyEnd());
+
+        reloadKey = createAndRegister(AmLang.KEY_RELOAD, keyNone());
+        playPauseKey = createAndRegister(AmLang.KEY_PLAY_PAUSE, keyNone());
+        nextMusicKey = createAndRegister(AmLang.KEY_NEXT_MUSIC, keyNone());
+
         printAllKey = createAndRegister(AmLang.KEY_PRINT_ALL, keyPageDown());
+
         toggleAreasKey = createAndRegister(AmLang.KEY_TOGGLE_AREAS, keyHome());
         areaConfirmKey = createAndRegister(AmLang.KEY_AREA_CONFIRM, keyInsert());
         areaCancelKey = createAndRegister(AmLang.KEY_AREA_CANCEL, keyDelete());
@@ -35,6 +48,7 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
 
     protected abstract int keyEnd();
+    protected abstract int keyNone();
     protected abstract int keyPageDown();
     protected abstract int keyHome();
     protected abstract int keyInsert();
@@ -48,14 +62,40 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
 
     public String getMenuKeyString() {
-        return getKeyString(openAmMenu);
+        return getKeyString(openAmMenuKey);
     }
 
 
     public void handleKeyInput()
     {
-        if (isClicked(openAmMenu))
+        if (isClicked(openAmMenuKey))
             core.openMainMenu();
+
+        if (isClicked(reloadKey)) {
+            core.notification.showToast(AmLang.MSG_RELOAD);
+            MusicEngine.enableAutoRestart();
+            core.tryReloadMusicEngine();
+        }
+
+        if (isClicked(playPauseKey) && checkMonitorRunning()) {
+            var musicEngine = core.getMusicEngine();
+            if (musicEngine.isPaused()) {
+                core.notification.showToast(AmLang.MSG_RESUMING_MUSIC);
+                musicEngine.resume();
+            } else {
+                core.notification.showToast(AmLang.MSG_PAUSING_MUSIC);
+                musicEngine.pause();
+            }
+        }
+
+        if (isClicked(nextMusicKey) && checkMonitorRunning()) {
+            if (!core.clientConfig.printNowPlaying.get())
+                core.notification.showToast(AmLang.MSG_NEXT_MUSIC);
+
+            var musicEngine = core.getMusicEngine();
+            musicEngine.forceSelectNewMusic();
+            musicEngine.resume();
+        }
 
         if (isClicked(printAllKey)) {
             BaseGameStateProvider provider = core.getGameStateProvider();
@@ -84,5 +124,12 @@ public abstract class BaseKeyBindings<TKeyBinding>
 
         if (isClicked(areaCancelKey))
             core.areaRenderer.registerCancel();
+    }
+
+    private boolean checkMonitorRunning() {
+        if (core.isEngineRunning())
+            return true;
+        core.notification.showToast(AmLang.MSG_NOT_RUNNING);
+        return false;
     }
 }

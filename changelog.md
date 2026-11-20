@@ -30,7 +30,7 @@ The wait is over and the biggest update yet is here!
 - Fixed bug where the field `combatant.fighting_player` exists in combatant values but cannot be accessed.
 
 **Menus and keybindings:**
-- Removed keybindings for "play/pause" (default: `END`) and "reload music player" (default: `P`).
+- Keybindings for "play/pause", "reload music player", "change soundtrack" are now unbound by default.
 - Added an "Ambience Mini Main Menu" for controlling the mod (opened by pressing `END` by default).
   * Tab1: 
     * View current music and playlist. 

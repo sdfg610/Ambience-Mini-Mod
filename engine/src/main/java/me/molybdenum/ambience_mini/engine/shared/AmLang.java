@@ -10,6 +10,9 @@ public enum AmLang
 
     // Keys
     KEY_OPEN_AM_MENU("key.open_am_menu"),
+    KEY_RELOAD("key.reload"),
+    KEY_PLAY_PAUSE("key.play_pause"),
+    KEY_NEXT_MUSIC("key.next_music"),
     KEY_PRINT_ALL("key.print_all"),
     KEY_TOGGLE_AREAS("key.toggle_areas"),
     KEY_AREA_CONFIRM("key.area_confirm"),

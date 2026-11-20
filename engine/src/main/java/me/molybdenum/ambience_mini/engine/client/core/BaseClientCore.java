@@ -264,7 +264,7 @@ public abstract class BaseClientCore<
 
         if (!hasPrintedControls && clientConfig.printBasicControls.get()) {
             notification.printTranslatableToChat(AmLang.MSG_BASIC_CONTROLS,
-                keyBindings.getKeyString(keyBindings.openAmMenu),
+                keyBindings.getKeyString(keyBindings.openAmMenuKey),
                 keyBindings.getKeyString(keyBindings.printAllKey)
             );
             hasPrintedControls = true;

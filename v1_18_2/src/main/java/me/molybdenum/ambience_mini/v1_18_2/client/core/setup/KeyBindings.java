@@ -19,6 +19,11 @@ public class KeyBindings extends BaseKeyBindings<KeyMapping>
     }
 
     @Override
+    protected int keyNone() {
+        return InputConstants.UNKNOWN.getValue();
+    }
+
+    @Override
     protected int keyPageDown() {
         return InputConstants.KEY_PAGEDOWN;
     }
