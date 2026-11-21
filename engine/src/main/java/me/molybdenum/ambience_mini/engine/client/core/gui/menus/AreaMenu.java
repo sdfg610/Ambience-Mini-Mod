@@ -86,29 +86,38 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
         int radioY = lblOwnership.bottom() + BASE_SEPARATION;
         var radioGroup = RadioButton.newGroup();
 
-        RadioButton rdbPrivate = panel.addWidget(new RadioButton(
-                MENU_INNER_MARGIN, radioY, notification.translateFromKey(AmLang.STRING_PRIVATE), radioGroup
-        ));
-        rdbPrivate.setSelected((isNew || area.owner.isPrivate()) && areasEnabled);
+        int radioX = MENU_INNER_MARGIN;
+        if (areasEnabled) {
+            RadioButton rdbPrivate = panel.addWidget(new RadioButton(
+                    radioX, radioY, notification.translateFromKey(AmLang.STRING_PRIVATE), radioGroup
+            ));
+            rdbPrivate.setSelected((isNew || area.owner.isPrivate()));
+            radioX += rdbPrivate.getWidth() + BASE_SEPARATION;
 
-        rdbShared = panel.addWidget(new RadioButton(
-                MENU_INNER_MARGIN + rdbPrivate.right() + BASE_SEPARATION, radioY, notification.translateFromKey(AmLang.STRING_SHARED), radioGroup
-        ));
-        rdbShared.setSelected(area.owner.isShared() && areasEnabled);
+            rdbShared = panel.addWidget(new RadioButton(
+                    radioX, radioY, notification.translateFromKey(AmLang.STRING_SHARED), radioGroup
+            ));
+            rdbShared.setSelected(area.owner.isShared());
+            radioX += rdbShared.getWidth() + BASE_SEPARATION;
 
-        rdbPublic = panel.addWidget(new RadioButton(
-                MENU_INNER_MARGIN + rdbShared.right() + BASE_SEPARATION, radioY, notification.translateFromKey(AmLang.STRING_PUBLIC), radioGroup
-        ));
-        rdbPublic.setSelected(area.owner.isPublic() && areasEnabled);
+            rdbPublic = panel.addWidget(new RadioButton(
+                    radioX, radioY, notification.translateFromKey(AmLang.STRING_PUBLIC), radioGroup
+            ));
+            rdbPublic.setSelected(area.owner.isPublic());
+            radioX += rdbPublic.getWidth() + BASE_SEPARATION;
+        } else {
+            rdbShared = null;
+            rdbPublic = null;
+        }
 
         rdbLocal = panel.addWidget(new RadioButton(
-                MENU_INNER_MARGIN + rdbPublic.right() + BASE_SEPARATION, radioY, notification.translateFromKey(AmLang.STRING_LOCAL), radioGroup
+                radioX, radioY, notification.translateFromKey(AmLang.STRING_LOCAL), radioGroup
         ));
         rdbLocal.setSelected(area.owner.isLocal() || !areasEnabled);
 
 
         // Buttons
-        int buttonY = rdbPrivate.bottom() + BASE_SEPARATION*4;
+        int buttonY = rdbLocal.bottom() + BASE_SEPARATION*4;
 
         String confirmString = notification.translateFromKey(AmLang.STRING_SAVE);
         Button btnSave = panel.addWidget(new Button(MENU_INNER_MARGIN, buttonY, tools.getTextWidth(confirmString) + 20, BUTTON_HEIGHT, confirmString, this::onConfirmClicked));
@@ -163,7 +172,7 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
         allowInput = false;
         area.name = name;
         area.owner = new Owner(
-                rdbPublic.isSelected() || rdbLocal.isSelected()
+                rdbLocal.isSelected() || rdbPublic.isSelected()
                         ? new Owner.Ownerless(rdbLocal.isSelected())
                         : new Owner.Owned(areaHelper.getPlayerUUID(), rdbShared.isSelected())
         );
@@ -226,6 +235,7 @@ public class AreaMenu<TPoseStack> extends AmMenu<TPoseStack>
 
     private void resetDelete() {
         confirmingDelete = false;
-        btnDelete.setText(deleteString);
+        if (btnDelete != null)
+            btnDelete.setText(deleteString);
     }
 }
