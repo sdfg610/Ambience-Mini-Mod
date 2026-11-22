@@ -29,6 +29,15 @@ The wait is over and the biggest update yet is here!
   * Configure using `preset "name" SCEDULE end` in `music_config.txt`.
 - Fixed bug where the field `combatant.fighting_player` exists in combatant values but cannot be accessed.
 
+**Events and Properties:**
+- Added a `$nearby_living` property which lists the types and (max) health of all nearby living entities.
+- Added a `$boss_infos` property which lists the ID AND health percentage of all currently active bosses.
+- Added `$screen_id` property to get the id (fully qualified class name) of the currently open screen (e.g., title screen, pause screen, etc.).
+- Added `$menu` property which represents a collection of screens under some menu name.
+  * Current possible values are: `none` (current screen if any is not part of a menu collection), `main_menu`, `joining`, `disconnected`, `credits`, `death`, `pause` (distinct from `@paused` when the game is halted in singleplayer), `player_inventory`.
+  * This is similar to the events `@main_menu`, `@joining`, and so on, but easier to extend with new menu types without adding new events.
+- Added `Print_Screen_On_Change` mod-config option. When enabled, the mod prints out the screen ID (and menu type if any) whenever the menu changes. Use for music pack creation and debugging.
+
 **Menus and keybindings:**
 - Keybindings for "play/pause", "reload music player", "change soundtrack" are now unbound by default.
 - Added an "Ambience Mini Main Menu" for controlling the mod (opened by pressing `END` by default).
@@ -40,14 +49,6 @@ The wait is over and the biggest update yet is here!
 - You now need to click the "Delete" button twice (instead of only once) in the area-menu to actually delete the area.
 - Pressing the "Cancel" keybind when in "edit area bounds"-mode now returns you to the area menu instead of cancelling everything.
 - Architectural and graphical improvements the menus.
-
-**Events and Properties:**
-- Added a `$nearby_living` property which lists the types and (max) health of all nearby living entities.
-- Added `$screen_id` property to get the id (fully qualified class name) of the currently open screen (e.g., title screen, pause screen, etc.).
-- Added `$menu` property which represents a collection of screens under some menu name.
-  * Current possible values are: `none` (current screen if any is not part of a menu collection), `main_menu`, `joining`, `disconnected`, `credits`, `death`, `pause` (distinct from `@paused` when the game is halted in singleplayer), `player_inventory`.
-  * This is similar to the events `@main_menu`, `@joining`, and so on, but easier to extend with new menu types without adding new events.
-- Added `Print_Screen_On_Change` mod-config option. When enabled, the mod prints out the screen ID (and menu type if any) whenever the menu changes. Use for music pack creation and debugging.
 
 **Server-side mod config:**
 - Added server-side mod options for auto-save interval for flags.
@@ -77,6 +78,7 @@ The wait is over and the biggest update yet is here!
 - Various bug-fixes.
 
 ****
+
 
 ### Version 2.7.12:
 
